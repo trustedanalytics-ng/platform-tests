@@ -18,9 +18,9 @@ import argparse
 import configparser
 import os
 
-from modules.constants import Priority, TapComponent
-from modules.runner.decorators import MARK_NAMES
+
 from modules import tap_logger
+from modules.markers import priority
 
 # secrets config
 secret_file_path = os.path.join("configuration", "secrets", ".secret.ini")
@@ -161,23 +161,22 @@ def parse_arguments():
                         default="master",
                         help="Platform version tag name")
     parser.add_argument("-p", "--priority",
-                        default=Priority.low.name,
-                        choices=Priority.names(),
-                        help="Run subset of tests with priority equal to or higher than passed priority")
+                        default=[],
+                        action="append",
+                        type=lambda x: getattr(priority, x).markname,
+                        help="Run subset of tests with given priority")
     parser.add_argument("-c", "--components",
                         default=[],
                         action="append",
-                        type=TapComponent,
+                        type=lambda x: x.replace("-", "_"),
                         help="Limit tests to those which use specified components")
     parser.add_argument("--only-tagged",
                         default=[],
                         action="append",
-                        choices=MARK_NAMES,
                         help="Limit tests to those which are included in specified group")
     parser.add_argument("--not-tagged",
                         default=[],
                         action="append",
-                        choices=MARK_NAMES,
                         help="Limit tests to those which are not included in specified group")
     parser.add_argument("--proxy",
                         default=None,

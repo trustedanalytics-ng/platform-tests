@@ -16,15 +16,16 @@
 
 from modules import gmail_api
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Invitation, Organization, User
 from modules.tap_object_model.flows import onboarding
 
 
-@log_components()
-@components(TAP.user_management)
+logged_components = (TAP.user_management,)
+pytestmark = [components.user_management]
+
+
 class PendingInvitations(TapTestCase):
 
     @priority.high

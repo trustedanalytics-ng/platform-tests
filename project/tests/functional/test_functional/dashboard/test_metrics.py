@@ -14,13 +14,18 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import DataSet, Organization, User
+from modules.markers import components, priority
+from modules.tap_object_model import DataSet, User
 from modules.tap_object_model.flows import summaries
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from tests.fixtures.test_data import TestData
+
+
+logged_components = (TAP.metrics_provider,)
+pytestmark = [components.metrics_provider]
 
 
 expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsage", "domainsUsagePercent",
@@ -28,28 +33,26 @@ expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsag
                          "serviceUsage", "serviceUsagePercent", "totalUsers"]
 
 
-@log_components()
-@components(TAP.metrics_provider)
 class Metrics(TapTestCase):
+    org_apps = org_services = None
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Retrieve metrics for the reference organization")
-        cls.ref_org = setup_fixtures.get_reference_organization()
-        cls.ref_org.api_get_metrics()
-        cls.org_apps, cls.org_services = summaries.cf_api_get_org_summary(org_guid=cls.ref_org.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def get_org_metrics(cls, core_org):
+        cls.step("Retrieve metrics for the core organization")
+        core_org.api_get_metrics()
+        cls.org_apps, cls.org_services = summaries.cf_api_get_org_summary(org_guid=core_org.guid)
 
     @priority.high
     def test_metrics_contains_all_keys(self):
         self.step("Check that metrics response contains all expected fields")
-        keys = list(self.ref_org.metrics.keys())
+        keys = list(TestData.core_org.metrics.keys())
         self.assertUnorderedListEqual(keys, expected_metrics_keys)
 
     @priority.low
     def test_service_count(self):
         self.step("Get services from cf and check that serviceUsage metrics is correct")
-        self.assertEqual(self.ref_org.metrics["serviceUsage"], len(self.org_services))
+        self.assertEqual(TestData.core_org.metrics["serviceUsage"], len(self.org_services))
 
     @priority.low
     def test_application_metrics(self):
@@ -61,8 +64,8 @@ class Metrics(TapTestCase):
                 cf_apps_up.append(app.name)
             else:
                 cf_apps_down.append(app.name)
-        dashboard_apps_running = self.ref_org.metrics["appsRunning"]
-        dashboard_apps_down = self.ref_org.metrics["appsDown"]
+        dashboard_apps_running = TestData.core_org.metrics["appsRunning"]
+        dashboard_apps_down = TestData.core_org.metrics["appsDown"]
         metrics_are_equal = (len(cf_apps_up) == dashboard_apps_running and len(cf_apps_down) == dashboard_apps_down)
         self.assertTrue(metrics_are_equal,
                         "\nApps running: {} - expected: {}\n({})"
@@ -73,8 +76,8 @@ class Metrics(TapTestCase):
     @priority.low
     def test_user_count(self):
         self.step("Get org users from cf and check that totalUsers metrics is correct")
-        cf_user_list = User.cf_api_get_list_in_organization(org_guid=self.ref_org.guid)
-        dashboard_total_users = self.ref_org.metrics["totalUsers"]
+        cf_user_list = User.cf_api_get_list_in_organization(org_guid=TestData.core_org.guid)
+        dashboard_total_users = TestData.core_org.metrics["totalUsers"]
         self.assertEqual(len(cf_user_list), dashboard_total_users,
                          "\nUsers: {} - expected: {}".format(dashboard_total_users, len(cf_user_list)))
 
@@ -83,15 +86,15 @@ class Metrics(TapTestCase):
         self.step("Get datasets and check datasetCount, privateDatasets, publicDatasets metrics are correct")
         public_datasets = []
         private_datasets = []
-        datasets = DataSet.api_get_list([self.ref_org])
+        datasets = DataSet.api_get_list([TestData.core_org])
         for table in datasets:
             if table.is_public:
                 public_datasets.append(table)
             else:
                 private_datasets.append(table)
-        dashboard_datasets_count = self.ref_org.metrics['datasetCount']
-        dashboard_private_datasets = self.ref_org.metrics['privateDatasets']
-        dashboard_public_datasets = self.ref_org.metrics['publicDatasets']
+        dashboard_datasets_count = TestData.core_org.metrics['datasetCount']
+        dashboard_private_datasets = TestData.core_org.metrics['privateDatasets']
+        dashboard_public_datasets = TestData.core_org.metrics['publicDatasets']
         metrics_are_equal = (len(datasets) == dashboard_datasets_count and
                              len(private_datasets) == dashboard_private_datasets and
                              len(public_datasets) == dashboard_public_datasets)

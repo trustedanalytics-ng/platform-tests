@@ -14,22 +14,25 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules import app_sources
 from configuration import config
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
-from modules.http_calls import cloud_foundry as cf
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import priority, components
+from modules.markers import priority, components
 from modules.service_tools.psql import PsqlTable, PsqlColumn, PsqlRow
-from modules.tap_object_model import Application, Organization, ServiceInstance, ServiceType, Space
+from modules.tap_object_model import Application, ServiceInstance, ServiceType
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
 
 
-@log_components()
-@components(TAP.service_catalog)
+logged_components = (TAP.service_catalog,)
+pytestmark = [components.service_catalog]
+
+
 class Postgres(TapTestCase):
+
+    psql_app = None
     test_table_name = "oh_hai"
     test_columns = [{"name": "col0", "type": "VARCHAR", "max_len": 15},
                     {"name": "col1", "type": "INTEGER", "is_nullable": False},
@@ -40,26 +43,13 @@ class Postgres(TapTestCase):
                       [{"column_name": "col0", "value": None}, {"column_name": "col1", "value": 9000},
                        {"column_name": "col2", "value": None}]]
 
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Get sql api app sources")
-        sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data,
-                                                 gh_auth=config.CONFIG["github_auth"])
-        psql_app_path = sql_api_sources.clone_or_pull()
-
-        cls.step("Create test org and test space")
-        test_org = Organization.api_create()
-        test_space = Space.api_create(test_org)
-
-        cls.step("Login to the new organization")
-        cf.cf_login(test_org.name, test_space.name)
-
-        cls.step("Create postgres service instance")
+    @pytest.fixture(scope="class", autouse=True)
+    def postgres_instance(self, request, test_org, test_space):
+        self.step("Create postgres service instance")
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
         instance_name = get_test_name()
-        ServiceInstance.api_create(
+        return ServiceInstance.api_create(
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.PSQL,
@@ -67,16 +57,27 @@ class Postgres(TapTestCase):
             service_plan_guid=psql.service_plan_guids[0]
         )
 
+    @classmethod
+    @pytest.fixture(scope="class", autouse=True)
+    def setup_psql_api_app(cls, request, test_space, login_to_cf, postgres_instance):
+        cls.step("Get sql api app sources")
+        sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example,
+                                                 repo_owner=TapGitHub.intel_data,
+                                                 gh_auth=config.CONFIG["github_auth"])
+        psql_app_path = sql_api_sources.clone_or_pull()
         cls.step("Push psql api app to cf")
         cls.psql_app = Application.push(
             space_guid=test_space.guid,
             source_directory=psql_app_path,
-            bound_services=(instance_name,)
+            bound_services=(postgres_instance.name,)
         )
 
-    def tearDown(self):
-        for table in PsqlTable.TABLES:
-            table.delete()
+    @pytest.fixture(scope="function", autouse=True)
+    def cleanup_psql_tables(self, request):
+        def fin():
+            for table in PsqlTable.TABLES:
+                table.delete()
+        request.addfinalizer(fin)
 
     def _create_expected_row(self, psql_app, table_name, id, expected_values):
         values = {col["column_name"]: col["value"] for col in expected_values}
@@ -91,14 +92,10 @@ class Postgres(TapTestCase):
         return expected_rows
 
     @priority.medium
-    def test_create_table(self):
+    def test_create_and_delete_table(self):
         test_table = PsqlTable.post(self.psql_app, self.test_table_name, self.test_columns)
         table_list = PsqlTable.get_list(self.psql_app)
         self.assertIn(test_table, table_list)
-
-    @priority.medium
-    def test_delete_table(self):
-        test_table = PsqlTable.post(self.psql_app, self.test_table_name, self.test_columns)
         test_table.delete()
         table_list = PsqlTable.get_list(self.psql_app)
         self.assertNotIn(test_table, table_list)

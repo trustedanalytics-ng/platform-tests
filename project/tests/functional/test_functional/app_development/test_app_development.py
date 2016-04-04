@@ -14,31 +14,25 @@
 # limitations under the License.
 #
 
-from modules.api_client import ConsoleClient
+import pytest
+
 from modules.constants import TapComponent as TAP
 from modules.http_calls import platform as api
-from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.decorators import priority, components
+from modules.markers import priority, components
 from modules.runner.tap_test_case import TapTestCase
-from modules.tap_object_model import Invitation, Organization, User
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.console)
+logged_components = (TAP.console,)
+
+
+@pytest.mark.usefixtures("test_org", "test_org_manager_client", "admin_client")
 class AppDevelopmentPage(TapTestCase):
-
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create organization and get test user and admin client")
-        test_org = Organization.api_create()
-        cls.non_admin_client = User.api_create_by_adding_to_organization(test_org.guid).login()
-        cls.admin_client = ConsoleClient.get_admin_client()
+    pytestmark = [components.console]
 
     @priority.medium
     def test_get_app_development_page(self):
-        clients = {"non_admin": self.non_admin_client, "admin": self.admin_client}
+        clients = {"non_admin": TestData.test_org_manager_client, "admin": TestData.admin_client}
         for name, client in clients.items():
             with self.subTest(client=name):
                 self.step("Get 'App development' page")

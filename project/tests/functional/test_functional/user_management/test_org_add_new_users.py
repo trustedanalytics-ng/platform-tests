@@ -16,28 +16,36 @@
 
 import time
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Organization, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+pytestmark = [components.user_management, components.auth_gateway, components.auth_proxy]
+
+
 class AddNewUserToOrganization(TapTestCase):
+
     ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
+    @pytest.fixture(scope="class", autouse=True)
+    def users(cls, request, test_org):
+        cls.test_org = test_org
         cls.step("Create users for org tests")
-        users, cls.test_org = setup_fixtures.create_test_users(2)
-        cls.test_user = users[0]
-        cls.test_client = users[0].login()
-        cls.second_test_user = users[1]
+        cls.test_user = User.api_create_by_adding_to_organization(org_guid=cls.test_org.guid)
+        cls.test_client = cls.test_user.login()
+        cls.second_test_user = User.api_create_by_adding_to_organization(org_guid=cls.test_org.guid)
+
+        def fin():
+            cls.test_user.cf_api_delete()
+            cls.second_test_user.cf_api_delete()
+        request.addfinalizer(fin)
 
     @priority.medium
     def test_add_new_user_with_no_roles(self):

@@ -16,10 +16,9 @@
 
 from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus
 from .logger_type import LoggerType
-from .priority_levels import Priority
+from .project_paths import Path
 from .services import ServiceLabels, PARAMETRIZED_SERVICE_INSTANCES
 from .sources import CfEnvApp, TapGitHub
 from .tap_components import TapComponent
-from .test_results import TestResult
 from .urls import Urls
 

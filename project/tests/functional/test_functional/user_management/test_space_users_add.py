@@ -14,29 +14,35 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import Organization, Space, User
+from modules.markers import components, priority
+from modules.tap_object_model import Space, User
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
+
+
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 
 
 class BaseTestClass(TapTestCase):
     ALL_SPACE_ROLES = {role for role_set in User.SPACE_ROLES.values() for role in role_set}
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.test_org = Organization.api_create()
-        cls.test_user = User.api_create_by_adding_to_organization(cls.test_org.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def space(cls, request, test_org, test_org_manager):
+        cls.test_org = test_org
+        cls.test_user = test_org_manager
+        cls.step("Create test space")
+        cls.test_space = Space.api_create(cls.test_org)
 
-    def setUp(self):
-        self.step("Create test space")
-        self.test_space = Space.api_create(self.test_org)
+        def fin():
+            cls.test_space.api_delete()
+        request.addfinalizer(fin)
 
     def _assert_user_in_space_with_roles(self, expected_user, space_guid):
+        # TODO move to TapTestCase
         self.step("Check that the user is on the list of space users")
         space_users = User.api_get_list_via_space(space_guid)
         self.assertIn(expected_user, space_users)
@@ -48,9 +54,8 @@ class BaseTestClass(TapTestCase):
                                       "{} space roles are not equal".format(expected_user))
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class AddNewUserToSpace(BaseTestClass):
+    pytestmark = [components.auth_gateway, components.auth_proxy, components.user_management]
 
     def _get_test_user(self, org_guid, space_guid, space_role=User.ORG_ROLES["manager"]):
         return User.api_create_by_adding_to_space(org_guid, space_guid, roles=space_role)
@@ -94,9 +99,8 @@ class AddNewUserToSpace(BaseTestClass):
                              "User with incorrect roles was added to space")
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
 class AddExistingUserToSpace(AddNewUserToSpace):
+    pytestmark = [components.user_management]
 
     def _get_test_user(self, org_guid, space_guid, space_role=User.ORG_ROLES["manager"]):
         self.step("Create new platform user by adding to the organization")
@@ -115,12 +119,12 @@ class AddExistingUserToSpace(AddNewUserToSpace):
         self._assert_user_in_space_with_roles(user_not_in_space, space.guid)
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
 class AddUserToSpace(BaseTestClass):
+    pytestmark = [components.user_management]
+
     @priority.low
+    @pytest.mark.bugs("DPNG-5743 Adding a user with long username to space throws 500 while expected 400")
     def test_cannot_create_new_user_with_long_username(self):
-        """DPNG-5743 Adding a user with long username to space throws 500 while expected 400"""
         long_username = "x" * 300 + get_test_name(email=True)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMPTY,
                                             User.api_create_by_adding_to_space, self.test_org.guid,

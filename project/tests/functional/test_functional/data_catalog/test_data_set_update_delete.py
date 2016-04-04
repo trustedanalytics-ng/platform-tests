@@ -14,34 +14,23 @@
 # limitations under the License.
 #
 
+import pytest
 from retry import retry
+
 from modules.constants import HttpStatus, TapComponent as TAP, Urls
-from modules.remote_logger.remote_logger_decorator import log_components
+from modules.exceptions import UnexpectedResponseError
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import DataSet, Organization, Transfer, User
-from tests.fixtures import teardown_fixtures
+from modules.markers import components, priority
+from modules.tap_object_model import DataSet
+from modules.tap_object_model.flows import data_catalog
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+
+
 class UpdateDeleteDataSet(TapTestCase):
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization")
-        cls.org = Organization.api_create()
-        cls.step("Add admin to the organization")
-        User.get_admin().api_add_to_organization(org_guid=cls.org.guid)
-
-    def setUp(self):
-        self.step("Create new transfer")
-        transfer = Transfer.api_create(org_guid=self.org.guid, source=Urls.test_transfer_link, is_public=False,
-                                       category=DataSet.CATEGORIES[0])
-        self.step("Wait for transfer to finish")
-        transfer.ensure_finished()
-        self.step("Get data set matching to transfer")
-        self.dataset = DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
 
     @retry(AssertionError, tries=10, delay=3)
     def _assert_updated(self, data_set_id, updated_attribute_name, expected_value):
@@ -49,12 +38,25 @@ class UpdateDeleteDataSet(TapTestCase):
         updated_value = getattr(updated_dataset, updated_attribute_name)
         self.assertEqual(updated_value, expected_value, "Data set was not updated")
 
+    @pytest.fixture(scope="function", autouse=True)
+    def create_dataset(self, request, test_org, add_admin_to_test_org):
+        self.step("Create data set")
+        transfer, self.dataset = data_catalog.create_dataset_from_link(org=test_org, source=Urls.test_transfer_link)
+
+        def fin():
+            try:
+                transfer.api_delete()
+                self.dataset.api_delete()
+            except UnexpectedResponseError:
+                pass
+        request.addfinalizer(fin)
+
     @priority.high
     def test_delete_dataset(self):
         self.step("Delete the data set")
         self.dataset.api_delete()
         self.step("Get data set list and check the deleted one is not on it")
-        datasets = DataSet.api_get_list(org_list=[self.org])
+        datasets = DataSet.api_get_list(org_list=[TestData.test_org])
         self.assertNotIn(self.dataset, datasets)
 
     @priority.low

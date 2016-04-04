@@ -14,26 +14,29 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Organization, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+pytestmark = [components.user_management]
+
+
 class GetOrganizationUsers(TapTestCase):
+
     ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create users for org tests")
-        users, cls.test_org = setup_fixtures.create_test_users(3)
-        cls.step("Add manager role to user in the test org")
+    @pytest.fixture(scope="class", autouse=True)
+    def users(cls, request, test_org):
+        cls.step("Create test users")
+        users = [User.api_create_by_adding_to_organization(org_guid=test_org.guid) for _ in range(3)]
         cls.manager = users[0]
         cls.manager_client = users[0].login()
         cls.step("Add non-manager roles to users in the test org")
@@ -41,9 +44,14 @@ class GetOrganizationUsers(TapTestCase):
         cls.non_manager_clients = {}
         for index, roles in enumerate(cls.NON_MANAGER_ROLES):
             user = users[index + 1]
-            user.api_update_org_roles(org_guid=cls.test_org.guid, new_roles=[roles])
+            user.api_update_org_roles(org_guid=TestData.test_org.guid, new_roles=[roles])
             cls.non_managers[(roles,)] = user
             cls.non_manager_clients[roles] = user.login()
+
+        def fin(self):
+            for user in users:
+                user.cf_api_delete()
+        request.addfinalizer(fin)
 
     @priority.low
     def test_non_manager_in_org_cannot_get_org_users(self):
@@ -51,14 +59,14 @@ class GetOrganizationUsers(TapTestCase):
             with self.subTest(user_role=role):
                 self.step("Check that non-manager cannot get list of users in org")
                 self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                    User.api_get_list_via_organization, org_guid=self.test_org.guid,
+                                                    User.api_get_list_via_organization, org_guid=TestData.test_org.guid,
                                                     client=client)
 
     @priority.high
     def test_manager_can_get_org_users(self):
         self.step("Check that manager can get list of users in org")
-        expected_users = [self.manager] + list(self.non_managers.values())
-        user_list = User.api_get_list_via_organization(org_guid=self.test_org.guid, client=self.manager_client)
+        expected_users = User.api_get_list_via_organization(org_guid=TestData.test_org.guid)
+        user_list = User.api_get_list_via_organization(org_guid=TestData.test_org.guid, client=self.manager_client)
         self.assertUnorderedListEqual(user_list, expected_users)
 
     @priority.low

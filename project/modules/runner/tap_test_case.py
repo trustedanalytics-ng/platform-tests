@@ -14,18 +14,17 @@
 # limitations under the License.
 #
 
+# TODO TapTestCase class should be deleted, test classes should be replaced by non-unittest classes
+
 import functools
 import time
 import unittest
 
 from retry import retry
-from unittest.suite import _ErrorHolder
 
-from ..constants import LoggerType, Priority
-from .custom_runners import TapTestResult
+from ..constants import LoggerType
 from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger
-from ..tap_object_model.flows import cleaner
 from ..tap_object_model import user
 
 
@@ -70,48 +69,6 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
 
     maxDiff = None
     components = tuple()
-
-    def __init__(self, methodName="runTest"):
-        test_method = getattr(self.__class__, methodName)
-        priority = getattr(test_method, "priority", None)
-        super().__init__(methodName=methodName)
-        self.priority = Priority.default() if priority is None else priority
-        self.components = getattr(test_method, "components", self.components)
-        self.mark = getattr(test_method, "mark", None)
-        self.class_name = "{}.{}".format(self.__class__.__module__, self.__class__.__name__)
-        self.full_name = "{}.{}".format(self.class_name, self._testMethodName)
-
-    @classmethod
-    def tearDownClass(cls):
-        cleaner.tear_down_all()
-
-    def _feedErrorsToResult(self, result, errors):
-        # error [0] - setUp
-        #       [1] - test_xxx or [1..n] n subtests
-        #       [2 or n+1] - tearDown
-        # error [][0] - test
-        #       [][1] - exc_info, None if no exception
-
-        # check if test (not subtest) was a success and tearDown an error
-        if (len(errors) == 3 and not TapTestResult._is_subTest(errors[1][0]) and
-                errors[1][1] is None and errors[2][1] is not None):
-            # in such case the test is only emited as an error,
-            # adding extra test success
-            result.addSuccess(errors[1][0])
-
-        # send FixtureDocument instead a TestResultDocument when setUp and tearDown
-        if errors[0][1] is not None:
-            errors[0] = (
-                _ErrorHolder("setUp ({})".format(errors[0][0].full_name)),
-                errors[0][1]
-            )
-        if len(errors) > 1 and errors[-1][1] is not None:
-            errors[-1] = (
-                _ErrorHolder("tearDown ({})".format(errors[-1][0].full_name)),
-                errors[-1][1]
-            )
-
-        super()._feedErrorsToResult(result, errors)
 
     @classmethod
     def get_errors_and_failures(cls, result):

@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from modules.runner.tests.db_tests.base_test import BaseDbTest
-from modules.constants.test_results import TestResult
+
+import os
 
 
-class PassingTestCase(BaseDbTest):
-
-    def test_documents(self):
-        self.assertResultDocuments(TestResult.error, "setUpModule", True)
+class Path:
+    test_root_directory = os.path.join("tests", "functional")
+    test_directories = {
+        "test_functional": os.path.join(test_root_directory, "test_functional"),
+        "test_smoke": os.path.join(test_root_directory, "test_smoke"),
+        "test_monitoring": os.path.join(test_root_directory, "test_monitoring"),
+    }

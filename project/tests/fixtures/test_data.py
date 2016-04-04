@@ -13,14 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from modules.constants.test_results import TestResult
-from modules.runner.tests.db_tests.base_test import BaseDbTest
 
 
-class PassingTestCase(BaseDbTest):
+class TestData:
+    test_org = None
+    test_space = None
+    test_org_manager = None
+    test_org_manager_client = None
+    admin = None
+    admin_client = None
+    core_org = None
+    core_space = None
 
-    def test_documents(self):
-        self.assertResultDocuments(
-            TestResult.success, "test_pass", False,
-            TestResult.error, "tearDownModule", True
-        )
+    example_app_repo_path = None

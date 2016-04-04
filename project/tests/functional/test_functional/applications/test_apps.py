@@ -14,27 +14,52 @@
 # limitations under the License.
 #
 
-from modules import app_sources
-from modules.constants import TapComponent as TAP, CfEnvApp
+import pytest
+
+from modules.constants import TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf
-from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.decorators import priority, components
+from modules.markers import priority, components
 from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Application, Organization, Space
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-class TestAppBase(TapTestCase):
+logged_components = (TAP.service_catalog, TAP.user_management)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.step("Get sources of the example application")
-        sources = app_sources.AppSources(repo_name=CfEnvApp.repo_name, repo_owner=CfEnvApp.repo_owner)
-        cls.app_repo_path = sources.clone_or_pull()
-        sources.checkout_commit(CfEnvApp.commit_id)
 
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUp(self):
+@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf", "example_app_path")
+class TapApp(TapTestCase):
+
+    pytestmark = [components.service_catalog]
+
+    @priority.high
+    def test_api_push_stop_start_restage_delete(self):
+        self.step("Push example application")
+        test_app = Application.push(
+            space_guid=TestData.test_space.guid,
+            source_directory=TestData.example_app_repo_path
+        )
+        self.step("Check the application is running")
+        self.assertEqualWithinTimeout(120, True, test_app.cf_api_app_is_running)
+
+        self.step("Stop the application and check that it is stopped")
+        test_app.api_stop()
+        self.assertEqualWithinTimeout(120, False, test_app.cf_api_app_is_running)
+
+        self.step("Start the application and check that it has started")
+        test_app.api_start()
+        self.assertEqualWithinTimeout(120, True, test_app.cf_api_app_is_running)
+
+        self.step("Delete the application and check that it doesn't exist")
+        test_app.api_delete()
+        self.assertNotIn(test_app, Application.cf_api_get_list_by_space(TestData.test_space.guid))
+
+
+class DeleteSpaceAndOrg(TapTestCase):
+    pytestmark = [components.user_management, components.service_catalog]
+
+    @pytest.fixture(scope="function", autouse=True)
+    def create_org_space_push_app(self, request, example_app_path):
         self.step("Create test organization and space")
         self.test_org = Organization.api_create()
         self.test_space = Space.api_create(self.test_org)
@@ -42,32 +67,10 @@ class TestAppBase(TapTestCase):
         cf.cf_login(self.test_org.name, self.test_space.name)
         self.test_app = Application.push(
             space_guid=self.test_space.guid,
-            source_directory=self.app_repo_path
+            source_directory=example_app_path
         )
         self.step("Check the application is running")
         self.assertEqualWithinTimeout(120, True, self.test_app.cf_api_app_is_running)
-
-
-@log_components()
-@components(TAP.service_catalog)
-class TapApp(TestAppBase):
-
-    @priority.high
-    def test_api_push_stop_start_restage_delete(self):
-        self.step("Stop the application and check that it is stopped")
-        self.test_app.api_stop()
-        self.assertEqualWithinTimeout(120, False, self.test_app.cf_api_app_is_running)
-        self.step("Start the application and check that it has started")
-        self.test_app.api_start()
-        self.assertEqualWithinTimeout(120, True, self.test_app.cf_api_app_is_running)
-        self.step("Delete the application and check that it doesn't exist")
-        self.test_app.api_delete()
-        self.assertNotIn(self.test_app, Application.cf_api_get_list_by_space(self.test_space.guid))
-
-
-@log_components()
-@components(TAP.user_management, TAP.service_catalog)
-class SpaceDeletion(TestAppBase):
 
     @priority.low
     def test_delete_space_and_org_after_app_creation_and_deletion(self):

@@ -14,42 +14,36 @@
 # limitations under the License.
 #
 
-import unittest
+import pytest
 
 from modules.constants import HttpStatus, TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components
+from modules.markers import components
 from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceType, \
     Space, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.platform_context)
+logged_components = (TAP.platform_operations, )
+pytestmark = [components.platform_operations]
+
+
+@pytest.mark.usefixtures("test_org_manager_client")
 class NonAdminOperationsMetrics(TapTestCase):
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.platform = Platform()
-        users, _ = setup_fixtures.create_test_users(1)
-        cls.non_admin_user = users[0]
 
-    @unittest.skip("DPNG-5904")
+    @pytest.mark.skip("DPNG-5904")
     def test_non_admin_cannot_access_platform_operations(self):
         self.step("Checking if non-admin user cannot retrieve data")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                            self.platform.retrieve_metrics, self.non_admin_user.get_client())
+                                            Platform().retrieve_metrics, TestData.test_org_manager_client)
 
-    @unittest.skip("DPNG-5904")
+    @pytest.mark.skip("DPNG-5904")
     def test_non_admin_user_cannot_access_refresh(self):
         self.step("Checking if non-admin user cannot refresh data")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                            self.platform.refresh_data, self.non_admin_user.get_client())
+                                            Platform.refresh_data, TestData.test_org_manager_client)
 
 
-@log_components()
-@components(TAP.platform_operations)
 class OperationsMetrics(TapTestCase):
     """
     Operations Metrics test can be unstable when run parallel

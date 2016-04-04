@@ -14,66 +14,59 @@
 # limitations under the License.
 #
 
-import unittest
-
+import pytest
 import requests
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, Urls
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, mark, priority
-from modules.tap_object_model import DataSet, Organization, ServiceInstance, ServiceKey, Space, Transfer, User
+from modules.markers import components, long, priority
+from modules.tap_object_model import DataSet, ServiceInstance, ServiceKey, Transfer, User
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.scoring_engine, TAP.service_catalog, TAP.application_broker, TAP.das, TAP.hdfs_downloader,
-            TAP.metadata_parser)
+logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.application_broker, TAP.das, TAP.hdfs_downloader,
+                     TAP.metadata_parser)
+pytestmark = [components.scoring_engine, components.service_catalog, components.application_broker]
+
+
 class TestScoringEngineInstance(TapTestCase):
+
     SE_PLAN_NAME = "Simple"
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and test spaces")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
-        cls.step("Add admin to the organization")
-        User.get_admin().api_add_to_organization(org_guid=cls.test_org.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def model_transfer(cls, test_org, test_space, add_admin_to_test_org):
+        # TODO change to a session-scoped fixture
         cls.step("Create a transfer and get hdfs path")
-        transfer = Transfer.api_create(category="other", org_guid=cls.test_org.guid, source=Urls.model_url)
+        transfer = Transfer.api_create(category="other", org_guid=test_org.guid, source=Urls.model_url)
         transfer.ensure_finished()
-        ds = DataSet.api_get_matching_to_transfer(org=cls.test_org, transfer_title=transfer.title)
+        ds = DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=transfer.title)
         cls.hdfs_path = ds.target_uri
 
-        space_manager = User.api_create_by_adding_to_space(org_guid=cls.test_org.guid,
-                                                           space_guid=cls.test_space.guid,
+    @classmethod
+    @pytest.fixture(scope="class", autouse=True)
+    def create_test_users(cls, test_org, test_space):
+        space_manager = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
                                                            roles=User.SPACE_ROLES["manager"])
-
-        space_auditor = User.api_create_by_adding_to_space(org_guid=cls.test_org.guid,
-                                                           space_guid=cls.test_space.guid,
+        space_auditor = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
                                                            roles=User.SPACE_ROLES["auditor"])
-
-        space_developer = User.api_create_by_adding_to_space(org_guid=cls.test_org.guid,
-                                                             space_guid=cls.test_space.guid,
+        space_developer = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
                                                              roles=User.SPACE_ROLES["developer"])
-        admin = User.get_admin()
-
-        cls.authorised_users = [admin, space_developer]
+        cls.authorised_users = [TestData.admin, space_developer]
         cls.unauthorised_users = [space_manager, space_auditor]
 
-    @mark.long
+    @long
     @priority.high
-    @unittest.skip("DPNG-6705")
+    @pytest.mark.skip("DPNG-6705")
     def test_create_delete_for_different_users(self):
         for user in self.authorised_users:
             with self.subTest(user=user):
                 self._check_create_delete_for_user(user)
 
     @priority.medium
-    def test_users_lacking_privileges_cannot_create_scoring_engine_user(self):
+    def test_users_lacking_privileges_cannot_create_scoring_engine(self):
         self.step("Checking that users with not enough privileges cannot create scoring engine")
         for user in self.unauthorised_users:
             with self.subTest(user=user):
@@ -102,7 +95,7 @@ class TestScoringEngineInstance(TapTestCase):
                                                 self._delete_scoring_engine, instance,
                                                 self.unauthorised_users[0].login())
 
-            instances = ServiceInstance.api_get_list(space_guid=self.test_space.guid)
+            instances = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
             self.assertIn(instance, instances, "Scoring engine instance was deleted")
         except AssertionError:
             self.step("Delete scoring engine instance and check it does not show on the list")
@@ -111,7 +104,7 @@ class TestScoringEngineInstance(TapTestCase):
     def _create_service_key(self, instance, client):
         self.step("Create a key for the scoring engine instance and check it")
         instance_key = ServiceKey.api_create(instance.guid)
-        summary = ServiceInstance.api_get_keys(self.test_space.guid)
+        summary = ServiceInstance.api_get_keys(TestData.test_space.guid)
         self.assertIn(instance_key, summary[instance], "Key not found")
 
         self.step("Delete service key")
@@ -120,8 +113,8 @@ class TestScoringEngineInstance(TapTestCase):
     def _create_scoring_engine(self, client, name):
         self.step("Create test service instance")
         instance = ServiceInstance.api_create(
-            org_guid=self.test_org.guid,
-            space_guid=self.test_space.guid,
+            org_guid=TestData.test_org.guid,
+            space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.SCORING_ENGINE,
             service_plan_name=self.SE_PLAN_NAME,
             name=name,
@@ -132,12 +125,12 @@ class TestScoringEngineInstance(TapTestCase):
         return instance, application
 
     def _validate_scoring_engine(self, instance):
-        instances_list = ServiceInstance.api_get_list(self.test_space.guid)
+        instances_list = ServiceInstance.api_get_list(TestData.test_space.guid)
 
         self.assertIn(instance, instances_list, "Scoring-engine was not created")
 
         self.step("Check that the instance exists in summary and has no keys")
-        summary = ServiceInstance.api_get_keys(self.test_space.guid)
+        summary = ServiceInstance.api_get_keys(TestData.test_space.guid)
 
         self.assertIn(instance, summary, "Instance not found in summary")
         self.assertEqual(summary[instance], [], "There are keys for the instance")
@@ -147,7 +140,7 @@ class TestScoringEngineInstance(TapTestCase):
 
     def _delete_scoring_engine(self, instance, client):
         instance.api_delete(client)
-        instances = ServiceInstance.api_get_list(space_guid=self.test_space.guid)
+        instances = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
         self.assertNotIn(instance, instances, "Scoring engine instance was not deleted")
 
     def _check_request_to_scoring_engine(self, application):

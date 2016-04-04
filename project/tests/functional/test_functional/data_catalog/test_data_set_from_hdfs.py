@@ -15,81 +15,76 @@
 #
 
 import os
-import unittest
+
+import pytest
 
 from modules.constants import TapComponent as TAP, Urls
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.service_tools.atk import ATKtools
-from modules.tap_object_model import Application, DataSet, Organization, Space, Transfer, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from modules.tap_object_model import Application
+from modules.tap_object_model.flows import data_catalog
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+
+
+@pytest.mark.usefixtures("test_org", "add_admin_to_test_org")
 class DataSetFromHdfs(TapTestCase):
-    atk_virtualenv = None
-    atk_url = None
-
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and space")
-        cls.org = Organization.api_create()
-        cls.space = Space.api_create(cls.org)
-        cls.step("Get reference space")
-        cls.space = setup_fixtures.get_reference_space()
-        cls.step("Add admin to the test space")
-        admin_user = User.get_admin()
-        admin_user.api_add_to_space(space_guid=cls.space.guid, org_guid=cls.org.guid, roles=("managers", "developers"))
-        cls.atk_virtualenv = ATKtools("atk_virtualenv")
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=cls.org)
-        super().tearDownClass()
-
-    def _create_dataset(self, org, source, is_public=False, category=DataSet.CATEGORIES[0]):
-        self.step("Create new transfer")
-        transfer = Transfer.api_create(org_guid=org.guid, source=source, category=category, is_public=is_public)
-        self.step("Wait for transfer to finish")
-        transfer.ensure_finished()
-        self.step("Get data set matching to transfer")
-        return DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title)
 
     @priority.medium
     def test_create_dataset_from_hdfs_uri(self):
         self.step("Create source dataset")
-        source_dataset = self._create_dataset(self.org, Urls.test_transfer_link)
+        _, source_dataset = data_catalog.create_dataset_from_link(TestData.test_org, Urls.test_transfer_link)
         self.step("Create dataset from hdfs uri")
-        dataset = self._create_dataset(self.org, source_dataset.target_uri)
+        _, dataset = data_catalog.create_dataset_from_link(TestData.test_org, source_dataset.target_uri)
         self.assertEqual(dataset.source_uri, source_dataset.target_uri)
 
-    @priority.low
-    @unittest.skip("We don't know how this should work")
-    def test_create_transfer_from_atk_model_file(self):
+    @classmethod
+    @pytest.fixture(scope="function")
+    def atk_virtualenv(cls, request):
+        cls.atk_virtualenv = ATKtools("atk_virtualenv")
+
+        def fin():
+            cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=TestData.test_org)
+        request.addfinalizer(fin)
+
+    @classmethod
+    @pytest.fixture(scope="function")
+    def create_data_set(cls, request):
+        cls.step("Create data set from model file")
         model_path = os.path.join("fixtures", "data_sets", "lda.csv")
-        test_data_directory = os.path.join("fixtures", "atk_test_scripts")
-        self.step("Create transfer")
-        initial_transfer = Transfer.api_create_by_file_upload(org_guid=self.org.guid, file_path=model_path)
-        initial_transfer.ensure_finished()
-        initial_dataset = DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=initial_transfer.title)
+        transfer, cls.initial_dataset = data_catalog.create_dataset_from_file(org=TestData.test_org, file_path=model_path)
+
+        def fin():
+            transfer.api_delete()
+            cls.initial_dataset.api_delete()
+        request.addfinalizer(fin)
+
+    @priority.low
+    @pytest.mark.usefixtures("atk_virtualenv", "create_data_set")
+    @pytest.mark.skip("We don't know how this should work")
+    def test_create_transfer_from_atk_model_file(self):
         self.step("Get atk app from seedspace")
         atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"), None)
         if atk_app is None:
             raise AssertionError("Atk app not found in seedspace")
-        self.step("Create virtualenv")
+
+        self.step("Install atk client package in virtualenv")
         self.atk_virtualenv.create()
-        self.step("Install the atk client package")
         self.atk_virtualenv.pip_install(ATKtools.get_atk_client_url(atk_app.urls[0]))
+
         self.step("Run atk create model script")
         ATKtools.check_uaac_token()
-        atk_test_script_path = os.path.join(test_data_directory, "atk_create_model.py")
+        atk_test_script_path = os.path.join("fixtures", "atk_test_scripts", "atk_create_model.py")
         response = self.atk_virtualenv.run_atk_script(atk_test_script_path, atk_app.urls[0],
                                                       arguments={"--target_uri": initial_dataset.target_uri})
+
         self.step("Retrieve path to model file created by atk")
         hdfs_model_path = response.split("hdfs_model_path: ", 1)[1]
+
         self.step("Create dataset by providing retrieved model file path")
-        ds = self._create_dataset(self.org, source=hdfs_model_path)
+        _, ds = data_catalog.create_dataset_from_link(org=TestData.test_org, source=hdfs_model_path)
         self.assertEqual(ds.source_uri, hdfs_model_path)

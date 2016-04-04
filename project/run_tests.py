@@ -16,14 +16,12 @@
 
 import os
 
+import pytest
 import requests
 from teamcity import is_running_under_teamcity
 
 from configuration import config
-from modules.constants import Priority, TapComponent
-from modules.runner.loader import TapTestLoader
-from modules.runner.stats import log_all_stats
-from modules.runner.test_runner import TestRunner
+from modules.constants import Path
 from modules.tap_logger import get_logger, change_log_file_path
 
 
@@ -78,17 +76,28 @@ if __name__ == "__main__":
     # check that environment is up and running
     check_environment_viability()
 
-    # run tests
-    runner = TestRunner()
-    loader = TapTestLoader()
-    if args.file is not None:
-        suite = loader.load_from_file(args.file)
-    else:
-        priority = getattr(Priority, args.priority)
-        suite = loader.load(path=args.suite, test_name=args.test, priority=priority, components=args.components,
-                            only_tags=args.only_tagged, excluded_tags=args.not_tagged)
+    suite_path = Path.test_root_directory
+    if args.suite is not None:
+        suite_path = os.path.join(suite_path, args.suite)
+    pytest_options = [suite_path, "-s"]
 
-    log_all_stats()
-    logger.info("Starting {} tests.".format(loader.test_count))
+    # TODO this tag parsing should be removed - to do this, need to change run_tests options api
+    def join_tags(tag_list, positive=True):
+        join_str = " or "
+        if not positive:
+            join_str = " and "
+            tag_list = ["not " + tag for tag in tag_list]
+        return "({})".format(join_str.join(tag_list))
 
-    runner.run(suite)
+    tags = []
+    for tag_list in [args.priority, args.components, args.only_tagged]:
+        if len(tag_list) > 0:
+            tags.append(join_tags(tag_list))
+    if len(args.not_tagged) > 0:
+        tags.append(join_tags(args.not_tagged, positive=False))
+
+    if len(tags) > 0:
+        pytest_options += ["-m", " and ".join(tags)]
+
+
+    pytest.main(pytest_options)

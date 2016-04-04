@@ -8,3 +8,4 @@
 *key.dat
 *appstack.yml
 /project/modules/gatling_runner/download/*
+.cache

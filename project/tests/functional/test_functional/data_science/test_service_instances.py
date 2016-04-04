@@ -14,28 +14,27 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space
-from tests.fixtures import teardown_fixtures
+from modules.markers import components, priority
+from modules.tap_object_model import ServiceInstance, ServiceType
+from tests.fixtures.test_data import TestData
 
 
+logged_components = (TAP.service_catalog, TAP.service_exposer)
+pytestmark = [components.service_catalog, components.service_exposer]
 
-@log_components()
-@components(TAP.service_catalog, TAP.service_exposer)
+
 class DataScienceInstances(TapTestCase):
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and test space")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
+    @pytest.fixture(scope="class", autouse=True)
+    def marketplace_services(cls, test_org, test_space):
         cls.step("Get marketplace services")
-        cls.marketplace = ServiceType.api_get_list_from_marketplace(cls.test_space.guid)
+        cls.marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
 
     @priority.high
     def test_create_and_delete_service_instances(self):
@@ -45,8 +44,8 @@ class DataScienceInstances(TapTestCase):
             with self.subTest(service=service_type.label):
                 self.step("Create service instance")
                 instance = ServiceInstance.api_create(
-                    org_guid=self.test_org.guid,
-                    space_guid=self.test_space.guid,
+                    org_guid=TestData.test_org.guid,
+                    space_guid=TestData.test_space.guid,
                     service_label=service_type.label,
                     service_plan_guid=plan["guid"]
                 )

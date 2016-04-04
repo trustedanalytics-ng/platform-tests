@@ -17,17 +17,21 @@
 import os
 import datetime
 
+import pytest
+
 from modules.constants import TapComponent as TAP, Urls
-from modules.file_utils import download_file, get_csv_data, get_csv_record_count, tear_down_test_files
-from modules.remote_logger.remote_logger_decorator import log_components
+from modules.file_utils import download_file, get_csv_data, get_csv_record_count
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import Application, DataSet, Organization, Transfer, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from modules.markers import components, priority
+from modules.tap_object_model import Application, DataSet, Transfer
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+
+
+@pytest.mark.usefixtures("test_org", "add_admin_to_test_org")
 class CreateDatasets(TapTestCase):
     DETAILS_TO_COMPARE = {"accessibility", "title", "category", "sourceUri", "size", "orgUUID", "targetUri", "format",
                           "dataSample", "isPublic", "creationTime"}
@@ -35,28 +39,18 @@ class CreateDatasets(TapTestCase):
     FROM_FILE = False
 
     @classmethod
-    def _get_source_and_filepath(cls):
-        source = Urls.test_transfer_link
-        file_path = download_file(source)
-        return source, file_path
-
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.source, cls.file_path = cls._get_source_and_filepath()
-        cls.step("Create test organization")
-        cls.org = Organization.api_create()
-        cls.step("Add admin to the organization")
-        User.get_admin().api_add_to_organization(org_guid=cls.org.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def target_uri(cls, test_org, core_space):
         cls.step("Get target uri from hdfs instance")
-        ref_space = setup_fixtures.get_reference_space()
-        hdfs = next(app for app in Application.cf_api_get_list_by_space(ref_space.guid) if "hdfs-downloader" in app.name)
-        cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri'].replace("%{organization}", cls.org.guid)
+        hdfs = next(app for app in Application.cf_api_get_list_by_space(core_space.guid) if "hdfs-downloader" in app.name)
+        cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri'].replace("%{organization}",
+                                                                                                     TestData.test_org.guid)
 
     @classmethod
-    def tearDownClass(cls):
-        tear_down_test_files()
-        super().tearDownClass()
+    @pytest.fixture(scope="class", autouse=True)
+    def data_set_file_path(cls):
+        source = Urls.test_transfer_link
+        cls.file_path = download_file(source)
 
     def _get_expected_dataset_details(self, org_uuid, format, is_public, file_path, transfer, from_file=False):
         return {'accessibility': self.ACCESSIBILITIES[is_public], 'title': transfer.title,
@@ -70,10 +64,10 @@ class CreateDatasets(TapTestCase):
 
     def _get_transfer_and_dataset(self, file_source, is_public):
         self.step("Create transfer by providing a csv from url")
-        transfer = Transfer.api_create(DataSet.CATEGORIES[0], is_public, self.org.guid, file_source)
+        transfer = Transfer.api_create(DataSet.CATEGORIES[0], is_public, TestData.test_org.guid, file_source)
         transfer.ensure_finished()
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        data_set = DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
+        data_set = DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=transfer.title)
         return transfer, data_set
 
     @priority.medium
@@ -81,8 +75,8 @@ class CreateDatasets(TapTestCase):
         for is_public, access in self.ACCESSIBILITIES.items():
             transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, is_public)
             self.step("Generate expected dataset summary and get real dataset summary")
-            expected_details = self._get_expected_dataset_details(self.org.guid, "CSV", is_public, self.file_path,
-                                                                  transfer, from_file=self.FROM_FILE)
+            expected_details = self._get_expected_dataset_details(TestData.test_org.guid, "CSV", is_public,
+                                                                  self.file_path, transfer, from_file=self.FROM_FILE)
             ds_details = dataset.get_details()
             self.step("Compare dataset details with expected values")
             for key in self.DETAILS_TO_COMPARE:
@@ -90,8 +84,8 @@ class CreateDatasets(TapTestCase):
                     self.assertEqual(expected_details[key], ds_details[key])
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
     def test_create_dataset_recordcount(self):
-        """DPNG-3656 Wrong record count for csv file in dataset details"""
         label = "recordCount"
         for is_public, access in self.ACCESSIBILITIES.items():
             transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, is_public)

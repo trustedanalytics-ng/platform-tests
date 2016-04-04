@@ -21,21 +21,24 @@ import subprocess
 import time
 
 import paho.mqtt.client as mqtt
+import pytest
 
 from modules import app_sources
 from configuration import config
 from modules.constants import TapComponent as TAP, ServiceLabels, TapGitHub
-from modules.http_calls import cloud_foundry as cf
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import priority, components
-from modules.tap_object_model import Application, Organization, ServiceInstance, Space
-from tests.fixtures import teardown_fixtures
+from modules.markers import priority, components
+from modules.tap_object_model import Application, ServiceInstance
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.mqtt_demo, TAP.service_catalog)
+logged_components = (TAP.mqtt_demo, TAP.service_catalog)
+pytestmark = [components.mqtt_demo, components.service_catalog]
+
+
+@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf")
 class Mqtt(TapTestCase):
+
     SOURCES_OWNER = TapGitHub.intel_data
     REPO_NAME = TapGitHub.mqtt_demo
     INFLUX_INSTANCE_NAME = "mqtt-demo-db"
@@ -45,9 +48,10 @@ class Mqtt(TapTestCase):
     SERVER_CERTIFICATE = os.path.join("fixtures", "mosquitto_demo_cert.pem")
     MQTT_TOPIC_NAME = "space-shuttle/test-data"
 
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUp(self):
-
+    @priority.medium
+    @pytest.mark.bugs("DPNG-3929 Mosquitto crendentials suppor",
+                      "DPNG-6067 Mosquitto ports are not accessible externally")
+    def test_mqtt_demo(self):
         self.step("Clone repository")
         mqtt_demo_sources = app_sources.AppSources(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER,
                                                    gh_auth=config.CONFIG["github_auth"])
@@ -55,38 +59,29 @@ class Mqtt(TapTestCase):
         self.step("Compile the sources")
         mqtt_demo_sources.compile_mvn()
 
-        self.step("Create test organization and space")
-        test_org = Organization.api_create()
-        test_space = Space.api_create(test_org)
-
         self.step("Create required service instances.")
         ServiceInstance.api_create(
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
+            org_guid=TestData.test_org.guid,
+            space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.INFLUX_DB,
             name=self.INFLUX_INSTANCE_NAME,
             service_plan_name="free"
         )
         ServiceInstance.api_create(
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
+            org_guid=TestData.test_org.guid,
+            space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.MOSQUITTO,
             name=self.MQTT_INSTANCE_NAME,
             service_plan_name="free"
         )
 
-        self.step("Login to cf")
-        cf.cf_login(test_org.name, test_space.name)
-
         self.step("Push mqtt app to cf")
-        mqtt_demo_app = Application.push(source_directory=app_repo_path, name=self.REPO_NAME, space_guid=test_space.guid)
+        mqtt_demo_app = Application.push(source_directory=app_repo_path, name=self.REPO_NAME,
+                                         space_guid=TestData.test_space.guid)
 
         self.step("Retrieve credentials for mqtt service instance")
         self.credentials = mqtt_demo_app.get_credentials(service_name=ServiceLabels.MOSQUITTO)
 
-    @priority.medium
-    def test_mqtt_demo(self):
-        """DPNG-3929 Mosquitto crendentials support-> DPNG-6067 Mosquitto ports are not accessible externally"""
         mqtt_port = self.credentials.get("port")
         self.assertIsNotNone(mqtt_port)
         mqtt_username = self.credentials.get("username")

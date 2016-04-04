@@ -14,39 +14,38 @@
 # limitations under the License.
 #
 
-import unittest
+import pytest
 
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.constants import ServiceLabels, TapComponent as TAP, Priority
-from modules.remote_logger.remote_logger_decorator import log_components
+from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, incremental
-from modules.tap_object_model import Application, Organization, ServiceInstance, ServiceType, Space, AtkInstance, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from modules.markers import components, incremental, priority
+from modules.tap_object_model import Application, ServiceInstance, ServiceType, AtkInstance
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@incremental(Priority.high)
-@components(TAP.service_catalog, TAP.service_exposer, TAP.application_broker)
+logged_components = (TAP.service_catalog, TAP.service_exposer, TAP.application_broker)
+pytestmark = [components.service_catalog, components.application_broker, components.service_exposer]
+
+
+@incremental
+@priority.high
 class DataScienceAtkInstance(TapTestCase):
+
     atk_bindings = None
     atk_instance = None
     atk_from_data_science_list = None
     validator = None
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and test space")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
-        cls.step("Get marketplace services")
-        cls.marketplace = ServiceType.api_get_list_from_marketplace(cls.test_space.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def marketplace(cls, test_org, test_space):
+        cls.marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
 
+    @pytest.mark.usefixtures("core_space")
     def test_0_get_reference_atk_bindings(self):
         self.step("Get services bound to atk in the reference space")
-        ref_space_guid = setup_fixtures.get_reference_space().guid
-        ref_atk_app = next((a for a in Application.api_get_list(ref_space_guid) if a.name == "atk"), None)
+        ref_atk_app = next((a for a in Application.api_get_list(TestData.core_space.guid) if a.name == "atk"), None)
         self.assertIsNotNone(ref_atk_app, "ATK app not found in the reference space")
         self.__class__.atk_bindings = [s[0]["label"] for s in ref_atk_app.cf_api_env()["VCAP_SERVICES"].values()]
 
@@ -56,36 +55,36 @@ class DataScienceAtkInstance(TapTestCase):
         plan = next(iter(service_type.service_plans))
         self.step("Create atk instance")
         self.__class__.atk_instance = ServiceInstance.api_create(
-            org_guid=self.test_org.guid,
-            space_guid=self.test_space.guid,
+            org_guid=TestData.test_org.guid,
+            space_guid=TestData.test_space.guid,
             service_label=service_type.label,
             service_plan_guid=plan["guid"]
         )
 
-    @unittest.skip("DPNG-6832")
+    @pytest.mark.skip("DPNG-6832")
     def test_2_check_atk_instance_exists(self):
         self.step("Find atk instance on the data science instances list")
-        data_science_atk_list = AtkInstance.api_get_list_from_data_science_atk(self.test_org.guid)
+        data_science_atk_list = AtkInstance.api_get_list_from_data_science_atk(TestData.test_org.guid)
         self.__class__.atk_from_data_science_list = next((i for i in data_science_atk_list
                                                           if i.name == self.atk_instance.name), None)
         self.step("Check that service instance exists in data science atk list")
         self.assertIsNotNone(self.atk_from_data_science_list, "Atk instance not found in data science list")
 
-    @unittest.skip("DPNG-6832")
+    @pytest.mark.skip("DPNG-6832")
+    @pytest.mark.usefixtures("admin_user")
     def test_3_validate_atk_instance_creator(self):
-        admin_user = User.get_admin()
         self.step("Check atk instance creator")
-        self.assertEqual(self.atk_from_data_science_list.creator_name, admin_user.username,
+        self.assertEqual(self.atk_from_data_science_list.creator_name, TestData.admin_user.username,
                          "Atk creator name doesn't match")
-        self.assertEqual(self.atk_from_data_science_list.creator_guid, admin_user.guid,
+        self.assertEqual(self.atk_from_data_science_list.creator_guid, TestData.admin_user.guid,
                          "Atk creator guid doesn't match")
 
-    @unittest.skip("DPNG-6832")
+    @pytest.mark.skip("DPNG-6832")
     def test_4_validate_atk_app_and_bindings(self):
         self.__class__.validator = ApplicationStackValidator(self, self.atk_instance)
         self.validator.validate(expected_bindings=self.atk_bindings)
 
-    @unittest.skip("DPNG-6832")
+    @pytest.mark.skip("DPNG-6832")
     def test_5_validate_delete_atk_instance(self):
         self.step("Delete atk instance")
         self.atk_instance.api_delete()

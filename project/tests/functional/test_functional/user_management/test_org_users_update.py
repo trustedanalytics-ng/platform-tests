@@ -16,18 +16,21 @@
 
 import itertools
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls import platform as api
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Organization, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+pytestmark = [components.user_management]
+
+
 class UpdateOrganizationUser(TapTestCase):
+
     ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
     ROLES_WITHOUT_MANAGER = [(name, user_role) for name, user_role in User.ORG_ROLES.items() if name is not "manager"]
@@ -40,13 +43,18 @@ class UpdateOrganizationUser(TapTestCase):
     }
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create users for org tests")
-        users, cls.test_org = setup_fixtures.create_test_users(2)
-        cls.test_user = users[0]
-        cls.test_client = users[0].login()
-        cls.second_test_user = users[1]
+    @pytest.fixture(scope="class", autouse=True)
+    def users(cls, request, test_org):
+        cls.test_org = test_org
+        cls.step("Create users for tests")
+        cls.test_user = User.api_create_by_adding_to_organization(org_guid=test_org.guid)
+        cls.test_client = cls.test_user.login()
+        cls.second_test_user = User.api_create_by_adding_to_organization(org_guid=test_org.guid)
+
+        def fin():
+            cls.test_user.cf_api_delete()
+            cls.second_test_user.cf_api_delete()
+        request.addfinalizer(fin)
 
     def _get_client(self, client_name):
         if client_name == "admin":

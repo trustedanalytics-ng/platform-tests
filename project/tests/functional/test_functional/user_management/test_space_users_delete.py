@@ -14,41 +14,43 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
-from modules.tap_object_model import Organization, Space, User
+from modules.tap_object_model import Space, User
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from tests.fixtures import teardown_fixtures
+from modules.markers import components, priority
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+pytestmark = [components.user_management, components.auth_gateway, components.auth_proxy]
+
+
 class DeleteSpaceUser(TapTestCase):
 
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.test_org = Organization.api_create()
-        cls.test_user = User.api_create_by_adding_to_organization(cls.test_org.guid)
-
-    def setUp(self):
+    @pytest.fixture(scope="function", autouse=True)
+    def space(self, request, test_org, test_org_manager):
         self.step("Create test space")
-        self.test_space = Space.api_create(self.test_org)
+        self.test_space = Space.api_create(test_org)
+
+        def fin():
+            self.test_space.api_delete()
+        request.addfinalizer(fin)
 
     @priority.high
     def test_delete_user_from_space(self):
         self.step("Add the user to space")
-        self.test_user.api_add_to_space(self.test_space.guid, self.test_org.guid)
+        TestData.test_org_manager.api_add_to_space(self.test_space.guid, TestData.test_org.guid)
         self.step("Delete the user from space")
-        self.test_user.api_delete_from_space(self.test_space.guid)
-        self.assertNotInWithRetry(self.test_user, User.api_get_list_via_space, self.test_space.guid)
+        TestData.test_org_manager.api_delete_from_space(self.test_space.guid)
+        self.assertNotInWithRetry(TestData.test_org_manager, User.api_get_list_via_space, self.test_space.guid)
         self.step("Check that the user is still in the organization")
-        org_users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
-        self.assertIn(self.test_user, org_users, "User is not in the organization")
+        org_users = User.api_get_list_via_organization(org_guid=TestData.test_org.guid)
+        self.assertIn(TestData.test_org_manager, org_users, "User is not in the organization")
 
     @priority.low
     def test_delete_user_which_is_not_in_space(self):
         self.step("Check that deleting the user from space they are not in returns an error")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_USER_IS_NOT_IN_GIVEN_SPACE,
-                                            self.test_user.api_delete_from_space, self.test_space.guid)
+                                            TestData.test_org_manager.api_delete_from_space, self.test_space.guid)

@@ -14,30 +14,38 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls import platform as api
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import Organization, Space, User
-from tests.fixtures import teardown_fixtures
+from modules.markers import components, priority
+from modules.tap_object_model import Space, User
+from tests.fixtures.test_data import TestData
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+pytestmark = [components.user_management]
+
+
 class UpdateSpaceUser(TapTestCase):
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.test_org = Organization.api_create()
-        cls.test_user = User.api_create_by_adding_to_organization(cls.test_org.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def user(cls, request, test_org):
+        cls.test_user = User.api_create_by_adding_to_organization(test_org.guid)
 
-    def setUp(self):
+        def fin():
+            cls.test_user.cf_api_delete()
+        request.addfinalizer(fin)
+
+    @pytest.fixture(scope="function", autouse=True)
+    def space(self, test_org):
         self.step("Create test space")
-        self.test_space = Space.api_create(self.test_org)
+        self.test_space = Space.api_create(test_org)
 
     def _assert_user_in_space_with_roles(self, expected_user, space_guid):
+        # TODO move to TapTestCase
         self.step("Check that the user is on the list of space users")
         space_users = User.api_get_list_via_space(space_guid)
         self.assertIn(expected_user, space_users)
@@ -53,7 +61,8 @@ class UpdateSpaceUser(TapTestCase):
         initial_roles = User.SPACE_ROLES["manager"]
         new_roles = User.SPACE_ROLES["auditor"]
         self.step("Add user to space with roles {}".format(initial_roles))
-        self.test_user.api_add_to_space(space_guid=self.test_space.guid, org_guid=self.test_org.guid, roles=initial_roles)
+        self.test_user.api_add_to_space(space_guid=self.test_space.guid, org_guid=TestData.test_org.guid,
+                                        roles=initial_roles)
         self.step("Update the user, change their role to {}".format(new_roles))
         self.test_user.api_update_space_roles(self.test_space.guid, new_roles=new_roles)
         self._assert_user_in_space_with_roles(self.test_user, self.test_space.guid)
@@ -63,16 +72,18 @@ class UpdateSpaceUser(TapTestCase):
         initial_roles = User.SPACE_ROLES["manager"]
         new_roles = ("wrong_role",)
         self.step("Add user to space with roles {}".format(initial_roles))
-        self.test_user.api_add_to_space(space_guid=self.test_space.guid, org_guid=self.test_org.guid, roles=initial_roles)
+        self.test_user.api_add_to_space(space_guid=self.test_space.guid, org_guid=TestData.test_org.guid,
+                                        roles=initial_roles)
         self.step("Check that updating space user roles to invalid ones returns an error")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            self.test_user.api_update_space_roles, self.test_space.guid, new_roles=new_roles)
+                                            self.test_user.api_update_space_roles, self.test_space.guid,
+                                            new_roles=new_roles)
         self._assert_user_in_space_with_roles(self.test_user, self.test_space.guid)
 
     @priority.medium
     def test_cannot_delete_all_user_roles_while_in_space(self):
         self.step("Add user to space")
-        self.test_user.api_add_to_space(space_guid=self.test_space.guid, org_guid=self.test_org.guid)
+        self.test_user.api_add_to_space(space_guid=self.test_space.guid, org_guid=TestData.test_org.guid)
         self.step("Try to update the user, removing all space roles")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT, HttpStatus.MSG_MUST_HAVE_AT_LEAST_ONE_ROLE,
                                             self.test_user.api_update_space_roles, self.test_space.guid, new_roles=())
@@ -99,7 +110,7 @@ class UpdateSpaceUser(TapTestCase):
     @priority.low
     def test_send_space_role_update_request_with_empty_body(self):
         self.step("Create new platform user by adding to the space")
-        test_user = User.api_create_by_adding_to_space(org_guid=self.test_org.guid, space_guid=self.test_space.guid)
+        test_user = User.api_create_by_adding_to_space(org_guid=TestData.test_org.guid, space_guid=self.test_space.guid)
         self.step("Send request with empty body")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT, HttpStatus.MSG_MUST_HAVE_AT_LEAST_ONE_ROLE,
                                             api.api_update_space_user_roles, self.test_space.guid, test_user.guid)

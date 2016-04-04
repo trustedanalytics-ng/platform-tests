@@ -15,26 +15,13 @@
 # limitations under the License.
 #
 
-import argparse
+import pytest
 
-from modules.runner.stats import log_all_stats, TEST_PATHS
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Tests statistics")
-    parser.add_argument("-p", "--show-priorities",
-                        help="show statistics according to priorities",
-                        action="store_true")
-    parser.add_argument("-c", "--show-components",
-                        help="show statistics according to components",
-                        action="store_true")
-    parser.add_argument("-d", "--directory",
-                        help="show statistics only in passed directory",
-                        choices=TEST_PATHS,
-                        default=None)
-    return parser.parse_args()
+from modules.constants import Path
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    log_all_stats(**vars(args))
+
+    # call pytest with collectonly to log statistics
+    pytest.main([Path.test_root_directory, "--collectonly"])
+

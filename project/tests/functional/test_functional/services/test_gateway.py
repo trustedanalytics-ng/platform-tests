@@ -14,21 +14,24 @@
 # limitations under the License.
 #
 
+import pytest
 import websocket
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.api_client import CfApiClient
-from modules.constants import Priority, ServiceLabels, TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
+from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, incremental
-from modules.tap_object_model import Organization, ServiceInstance, Space, User
-from tests.fixtures import teardown_fixtures
+from modules.markers import components, incremental, priority
+from modules.tap_object_model import ServiceInstance, User
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@incremental(Priority.high)
-@components(TAP.gateway, TAP.application_broker, TAP.service_catalog)
+logged_components = (TAP.gateway, TAP.application_broker, TAP.service_catalog)
+pytestmark = [components.gateway, components.application_broker, components.service_catalog]
+
+
+@incremental
+@priority.high
 class Gateway(TapTestCase):
     PLAN_NAME = "Simple"
     gateway_instance = None
@@ -36,24 +39,26 @@ class Gateway(TapTestCase):
     gateway_app = None
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and test space")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
+    @pytest.fixture(scope="class", autouse=True)
+    def space_developer_user(cls, request, test_org, test_space):
         cls.step("Create space developer client")
-        space_developer_user = User.api_create_by_adding_to_space(cls.test_org.guid, cls.test_space.guid,
+        space_developer_user = User.api_create_by_adding_to_space(test_org.guid, test_space.guid,
                                                                   roles=User.SPACE_ROLES["developer"])
         cls.space_developer_client = space_developer_user.login()
-        cls.step("Retrieve oauth token")
-        cf_api_client = CfApiClient.get_client()
-        cls.token = cf_api_client.get_oauth_token()
+
+        def fin():
+            space_developer_user.cf_api_delete()
+        request.addfinalizer(fin)
 
     def test_0_create_gateway_instance(self):
         self.step("Create gateway instance")
         gateway_instance = ServiceInstance.api_create(
-            self.test_org.guid, self.test_space.guid, ServiceLabels.GATEWAY,
-            service_plan_name=self.PLAN_NAME, client=self.space_developer_client)
+            TestData.test_org.guid,
+            TestData.test_space.guid,
+            ServiceLabels.GATEWAY,
+            service_plan_name=self.PLAN_NAME,
+            client=self.space_developer_client
+        )
         validator = ApplicationStackValidator(self, gateway_instance)
         validator.validate(expected_bindings=[ServiceLabels.KAFKA])
         self.__class__.gateway_instance = gateway_instance
@@ -61,8 +66,10 @@ class Gateway(TapTestCase):
         self.__class__.kafka_instance = validator.application_bindings[ServiceLabels.KAFKA]
 
     def test_1_send_message_to_gateway_app_instance(self):
+        self.step("Retrieve oauth token")
+        token = CfApiClient.get_client().get_oauth_token()
         self.step("Check communication with gateway app")
-        header = ["Authorization: Bearer{}".format(self.token)]
+        header = ["Authorization: Bearer{}".format(token)]
         try:
             websocket.enableTrace(True)
             ws = websocket.WebSocket()
@@ -75,7 +82,7 @@ class Gateway(TapTestCase):
     def test_2_delete_gateway_instance(self):
         self.step("Delete gateway instance")
         self.gateway_instance.api_delete(client=self.space_developer_client)
-        self.assertNotInWithRetry(self.gateway_instance, ServiceInstance.api_get_list, self.test_space.guid)
+        self.assertNotInWithRetry(self.gateway_instance, ServiceInstance.api_get_list, TestData.test_space.guid)
         self.step("Check that bound kafka instance was also deleted")
-        service_instances = ServiceInstance.api_get_list(self.test_space.guid)
+        service_instances = ServiceInstance.api_get_list(TestData.test_space.guid)
         self.assertNotIn(self.kafka_instance, service_instances, "Kafka instance was not deleted")

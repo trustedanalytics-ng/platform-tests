@@ -17,30 +17,29 @@
 import re
 import time
 
+import pytest
+
 from modules import gmail_api
 from configuration import config
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls import platform as api
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Invitation, Organization, User
 from modules.tap_object_model.flows import onboarding
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+pytestmark = [components.user_management, components.auth_gateway, components.auth_proxy]
+
+
 class Onboarding(TapTestCase):
+
     EXPECTED_EMAIL_SUBJECT = "Invitation to join Trusted Analytics platform"
     CLIENT_ID = "intel.data.tests@gmail.com"
     SENDER_PATTERN = "TrustedAnalytics <support@{}>"
-
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.test_org = Organization.api_create()
 
     def _assert_message_correct(self, message_subject, message_content, message_sender):
         self.step("Check that the e-mail invitation message is correct")
@@ -105,9 +104,10 @@ class Onboarding(TapTestCase):
                                             Invitation.api_send, username=user.username)
 
     @priority.high
+    @pytest.mark.usefixtures("test_org")
     def test_non_admin_user_cannot_invite_another_user(self):
         self.step("Create a test user")
-        non_admin_user = User.api_create_by_adding_to_organization(org_guid=self.test_org.guid)
+        non_admin_user = User.api_create_by_adding_to_organization(org_guid=TestData.test_org.guid)
         non_admin_user_client = non_admin_user.login()
         self.step("Check an error is returned when non-admin tries to onboard another user")
         username = get_test_name(email=True)
@@ -153,14 +153,15 @@ class Onboarding(TapTestCase):
         self.assertNotIn(invitation.username, username_list, "User was created")
 
     @priority.medium
+    @pytest.mark.usefixtures("test_org")
     def test_user_cannot_register_already_existing_organization(self):
         self.step("Invite a new user")
         invitation = Invitation.api_send()
         self.step("Check that an error is returned when the user registers with an already-existing org name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT,
-                                            HttpStatus.MSG_ORGANIZATION_ALREADY_EXISTS.format(self.test_org.name),
+                                            HttpStatus.MSG_ORGANIZATION_ALREADY_EXISTS.format(TestData.test_org.name),
                                             onboarding.register, code=invitation.code, username=invitation.username,
-                                            org_name=self.test_org.name)
+                                            org_name=TestData.test_org.name)
         self.step("Check that the user was not created")
         username_list = [user.username for user in User.cf_api_get_all_users()]
         self.assertNotIn(invitation.username, username_list, "User was created")

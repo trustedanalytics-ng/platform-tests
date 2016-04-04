@@ -14,20 +14,23 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Organization, Space, User
-from tests.fixtures import teardown_fixtures
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
-class Spaces(TapTestCase):
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+pytestmark = [components.user_management]
+
+
+class Space(TapTestCase):
+
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
+    @pytest.fixture(scope="class", autouse=True)
+    def organization(cls):
         cls.step("Create an organization")
         cls.test_org = Organization.api_create()
 

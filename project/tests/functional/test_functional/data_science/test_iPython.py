@@ -15,22 +15,23 @@
 #
 
 import re
-import time
 
+import pytest
 from retry import retry
 
 from configuration import config
 from modules.constants import TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.service_tools.ipython import iPython
-from modules.tap_object_model import Application, Organization, ServiceInstance, Space, User
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from modules.tap_object_model import Application, ServiceInstance, User
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.service_catalog, TAP.service_exposer)
+logged_components = (TAP.service_catalog, TAP.service_exposer)
+pytestmark = [components.service_catalog, components.service_exposer]
+
+
 class iPythonConsole(TapTestCase):
 
     ATK_PLAN_NAME = "Simple"
@@ -44,21 +45,16 @@ class iPythonConsole(TapTestCase):
         return current_terminal
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Get reference space")
-        cls.ref_space = setup_fixtures.get_reference_space()
-        cls.step("Create test organization and test space")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
-        admin_user = User.get_admin()
-        admin_user.api_add_to_space(space_guid=cls.test_space.guid, org_guid=cls.test_org.guid,
+    @pytest.fixture(scope="class", autouse=True)
+    def create_ipython_instance(cls, request, test_org, test_space, admin_user):
+        admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                     roles=User.SPACE_ROLES["developer"])
         cls.step("Create instance of iPython service")
-        cls.ipython = iPython(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid)
-        cls._assert_ipython_instance_created(cls.ipython.instance, space_guid=cls.test_space.guid, ipython=cls.ipython)
+        cls.ipython = iPython(org_guid=test_org.guid, space_guid=test_space.guid)
+        cls._assert_ipython_instance_created(cls.ipython.instance, space_guid=test_space.guid, ipython=cls.ipython)
         cls.step("Login into iPython")
         cls.ipython.login()
+        # TODO add finalizer to delete ipython instance
 
     @classmethod
     @retry(AssertionError, tries=5, delay=5)
@@ -94,12 +90,13 @@ class iPythonConsole(TapTestCase):
         self.assertEqual(output, "Hello, world!\n")
 
     @priority.medium
+    @pytest.mark.usefixtures("core_space")
     def test_iPython_connect_to_atk_client(self):
-        self.step("Get atk app from seedspace")
-        atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"),
+        self.step("Get atk app from core space")
+        atk_app = next((app for app in Application.cf_api_get_list_by_space(TestData.core_space.guid) if app.name == "atk"),
                        None)
         if atk_app is None:
-            raise AssertionError("Atk app not found in seedspace")
+            raise AssertionError("Atk app not found in core space")
         self.atk_url = atk_app.urls[0]
         self.step("Create new iPython terminal and install atk client")
         terminal = self.ipython.connect_to_terminal(terminal_no=self.terminal_no)

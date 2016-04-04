@@ -14,26 +14,29 @@
 # limitations under the License.
 #
 
-import unittest
-
 from modules.constants import TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import Organization, User
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+pytestmark = [components.auth_gateway, components.auth_proxy, components.user_management]
+
+
 class TestOrganization(TapTestCase):
 
     @priority.high
-    def test_create_organization(self):
+    def test_create_delete_organization(self):
         self.step("Create an organization")
-        expected_org = Organization.api_create()
+        test_org = Organization.api_create()
         self.step("Check that the organization is on the organization list")
         orgs = Organization.api_get_list()
-        self.assertIn(expected_org, orgs)
+        self.assertIn(test_org, orgs)
+        self.step("Delete the organization")
+        test_org.api_delete()
+        self.step("Check that the organization is not on org list")
+        self.assertNotInWithRetry(test_org, Organization.api_get_list)
 
     @priority.medium
     def test_rename_organization(self):
@@ -45,33 +48,6 @@ class TestOrganization(TapTestCase):
         self.step("Check that the organization with new name is on the organization list")
         orgs = Organization.api_get_list()
         self.assertIn(expected_org, orgs)
-
-    @priority.high
-    def test_delete_organization(self):
-        self.step("Create an organization")
-        deleted_org = Organization.api_create()
-        self.step("Check that the organization is on the org list")
-        orgs = Organization.api_get_list()
-        self.assertIn(deleted_org, orgs)
-        self.step("Delete the organization")
-        deleted_org.api_delete()
-        self.step("Check that the organization is not on org list")
-        self.assertNotInWithRetry(deleted_org, Organization.api_get_list)
-
-    @unittest.skip
-    @priority.medium
-    def test_get_more_than_50_organizations(self):
-        self.step("Get list of organization and check how many there are")
-        old_orgs = Organization.api_get_list()
-        self.step("Add organizations, so that there are more than 50")
-        new_orgs_num = (50 - len(old_orgs)) + 1
-        new_orgs = [Organization.api_create() for _ in range(new_orgs_num)]
-        self.step("Check that all new and old organizations are returned in org list")
-        expected_orgs = old_orgs + new_orgs
-        orgs = Organization.api_get_list()
-        self.assertGreaterEqual(len(orgs), len(expected_orgs))
-        missing_orgs = [o for o in expected_orgs if o not in orgs]
-        self.assertEqual(missing_orgs, [], "Not all test orgs are present on org list")
 
     @priority.low
     def test_delete_organization_with_user(self):

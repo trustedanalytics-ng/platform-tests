@@ -14,25 +14,28 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.tap_object_model import ExternalTools
 
 
-@log_components()
-@components(TAP.platform_context)
+logged_components = (TAP.platform_context,)
+pytestmark = [components.platform_context]
+
+
 class ExternalToolsStatus(TapTestCase):
 
     @classmethod
-    def setUpClass(cls):
+    @pytest.fixture(scope="class", autouse=True)
+    def external_tools_list(cls):
         cls.step("Get list of external tools")
         cls.tools_list = ExternalTools.api_get_external_tools()
 
     @priority.medium
     def test_check_status_code_of_external_tools(self):
-        """DPNG-2306 Availability of Arcadia and Hue should be discovered automatically"""
         for tool in self.tools_list:
             if tool.should_have_url:
                 with self.subTest(tool=tool.name, available=tool.available):

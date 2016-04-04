@@ -14,49 +14,49 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.constants import TapComponent as TAP, Urls
-from modules.file_utils import tear_down_test_files
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import DataSet, Organization, Transfer, User
-from tests.fixtures import teardown_fixtures
+from modules.markers import components, priority
+from modules.tap_object_model import DataSet, Organization, Transfer
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
+pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+
+
 class GetDataSets(TapTestCase):
 
-    def _filter_datasets(self, org, filters=(), only_private=False, only_public=False):
-        ds_list = DataSet.api_get_list(org_list=[org], filters=filters, only_private=only_private,
-                                       only_public=only_public)
-        return [d for d in ds_list if d in self.datasets]
-
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization")
-        cls.org = Organization.api_create()
-        cls.step("Add admin to the organization")
-        User.get_admin().api_add_to_organization(org_guid=cls.org.guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def create_test_data_sets(cls, request, test_org, add_admin_to_test_org):
         cls.step("Create new transfer for each category")
         cls.transfers = []
         is_public = True
         for category in DataSet.CATEGORIES:
             is_public = not is_public  # half of the transfers will be created as public, half - as private
-            cls.transfers.append(Transfer.api_create(category, is_public, org_guid=cls.org.guid,
+            cls.transfers.append(Transfer.api_create(category, is_public, org_guid=test_org.guid,
                                                      source=Urls.test_transfer_link))
         cls.step("Ensure that transfers are finished")
         for transfer in cls.transfers:
             transfer.ensure_finished()
         cls.step("Get all data sets in the test org")
         transfer_titles = [t.title for t in cls.transfers]
-        cls.datasets = [d for d in DataSet.api_get_list(org_list=[cls.org]) if d.title in transfer_titles]
+        cls.datasets = [d for d in DataSet.api_get_list(org_list=[test_org]) if d.title in transfer_titles]
 
-    @classmethod
-    def tearDownClass(cls):
-        tear_down_test_files()
-        super().tearDownClass()
+        def fin():
+            for dataset in cls.datasets:
+                dataset.api_delete()
+            for transfer in cls.transfers:
+                transfer.api_delete()
+        request.addfinalizer(fin)
+
+    def _filter_datasets(self, org, filters=(), only_private=False, only_public=False):
+        ds_list = DataSet.api_get_list(org_list=[org], filters=filters, only_private=only_private,
+                                       only_public=only_public)
+        return [d for d in ds_list if d in self.datasets]
 
     @priority.high
     def test_match_dataset_to_transfer(self):
@@ -73,7 +73,7 @@ class GetDataSets(TapTestCase):
         self.step("Retrieve datasets by categories")
         for category in DataSet.CATEGORIES:
             with self.subTest(category=category):
-                filtered_datasets = self._filter_datasets(self.org, ({"category": [category]},))
+                filtered_datasets = self._filter_datasets(TestData.test_org, ({"category": [category]},))
                 expected_datasets = [d for d in self.datasets if d.category == category]
                 self.assertListEqual(filtered_datasets, expected_datasets)
 
@@ -82,7 +82,7 @@ class GetDataSets(TapTestCase):
         self.step("Sort datasets by creation time and retrieve first two")
         time_range = sorted([dataset.creation_time for dataset in self.datasets][:2])
         self.step("Retrieve datasets for specified time range")
-        filtered_datasets = self._filter_datasets(self.org, ({"creationTime": time_range},))
+        filtered_datasets = self._filter_datasets(TestData.test_org, ({"creationTime": time_range},))
         expected_datasets = [d for d in self.datasets if time_range[0] <= d.creation_time <= time_range[1]]
         self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
@@ -92,21 +92,21 @@ class GetDataSets(TapTestCase):
         self.step("Retrieve datasets by file format")
         for file_format in DataSet.FILE_FORMATS:
             with self.subTest(file_format=file_format):
-                filtered_datasets = self._filter_datasets(self.org, ({"format": [file_format]},))
+                filtered_datasets = self._filter_datasets(TestData.test_org, ({"format": [file_format]},))
                 expected_datasets = [d for d in self.datasets if d.format == file_format]
                 self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
     @priority.medium
     def test_get_public_datasets_from_current_org(self):
         self.step("Retrieve only public datasets")
-        filtered_datasets = self._filter_datasets(self.org, only_public=True)
+        filtered_datasets = self._filter_datasets(TestData.test_org, only_public=True)
         expected_datasets = [d for d in self.datasets if d.is_public]
         self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
     @priority.medium
     def test_get_private_datasets_from_current_org(self):
         self.step("Retrieve only private datasets")
-        filtered_datasets = self._filter_datasets(self.org, only_private=True)
+        filtered_datasets = self._filter_datasets(TestData.test_org, only_private=True)
         expected_datasets = [d for d in self.datasets if not d.is_public]
         self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 

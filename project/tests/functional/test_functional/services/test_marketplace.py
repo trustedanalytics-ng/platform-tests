@@ -16,40 +16,45 @@
 
 import itertools
 
+import pytest
+
 from modules.constants import PARAMETRIZED_SERVICE_INSTANCES, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels,\
     TapComponent as TAP
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, mark, priority
+from modules.markers import components, long, priority
 from modules.service_tools.ipython import iPython
-from modules.tap_object_model import Organization, ServiceInstance, ServiceKey, ServiceType, Space, User
+from modules.tap_object_model import ServiceInstance, ServiceKey, ServiceType, Space, User
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@components(TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker, TAP.hdfs_broker,
-            TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker, TAP.zookeeper_wssb_broker)
+logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+                     TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
+                     TAP.zookeeper_wssb_broker)
+pytestmark = [components.service_catalog, components.application_broker, components.gearpump_broker,
+              components.hbase_broker, components.hdfs_broker, components.kafka_broker, components.smtp_broker,
+              components.yarn_broker, components.zookeeper_broker, components.zookeeper_wssb_broker]
+
+
 class MarketplaceServices(TapTestCase):
+
     SERVICES_TESTED_SEPARATELY = [ServiceLabels.YARN, ServiceLabels.HDFS, ServiceLabels.HBASE, ServiceLabels.GEARPUMP,
                                   ServiceLabels.H2O]
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and test space")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
+    @pytest.fixture(scope="class", autouse=True)
+    def marketplace_services(cls, test_org, test_space):
         cls.step("Get list of available services from Marketplace")
-        cls.marketplace = ServiceType.api_get_list_from_marketplace(cls.test_space.guid)
-        cls.step("Create space developer client")
-        cls.space_developer_client = User.api_create_by_adding_to_space(cls.test_org.guid, cls.test_space.guid,
-                                                                        roles=User.SPACE_ROLES["developer"]).login()
+        cls.marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+
+    @classmethod
+    @pytest.fixture(scope="class")
+    def non_space_developer_users(cls, test_org, test_space):
         cls.step("Create space auditor client")
-        cls.space_auditor_client = User.api_create_by_adding_to_space(cls.test_org.guid, cls.test_space.guid,
+        cls.space_auditor_client = User.api_create_by_adding_to_space(test_org.guid, test_space.guid,
                                                                       roles=User.SPACE_ROLES["auditor"]).login()
         cls.step("Create space manager client")
-        cls.space_manager_client = User.api_create_by_adding_to_space(cls.test_org.guid, cls.test_space.guid,
+        cls.space_manager_client = User.api_create_by_adding_to_space(test_org.guid, test_space.guid,
                                                                       roles=User.SPACE_ROLES["manager"]).login()
 
     def _create_and_delete_service_instance_and_keys(self, org_guid, space_guid, service_label, plan_guid):
@@ -107,10 +112,10 @@ class MarketplaceServices(TapTestCase):
     @priority.medium
     def test_check_marketplace_services_list_vs_cloudfoundry(self):
         self.step("Check that services in cf are the same as in Marketplace")
-        cf_marketplace = ServiceType.cf_api_get_list_from_marketplace_by_space(self.test_space.guid)
+        cf_marketplace = ServiceType.cf_api_get_list_from_marketplace_by_space(TestData.test_space.guid)
         self.assertUnorderedListEqual(self.marketplace, cf_marketplace)
 
-    @mark.long
+    @long
     @priority.high
     def test_create_and_delete_service_instance_and_keys(self):
         tested_service_types = [st for st in self.marketplace if st.label not in PARAMETRIZED_SERVICE_INSTANCES +
@@ -118,7 +123,7 @@ class MarketplaceServices(TapTestCase):
         for service_type in tested_service_types:
             for plan in service_type.service_plans:
                 with self.subTest(service=service_type.label, plan=plan["name"]):
-                    self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid,
+                    self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
                                                                       service_type.label, plan["guid"])
 
     @priority.low
@@ -135,13 +140,13 @@ class MarketplaceServices(TapTestCase):
         existing_name = get_test_name()
         self.step("Create service instance")
         instance = ServiceInstance.api_create(
-            org_guid=self.test_org.guid,
-            space_guid=self.test_space.guid,
+            org_guid=TestData.test_org.guid,
+            space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.KAFKA,
             name=existing_name,
             service_plan_name="shared"
         )
-        service_list = ServiceInstance.api_get_list(space_guid=self.test_space.guid)
+        service_list = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
         self.step("Check that the instance was created")
         self.assertIn(instance, service_list, "Instance was not created")
         for service_type in self.marketplace:
@@ -149,25 +154,25 @@ class MarketplaceServices(TapTestCase):
             with self.subTest(service_type=service_type):
                 self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT,
                                                     HttpStatus.MSG_SERVICE_NAME_TAKEN.format(existing_name),
-                                                    ServiceInstance.api_create, self.test_org.guid,
-                                                    self.test_space.guid, service_type.label, existing_name,
-                                                    service_plan_guid=plan_guid, client=self.space_developer_client)
-        self.assertUnorderedListEqual(service_list, ServiceInstance.api_get_list(space_guid=self.test_space.guid),
+                                                    ServiceInstance.api_create, TestData.test_org.guid,
+                                                    TestData.test_space.guid, service_type.label, existing_name,
+                                                    service_plan_guid=plan_guid)
+        self.assertUnorderedListEqual(service_list, ServiceInstance.api_get_list(space_guid=TestData.test_space.guid),
                                       "Some new services were created")
 
     @priority.low
+    @pytest.mark.bugs("DPNG-5154 Http status 500 when trying to create a service instance without a name")
     def test_cannot_create_instance_without_a_name(self):
-        """DPNG-5154 Http status 500 when trying to create a service instance without a name"""
-        expected_instance_list = ServiceInstance.api_get_list(self.test_space.guid)
+        expected_instance_list = ServiceInstance.api_get_list(TestData.test_space.guid)
         self.step("Check that instance cannot be created with empty name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            ServiceInstance.api_create, self.test_org.guid, self.test_space.guid,
-                                            ServiceLabels.KAFKA, "", service_plan_name="shared",
-                                            client=self.space_developer_client)
-        self.assertUnorderedListEqual(expected_instance_list, ServiceInstance.api_get_list(self.test_space.guid),
+                                            ServiceInstance.api_create, TestData.test_org.guid, TestData.test_space.guid,
+                                            ServiceLabels.KAFKA, "", service_plan_name="shared")
+        self.assertUnorderedListEqual(expected_instance_list, ServiceInstance.api_get_list(TestData.test_space.guid),
                                       "New instance was created")
 
     @priority.medium
+    @pytest.mark.usefixtures("non_space_developer_users")
     def test_cannot_create_instance_as_non_space_developer(self):
         test_clients = {"space_auditor": self.space_auditor_client, "space_manager": self.space_manager_client}
         for service_type, (name, client) in itertools.product(self.marketplace, test_clients.items()):
@@ -175,31 +180,31 @@ class MarketplaceServices(TapTestCase):
                 with self.subTest(service=service_type.label, plan=plan["name"]):
                     self.step("Try to create new instance")
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                        ServiceInstance.api_create, self.test_org.guid,
-                                                        self.test_space.guid, service_type.label,
+                                                        ServiceInstance.api_create, TestData.test_org.guid,
+                                                        TestData.test_space.guid, service_type.label,
                                                         service_plan_guid=plan["guid"], client=client)
 
     @priority.low
+    @pytest.mark.bugs("DPNG-6086 Adding service key to H2O instance fails")
     def test_create_h2o_service_instance_and_keys(self):
-        """DPNG-6086 Adding service key to H2O instance fails"""
         label = ServiceLabels.H2O
         h2o = next((s for s in self.marketplace if s.label == label), None)
         if h2o is None:
             self.skipTest("h2o is not available in Marketplace")
         for plan in h2o.service_plans:
             with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid, label,
-                                                                  plan["guid"])
+                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
+                                                                  label, plan["guid"])
 
     @priority.low
+    @pytest.mark.bugs("DPNG-3474 Command cf create-service-key does not work for yarn broker")
     def test_create_yarn_service_instance_and_keys(self):
-        """DPNG-3474 Command cf create-service-key does not work for yarn broker"""
         label = ServiceLabels.YARN
         yarn = next(s for s in self.marketplace if s.label == label)
         for plan in yarn.service_plans:
             with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid, label,
-                                                                  plan["guid"])
+                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
+                                                                  label, plan["guid"])
 
     @priority.low
     def test_create_hdfs_service_instance_and_keys(self):
@@ -208,37 +213,37 @@ class MarketplaceServices(TapTestCase):
         hdfs = next(s for s in self.marketplace if s.label == label)
         for plan in hdfs.service_plans:
             with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid, label,
-                                                                  plan["guid"])
+                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
+                                                                  label, plan["guid"])
 
     @priority.low
+    @pytest.mark.bugs("DPNG-2798 Enable HBase broker to use Service Keys")
     def test_create_hbase_service_instance_and_keys(self):
-        """DPNG-2798 Enable HBase broker to use Service Keys"""
         label = ServiceLabels.HBASE
         hbase = next(s for s in self.marketplace if s.label == label)
         for plan in hbase.service_plans:
             with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid, label,
-                                                                  plan["guid"])
+                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
+                                                                  label, plan["guid"])
 
     @priority.low
+    @pytest.mark.bugs("DPNG-6087 Connection to service catalog timedout - cannot create gearpump instance")
     def test_create_gearpump_service_instance_and_keys(self):
-        """DPNG-6087 Connection to service catalog timedout - cannot create gearpump instance"""
         label = ServiceLabels.GEARPUMP
         gearpump = next(s for s in self.marketplace if s.label == label)
         for plan in gearpump.service_plans:
             with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid, label,
-                                                                  plan["guid"])
+                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
+                                                                  label, plan["guid"])
 
     @priority.low
     def test_get_service_instance_summary_from_empty_space(self):
         self.step("Create a service instance in one space")
         service_type = next(s for s in self.marketplace if s.label == ServiceLabels.KAFKA)
-        ServiceInstance.api_create(org_guid=self.test_org.guid, space_guid=self.test_space.guid,
+        ServiceInstance.api_create(org_guid=TestData.test_org.guid, space_guid=TestData.test_space.guid,
                                    service_label=service_type.label,
                                    service_plan_guid=service_type.service_plan_guids[0])
-        test_space = Space.api_create(self.test_org)
+        test_space = Space.api_create(TestData.test_org)
         self.step("Get service instance summary in another space")
         summary = ServiceInstance.api_get_keys(test_space.guid)
         self.step("Check that service instance summary is empty in the second space")

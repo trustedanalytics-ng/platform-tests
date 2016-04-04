@@ -16,10 +16,11 @@
 
 from datetime import datetime
 
+import pytest
+
 from modules.constants.services import ServiceLabels
 from modules.runner.tap_test_case import TapTestCase
-from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space
-from tests.fixtures import teardown_fixtures
+from modules.tap_object_model import ServiceInstance, ServiceType
 
 
 class ServiceInstancesMonitoring(TapTestCase):
@@ -27,13 +28,11 @@ class ServiceInstancesMonitoring(TapTestCase):
     TESTED_APP_NAMES = {ServiceLabels.RSTUDIO}
 
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization and test space")
-        cls.test_organization = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_organization)
+    @pytest.fixture(scope="class", autouse=True)
+    def marketplace_services(cls, test_org, test_space):
+        cls.test_org = test_org
         cls.step("Get list of available services from Marketplace")
-        cls.marketplace_services = ServiceType.api_get_list_from_marketplace(cls.test_space.guid)
+        cls.marketplace_services = ServiceType.api_get_list_from_marketplace(test_space.guid)
 
     def test_service_instances(self):
         tested_service_types = [st for st in self.marketplace_services if st.label in self.TESTED_APP_NAMES]
@@ -44,7 +43,7 @@ class ServiceInstancesMonitoring(TapTestCase):
                                                                                          plan["name"]))
                     service_instance_name = service_type.label + datetime.now().strftime('%Y%m%d_%H%M%S_%f')
                     instance = ServiceInstance.api_create(
-                        org_guid=self.test_organization.guid,
+                        org_guid=self.test_org.guid,
                         space_guid=service_type.space_guid,
                         service_label=service_type.label,
                         name=service_instance_name,

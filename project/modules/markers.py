@@ -13,17 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from modules.runner.tap_test_case import TapTestCase
+
+import pytest
+
+from modules.constants import tap_components
 
 
-def tearDownModule():
-    raise AssertionError()
+class Priority:
+    high = pytest.mark.priority_high
+    medium = pytest.mark.priority_medium
+    low = pytest.mark.priority_low
 
 
-class PassingTestCase(TapTestCase):
-    @classmethod
-    def tearDownClass(cls):
-        pass
+# markers for all components in enum TapComponent
+class TapComponent: pass
+for component in list(tap_components.TapComponent):
+    setattr(TapComponent, component.name, getattr(pytest.mark, component.name))
 
-    def test_pass(self):
-        self.assertTrue(True)
+
+# marker definitions
+components = TapComponent
+incremental = pytest.mark.incremental
+long = pytest.mark.long
+priority = Priority
+

@@ -16,12 +16,15 @@
 
 import time
 
+import pytest
+
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.decorators import components, priority
+from modules.markers import components, priority
 from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Organization, User
-from tests.fixtures import setup_fixtures
+
+
+logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 
 
 class BaseTestClass(TapTestCase):
@@ -29,17 +32,22 @@ class BaseTestClass(TapTestCase):
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
 
     @classmethod
-    def setUpClass(cls):
+    @pytest.fixture(scope="class", autouse=True)
+    def users(cls, request, test_org):
+        cls.test_org = test_org
         cls.step("Create users for org tests")
-        users, cls.test_org = setup_fixtures.create_test_users(2)
-        cls.test_user = users[0]
-        cls.test_client = users[0].login()
-        cls.second_test_user = users[1]
+        cls.test_user = User.api_create_by_adding_to_organization(org_guid=cls.test_org.guid)
+        cls.test_client = cls.test_user.login()
+        cls.second_test_user = User.api_create_by_adding_to_organization(org_guid=cls.test_org.guid)
+
+        def fin():
+            cls.test_user.cf_api_delete()
+            cls.second_test_user.cf_api_delete()
+        request.addfinalizer(fin)
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 class AddNewUserToOrganization(BaseTestClass):
+    pytestmark = [components.user_management, components.auth_gateway, components.auth_proxy]
 
     def _get_test_org(self):
         return self.test_org
@@ -119,9 +127,8 @@ class AddNewUserToOrganization(BaseTestClass):
         self.assertListEqual(User.api_get_list_via_organization(org.guid), org_users)
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
 class AddExistingUserToOrganization(AddNewUserToOrganization):
+    pytestmark = [components.user_management]
 
     def _get_test_org(self):
         self.step("Create organization")
@@ -137,9 +144,8 @@ class AddExistingUserToOrganization(AddNewUserToOrganization):
         return self.test_client
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
 class AddUserToOrganization(BaseTestClass):
+    pytestmark = [components.user_management]
 
     @priority.low
     def test_cannot_add_new_user_with_non_email_username(self):

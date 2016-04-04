@@ -14,32 +14,37 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules import gmail_api, api_password
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from tests.fixtures import setup_fixtures, teardown_fixtures
+from modules.markers import components, priority
+from modules.tap_object_model import User
 
 
-@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-@components(TAP.user_management)
-class PasswordTests(TapTestCase):
+logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+pytestmark = [components.user_management]
+
+
+class Password(TapTestCase):
 
     NEW_PASSWORD = "NEW_PASSWORD"
 
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create users for password tests")
-        cls.users, _ = setup_fixtures.create_test_users(2)
+    @pytest.fixture(scope="function", autouse=True)
+    def user(self, request, test_org):
+        self.step("Create test user")
+        self.test_user = User.api_create_by_adding_to_organization(org_guid=test_org.guid)
+
+        def fin():
+            self.test_user.cf_api_delete()
+        request.addfinalizer(fin)
 
     @priority.high
     def test_reset_password(self):
-        user = self.users.pop()
 
         self.step("Login to the platform")
-        client = user.get_client()
+        client = self.test_user.get_client()
         pswd_api = api_password.PasswordAPI(client)
 
         self.step("Logout")
@@ -49,41 +54,39 @@ class PasswordTests(TapTestCase):
         pswd_api.reset_password()
 
         self.step("Try to login with old credentials. User should still be able to login after pressing RESET")
-        client.authenticate(user.password)
+        client.authenticate(self.test_user.password)
 
         self.step("Logout and go to email message and press 'reset your password' link.")
         client.logout()
-        code = gmail_api.get_reset_password_links(user.username)
+        code = gmail_api.get_reset_password_links(self.test_user.username)
 
         self.step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
         pswd_api.reset_password_set_new(code, self.NEW_PASSWORD)
 
         self.step("Try to login with old credentials.")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, user.login)
+        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 
         self.step("Login to the platform with new credentials.")
-        user.password=self.NEW_PASSWORD
-        user.login()
+        self.test_user.password=self.NEW_PASSWORD
+        self.test_user.login()
 
     @priority.high
     def test_change_pass(self):
-        user = self.users.pop()
-
         self.step("Login to the platform")
-        client = user.get_client()
-        user.login()
+        client = self.test_user.get_client()
+        self.test_user.login()
 
         pswd_api = api_password.PasswordAPI(client)
 
-        pswd_api.change_password(user.password, self.NEW_PASSWORD)
+        pswd_api.change_password(self.test_user.password, self.NEW_PASSWORD)
 
         self.step("Logout and try to login with old credentials.")
         client.logout()
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, user.login)
+        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 
         self.step("Login to the platform with new credentials.")
-        user.password=self.NEW_PASSWORD
-        user.login()
+        self.test_user.password=self.NEW_PASSWORD
+        self.test_user.login()
 
 
 

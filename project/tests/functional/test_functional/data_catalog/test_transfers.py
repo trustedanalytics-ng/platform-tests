@@ -16,43 +16,37 @@
 
 import time
 
+import pytest
+
 from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
-from modules.file_utils import generate_csv_file, tear_down_test_files
+from modules.file_utils import generate_csv_file
 from modules.http_calls import platform as api
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, priority
-from modules.tap_object_model import DataSet, Organization, Transfer, User
+from modules.markers import components, priority
+from modules.tap_object_model import DataSet, Transfer
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-class SubmitTransferBase(TapTestCase):
+logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
+
+
+@pytest.mark.usefixtures("test_org", "add_admin_to_test_org")
+class SubmitTransfer(TapTestCase):
+    pytestmark = [components.das, components.hdfs_downloader, components.metadata_parser]
+
     DEFAULT_CATEGORY = "other"
-
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization")
-        cls.org = Organization.api_create()
-        cls.step("Add admin to the organization")
-        User.get_admin().api_add_to_organization(org_guid=cls.org.guid)
-
-
-@log_components()
-@components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
-class SubmitTransfer(SubmitTransferBase):
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
 
     def _create_transfer(self, org_guid, category):
-        self.step("Create new transfers and wait until they finish")
+        self.step("Create new transfer and wait until it's finished")
         transfer = Transfer.api_create(category=category, source=Urls.test_transfer_link, org_guid=org_guid)
         transfer.ensure_finished()
         return transfer
 
     @priority.high
     def test_submit_transfer(self):
-        transfer = self._create_transfer(category=self.DEFAULT_CATEGORY, org_guid=self.org.guid)
+        transfer = self._create_transfer(category=self.DEFAULT_CATEGORY, org_guid=TestData.test_org.guid)
         self.step("Get transfers and check if they are the same as the uploaded ones")
         retrieved_transfer = Transfer.api_get(transfer.id)
         self.assertEqual(transfer, retrieved_transfer, "The transfer is not the same")
@@ -60,7 +54,7 @@ class SubmitTransfer(SubmitTransferBase):
     @priority.low
     def test_create_transfer_with_new_category(self):
         new_category = "user_category"
-        transfer = self._create_transfer(category=new_category, org_guid=self.org.guid)
+        transfer = self._create_transfer(category=new_category, org_guid=TestData.test_org.guid)
         self.step("Get transfer and check it's category")
         retrieved_transfer = Transfer.api_get(transfer.id)
         self.assertEqual(retrieved_transfer.category, new_category, "Created transfer has different category")
@@ -73,11 +67,11 @@ class SubmitTransfer(SubmitTransferBase):
                                             self._create_transfer, org_guid=org_guid, category=self.DEFAULT_CATEGORY)
 
     @priority.low
+    @pytest.mark.bugs("DPNG-6074 Transfer (from link) without category timeouts")
     def test_create_transfer_without_category(self):
-        """DPNG-6074 Transfer (from link) without category timeouts"""        
-        transfer = self._create_transfer(category=None, org_guid=self.org.guid)
+        transfer = self._create_transfer(category=None, org_guid=TestData.test_org.guid)
         self.step("Get transfer and check it's category")
-        transfer_list = Transfer.api_get_list(org_guid_list=[self.org.guid])
+        transfer_list = Transfer.api_get_list(org_guid_list=[TestData.test_org.guid])
         transfer.category = "other"
         self.assertIn(transfer, transfer_list, "Transfer was not found")
 
@@ -88,18 +82,19 @@ class SubmitTransfer(SubmitTransferBase):
             source=Urls.test_transfer_link,
             title=get_test_name(),
             is_public=False,
-            org_guid=self.org.guid,
+            org_guid=TestData.test_org.guid,
             category=self.DEFAULT_CATEGORY
         )
         self.assertTrue("token" not in response, "token field was returned in response")
 
 
-@log_components()
-@components(TAP.das, TAP.hdfs_uploader, TAP.metadata_parser)
 class SubmitTransferFromLocalFile(SubmitTransfer):
+    pytestmark = [components.das, components.hdfs_downloader, components.metadata_parser]
+
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_BAD_REQUEST
 
-    def _create_transfer(self, org_guid, column_count=10, row_count=10, category=SubmitTransfer.DEFAULT_CATEGORY, size=None, file_name=None):
+    def _create_transfer(self, org_guid, column_count=10, row_count=10, category=SubmitTransfer.DEFAULT_CATEGORY,
+                         size=None, file_name=None):
         self.step("Generate sample csv file")
         file_path = generate_csv_file(column_count=column_count, row_count=row_count, size=size, file_name=file_name)
         self.step("Create a transfer with new category")
@@ -107,18 +102,15 @@ class SubmitTransferFromLocalFile(SubmitTransfer):
         transfer.ensure_finished()
         return transfer
 
-    def tearDown(self):
-        tear_down_test_files()
-
     @priority.medium
     def test_submit_transfer_from_large_file(self):
-        transfer = self._create_transfer(org_guid=self.org.guid, size=20 * 1024 * 1024)
+        transfer = self._create_transfer(org_guid=TestData.test_org.guid, size=20 * 1024 * 1024)
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
+        DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=transfer.title)
 
     @priority.low
+    @pytest.mark.bugs("DPNG-3678 Create transfer by file upload without category - http 500")
     def test_create_transfer_without_category(self):
-        """DPNG-3678 Create transfer by file upload without category - http 500"""
         return super().test_create_transfer_without_category()
 
     @priority.medium
@@ -130,36 +122,29 @@ class SubmitTransferFromLocalFile(SubmitTransfer):
             source=file_path,
             title="test-transfer-{}".format(time.time()),
             is_public=False,
-            org_guid=self.org.guid,
+            org_guid=TestData.test_org.guid,
             category=self.DEFAULT_CATEGORY
         )
         self.assertTrue("token" not in response, "token field was returned in response")
 
     @priority.low
     def test_submit_transfer_from_file_with_space_in_name(self):
-        transfer = self._create_transfer(org_guid=self.org.guid, file_name="test file with space in name {}.csv")
+        transfer = self._create_transfer(org_guid=TestData.test_org.guid, file_name="file with space in name {}.csv")
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
+        DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=transfer.title)
 
     @priority.low
     def test_submit_transfer_from_empty_file(self):
-        transfer = self._create_transfer(org_guid=self.org.guid, category=self.DEFAULT_CATEGORY, size=0)
+        transfer = self._create_transfer(org_guid=TestData.test_org.guid, category=self.DEFAULT_CATEGORY, size=0)
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
+        DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=transfer.title)
 
 
-@log_components()
-@components(TAP.das)
+@pytest.mark.usefixtures("test_org", "add_admin_to_test_org")
 class GetTransfers(TapTestCase):
-    @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Create test organization")
-        cls.org = Organization.api_create()
-        cls.step("Add admin to the organization")
-        User.get_admin().api_add_to_organization(org_guid=cls.org.guid)
+    pytestmark = [components.das]
 
     @priority.high
     def test_admin_can_get_transfer_list(self):
         self.step("Check if the list of transfers can be retrieved")
-        Transfer.api_get_list(org_guid_list=[self.org.guid])
+        Transfer.api_get_list(org_guid_list=[TestData.test_org.guid])

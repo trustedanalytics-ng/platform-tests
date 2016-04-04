@@ -18,26 +18,28 @@ import os
 import ssl
 import unittest
 
+import pytest
 import websocket
 
 from configuration import config
 from modules.app_sources import AppSources
-from modules.constants import TapComponent as TAP, Priority, ServiceLabels, Urls, TapGitHub
+from modules.constants import TapComponent as TAP, ServiceLabels, Urls, TapGitHub
 from modules.file_utils import download_file
 from modules.hbase_client import HbaseClient
-from modules.http_calls import cloud_foundry as cf
-from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
-from modules.runner.decorators import components, incremental
+from modules.markers import components, incremental, priority
 from modules.service_tools.gearpump import Gearpump
-from modules.tap_object_model import Application, Organization, ServiceInstance, Space
+from modules.tap_object_model import Application, ServiceInstance
 from modules.test_names import get_test_name
-from tests.fixtures import teardown_fixtures
+from tests.fixtures.test_data import TestData
 
 
-@log_components()
-@incremental(Priority.medium)
-@components(TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)
+logged_components = (TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)
+pytestmark = [components.ingestion_ws_kafka_gearpump_hbase, components.service_catalog]
+
+
+@incremental
+@priority.medium
 class Ws2kafka2gearpump2hbase(TapTestCase):
     REPO_OWNER = TapGitHub.intel_data
     TOPIC_NAME = "myFavouriteKafkaTopic"
@@ -51,112 +53,101 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
     hbase_namespace = None
     db_and_table_name = None
 
+    @pytest.fixture(scope="class", autouse=True)
+    def setup_kafka_zookeeper_hbase_instances(self, test_org, test_space):
+        self.step("Create instances of kafka, zookeeper, hbase")
+        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                   service_label=ServiceLabels.KAFKA, name="kafka-inst",
+                                   service_plan_name=self.SHARED_PLAN_NAME)
+        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                   service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
+                                   service_plan_name=self.SHARED_PLAN_NAME)
+        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                   service_label=ServiceLabels.HBASE, name="hbase1",
+                                   service_plan_name=self.BARE_PLAN_NAME)
+        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                   service_label=ServiceLabels.HBASE, name="kerberos-instance",
+                                   service_plan_name=self.SHARED_PLAN_NAME)
+
     @classmethod
-    @teardown_fixtures.cleanup_after_failed_setup
-    def setUpClass(cls):
-        cls.step("Clone and compile app sources")
+    @pytest.fixture(scope="class", autouse=True)
+    def push_apps(cls, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances):
+        cls.step("Get ws2kafka app sources")
         github_auth = config.CONFIG["github_auth"]
         ingestion_repo = AppSources(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER, gh_auth=github_auth)
         ingestion_path = ingestion_repo.clone_or_pull()
         ws2kafka_path = os.path.join(ingestion_path, TapGitHub.ws2kafka)
+
+        cls.step("Get hbase reader app sources")
         hbase_reader_repo = AppSources(repo_name=TapGitHub.hbase_api_example, repo_owner=cls.REPO_OWNER,
                                        gh_auth=github_auth)
         hbase_reader_path = hbase_reader_repo.clone_or_pull()
         hbase_reader_repo.compile_gradle()
 
-        cls.step("Download file kafka2hbase")
-        cls.kafka2hbase_app_path = download_file(url=Urls.kafka2hbase_app_url,
-                                                 save_file_name=Urls.kafka2hbase_app_url.split("/")[-1])
-
-        cls.step("Create test org and space")
-        cls.test_org = Organization.api_create()
-        cls.test_space = Space.api_create(cls.test_org)
-
-        cls.step("Create instances of kafka, zookeeper, hbase")
-        ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
-                                   service_label=ServiceLabels.KAFKA, name="kafka-inst",
-                                   service_plan_name=cls.SHARED_PLAN_NAME)
-        ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
-                                   service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
-                                   service_plan_name=cls.SHARED_PLAN_NAME)
-        ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
-                                   service_label=ServiceLabels.HBASE, name="hbase1",
-                                   service_plan_name=cls.BARE_PLAN_NAME)
-        ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
-                                   service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
-                                   service_plan_name=cls.SHARED_PLAN_NAME)
-
-        cls.step("Login to cf, target test org and space")
-        cf.cf_login(cls.test_org.name, cls.test_space.name)
-
         cls.step("Push apps")
-        cls.app_ws2kafka = Application.push(space_guid=cls.test_space.guid, source_directory=ws2kafka_path,
+        cls.app_ws2kafka = Application.push(space_guid= test_space.guid, source_directory=ws2kafka_path,
                                             name=get_test_name(short=True))
-        app_hbase_reader = Application.push(space_guid=cls.test_space.guid, source_directory=hbase_reader_path,
+        app_hbase_reader = Application.push(space_guid=test_space.guid, source_directory=hbase_reader_path,
                                             name=get_test_name(short=True))
-
-        cls.step("Create gearpump instance")
-        cls.gearpump = Gearpump(cls.test_org.guid, cls.test_space.guid, service_plan_name=cls.ONE_WORKER_PLAN_NAME)
-        cls.assert_gearpump_instance_created(gearpump_data_science=cls.gearpump.data_science,
-                                             space_guid=cls.test_space.guid)
-
         cls.hbase_reader = HbaseClient(app_hbase_reader)
-        cls.step("Log into gearpump UI")
-        cls.gearpump.login()
-
-        cls.ws_opts = {"cert_reqs": ssl.CERT_NONE}
-        cls.ws_protocol = "ws://"
-        if config.CONFIG["ssl_validation"]:
-            cls.ws_opts = {}
-            cls.ws_protocol = "wss://"
-
-    @classmethod
-    def assert_gearpump_instance_created(cls, gearpump_data_science, space_guid):
-        cls.step("Check that gearpump instance has been created")
-        instances = ServiceInstance.api_get_list(space_guid=space_guid)
-        if gearpump_data_science.instance not in instances:
-            raise AssertionError("gearpump instance is not on list of instances")
-        gearpump_data_science.get_credentials()
-
-    def _generate_example_messages(self, msg_count):
-        return ["Test-{}".format(n) for n in range(msg_count)]
 
     def _send_ws_messages(self, connection_string):
-        message_count = 2
         self.step("Send messages to {}".format(connection_string))
-        ws = websocket.create_connection("{}{}".format(self.ws_protocol, connection_string), sslopt=self.ws_opts)
-        messages = self._generate_example_messages(message_count)
+        ws_opts = {"cert_reqs": ssl.CERT_NONE}
+        ws_protocol = "ws://"
+        if config.CONFIG["ssl_validation"]:
+            ws_opts = {}
+            ws_protocol = "wss://"
+        ws = websocket.create_connection("{}{}".format(ws_protocol, connection_string), sslopt=ws_opts)
+        messages = ["Test-{}".format(n) for n in range(2)]
         for message in messages:
             ws.send(message)
         return ws.status
 
-    def test_step_1_get_hbase_namespace(self):
+    def test_0_create_gearpump_instance(self):
+        self.step("Create gearpump instance")
+        self.__class__.gearpump = Gearpump(TestData.test_org.guid, TestData.test_space.guid,
+                                           service_plan_name=self.ONE_WORKER_PLAN_NAME)
+        self.step("Check that gearpump instance has been created")
+        instances = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
+        if self.gearpump.data_science.instance not in instances:
+            raise AssertionError("gearpump instance is not on list of instances")
+        self.gearpump.data_science.get_credentials()
+
+    def test_1_login_to_gearpump_ui(self):
+        self.step("Log into gearpump UI")
+        self.gearpump.login()
+
+    def test_step_2_get_hbase_namespace(self):
         self.step("Get hbase namespace from hbase-reader env")
         self.__class__.hbase_namespace = self.hbase_reader.get_namespace()
         self.assertIsNotNone(self.hbase_namespace, msg="hbase namespace is not set")
         self.__class__.db_and_table_name = "{}:{}".format(self.hbase_namespace, self.HBASE_TABLE_NAME)
 
-    def test_step_2_create_hbase_table(self):
+    def test_step_3_create_hbase_table(self):
         self.step("Create hbase table pipeline")
         self.hbase_reader.create_table(self.HBASE_TABLE_NAME)
         self.step("Check that pipeline table was created")
         hbase_tables = self.hbase_reader.get_tables()
         self.assertTrue(self.db_and_table_name in hbase_tables, msg="No pipeline table")
 
-    def test_step_3_submit_kafka2hbase_app_to_gearpump_dashboard(self):
+    def test_step_4_submit_kafka2hbase_app_to_gearpump_dashboard(self):
+        self.step("Download file kafka2hbase")
+        kafka2hbase_app_path = download_file(url=Urls.kafka2hbase_app_url,
+                                             save_file_name=Urls.kafka2hbase_app_url.split("/")[-1])
         self.step("Submit application kafka2hbase to gearpump dashboard")
-        kafka2hbase_app = self.gearpump.submit_application_jar(self.kafka2hbase_app_path, self.KAFKA2HBASE_APP_NAME)
+        kafka2hbase_app = self.gearpump.submit_application_jar(kafka2hbase_app_path, self.KAFKA2HBASE_APP_NAME)
         self.step("Check that submitted application is started")
         self.assertTrue(kafka2hbase_app.is_started, msg="kafka2hbase app is not started")
 
-    def test_step_4_send_from_ws2kafka(self):
+    def test_step_5_send_from_ws2kafka(self):
         connection_string = "{}/{}".format(self.app_ws2kafka.urls[0], self.TOPIC_NAME)
         status_code = self._send_ws_messages(connection_string)
         self.step("Check that status code is 101")
         self.assertTrue(status_code == 101, msg="problem with websocket connection")
 
     @unittest.skip("DPNG-6031")
-    def test_step_5_get_hbase_table_rows(self):
+    def test_step_6_get_hbase_table_rows(self):
         pipeline_rows = self.hbase_reader.get_first_rows_from_table(self.db_and_table_name)
         self.step("Check that messages from kafka were sent to hbase")
         self.assertTrue(self.MESSAGES[0][::-1] in pipeline_rows and self.MESSAGES[1][::-1] in pipeline_rows,

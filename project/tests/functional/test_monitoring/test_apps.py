@@ -14,10 +14,11 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.api_client import PlatformApiClient
 from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Application
-from tests.fixtures import setup_fixtures
 
 
 class AppMonitoring(TapTestCase):
@@ -25,9 +26,9 @@ class AppMonitoring(TapTestCase):
     TESTED_APP_NAMES = {"das", "metrics-provider", "router-metrics-provider", "user-management"}
 
     @classmethod
-    def setUpClass(cls):
-        ref_space_guid = setup_fixtures.get_reference_space().guid
-        cls.platform_apps = Application.api_get_list(ref_space_guid)
+    @pytest.fixture(scope="class", autouse=True)
+    def get_apps(cls, core_space):
+        cls.platform_apps = Application.api_get_list(core_space.guid)
 
     def test_all_required_apps_are_present_on_platform(self):
         self.step("Check that all expected apps are present on the Platform")
