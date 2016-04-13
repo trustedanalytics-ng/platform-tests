@@ -61,6 +61,8 @@ class Config(object):
     @staticmethod
     def get_elastic_ssh_tunnel_host():
         """ Returns ssh tunnel remote host. """
+        if CONFIG["jumpbox_address"] is not None:
+            return CONFIG["jumpbox_address"]
         return "jump.{}".format(CONFIG["domain"])
 
     @staticmethod

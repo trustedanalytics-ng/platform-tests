@@ -10,3 +10,4 @@
 *appstack.yml
 /project/modules/gatling_runner/download/*
 .cache
+*.iml

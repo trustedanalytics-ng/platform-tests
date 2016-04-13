@@ -14,9 +14,8 @@
 # limitations under the License.
 #
 
-import re
 import json
-
+from bs4 import BeautifulSoup
 from configuration import config
 
 
@@ -35,25 +34,31 @@ class PasswordAPI(object):
         self.client.post(url, data, "reset password")
 
     def reset_password_set_new(self, code, new_password):
-        csrf_code = self._get_csrf_code(code)
+        new_code, csrf_code = self._get_codes(code)
 
         url = self.client.create_login_url("reset_password.do")
-        data = {"email": self._username, "code": code, "password": new_password,
+        data = {"email": self._username, "code": new_code, "password": new_password,
               "password_confirmation": new_password, "_csrf": csrf_code}
         self.client.post(url, data, "reset password: set new")
 
-    def _get_csrf_code(self, code):
+    def _get_codes(self, code):
         url = self.client.create_login_url("reset_password?code={}&email={}".format(code, self._username))
         data = self.client.get(url, "reset password: get reset form")
-        return self._parse_csrf_code(data)
+        return self._parse_codes(data)
 
     @staticmethod
-    def _parse_csrf_code(message):
-        pattern = r"(?<=value=\")([a-zA-Z0-9]*[-][a-zA-Z0-9-]*)+"
-        match = re.search(pattern, message)
-        if match is None:
-            raise AssertionError("Can't find code in given message: {}".format(message))
-        return match.group()
+    def _parse_codes(message):
+        soup = BeautifulSoup(message, 'html.parser')
+
+        csrf_input = soup.find("input", attrs={"name":"_csrf"})
+        if csrf_input is None:
+            raise AssertionError("Can't find csrf code in given message: {}".format(message))
+
+        code_input = soup.find("input", attrs={"name":"code"})
+        if code_input is None:
+            raise AssertionError("Can't find one-time code in given message: {}".format(message))
+
+        return code_input['value'], csrf_input['value']
 
     def change_password(self, old_password, new_password):
         url = "https://console.{}/{}".format(config.CONFIG["domain"], "rest/users/current/password")

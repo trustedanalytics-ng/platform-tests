@@ -17,7 +17,8 @@
 import abc
 import json
 import time
-
+import requests
+from bs4 import BeautifulSoup
 
 import requests
 
@@ -121,18 +122,34 @@ class ConsoleClient(PlatformApiClient):
     def create_login_url(self, path):
         return "{}://{}/{}".format(config.CONFIG["login.do_scheme"], self._login_endpoint, path)
 
+    def _get_csrf_code(self):
+        url = self.create_login_url("login")
+        data = self.get(url, "authenticate: get login form")
+        return self._parse_csrf_code(data)
+
+    @staticmethod
+    def _parse_csrf_code(message):
+        soup = BeautifulSoup(message, 'html.parser')
+        input = soup.find("input", attrs={"name":"X-Uaa-Csrf"})
+
+        if input is None:
+            raise AssertionError("Can't find code in given message: {}".format(message))
+        return input['value']
+
     def authenticate(self, password):
+        csrf_code = self._get_csrf_code()
+
         request = requests.Request(
             method="POST",
             url=self.create_login_url("login.do"),
-            data={"username": self._username, "password": password},
-            headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"}
+            data={"username": self._username, "password": password, "X-Uaa-Csrf": csrf_code},
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
         request = self._session.prepare_request(request)
         log_http_request(request, self._username, self._password, description="Authenticate user")
         response = self._session.send(request)
         log_http_response(response)
-        if not response.ok or "forgotPasswordLink" in response.text:
+        if not response.ok or "Unable to verify email or password. Please try again." in response.text:
             raise UnexpectedResponseError(response.status_code, response.text)
 
     def logout(self):

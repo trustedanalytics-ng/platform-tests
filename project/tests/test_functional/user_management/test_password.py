@@ -63,6 +63,9 @@ class Password(TapTestCase):
         self.step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
         pswd_api.reset_password_set_new(code, self.NEW_PASSWORD)
 
+        self.step("Logout")
+        client.logout()
+
         self.step("Try to login with old credentials.")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 

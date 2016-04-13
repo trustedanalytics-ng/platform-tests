@@ -1,4 +1,5 @@
 aniso8601==1.1.0
+beautifulsoup4==4.4.1
 decorator==3.4.2
 ecdsa==0.13
 Flask==0.10.1

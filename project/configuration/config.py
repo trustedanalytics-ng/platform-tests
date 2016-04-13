@@ -59,14 +59,14 @@ CONFIG = {
 }
 
 LOGGED_CONFIG_KEYS = ["domain", "admin_username", "client_type", "proxy", "ssl_validation", "platfom_version",
-                      "database_url", "ref_org_name", "ref_space_name"]
+                      "database_url", "ref_org_name", "ref_space_name", "jumpbox_address"]
 
 
 def update_test_config(domain=None, proxy=None, client_type=None, logged_response_body_length=None,
                        logging_level=None, repository=None, platform_version="master", database_url=None,
                        test_suite=None, local_appstack=None, admin_username=None, admin_password=None,
                        ref_org_name=None, ref_space_name=None, test_run_id=None, disable_remote_logger=None,
-                       remote_logger_retry_count=None, kerberos=None):
+                       remote_logger_retry_count=None, kerberos=None, jumpbox_address=None):
     defaults = __CONFIG.defaults()
     defaults.update(__SECRETS.defaults())
     CONFIG["platform_version"] = platform_version
@@ -118,6 +118,8 @@ def update_test_config(domain=None, proxy=None, client_type=None, logged_respons
     CONFIG["test_run_id"] = test_run_id
     if kerberos is not None:
         CONFIG["kerberos"] = kerberos
+    CONFIG["jumpbox_address"] = jumpbox_address
+
 
 
 def setup_admin_login(domain, defaults, admin_username=None, admin_password=None):
@@ -144,7 +146,8 @@ update_test_config(domain=os.environ.get("TEST_ENVIRONMENT"),
                    logged_response_body_length=os.environ.get("LOGGED_RESPONSE_BODY_LENGTH"),
                    platform_version=os.environ.get("PLATFORM_VERSION", "master"),
                    database_url=os.environ.get("DATABASE_URL"),
-                   kerberos=os.environ.get("KERBEROS"))
+                   kerberos=os.environ.get("KERBEROS"),
+                   jumpbox_address=os.environ.get("JUMPBOX_ADDRESS"))
 
 
 def parse_arguments():
@@ -231,6 +234,9 @@ def parse_arguments():
     parser.add_argument("--kerberos",
                         action='store_true',
                         help="Pass this parameter if environment has kerberos.")
+    parser.add_argument("--jumpbox-address",
+                        action='store_true',
+                        help="Address of the jumpbox machine (jump.<domain> of empty)")
     return parser.parse_args()
 
 

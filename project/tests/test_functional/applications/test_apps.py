@@ -64,9 +64,9 @@ class TestTapApp:
         space_developer = test_org_manager
         space_developer.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                          roles=User.SPACE_ROLES["developer"])
-        space_developer_client = space_developer.login()
+
         cf.cf_login(test_org.name, test_space.name, credentials=(space_developer.username, space_developer.password))
-        self._check_user_can_do_app_flow(test_org, test_space, example_app_path, client=space_developer_client)
+        self._check_user_can_do_app_flow(test_org, test_space, example_app_path, client=space_developer.get_client())
 
     @priority.low
     def test_non_developer_cannot_push_app(self, test_org, test_space, example_app_path, test_org_manager,
@@ -95,16 +95,15 @@ class TestTapApp:
         space_manager = test_org_manager
         space_manager.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                        roles=User.SPACE_ROLES["manager"])
-        space_manager_client = space_manager.login()
         step("Check that manager cannot stop app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_stop, client=space_manager_client)
+                                                test_app.api_stop, client=space_manager.get_client())
         step("Check that manager cannot start app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_start, client=space_manager_client)
+                                                test_app.api_start, client=space_manager.get_client())
         step("Check that manager cannot delete app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_delete, client=space_manager_client)
+                                                test_app.api_delete, client=space_manager.get_client())
         apps = Application.cf_api_get_list_by_space(test_space.guid)
         assert test_app in apps
 
