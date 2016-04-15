@@ -16,7 +16,7 @@
 
 from pymongo import MongoClient
 
-from ..tap_logger import get_logger
+from modules.tap_logger import get_logger
 
 
 logger = get_logger(__name__)

@@ -19,6 +19,7 @@ import time
 import unittest
 
 from retry import retry
+from unittest.suite import _ErrorHolder
 
 from ..constants import LoggerType, Priority
 from ..exceptions import UnexpectedResponseError
@@ -82,6 +83,34 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
     @classmethod
     def tearDownClass(cls):
         cleaner.tear_down_all()
+
+    def _feedErrorsToResult(self, result, errors):
+        # error [0] - setUp
+        #       [1] - test_xxx or [1..n] n subtests
+        #       [2 or n+1] - tearDown
+        # error [][0] - test
+        #       [][1] - exc_info, None if no exception
+
+        # check if test (not subtest) was a success and tearDown an error
+        if (len(errors) == 3 and not result._is_subTest(errors[1][0]) and
+                errors[1][1] is None and errors[2][1] is not None):
+            # in such case the test is only emited as an error,
+            # adding extra test success
+            result.addSuccess(errors[1][0])
+
+        # send FixtureDocument instead a TestResultDocument when setUp and tearDown
+        if errors[0][1] is not None:
+            errors[0] = (
+                _ErrorHolder("setUp ({})".format(errors[0][0].full_name)),
+                errors[0][1]
+            )
+        if len(errors) > 1 and errors[-1][1] is not None:
+            errors[-1] = (
+                _ErrorHolder("tearDown ({})".format(errors[-1][0].full_name)),
+                errors[-1][1]
+            )
+
+        super()._feedErrorsToResult(result, errors)
 
     @classmethod
     def get_errors_and_failures(cls, result):

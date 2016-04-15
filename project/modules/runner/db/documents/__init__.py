@@ -14,6 +14,6 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.4.55'
-
+from .fixture import FixtureDocument
+from .test_result import TestResultDocument
+from .test_run import TestRunDocument

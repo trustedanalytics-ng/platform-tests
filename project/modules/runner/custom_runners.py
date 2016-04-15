@@ -16,16 +16,16 @@
 
 import re
 import unittest
+from unittest.suite import _ErrorHolder
 
 from teamcity import is_running_under_teamcity
 from teamcity.unittestpy import TeamcityTestResult, TeamcityTestRunner
 
 from .. import tap_logger
-from configuration import config
 from ..constants import TestResult
-from .db_client import DBClient
-from .test_run_document import TestRunDocument
-from .test_result_document import TestResultDocument
+from .db.client import DBClient
+from .db.documents import TestRunDocument, TestResultDocument, FixtureDocument
+from configuration import config
 
 
 class _TextTestRunner(unittest.TextTestRunner):
@@ -46,7 +46,7 @@ class TapTestResult(BaseResultClass):
         for test, _ in self.errors + self.failures:
             if self.__is_error_holder(test):
                 failed_tests.append(self.__test_name_from_error_holder(test.description))
-            elif self.__is_subTest(test):
+            elif self._is_subTest(test):
                 failed_tests.append(test.test_case.full_name)
             elif self.__is_incremental(test):
                 failed_tests.append(test.class_name)
@@ -63,7 +63,7 @@ class TapTestResult(BaseResultClass):
         return obj.__class__.__name__ == "_ErrorHolder"
 
     @staticmethod
-    def __is_subTest(obj):
+    def _is_subTest(obj):
         return obj.__class__.__name__ == "_SubTest"
 
     @staticmethod
@@ -139,9 +139,19 @@ class DBTestResult(TapTestResult):
 
     def addError(self, test, err):
         super().addError(test, err)
-        if self.__current_test is not None:  # module setup / teardown failures
-            self.__current_test.end(result=TestResult.error, error=self._exc_info_to_string(err, test))
-            self.__run.update_result(result=TestResult.error)
+        result = TestResult.error
+        error = self._exc_info_to_string(err, test)
+
+        if isinstance(test, _ErrorHolder):
+            # setUp/tearDown error
+            FixtureDocument(
+                self.__db_client, run_id=self.__run.id, suite=self.__test_suite,
+                name=test.description, stacktrace=error
+            ).insert()
+        else:
+            self.__current_test.end(result, error)
+
+        self.__run.update_result(result)
 
     def addFailure(self, test, err):
         super().addFailure(test, err)

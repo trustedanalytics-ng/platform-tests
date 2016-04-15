@@ -13,7 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from modules.runner.tap_test_case import TapTestCase
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.4.55'
 
+def setUpModule():
+    raise AssertionError()
+
+
+class PassingTestCase(TapTestCase):
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def test_pass(self):
+        self.assertTrue(True)

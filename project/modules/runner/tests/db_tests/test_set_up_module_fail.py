@@ -13,7 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from modules.runner.tests.db_tests.base_test import BaseDbTest
+from modules.constants.test_results import TestResult
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.4.55'
 
+class PassingTestCase(BaseDbTest):
+
+    def test_documents(self):
+        self.assertResultDocuments(TestResult.error, "setUpModule", True)

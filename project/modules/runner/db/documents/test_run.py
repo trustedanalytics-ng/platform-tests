@@ -13,24 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from datetime import datetime
 import socket
 
 from bson.objectid import ObjectId
 
-from .db_client import DBClient
-from ..constants import TestResult
+from modules.runner.db.documents.base import BaseDocument
+from modules.runner.db.client import DBClient
+from modules.constants import TestResult
+from modules.platform_version import VersionedComponent
 from configuration.config import CONFIG
-from ..platform_version import VersionedComponent
 
 
-class TestRunDocument(object):
+class TestRunDocument(BaseDocument):
     COLLECTION_NAME = "test_run"
     sub_test_tests = []
 
     def __init__(self, db_client: DBClient, environment, environment_version, suite, release, platform_components,
                  tests_to_run_count):
-        self.__db_client = db_client
+        super().__init__(db_client)
         self.__environment = environment
         self.__environment_version = environment_version
         self.__suite = suite
@@ -56,26 +58,22 @@ class TestRunDocument(object):
         self.__result[result.value] += 1
         if result not in (TestResult.success, TestResult.expected_failure):
             self.__status = TestResult.failure
-        self.__replace()
-
-    @property
-    def id(self):
-        return self.__id
+        self._replace()
 
     def start(self):
         self.__start_date = datetime.now().isoformat()
         run_id = CONFIG.get("test_run_id")
         if run_id is not None:
             self.__id = ObjectId(run_id)
-            self.__replace()
+            self._replace()
         else:
-            self.__insert()
+            self._insert()
 
     def end(self):
         self.__end_date = datetime.now().isoformat()
-        self.__replace()
+        self._replace()
 
-    def __to_mongo_document(self):
+    def _to_mongo_document(self):
         return {
             "environment": self.__environment,
             "environment_version": self.__environment_version,
@@ -91,16 +89,3 @@ class TestRunDocument(object):
             "status": self.__status.value,
             "log": self.log
         }
-
-    def __insert(self):
-        self.__id = self.__db_client.insert(
-            collection_name=self.COLLECTION_NAME,
-            document=self.__to_mongo_document()
-        )
-
-    def __replace(self):
-        self.__db_client.replace(
-            collection_name=self.COLLECTION_NAME,
-            document_id=self.__id,
-            new_document=self.__to_mongo_document()
-        )

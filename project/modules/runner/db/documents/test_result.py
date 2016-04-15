@@ -17,18 +17,19 @@
 import json
 import time
 
-from .db_client import DBClient
-from .tap_test_case import TapTestCase
-from ..constants import TestResult
-from ..platform_version import VersionedComponent
+from .base import BaseDocument
+from modules.runner.db.client import DBClient
+from modules.runner.tap_test_case import TapTestCase
+from modules.constants import TestResult
+from modules.platform_version import VersionedComponent
 
 
-class TestResultDocument(object):
+class TestResultDocument(BaseDocument):
     COLLECTION_NAME = "test_result"
 
     def __init__(self, db_client: DBClient, run_id: str, suite: str, test_obj: TapTestCase, test_order: int,
                  platform_components: list):
-        self.__db_client = db_client
+        super().__init__(db_client)
         self.__run_id = run_id
         self.__suite = suite
         self.__name = test_obj.full_name
@@ -58,7 +59,7 @@ class TestResultDocument(object):
         self.__result = result
         self.__stacktrace = error
         self.__reason_skipped = reason_skipped
-        self.__insert()
+        self._upsert()
 
     def end_sub_test(self, subtest, result: TestResult, error=None):
         if self.__result is TestResult.success:
@@ -68,7 +69,7 @@ class TestResultDocument(object):
             "result": result.value,
             "stacktrace": error
         })
-        self.__upsert()
+        self._upsert()
 
     @staticmethod
     def __get_main_component_name(test_obj):
@@ -81,7 +82,7 @@ class TestResultDocument(object):
             return platform_component.component in test_obj.components
         return list(filter(is_test_component, platform_components))
 
-    def __to_mongo_document(self):
+    def _to_mongo_document(self):
         return {
             "run_id": self.__run_id,
             "suite": self.__suite,
@@ -100,19 +101,3 @@ class TestResultDocument(object):
             "log": self.log,
             "sub_tests": self.__sub_tests
         }
-
-    def __insert(self):
-        self.__id = self.__db_client.insert(
-            collection_name=self.COLLECTION_NAME,
-            document=self.__to_mongo_document()
-        )
-
-    def __upsert(self):
-        if self.__id is None:
-            self.__insert()
-        else:
-            self.__db_client.replace(
-                collection_name=self.COLLECTION_NAME,
-                document_id=self.__id,
-                new_document=self.__to_mongo_document()
-            )
