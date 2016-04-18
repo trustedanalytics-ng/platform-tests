@@ -36,17 +36,19 @@ def api_get_atk_instances(org_guid, client=None):
 # ======================================================== das ======================================================= #
 
 
-def api_get_transfers(org_guids, query="", filters=(), size=12, time_from=0, client=None):
+def api_get_transfers(org_guids=None, query="", filters=(), size=12, time_from=0, client=None):
     """GET /rest/das/requests"""
     client = client or PlatformApiClient.get_admin_client()
     query_params = {
-        "orgs": ",".join(org_guids),
         "query": query,
         "filters": list(filters),
         "size": size,
         "from": time_from
     }
-    return client.request("GET", "rest/das/requests", params=query_params, log_msg="PLATFORM: get filtered transfer list")
+    if org_guids is not None:
+        query_params["orgs"] = ",".join(org_guids)
+    return client.request("GET", "rest/das/requests", params=query_params,
+                          log_msg="PLATFORM: get filtered transfer list")
 
 
 def api_create_transfer(category=None, is_public=None, org_guid=None, source=None, title=None, client=None):
@@ -85,13 +87,14 @@ def api_delete_transfer(request_id, client=None):
 # =================================================== data-catalog =================================================== #
 
 
-def api_get_datasets(org_guid_list, query="", filters=(), size=12, time_from=0, only_private=False,
+def api_get_datasets(org_guid_list=None, query="", filters=(), size=12, time_from=0, only_private=False,
                      only_public=False, client=None):
     """GET /rest/datasets"""
     query_params = {
-        "orgs": ",".join(org_guid_list),
         "query": json.dumps({"query": query, "filters": list(filters), "size": size, "from": time_from})
     }
+    if org_guid_list is not None:
+        query_params["orgs"] = ",".join(org_guid_list)
     if only_private:
         query_params["onlyPrivate"] = only_private
     if only_public:

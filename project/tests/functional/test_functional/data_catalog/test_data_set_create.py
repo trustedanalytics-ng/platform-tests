@@ -20,9 +20,10 @@ import datetime
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import download_file, get_csv_data, get_csv_record_count, tear_down_test_files
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import cleanup_after_failed_setup, TapTestCase
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Application, DataSet, Organization, Transfer, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
@@ -40,8 +41,7 @@ class CreateDatasets(TapTestCase):
         return source, file_path
 
     @classmethod
-    @cleanup_after_failed_setup(DataSet.api_teardown_test_datasets, Transfer.api_teardown_test_transfers,
-                                Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.source, cls.file_path = cls._get_source_and_filepath()
         cls.step("Create test organization")
@@ -49,7 +49,7 @@ class CreateDatasets(TapTestCase):
         cls.step("Add admin to the organization")
         User.get_admin().api_add_to_organization(org_guid=cls.org.guid)
         cls.step("Get target uri from hdfs instance")
-        _, ref_space = Organization.get_ref_org_and_space()
+        ref_space = setup_fixtures.get_reference_space()
         hdfs = next(app for app in Application.cf_api_get_list_by_space(ref_space.guid) if "hdfs-downloader" in app.name)
         cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri'].replace("%{organization}", cls.org.guid)
 
@@ -73,7 +73,7 @@ class CreateDatasets(TapTestCase):
         transfer = Transfer.api_create(DataSet.CATEGORIES[0], is_public, self.org.guid, file_source)
         transfer.ensure_finished()
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        data_set = DataSet.api_get_matching_to_transfer([self.org], transfer.title)
+        data_set = DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
         return transfer, data_set
 
     @priority.medium

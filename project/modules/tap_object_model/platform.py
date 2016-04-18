@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from retry import retry
 
 from ..http_calls import platform as api

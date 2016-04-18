@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import itertools
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
@@ -21,6 +22,7 @@ from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Organization, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
@@ -38,9 +40,10 @@ class UpdateOrganizationUser(TapTestCase):
     }
 
     @classmethod
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create users for org tests")
-        users, cls.test_org = User.api_create_users_for_tests(2)
+        users, cls.test_org = setup_fixtures.create_test_users(2)
         cls.test_user = users[0]
         cls.test_client = users[0].login()
         cls.second_test_user = users[1]

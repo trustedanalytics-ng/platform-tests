@@ -16,7 +16,8 @@
 
 from modules.api_client import PlatformApiClient
 from modules.runner.tap_test_case import TapTestCase
-from modules.tap_object_model import Application, Organization
+from modules.tap_object_model import Application
+from tests.fixtures import setup_fixtures
 
 
 class AppMonitoring(TapTestCase):
@@ -25,7 +26,7 @@ class AppMonitoring(TapTestCase):
 
     @classmethod
     def setUpClass(cls):
-        ref_space_guid = Organization.get_ref_org_and_space()[1].guid
+        ref_space_guid = setup_fixtures.get_reference_space().guid
         cls.platform_apps = Application.api_get_list(ref_space_guid)
 
     def test_all_required_apps_are_present_on_platform(self):

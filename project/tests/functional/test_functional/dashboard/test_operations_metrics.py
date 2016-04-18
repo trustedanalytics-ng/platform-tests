@@ -18,20 +18,21 @@ import unittest
 
 from modules.constants import HttpStatus, TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components
 from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceType, \
     Space, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
 @components(TAP.platform_context)
 class NonAdminOperationsMetrics(TapTestCase):
     @classmethod
-    @cleanup_after_failed_setup(User.cf_api_tear_down_test_users)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.platform = Platform()
-        users, _ = User.api_create_users_for_tests(1)
+        users, _ = setup_fixtures.create_test_users(1)
         cls.non_admin_user = users[0]
 
     @unittest.skip("DPNG-5904")

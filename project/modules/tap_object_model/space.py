@@ -16,7 +16,6 @@
 
 import functools
 
-from . import Application, ServiceInstance
 from ..tap_logger import get_logger
 from ..test_names import get_test_name
 from ..http_calls import cloud_foundry as cf, platform as api
@@ -63,24 +62,19 @@ class Space(object):
             spaces.append(cls(name, guid, org_guid))
         return spaces
 
+    @classmethod
+    def api_get_list_in_org(cls, org_guid, client=None):
+        response = api.api_get_spaces_in_org(org_guid=org_guid, client=client)
+        spaces = []
+        for space_data in response:
+            space = cls(name=space_data["entity"]["name"], guid=space_data["metadata"]["guid"], org_guid=org_guid)
+            spaces.append(space)
+        return spaces
+
     def api_delete(self, client=None):
         api.api_delete_space(self.guid, client=client)
 
     # -------------------------------- cf api -------------------------------- #
-
-    def cf_api_get_space_summary(self):
-        """Return tuple with list of Application and ServiceInstance objects."""
-        response = cf.cf_api_space_summary(self.guid)
-        apps = Application.from_cf_api_space_summary_response(response, self.guid)
-        service_instances = []
-        for si_data in response["services"]:
-            try:
-                service_label = si_data["service_plan"]["service"]["label"]
-            except KeyError:
-                service_label = None
-            service_instances.append(ServiceInstance(guid=si_data["guid"], name=si_data["name"], space_guid=self.guid,
-                                     service_label=service_label))
-        return apps, service_instances
 
     @classmethod
     def cf_api_get_list(cls):
@@ -91,6 +85,15 @@ class Space(object):
             name = space_data["entity"]["name"]
             guid = space_data["metadata"]["guid"]
             spaces.append(cls(name, guid, org_guid))
+        return spaces
+
+    @classmethod
+    def cf_api_get_list_in_org(cls, org_guid):
+        response = cf.cf_api_get_org_spaces(org_guid)
+        spaces = []
+        for space_data in response:
+            space = cls(name=space_data["entity"]["name"], guid=space_data["metadata"]["guid"], org_guid=org_guid)
+            spaces.append(space)
         return spaces
 
     def cf_api_delete(self):

@@ -19,11 +19,12 @@ import itertools
 from modules.constants import PARAMETRIZED_SERVICE_INSTANCES, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels,\
     TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, mark, priority
 from modules.service_tools.ipython import iPython
 from modules.tap_object_model import Organization, ServiceInstance, ServiceKey, ServiceType, Space, User
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -34,7 +35,7 @@ class MarketplaceServices(TapTestCase):
                                   ServiceLabels.H2O]
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs, User.cf_api_tear_down_test_users)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test space")
         cls.test_org = Organization.api_create()

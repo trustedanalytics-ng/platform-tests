@@ -21,10 +21,11 @@ import requests
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, mark, priority
 from modules.tap_object_model import DataSet, Organization, ServiceInstance, ServiceKey, Space, Transfer, User
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -34,7 +35,7 @@ class TestScoringEngineInstance(TapTestCase):
     SE_PLAN_NAME = "Simple"
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test spaces")
         cls.test_org = Organization.api_create()
@@ -44,7 +45,7 @@ class TestScoringEngineInstance(TapTestCase):
         cls.step("Create a transfer and get hdfs path")
         transfer = Transfer.api_create(category="other", org_guid=cls.test_org.guid, source=Urls.model_url)
         transfer.ensure_finished()
-        ds = DataSet.api_get_matching_to_transfer([cls.test_org], transfer.title)
+        ds = DataSet.api_get_matching_to_transfer(org=cls.test_org, transfer_title=transfer.title)
         cls.hdfs_path = ds.target_uri
 
         space_manager = User.api_create_by_adding_to_space(org_guid=cls.test_org.guid,

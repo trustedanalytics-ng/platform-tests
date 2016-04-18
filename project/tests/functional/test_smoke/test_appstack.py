@@ -21,7 +21,8 @@ from modules.platform_version import get_appstack_yml
 from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import mark, priority
 from modules.tap_logger import get_logger
-from modules.tap_object_model import Application, Organization, ServiceBroker, ServiceInstance, Upsi
+from modules.tap_object_model import Application, ServiceBroker, ServiceInstance, Upsi
+from tests.fixtures import setup_fixtures
 
 
 logger = get_logger(__name__)
@@ -38,7 +39,7 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
 
         cls.step("Retrieve apps, services, and brokers present in cf")
 
-        ref_space_guid = Organization.get_ref_org_and_space()[1].guid
+        ref_space_guid = setup_fixtures.get_reference_space().guid
         cls.cf_apps = Application.cf_api_get_list_by_space(ref_space_guid)
         cls.cf_upsi = [s for s in Upsi.cf_api_get_list() if s.space_guid == ref_space_guid]
         cls.cf_brokers = ServiceBroker.cf_api_get_list(ref_space_guid)

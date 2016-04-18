@@ -23,7 +23,8 @@ from retry import retry
 from ..constants import LoggerType, Priority
 from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger
-from ..tap_object_model import organization, user, transfer, dataset
+from ..tap_object_model.flows import cleaner
+from ..tap_object_model import user
 
 
 logger = get_logger(__name__)
@@ -80,11 +81,7 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
 
     @classmethod
     def tearDownClass(cls):
-        dataset.DataSet.api_teardown_test_datasets()
-        transfer.Transfer.api_teardown_test_transfers()
-        organization.Organization.cf_api_tear_down_test_orgs()
-        user.User.cf_api_tear_down_test_users()
-        user.User.api_tear_down_test_invitations()
+        cleaner.tear_down_all()
 
     @classmethod
     def get_errors_and_failures(cls, result):
@@ -175,19 +172,3 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
         thing = next((i for i in items if getattr(i, attr_name) == attr_value), None)
         self.assertIsNotNone(thing)
         return thing
-
-
-def cleanup_after_failed_setup(*cleanup_methods):
-    def wrapper(func):
-        @functools.wraps(func)
-        def wrapped(*args, **kwargs):
-            try:
-                func(*args, **kwargs)
-            except:
-                for cleanup_method in cleanup_methods:
-                    cleanup_method()
-                raise
-        return wrapped
-    return wrapper
-
-

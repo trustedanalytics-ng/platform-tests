@@ -21,6 +21,8 @@ from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, mark, priority
 from modules.tap_object_model import DataSet, Organization, ServiceInstance, ServiceType, Space, Transfer, User
+from modules.tap_object_model.flows import onboarding
+from tests.fixtures import setup_fixtures
 
 
 @log_components(TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
@@ -32,7 +34,8 @@ class FunctionalSmokeTests(TapTestCase):
     @classmethod
     def setUpClass(cls):
         cls.step("Get reference organization and space")
-        cls.ref_org, cls.ref_space = Organization.get_ref_org_and_space()
+        cls.ref_org = setup_fixtures.get_reference_organization()
+        cls.ref_space = setup_fixtures.get_reference_space()
 
     @priority.high
     def test_0_test_admin_can_login_to_platform(self):
@@ -55,7 +58,7 @@ class FunctionalSmokeTests(TapTestCase):
     @components(TAP.user_management, TAP.auth_gateway)
     def test_onboarding(self):
         self.step("Onboard new user")
-        test_user, test_org = User.api_onboard_without_email()
+        test_user, test_org = onboarding.onboard(check_email=False)
         self.step("Check that user is created")
         users = User.cf_api_get_all_users()
         self.assertIn(test_user, users)
@@ -67,7 +70,7 @@ class FunctionalSmokeTests(TapTestCase):
     @components(TAP.user_management, TAP.auth_gateway)
     def test_add_new_user_to_and_delete_from_org(self):
         self.step("Add new user to organization")
-        test_user, test_org = User.api_onboard_without_email()
+        test_user, test_org = onboarding.onboard(check_email=False)
         test_user.api_add_to_organization(self.ref_org.guid, roles=User.ORG_ROLES["manager"],)
 
         self.step("Check that the user is added")
@@ -96,7 +99,7 @@ class FunctionalSmokeTests(TapTestCase):
     @components(TAP.user_management, TAP.auth_gateway)
     def test_add_new_user_to_and_delete_from_space(self):
         self.step("Add new user to space")
-        test_user, test_org = User.api_onboard_without_email()
+        test_user, test_org = onboarding.onboard(check_email=False)
         test_user.api_add_to_space(self.ref_space.guid, self.ref_org.guid, roles=User.SPACE_ROLES["manager"])
 
         self.step("Check that the user is added")
@@ -118,7 +121,7 @@ class FunctionalSmokeTests(TapTestCase):
         transfers = Transfer.api_get_list(org_guid_list=[self.ref_org.guid])
         self.assertIn(transfer, transfers)
         self.step("Get data set matching to transfer")
-        data_set = DataSet.api_get_matching_to_transfer(org_list=[self.ref_org], transfer_title=transfer.title)
+        data_set = DataSet.api_get_matching_to_transfer(org=self.ref_org, transfer_title=transfer.title)
         self.step("Delete the data set")
         data_set.api_delete()
         self.step("Check that the data set was deleted")
@@ -142,7 +145,7 @@ class FunctionalSmokeTests(TapTestCase):
         transfers = Transfer.api_get_list(org_guid_list=[self.ref_org.guid])
         self.assertIn(transfer, transfers)
         self.step("Get data set for the transfer")
-        data_set = DataSet.api_get_matching_to_transfer(org_list=[self.ref_org], transfer_title=transfer.title)
+        data_set = DataSet.api_get_matching_to_transfer(org=self.ref_org, transfer_title=transfer.title)
         self.step("Delete the data set")
         data_set.api_delete()
         self.step("Check that the data set was deleted")

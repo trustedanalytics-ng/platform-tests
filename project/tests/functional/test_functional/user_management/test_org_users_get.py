@@ -19,6 +19,7 @@ from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Organization, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
@@ -28,9 +29,10 @@ class GetOrganizationUsers(TapTestCase):
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
 
     @classmethod
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create users for org tests")
-        users, cls.test_org = User.api_create_users_for_tests(3)
+        users, cls.test_org = setup_fixtures.create_test_users(3)
         cls.step("Add manager role to user in the test org")
         cls.manager = users[0]
         cls.manager_client = users[0].login()

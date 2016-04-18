@@ -171,6 +171,20 @@ class ServiceInstance(object):
                             space_guid=data["entity"]["space_guid"]))
         return services
 
+    @classmethod
+    def from_cf_api_space_summary_response(cls, response: dict, space_guid: str) -> list:
+        service_instances = []
+        for instance_data in response["services"]:
+            try:
+                service_label = instance_data["service_plan"]["service"]["label"]
+            except KeyError:
+                service_label = None
+            service_instance = cls(guid=instance_data["guid"], name=instance_data["name"], space_guid=space_guid,
+                                   service_label=service_label)
+            service_instances.append(service_instance)
+        return service_instances
+
+
     # ----------------------------------------- APPLICATION BROKER API ----------------------------------------- #
 
     @classmethod

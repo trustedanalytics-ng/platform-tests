@@ -17,9 +17,10 @@
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import tear_down_test_files
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import cleanup_after_failed_setup, TapTestCase
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import DataSet, Organization, Transfer, User
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -32,8 +33,7 @@ class GetDataSets(TapTestCase):
         return [d for d in ds_list if d in self.datasets]
 
     @classmethod
-    @cleanup_after_failed_setup(DataSet.api_teardown_test_datasets, Transfer.api_teardown_test_transfers,
-                                Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization")
         cls.org = Organization.api_create()

@@ -21,6 +21,7 @@ from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.decorators import components, priority
 from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Organization, User
+from tests.fixtures import setup_fixtures
 
 
 class BaseTestClass(TapTestCase):
@@ -30,7 +31,7 @@ class BaseTestClass(TapTestCase):
     @classmethod
     def setUpClass(cls):
         cls.step("Create users for org tests")
-        users, cls.test_org = User.api_create_users_for_tests(2)
+        users, cls.test_org = setup_fixtures.create_test_users(2)
         cls.test_user = users[0]
         cls.test_client = users[0].login()
         cls.second_test_user = users[1]

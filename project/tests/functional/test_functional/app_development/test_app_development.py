@@ -19,8 +19,9 @@ from modules.constants import TapComponent as TAP
 from modules.http_calls import platform as api
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.decorators import priority, components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
-from modules.tap_object_model import Organization, User
+from modules.runner.tap_test_case import TapTestCase
+from modules.tap_object_model import Invitation, Organization, User
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -28,8 +29,7 @@ from modules.tap_object_model import Organization, User
 class AppDevelopmentPage(TapTestCase):
 
     @classmethod
-    @cleanup_after_failed_setup(User.cf_api_tear_down_test_users, User.api_tear_down_test_invitations,
-                                Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create organization and get test user and admin client")
         test_org = Organization.api_create()

@@ -21,10 +21,11 @@ from retry import retry
 from configuration import config
 from modules.constants import TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.service_tools.ipython import iPython
 from modules.tap_object_model import Application, Organization, ServiceInstance, Space, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
@@ -42,10 +43,10 @@ class iPythonConsole(TapTestCase):
         return current_terminal
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Get reference space")
-        _, cls.ref_space = Organization.get_ref_org_and_space()
+        cls.ref_space = setup_fixtures.get_reference_space()
         cls.step("Create test organization and test space")
         cls.test_org = Organization.api_create()
         cls.test_space = Space.api_create(cls.test_org)

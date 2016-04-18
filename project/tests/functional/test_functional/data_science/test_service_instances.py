@@ -17,9 +17,11 @@
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space
+from tests.fixtures import teardown_fixtures
+
 
 
 @log_components()
@@ -27,7 +29,7 @@ from modules.tap_object_model import Organization, ServiceInstance, ServiceType,
 class DataScienceInstances(TapTestCase):
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test space")
         cls.test_org = Organization.api_create()

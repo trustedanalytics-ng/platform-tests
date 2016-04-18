@@ -20,10 +20,11 @@ from modules import app_sources
 from modules.constants import HttpStatus, Priority, TapComponent as TAP, CfEnvApp
 from modules.http_calls import application_broker as broker_client, cloud_foundry as cf
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import priority, components, incremental
 from modules.tap_object_model import Application, Organization, ServiceInstance, ServiceType, Space
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -52,7 +53,7 @@ class ApplicationBrokerFlow(TapTestCase):
     SERVICE_NAME = get_test_name(short=True)
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Clone example application repository from github")
         sources = app_sources.AppSources(repo_name=CfEnvApp.repo_name, repo_owner=CfEnvApp.repo_owner)

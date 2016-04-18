@@ -17,11 +17,9 @@
 import functools
 import time
 
-from ..exceptions import UnexpectedResponseError
 from ..http_calls import platform as api
 from ..tap_logger import get_logger
 from ..test_names import get_test_name
-from . import DataSet
 
 
 logger = get_logger(__name__)
@@ -36,7 +34,7 @@ class Transfer(object):
     new_status = "NEW"
     finished_status = "FINISHED"
 
-    TEST_TRANSFERS = []
+    TEST_TRANSFER_TITLES = []
 
     def __init__(self, category=None, id=None, id_in_object_store=None, is_public=None, org_guid=None, source=None,
                  state=None, timestamps=None, title=None, user_id=None, from_local_file=False):
@@ -53,7 +51,7 @@ class Transfer(object):
         return self.id < other.id
 
     def __repr__(self):
-        return "{0} (id={1}, title={2}, state={3})".format(self.__class__.__name__, self.id, self.title, self.state)
+        return "{} (id={}, title={}, state={})".format(self.__class__.__name__, self.id, self.title, self.state)
 
     @classmethod
     def _from_api_response(cls, api_response):
@@ -66,27 +64,25 @@ class Transfer(object):
     def api_create(cls, category="other", is_public=False, org_guid=None, source=None, title=None, user_id=0,
                    client=None):
         title = get_test_name() if title is None else title
+        cls.TEST_TRANSFER_TITLES.append(title)
         response = api.api_create_transfer(category=category, is_public=is_public, org_guid=org_guid,
                                            source=source, title=title, client=client)
         new_transfer = cls(category=category, id=response["id"], id_in_object_store=response["idInObjectStore"],
                            is_public=is_public, org_guid=org_guid, source=source, state=response["state"],
                            timestamps=response["timestamps"], title=title, user_id=user_id)
-        cls.TEST_TRANSFERS.append(new_transfer)
-        DataSet.TEST_TRANSFER_TITLES.append(title)
         return new_transfer
 
     @classmethod
     def api_create_by_file_upload(cls, org_guid, file_path, category="other", is_public=False, title=None, client=None):
         title = get_test_name() if title is None else title
+        cls.TEST_TRANSFER_TITLES.append(title)
         api.api_create_transfer_by_file_upload(org_guid, source=file_path, category=category, is_public=is_public,
                                                title=title, client=client)
         new_transfer = next(t for t in cls.api_get_list(org_guid_list=[org_guid]) if t.title == title)
-        cls.TEST_TRANSFERS.append(new_transfer)
-        DataSet.TEST_TRANSFER_TITLES.append(title)
         return new_transfer
 
     @classmethod
-    def api_get_list(cls, org_guid_list, client=None):
+    def api_get_list(cls, org_guid_list=None, client=None):
         response = api.api_get_transfers(org_guid_list, client=client)
         return [cls._from_api_response(transfer_data) for transfer_data in response]
 
@@ -118,12 +114,3 @@ class Transfer(object):
 
     def is_finished(self):
         return self.finished_status in self.timestamps.keys()
-
-    @classmethod
-    def api_teardown_test_transfers(cls):
-        for transfer in cls.TEST_TRANSFERS:
-            try:
-                transfer.api_delete()
-            except UnexpectedResponseError:
-                logger.warning("Failed to delete {}".format(transfer))
-        cls.TEST_TRANSFERS = []

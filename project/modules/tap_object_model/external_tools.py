@@ -19,10 +19,11 @@ from urllib.parse import urlparse
 
 import requests
 
-from ..tap_logger import get_logger
 from configuration.config import CONFIG
 from ..exceptions import UnexpectedResponseError
 from ..http_calls import platform as api
+from ..tap_logger import get_logger
+
 
 logger = get_logger(__name__)
 

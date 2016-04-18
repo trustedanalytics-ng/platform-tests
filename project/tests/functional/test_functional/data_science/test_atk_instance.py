@@ -19,9 +19,10 @@ import unittest
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP, Priority
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, incremental
 from modules.tap_object_model import Application, Organization, ServiceInstance, ServiceType, Space, AtkInstance, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
@@ -34,7 +35,7 @@ class DataScienceAtkInstance(TapTestCase):
     validator = None
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test space")
         cls.test_org = Organization.api_create()
@@ -44,7 +45,7 @@ class DataScienceAtkInstance(TapTestCase):
 
     def test_0_get_reference_atk_bindings(self):
         self.step("Get services bound to atk in the reference space")
-        ref_space_guid = Organization.get_ref_org_and_space()[1].guid
+        ref_space_guid = setup_fixtures.get_reference_space().guid
         ref_atk_app = next((a for a in Application.api_get_list(ref_space_guid) if a.name == "atk"), None)
         self.assertIsNotNone(ref_atk_app, "ATK app not found in the reference space")
         self.__class__.atk_bindings = [s[0]["label"] for s in ref_atk_app.cf_api_env()["VCAP_SERVICES"].values()]

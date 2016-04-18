@@ -14,12 +14,13 @@
 # limitations under the License.
 #
 
-from configuration import config
 from modules.constants import TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import DataSet, Organization, User
+from modules.tap_object_model.flows import summaries
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsage", "domainsUsagePercent",
@@ -32,11 +33,12 @@ expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsag
 class Metrics(TapTestCase):
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
-        cls.step("Retrieve metrics for {}".format(config.CONFIG["ref_org_name"]))
-        cls.ref_org, _ = Organization.get_ref_org_and_space()
+        cls.step("Retrieve metrics for the reference organization")
+        cls.ref_org = setup_fixtures.get_reference_organization()
         cls.ref_org.api_get_metrics()
+        cls.org_apps, cls.org_services = summaries.cf_api_get_org_summary(org_guid=cls.ref_org.guid)
 
     @priority.high
     def test_metrics_contains_all_keys(self):
@@ -46,23 +48,19 @@ class Metrics(TapTestCase):
 
     @priority.low
     def test_service_count(self):
-        self.step("Get apps and services from cf and check that serviceUsage metrics is correct")
-        apps, services = self.ref_org.cf_api_get_apps_and_services()
-        self.assertEqual(self.ref_org.metrics["serviceUsage"], len(services))
+        self.step("Get services from cf and check that serviceUsage metrics is correct")
+        self.assertEqual(self.ref_org.metrics["serviceUsage"], len(self.org_services))
 
     @priority.low
     def test_application_metrics(self):
         self.step("Get apps from cf and check that appsRunning and appsDown metrics are correct")
         cf_apps_up = []
         cf_apps_down = []
-        org_spaces = self.ref_org.cf_api_get_spaces()
-        for space in org_spaces:
-            apps, _ = space.cf_api_get_space_summary()
-            for app in apps:
-                if app.is_started:
-                    cf_apps_up.append(app.name)
-                else:
-                    cf_apps_down.append(app.name)
+        for app in self.org_apps:
+            if app.is_started:
+                cf_apps_up.append(app.name)
+            else:
+                cf_apps_down.append(app.name)
         dashboard_apps_running = self.ref_org.metrics["appsRunning"]
         dashboard_apps_down = self.ref_org.metrics["appsDown"]
         metrics_are_equal = (len(cf_apps_up) == dashboard_apps_running and len(cf_apps_down) == dashboard_apps_down)

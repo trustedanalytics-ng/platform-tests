@@ -17,10 +17,11 @@
 from modules.file_utils import download_file
 from modules.constants import TapComponent as TAP, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_object_model import Organization, ServiceInstance, Space
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -31,7 +32,7 @@ class GearpumpConsole(TapTestCase):
     COMPLEXDAG_FILE_NAME = Urls.complexdag_app_url.split("/")[-1]
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Download file complexdag")
         cls.complexdag_app_path = download_file(url=Urls.complexdag_app_url, save_file_name=cls.COMPLEXDAG_FILE_NAME)

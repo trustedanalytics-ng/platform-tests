@@ -14,20 +14,22 @@
 # limitations under the License.
 #
 
-from .service_key import ServiceKey
-from .service_instance import AtkInstance, ServiceInstance
 from .application import Application
-from .space import Space
-from .organization import Organization
 from .buildpack import Buildpack
 from .dataset import DataSet
 from .external_tools import ExternalTools
+from .user import User
+from .invitation import Invitation
 from .job import Job
 from .latest_event import LatestEvent
+from .organization import Organization
 from .platform import Platform
 from .service_binding import ServiceBinding
 from .service_broker import ServiceBroker
+from .service_key import ServiceKey
+from .service_instance import AtkInstance, ServiceInstance
 from .service_type import ServiceType
+from .space import Space
 from .transfer import Transfer
 from .upsi import Upsi
-from .user import User
+

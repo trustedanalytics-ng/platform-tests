@@ -16,10 +16,11 @@
 
 from modules.constants import Priority, TapComponent as TAP, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, incremental
 from modules.service_tools.arcadia import Arcadia
 from modules.tap_object_model import DataSet, Organization, Space, Transfer, User
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -29,8 +30,7 @@ class ArcadiaTest(TapTestCase):
     arcadia = None
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs, User.cf_api_tear_down_test_users,
-                                Transfer.api_teardown_test_transfers, DataSet.api_teardown_test_datasets)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test spaces")
         cls.test_org = Organization.api_create()
@@ -41,7 +41,7 @@ class ArcadiaTest(TapTestCase):
         cls.non_admin_client = User.api_create_by_adding_to_space(cls.test_org.guid, cls.test_space.guid).login()
         cls.step("Create new transfer")
         cls.transfer = Transfer.api_create(org_guid=cls.test_org.guid, source=Urls.test_transfer_link)
-        cls.dataset = DataSet.api_get_matching_to_transfer([cls.test_org], cls.transfer.title)
+        cls.dataset = DataSet.api_get_matching_to_transfer(org=cls.test_org, transfer_title=cls.transfer.title)
         cls.step("Get arcadia dataconnection")
         cls.arcadia = Arcadia()
 

@@ -14,18 +14,17 @@
 # limitations under the License.
 #
 
-from datetime import datetime
-
 from modules import app_sources
 from configuration import config
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
 from modules.http_calls import cloud_foundry as cf
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import priority, components
 from modules.service_tools.psql import PsqlTable, PsqlColumn, PsqlRow
 from modules.tap_object_model import Application, Organization, ServiceInstance, ServiceType, Space
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -42,7 +41,7 @@ class Postgres(TapTestCase):
                        {"column_name": "col2", "value": None}]]
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Get sql api app sources")
         sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data,

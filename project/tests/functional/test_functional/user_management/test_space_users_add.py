@@ -16,17 +16,18 @@
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Organization, Space, User
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 class BaseTestClass(TapTestCase):
     ALL_SPACE_ROLES = {role for role_set in User.SPACE_ROLES.values() for role in role_set}
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs, User.cf_api_tear_down_test_users)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.test_org = Organization.api_create()
         cls.test_user = User.api_create_by_adding_to_organization(cls.test_org.guid)

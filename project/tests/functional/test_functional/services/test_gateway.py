@@ -13,15 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import websocket
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.api_client import CfApiClient
 from modules.constants import Priority, ServiceLabels, TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, incremental
 from modules.tap_object_model import Organization, ServiceInstance, Space, User
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -34,7 +36,7 @@ class Gateway(TapTestCase):
     gateway_app = None
 
     @classmethod
-    @cleanup_after_failed_setup(User.cf_api_tear_down_test_users, Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test space")
         cls.test_org = Organization.api_create()

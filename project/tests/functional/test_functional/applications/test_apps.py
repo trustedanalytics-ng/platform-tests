@@ -19,8 +19,9 @@ from modules.constants import TapComponent as TAP, CfEnvApp
 from modules.http_calls import cloud_foundry as cf
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.decorators import priority, components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Application, Organization, Space
+from tests.fixtures import teardown_fixtures
 
 
 class TestAppBase(TapTestCase):
@@ -32,7 +33,7 @@ class TestAppBase(TapTestCase):
         cls.app_repo_path = sources.clone_or_pull()
         sources.checkout_commit(CfEnvApp.commit_id)
 
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUp(self):
         self.step("Create test organization and space")
         self.test_org = Organization.api_create()

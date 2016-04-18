@@ -18,15 +18,16 @@ from modules.constants import TapComponent as TAP, UserManagementHttpStatus as H
 from modules.api_client import PlatformApiClient
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.tap_object_model import Organization, Space, User
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
 @components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class SpaceUserPermissions(TapTestCase):
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.client_permission = {
             "admin": True,
@@ -157,7 +158,7 @@ class SpaceUserPermissions(TapTestCase):
         self.step("Try to add new space using every client type.")
         for client in self.users_clients:
             with self.subTest(userType=client):
-                space_list = self.test_org.api_get_spaces()
+                space_list = Space.api_get_list_in_org(org_guid=self.test_org.guid)
                 if client_permission[client]:
                     new_space = Space.api_create(self.test_org, client=self.users_clients[client])
                     space_list = Space.api_get_list()
@@ -166,7 +167,8 @@ class SpaceUserPermissions(TapTestCase):
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                                         Space.api_create, self.test_org,
                                                         client=self.users_clients[client])
-                    self.assertUnorderedListEqual(self.test_org.api_get_spaces(), space_list, "Space was created")
+                    self.assertUnorderedListEqual(Space.api_get_list_in_org(org_guid=self.test_org.guid), space_list,
+                                                  "Space was created")
 
     @priority.medium
     def test_delete_space(self):
@@ -188,5 +190,6 @@ class SpaceUserPermissions(TapTestCase):
                 else:
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                                         new_space.api_delete, client=self.users_clients[client])
-                    self.assertIn(new_space, self.test_org.api_get_spaces(), "Space was not deleted")
+                    self.assertIn(new_space, Space.api_get_list_in_org(org_guid=self.test_org.guid),
+                                  "Space was not deleted")
 

@@ -19,10 +19,9 @@ import datetime
 
 from retry import retry
 
-from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger
 from ..http_calls import platform as api
-from . import Organization
+
 
 logger = get_logger(__name__)
 
@@ -35,7 +34,6 @@ class DataSet(object):
     CATEGORIES = ["other", "agriculture", "climate", "science", "energy", "business", "consumer", "education",
                   "finance", "manufacturing", "ecosystems", "health"]
     FILE_FORMATS = ["CSV"]
-    TEST_TRANSFER_TITLES = []
 
     def __init__(self, category=None, creation_time=None, data_sample=None, format=None, id=None, is_public=None,
                  org_guid=None, record_count=None, size=None, source_uri=None, target_uri=None, title=None):
@@ -53,9 +51,11 @@ class DataSet(object):
         return "{0} (title={1}, id={2})".format(self.__class__.__name__, self.title, self.id)
 
     @classmethod
-    def api_get_list(cls, org_list, query="", filters=(), size=100, time_from=0, only_private=False, only_public=False,
-                     client=None):
-        org_guids = [org.guid for org in org_list]
+    def api_get_list(cls, org_list=None, query="", filters=(), size=100, time_from=0, only_private=False,
+                     only_public=False, client=None):
+        org_guids = None
+        if org_list is not None:
+            org_guids = [org.guid for org in org_list]
         response = api.api_get_datasets(org_guids, query, filters, size, time_from, only_private, only_public,
                                         client=client)
         data_sets = []
@@ -68,18 +68,20 @@ class DataSet(object):
         return data_sets
 
     @classmethod
-    def api_get_matching_to_transfer_list(cls, org_list, transfer_title_list, client=None):
+    def api_get_matching_to_transfer_list(cls, transfer_title_list, org_list=None, client=None):
         """Return datasets whose title is in transfer_title_list."""
         datasets = cls.api_get_list(org_list=org_list, client=client)
         return [ds for ds in datasets if ds.title in transfer_title_list]
 
     @classmethod
     @retry(AssertionError, tries=15, delay=2)
-    def api_get_matching_to_transfer(cls, org_list, transfer_title, client=None):
+    def api_get_matching_to_transfer(cls, transfer_title, org, client=None):
         """Return dataset whose title matches transfer_title or raise AssertionError if such dataset is not found."""
-        dataset = next(iter(cls.api_get_matching_to_transfer_list(org_list, [transfer_title], client)), None)
+        datasets = cls.api_get_matching_to_transfer_list(transfer_title_list=[transfer_title], org_list=[org],
+                                                         client=client)
+        dataset = next(iter(datasets), None)
         if dataset is None:
-            raise AssertionError("Dataset with title {} was not found".format(transfer_title))
+            raise AssertionError("Dataset {} was not found".format(transfer_title))
         return dataset
 
     @classmethod
@@ -106,16 +108,6 @@ class DataSet(object):
 
     def api_delete(self, client=None):
         api.api_delete_dataset(self.id, client)
-
-    @classmethod
-    def api_teardown_test_datasets(cls):
-        dataset_list = cls.api_get_matching_to_transfer_list(Organization.TEST_ORGS, cls.TEST_TRANSFER_TITLES)
-        cls.TEST_TRANSFER_TITLES = []
-        for ds in dataset_list:
-            try:
-                ds.api_delete()
-            except UnexpectedResponseError:
-                logger.warning("Failed to delete: {}".format(ds))
 
     def get_details(self):
         return dict(accessibility="PUBLIC" if self.is_public else "PRIVATE", title=self.title, category=self.category,

@@ -52,3 +52,4 @@ class ServiceKey(object):
         response = api.api_create_service_key(service_instance_guid, service_key_name, client)
         return cls(guid=response["guid"], name=response["name"],
                    service_instance_guid=response["service_instance_guid"], credentials=response["credentials"])
+    

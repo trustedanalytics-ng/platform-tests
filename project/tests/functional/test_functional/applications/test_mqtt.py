@@ -27,9 +27,10 @@ from configuration import config
 from modules.constants import TapComponent as TAP, ServiceLabels, TapGitHub
 from modules.http_calls import cloud_foundry as cf
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import priority, components
 from modules.tap_object_model import Application, Organization, ServiceInstance, Space
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -44,7 +45,7 @@ class Mqtt(TapTestCase):
     SERVER_CERTIFICATE = os.path.join("fixtures", "mosquitto_demo_cert.pem")
     MQTT_TOPIC_NAME = "space-shuttle/test-data"
 
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUp(self):
 
         self.step("Clone repository")

@@ -16,16 +16,17 @@
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Organization, Space, User
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
 @components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class Spaces(TapTestCase):
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create an organization")
         cls.test_org = Organization.api_create()
@@ -35,7 +36,7 @@ class Spaces(TapTestCase):
         self.step("Create new organization")
         org = Organization.api_create()
         self.step("Get list of spaces in the org and check that there are none")
-        spaces = org.api_get_spaces()
+        spaces = Space.api_get_list_in_org(org_guid=org.guid)
         self.assertEqual(len(spaces), 0, "There are spaces in a new organization")
 
     @priority.high

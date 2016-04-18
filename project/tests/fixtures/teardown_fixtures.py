@@ -14,6 +14,17 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.4.50'
+import functools
 
+from modules.tap_object_model.flows import cleaner
+
+
+def cleanup_after_failed_setup(func):
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except:
+            cleaner.tear_down_all()
+            raise
+    return wrapped

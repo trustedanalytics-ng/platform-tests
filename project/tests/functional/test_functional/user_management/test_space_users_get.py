@@ -16,18 +16,19 @@
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import Space, User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
 @components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class GetSpaceUsers(TapTestCase):
     @classmethod
-    @cleanup_after_failed_setup()
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
-        cls.test_users, cls.test_org = User.api_create_users_for_tests(3)
+        cls.test_users, cls.test_org = setup_fixtures.create_test_users(3)
         cls.test_space = Space.api_create(cls.test_org)
 
     def test_get_user_list_from_space(self):

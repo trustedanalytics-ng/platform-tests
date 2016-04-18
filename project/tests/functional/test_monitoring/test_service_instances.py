@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from datetime import datetime
 
 from modules.constants.services import ServiceLabels
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space
+from tests.fixtures import teardown_fixtures
 
 
 class ServiceInstancesMonitoring(TapTestCase):
@@ -25,7 +27,7 @@ class ServiceInstancesMonitoring(TapTestCase):
     TESTED_APP_NAMES = {ServiceLabels.RSTUDIO}
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test space")
         cls.test_organization = Organization.api_create()

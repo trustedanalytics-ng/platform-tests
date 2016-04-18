@@ -17,17 +17,17 @@
 from retry import retry
 from modules.constants import HttpStatus, TapComponent as TAP, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import cleanup_after_failed_setup, TapTestCase
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import DataSet, Organization, Transfer, User
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
 @components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
 class UpdateDeleteDataSet(TapTestCase):
     @classmethod
-    @cleanup_after_failed_setup(DataSet.api_teardown_test_datasets, Transfer.api_teardown_test_transfers,
-                                Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization")
         cls.org = Organization.api_create()
@@ -41,7 +41,7 @@ class UpdateDeleteDataSet(TapTestCase):
         self.step("Wait for transfer to finish")
         transfer.ensure_finished()
         self.step("Get data set matching to transfer")
-        self.dataset = DataSet.api_get_matching_to_transfer([self.org], transfer.title)
+        self.dataset = DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
 
     @retry(AssertionError, tries=10, delay=3)
     def _assert_updated(self, data_set_id, updated_attribute_name, expected_value):

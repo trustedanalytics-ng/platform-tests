@@ -20,11 +20,12 @@ import unittest
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import Priority, TapComponent as TAP, ServiceLabels, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, incremental, mark
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import DataSet, Organization, ServiceInstance, ServiceType, Space, Transfer, User
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -38,7 +39,7 @@ class Atk(TapTestCase):
     data_set_hdfs_path = None
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization and test space")
         cls.test_org = Organization.api_create()
@@ -95,7 +96,7 @@ class Atk(TapTestCase):
         self.step("Create transfer and check it's finished")
         Transfer.api_create(source=Urls.test_transfer_link, org_guid=self.test_org.guid, title=self.transfer_title).ensure_finished()
         self.step("Publish in hive the data set created based on the submitted transfer")
-        data_set = DataSet.api_get_matching_to_transfer(org_list=[self.test_org], transfer_title=self.transfer_title)
+        data_set = DataSet.api_get_matching_to_transfer(org=self.test_org, transfer_title=self.transfer_title)
         data_set.api_publish()
         self.__class__.data_set_hdfs_path = data_set.target_uri
 

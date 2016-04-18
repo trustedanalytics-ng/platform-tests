@@ -27,11 +27,12 @@ from modules.file_utils import download_file
 from modules.hbase_client import HbaseClient
 from modules.http_calls import cloud_foundry as cf
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, incremental
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_object_model import Application, Organization, ServiceInstance, Space
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 @log_components()
@@ -50,7 +51,7 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
     db_and_table_name = None
 
     @classmethod
-    @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Clone and compile app sources")
         github_auth = config.CONFIG["github_auth"]

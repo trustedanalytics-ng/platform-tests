@@ -17,9 +17,9 @@
 from modules import gmail_api, api_password
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
-from modules.tap_object_model import User
+from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
@@ -29,10 +29,10 @@ class PasswordTests(TapTestCase):
     NEW_PASSWORD = "NEW_PASSWORD"
 
     @classmethod
-    @cleanup_after_failed_setup(User.cf_api_tear_down_test_users)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create users for password tests")
-        cls.users, _ = User.api_create_users_for_tests(2)
+        cls.users, _ = setup_fixtures.create_test_users(2)
 
     @priority.high
     def test_reset_password(self):

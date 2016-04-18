@@ -20,18 +20,18 @@ from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent 
 from modules.file_utils import generate_csv_file, tear_down_test_files
 from modules.http_calls import platform as api
 from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
+from modules.runner.tap_test_case import TapTestCase
 from modules.runner.decorators import components, priority
 from modules.tap_object_model import DataSet, Organization, Transfer, User
 from modules.test_names import get_test_name
+from tests.fixtures import teardown_fixtures
 
 
 class SubmitTransferBase(TapTestCase):
     DEFAULT_CATEGORY = "other"
 
     @classmethod
-    @cleanup_after_failed_setup(DataSet.api_teardown_test_datasets, Transfer.api_teardown_test_transfers,
-                                Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization")
         cls.org = Organization.api_create()
@@ -114,7 +114,7 @@ class SubmitTransferFromLocalFile(SubmitTransfer):
     def test_submit_transfer_from_large_file(self):
         transfer = self._create_transfer(org_guid=self.org.guid, size=20 * 1024 * 1024)
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        DataSet.api_get_matching_to_transfer([self.org], transfer.title)
+        DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
 
     @priority.low
     def test_create_transfer_without_category(self):
@@ -139,21 +139,20 @@ class SubmitTransferFromLocalFile(SubmitTransfer):
     def test_submit_transfer_from_file_with_space_in_name(self):
         transfer = self._create_transfer(org_guid=self.org.guid, file_name="test file with space in name {}.csv")
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        DataSet.api_get_matching_to_transfer([self.org], transfer.title)
+        DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
 
     @priority.low
     def test_submit_transfer_from_empty_file(self):
         transfer = self._create_transfer(org_guid=self.org.guid, category=self.DEFAULT_CATEGORY, size=0)
         self.step("Get data set matching to transfer {}".format(transfer.title))
-        DataSet.api_get_matching_to_transfer([self.org], transfer.title)
+        DataSet.api_get_matching_to_transfer(org=self.org, transfer_title=transfer.title)
 
 
 @log_components()
 @components(TAP.das)
 class GetTransfers(TapTestCase):
     @classmethod
-    @cleanup_after_failed_setup(DataSet.api_teardown_test_datasets, Transfer.api_teardown_test_transfers,
-                                Organization.cf_api_tear_down_test_orgs)
+    @teardown_fixtures.cleanup_after_failed_setup
     def setUpClass(cls):
         cls.step("Create test organization")
         cls.org = Organization.api_create()
