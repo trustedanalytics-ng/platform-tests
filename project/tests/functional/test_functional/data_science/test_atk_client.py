@@ -21,7 +21,7 @@ from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import Priority, TapComponent as TAP, ServiceLabels, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
-from modules.runner.decorators import components, incremental
+from modules.runner.decorators import components, incremental, mark
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import DataSet, Organization, ServiceInstance, ServiceType, Space, Transfer, User
 from modules.test_names import get_test_name
@@ -99,6 +99,7 @@ class Atk(TapTestCase):
         data_set.api_publish()
         self.__class__.data_set_hdfs_path = data_set.target_uri
 
+    @mark.long
     def test_5_frame_csv_file(self):
         """kerberos: DPNG-4525, non-kerberos: DPNG-5171"""
         self.step("Run atk csv file test")

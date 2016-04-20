@@ -36,6 +36,7 @@ class TapComponent(Enum):
     hdfs_broker = "hdfs-broker"
     hdfs_downloader = "hdfs-downloader"
     hdfs_uploader = "hdfs-uploader"
+    hive_broker = "hive-broker"
     kafka_broker = "kafka-broker"
     kerberos_service = "kerberos-service"
     latest_events_service = "latest-events-service"

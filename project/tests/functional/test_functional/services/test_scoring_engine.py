@@ -22,7 +22,7 @@ from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, Urls
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
-from modules.runner.decorators import components, priority
+from modules.runner.decorators import components, mark, priority
 from modules.tap_object_model import DataSet, Organization, ServiceInstance, ServiceKey, Space, Transfer, User
 from modules.test_names import get_test_name
 
@@ -63,6 +63,7 @@ class TestScoringEngineInstance(TapTestCase):
         cls.authorised_users = [admin, space_developer]
         cls.unauthorised_users = [space_manager, space_auditor]
 
+    @mark.long
     @priority.high
     @unittest.skip("DPNG-6705")
     def test_create_delete_for_different_users(self):

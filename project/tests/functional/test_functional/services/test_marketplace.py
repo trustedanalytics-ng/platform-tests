@@ -20,7 +20,7 @@ from modules.constants import PARAMETRIZED_SERVICE_INSTANCES, ServiceCatalogHttp
     TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase, cleanup_after_failed_setup
-from modules.runner.decorators import components, priority
+from modules.runner.decorators import components, mark, priority
 from modules.service_tools.ipython import iPython
 from modules.tap_object_model import Organization, ServiceInstance, ServiceKey, ServiceType, Space, User
 from modules.test_names import get_test_name
@@ -109,6 +109,7 @@ class MarketplaceServices(TapTestCase):
         cf_marketplace = ServiceType.cf_api_get_list_from_marketplace_by_space(self.test_space.guid)
         self.assertUnorderedListEqual(self.marketplace, cf_marketplace)
 
+    @mark.long
     @priority.high
     def test_create_and_delete_service_instance_and_keys(self):
         tested_service_types = [st for st in self.marketplace if st.label not in PARAMETRIZED_SERVICE_INSTANCES +
