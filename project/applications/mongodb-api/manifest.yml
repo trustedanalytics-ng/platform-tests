@@ -1,0 +1,5 @@
+applications:
+- buildpack: python_buildpack
+  command: app/main.py
+  name: mongodb_app
+  services: [mongodb_instance]

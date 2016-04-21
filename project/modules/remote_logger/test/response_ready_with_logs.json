@@ -1,0 +1,150 @@
+{
+  "took": 100,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "failed": 0
+  },
+  "hits": {
+    "total": 3,
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "logstash-2016.02.24",
+        "_type": "cloudfoundry_doppler",
+        "_id": "AVMTX5QRAa8JrV3fBC7E",
+        "_score": null,
+        "_source": {
+          "@version": "1",
+          "@timestamp": "2016-02-24T13:02:23.000Z",
+          "host": "127.0.0.1",
+          "@message": "{\"cf_app_id\":\"57332b4d-3bad-47d9-8d4d-107f22561780\",\"cf_app_name\":\"user-management\",\"cf_org_id\":\"c7363b45-9be2-4696-89e4-add8dc22bd88\",\"cf_org_name\":\"seedorg\",\"cf_space_id\":\"14f1a888-086a-42f2-b1f3-3c4f11222b75\",\"cf_space_name\":\"seedspace\",\"event_type\":\"LogMessage\",\"level\":\"info\",\"message_type\":\"OUT\",\"msg\":\"2016-02-24 13:02:23.458 DEBUG 29 --- [io-61010-exec-5] o.s.s.w.u.matcher.AntPathRequestMatcher  : Checking match of request : '/rest/invitations'; against '/rest/registrations'\",\"origin\":\"dea_logging_agent\",\"source_instance\":\"0\",\"source_type\":\"App\",\"time\":\"2016-02-24T13:02:23Z\",\"timestamp\":1456318943459096306}",
+          "received_at": "2016-02-24T13:02:23.468Z",
+          "received_from": "127.0.0.1",
+          "tags": [
+            "syslog_standard",
+            "cloudfoundry_doppler"
+          ],
+          "@source.host": "ad72b5d6-bdb1-41aa-8537-d1e93afe35e6",
+          "cf_app_id": "57332b4d-3bad-47d9-8d4d-107f22561780",
+          "cf_app_name": "user-management",
+          "cf_org_id": "c7363b45-9be2-4696-89e4-add8dc22bd88",
+          "cf_org_name": "seedorg",
+          "cf_space_id": "14f1a888-086a-42f2-b1f3-3c4f11222b75",
+          "cf_space_name": "seedspace",
+          "event_type": "LogMessage",
+          "level": "info",
+          "message_type": "OUT",
+          "msg": "2016-02-24 13:02:23.458 DEBUG 29 --- [io-61010-exec-5] o.s.s.w.u.matcher.AntPathRequestMatcher  : Checking match of request : '/rest/invitations'; against '/rest/registrations'",
+          "origin": "dea_logging_agent",
+          "source_instance": "0",
+          "source_type": "App",
+          "timestamp": 1456318943459096300,
+          "@type": "cloudfoundry_doppler"
+        },
+        "fields": {
+          "received_at": [
+            1456318943468
+          ],
+          "@timestamp": [
+            1456318943000
+          ]
+        },
+        "sort": [
+          1456318943000
+        ]
+      },
+      {
+        "_index": "logstash-2016.02.24",
+        "_type": "cloudfoundry_doppler",
+        "_id": "AVMTX5QRAa8JrV3fBC7J",
+        "_score": null,
+        "_source": {
+          "@version": "1",
+          "@timestamp": "2016-02-24T13:02:23.000Z",
+          "host": "127.0.0.1",
+          "@message": "{\"cf_app_id\":\"57332b4d-3bad-47d9-8d4d-107f22561780\",\"cf_app_name\":\"user-management\",\"cf_org_id\":\"c7363b45-9be2-4696-89e4-add8dc22bd88\",\"cf_org_name\":\"seedorg\",\"cf_space_id\":\"14f1a888-086a-42f2-b1f3-3c4f11222b75\",\"cf_space_name\":\"seedspace\",\"event_type\":\"LogMessage\",\"level\":\"info\",\"message_type\":\"OUT\",\"msg\":\"2016-02-24 13:02:23.458 DEBUG 29 --- [io-61010-exec-5] o.s.security.web.FilterChainProxy        : /rest/invitations at position 4 of 11 in additional filter chain; firing Filter: 'LogoutFilter'\",\"origin\":\"dea_logging_agent\",\"source_instance\":\"0\",\"source_type\":\"App\",\"time\":\"2016-02-24T13:02:23Z\",\"timestamp\":1456318943459281133}",
+          "received_at": "2016-02-24T13:02:23.471Z",
+          "received_from": "127.0.0.1",
+          "tags": [
+            "syslog_standard",
+            "cloudfoundry_doppler"
+          ],
+          "@source.host": "ad72b5d6-bdb1-41aa-8537-d1e93afe35e6",
+          "cf_app_id": "57332b4d-3bad-47d9-8d4d-107f22561780",
+          "cf_app_name": "user-management",
+          "cf_org_id": "c7363b45-9be2-4696-89e4-add8dc22bd88",
+          "cf_org_name": "seedorg",
+          "cf_space_id": "14f1a888-086a-42f2-b1f3-3c4f11222b75",
+          "cf_space_name": "seedspace",
+          "event_type": "LogMessage",
+          "level": "info",
+          "message_type": "OUT",
+          "msg": "2016-02-24 13:02:23.458 DEBUG 29 --- [io-61010-exec-5] o.s.security.web.FilterChainProxy        : /rest/invitations at position 4 of 11 in additional filter chain; firing Filter: 'LogoutFilter'",
+          "origin": "dea_logging_agent",
+          "source_instance": "0",
+          "source_type": "App",
+          "timestamp": 1456318943459281200,
+          "@type": "cloudfoundry_doppler"
+        },
+        "fields": {
+          "received_at": [
+            1456318943471
+          ],
+          "@timestamp": [
+            1456318943000
+          ]
+        },
+        "sort": [
+          1456318943000
+        ]
+      },
+      {
+        "_index": "logstash-2016.02.24",
+        "_type": "cloudfoundry_doppler",
+        "_id": "AVMTX5QRAa8JrV3fBC7O",
+        "_score": null,
+        "_source": {
+          "@version": "1",
+          "@timestamp": "2016-02-24T13:02:23.000Z",
+          "host": "127.0.0.1",
+          "@message": "{\"cf_app_id\":\"57332b4d-3bad-47d9-8d4d-107f22561780\",\"cf_app_name\":\"user-management\",\"cf_org_id\":\"c7363b45-9be2-4696-89e4-add8dc22bd88\",\"cf_org_name\":\"seedorg\",\"cf_space_id\":\"14f1a888-086a-42f2-b1f3-3c4f11222b75\",\"cf_space_name\":\"seedspace\",\"event_type\":\"LogMessage\",\"level\":\"info\",\"message_type\":\"OUT\",\"msg\":\"2016-02-24 13:02:23.464 DEBUG 29 --- [io-61010-exec-5] o.s.security.web.FilterChainProxy        : /rest/invitations at position 6 of 11 in additional filter chain; firing Filter: 'RequestCacheAwareFilter'\",\"origin\":\"dea_logging_agent\",\"source_instance\":\"0\",\"source_type\":\"App\",\"time\":\"2016-02-24T13:02:23Z\",\"timestamp\":1456318943464540044}",
+          "received_at": "2016-02-24T13:02:23.472Z",
+          "received_from": "127.0.0.1",
+          "tags": [
+            "syslog_standard",
+            "cloudfoundry_doppler"
+          ],
+          "@source.host": "ad72b5d6-bdb1-41aa-8537-d1e93afe35e6",
+          "cf_app_id": "57332b4d-3bad-47d9-8d4d-107f22561780",
+          "cf_app_name": "user-management",
+          "cf_org_id": "c7363b45-9be2-4696-89e4-add8dc22bd88",
+          "cf_org_name": "seedorg",
+          "cf_space_id": "14f1a888-086a-42f2-b1f3-3c4f11222b75",
+          "cf_space_name": "seedspace",
+          "event_type": "LogMessage",
+          "level": "info",
+          "message_type": "OUT",
+          "msg": "2016-02-24 13:02:23.464 DEBUG 29 --- [io-61010-exec-5] o.s.security.web.FilterChainProxy        : /rest/invitations at position 6 of 11 in additional filter chain; firing Filter: 'RequestCacheAwareFilter'",
+          "origin": "dea_logging_agent",
+          "source_instance": "0",
+          "source_type": "App",
+          "timestamp": 1456318943464540200,
+          "@type": "cloudfoundry_doppler"
+        },
+        "fields": {
+          "received_at": [
+            1456318943472
+          ],
+          "@timestamp": [
+            1456318943000
+          ]
+        },
+        "sort": [
+          1456318943000
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "size": _LIMIT_,
+  "from": _OFFSET_,
+  "sort": [
+    {
+      "timestamp": {
+        "order": "asc",
+        "mode": "min"
+      }
+    }
+  ],
+  "query": {
+    "filtered": {
+      "query": {
+        "match_all": {}
+      },
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "query": {
+                "match": {
+                  "cf_app_name": {
+                    "query": "_APP_NAME_",
+                    "type": "phrase"
+                  }
+                }
+              }
+            },
+            {
+              "range": {
+                "received_at": {
+                  "gte": _DATE_FROM_,
+                  "lte": _DATE_TO_
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "fields": [
+    "*",
+    "_source"
+  ],
+  "fielddata_fields": [
+    "timestamp"
+  ]
+}
