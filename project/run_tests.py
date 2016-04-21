@@ -84,9 +84,8 @@ if __name__ == "__main__":
     if args.file is not None:
         suite = loader.load_from_file(args.file)
     else:
-        components = [getattr(TapComponent, c) for c in args.components]
         priority = getattr(Priority, args.priority)
-        suite = loader.load(path=args.suite, test_name=args.test, priority=priority, components=components,
+        suite = loader.load(path=args.suite, test_name=args.test, priority=priority, components=args.components,
                             only_tags=args.only_tagged, excluded_tags=args.not_tagged)
 
     log_all_stats()

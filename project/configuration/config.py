@@ -167,7 +167,7 @@ def parse_arguments():
     parser.add_argument("-c", "--components",
                         default=[],
                         action="append",
-                        choices=TapComponent.names(),
+                        type=TapComponent,
                         help="Limit tests to those which use specified components")
     parser.add_argument("--only-tagged",
                         default=[],
