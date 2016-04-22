@@ -14,14 +14,14 @@
 # limitations under the License.
 #
 
+from enum import Enum
 
-class LoggerType(object):
-    """Logger types definitions"""
 
-    CF_CLI = "CF_CLI"
-    HTTP_REQUEST = "http_request"
-    HTTP_RESPONSE = "http_response"
-    REMOTE_LOGGER = "remote logger"
-    SHELL_COMMAND = "shell command"
-    STEP_LOGGER = "STEP"
-    GATLING_RUNNER = "gatling runner"
+class SimulationName(Enum):
+    """Gatling names of simulations classes."""
+
+    ADD_DATA_SET = "org.trustedanalytics.at.dataCatalog.AddDataSet"
+    LOAD_RESOURCES = "org.trustedanalytics.at.loadResources.LoadResources"
+    SERVICE_CATALOG = "org.trustedanalytics.at.serviceCatalog.ServiceCatalog"
+    ADD_ORGANIZATION = "org.trustedanalytics.at.userManagement.AddOrganization"
+    ADD_SPACE_TO_ORGANIZATION = "org.trustedanalytics.at.userManagement.AddSpaceToOrganization"

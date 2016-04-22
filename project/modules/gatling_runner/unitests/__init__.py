@@ -13,15 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-class LoggerType(object):
-    """Logger types definitions"""
-
-    CF_CLI = "CF_CLI"
-    HTTP_REQUEST = "http_request"
-    HTTP_RESPONSE = "http_response"
-    REMOTE_LOGGER = "remote logger"
-    SHELL_COMMAND = "shell command"
-    STEP_LOGGER = "STEP"
-    GATLING_RUNNER = "gatling runner"

@@ -14,14 +14,15 @@
 # limitations under the License.
 #
 
+import os
 
-class LoggerType(object):
-    """Logger types definitions"""
+import unittest
 
-    CF_CLI = "CF_CLI"
-    HTTP_REQUEST = "http_request"
-    HTTP_RESPONSE = "http_response"
-    REMOTE_LOGGER = "remote logger"
-    SHELL_COMMAND = "shell command"
-    STEP_LOGGER = "STEP"
-    GATLING_RUNNER = "gatling runner"
+
+class PackageTestCase(unittest.TestCase):
+    """Package unit test base class."""
+
+    def _load_fixture(self, fixture):
+        """Load fixture file."""
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "fixtures", fixture), 'r') as file:
+            return file.read()
