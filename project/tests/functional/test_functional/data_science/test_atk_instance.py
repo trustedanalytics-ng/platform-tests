@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import unittest
+
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP, Priority
 from modules.remote_logger.remote_logger_decorator import log_components
@@ -59,6 +61,7 @@ class DataScienceAtkInstance(TapTestCase):
             service_plan_guid=plan["guid"]
         )
 
+    @unittest.skip("DPNG-6832")
     def test_2_check_atk_instance_exists(self):
         self.step("Find atk instance on the data science instances list")
         data_science_atk_list = AtkInstance.api_get_list_from_data_science_atk(self.test_org.guid)

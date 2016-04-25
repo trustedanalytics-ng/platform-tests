@@ -15,6 +15,7 @@
 #
 
 import os
+import unittest
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import Priority, TapComponent as TAP, ServiceLabels, Urls
@@ -57,6 +58,7 @@ class Atk(TapTestCase):
         cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=cls.test_org)
         super().tearDownClass()
 
+    @unittest.skip("DPNG-5582, DPNG-6751")
     def test_0_check_atk_uaac_credentials(self):
         self.step("Check if atk has correct credentials and is able to download uaac token")
         ATKtools.check_uaac_token()

@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import unittest
+
 import requests
 
 from modules.application_stack_validator import ApplicationStackValidator
@@ -62,6 +64,7 @@ class TestScoringEngineInstance(TapTestCase):
         cls.unauthorised_users = [space_manager, space_auditor]
 
     @priority.high
+    @unittest.skip("DPNG-6705")
     def test_create_delete_for_different_users(self):
         for user in self.authorised_users:
             with self.subTest(user=user):
