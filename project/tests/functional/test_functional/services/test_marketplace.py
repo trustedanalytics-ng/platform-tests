@@ -30,7 +30,8 @@ from modules.test_names import get_test_name
 @components(TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker, TAP.hdfs_broker,
             TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker, TAP.zookeeper_wssb_broker)
 class MarketplaceServices(TapTestCase):
-    SERVICES_TESTED_SEPARATELY = [ServiceLabels.YARN, ServiceLabels.HDFS, ServiceLabels.HBASE, ServiceLabels.GEARPUMP]
+    SERVICES_TESTED_SEPARATELY = [ServiceLabels.YARN, ServiceLabels.HDFS, ServiceLabels.HBASE, ServiceLabels.GEARPUMP,
+                                  ServiceLabels.H2O]
 
     @classmethod
     @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs, User.cf_api_tear_down_test_users)
@@ -110,7 +111,6 @@ class MarketplaceServices(TapTestCase):
 
     @priority.high
     def test_create_and_delete_service_instance_and_keys(self):
-        """DPNG-6086 Adding service key to H2O instance fails"""
         tested_service_types = [st for st in self.marketplace if st.label not in PARAMETRIZED_SERVICE_INSTANCES +
                                 self.SERVICES_TESTED_SEPARATELY]
         for service_type in tested_service_types:
@@ -176,6 +176,18 @@ class MarketplaceServices(TapTestCase):
                                                         ServiceInstance.api_create, self.test_org.guid,
                                                         self.test_space.guid, service_type.label,
                                                         service_plan_guid=plan["guid"], client=client)
+
+    @priority.low
+    def test_create_h2o_service_instance_and_keys(self):
+        """DPNG-6086 Adding service key to H2O instance fails"""
+        label = ServiceLabels.H2O
+        h2o = next((s for s in self.marketplace if s.label == label), None)
+        if h2o is None:
+            self.skipTest("h2o is not available in Marketplace")
+        for plan in h2o.service_plans:
+            with self.subTest(service=label, plan=plan["name"]):
+                self._create_and_delete_service_instance_and_keys(self.test_org.guid, self.test_space.guid, label,
+                                                                  plan["guid"])
 
     @priority.low
     def test_create_yarn_service_instance_and_keys(self):

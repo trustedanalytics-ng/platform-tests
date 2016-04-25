@@ -25,6 +25,7 @@ class ServiceLabels(object):
     GATEWAY = "gateway"
     GEARPUMP = "gearpump"
     GEARPUMP_DASHBOARD = "gearpump-dashboard"
+    H2O = "h2o"
     HBASE = "hbase"
     HDFS = "hdfs"
     INFLUX_DB = "influxdb088"

@@ -58,7 +58,7 @@ class ServiceInstance(object):
         instance_list = cls.api_get_list(space_guid)
         instance = next((i for i in instance_list if i.name == instance_name), None)
         if instance is None:
-            raise AssertionError("Instance was not created in 5 minutes")
+            raise AssertionError("Instance was not created")
         return instance
 
     # ----------------------------------------- Platform API ----------------------------------------- #
