@@ -27,8 +27,7 @@ if [ -d $VENDOR ]; then
     rm -rf $VENDOR
 fi
 mkdir $VENDOR
-pip install --exists-action=w --download $VENDOR -r $REQUIREMENTS_PATH
-pip install --download $VENDOR/ -r $REQUIREMENTS_PATH --no-use-wheel
+pip download -d $VENDOR -r $REQUIREMENTS_PATH
 
 # remove secrets
 rm -rf $SECRETS_PATH
