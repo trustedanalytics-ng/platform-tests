@@ -30,8 +30,7 @@ from tests.fixtures import teardown_fixtures
 
 @log_components()
 @incremental(Priority.high)
-@components(TAP.atk, TAP.dataset_publisher, TAP.application_broker, TAP.service_catalog, TAP.das, TAP.hdfs_downloader,
-            TAP.metadata_parser)
+@components(TAP.atk, TAP.application_broker, TAP.service_catalog)
 class Atk(TapTestCase):
     ATK_PLAN_NAME = "Simple"
     atk_virtualenv = None
