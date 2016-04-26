@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
-from modules.constants import TapComponent as TAP
+from modules.constants import TapComponent as TAP, UserManagementHttpStatus
 from modules.markers import components, priority
 from modules.tap_logger import step
-from modules.tap_object_model import Organization, User
+from modules.tap_object_model import Organization, Space, User
 from tests.fixtures import assertions
 
 
@@ -56,6 +57,55 @@ class TestOrganization:
         test_org = Organization.api_create(context)
         step("Add new platform user to the organization")
         User.api_create_by_adding_to_organization(context, test_org.guid)
+        step("Delete the organization")
+        test_org.api_delete()
+        step("Check that the organization is not on org list")
+        assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
+
+    @priority.low
+    def test_delete_organization_with_space(self, context):
+        step("Create an organization")
+        test_org = Organization.api_create(context)
+        step("Create a space")
+        Space.api_create(org=test_org)
+        step("Delete the organization")
+        test_org.api_delete()
+        step("Check that the organization is not on org list")
+        assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
+
+    @priority.medium
+    def test_non_admin_cannot_create_org(self, test_org_manager_client, context):
+        step("Attempt to create organization with the non admin client")
+        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_FORBIDDEN,
+                                                UserManagementHttpStatus.MSG_FORBIDDEN, Organization.api_create,
+                                                context=context, client=test_org_manager_client)
+
+    @priority.high
+    def test_non_admin_cannot_delete_org(self, test_org_manager_client, context):
+        step("Create an organization")
+        test_org = Organization.api_create(context)
+        step("Attempt to delete the organization with the non admin client")
+        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_FORBIDDEN,
+                                                UserManagementHttpStatus.MSG_FORBIDDEN, test_org.api_delete,
+                                                client=test_org_manager_client)
+
+    @pytest.mark.bugs("DPNG-6841 Bad error message when creating org with existing name")
+    @priority.medium
+    def test_cannot_create_two_orgs_with_the_same_name(self, test_org, context):
+        step("Attempt to create organization with the same name")
+        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_CONFLICT,
+                                                UserManagementHttpStatus.MSG_ORGANIZATION_ALREADY_TAKEN,
+                                                Organization.api_create, context=context, name=test_org.name)
+
+    @priority.low
+    @pytest.mark.parametrize("org_name", ("a" * 100, "simple name"), ids=("long_name", "space_in_name"))
+    def test_create_and_delete_org_with_special_name(self, org_name, context):
+        step("Create an organization")
+        test_org = Organization.api_create(context, name=org_name)
+        assert org_name == test_org.name
+        step("Check that the organization is on the organization list")
+        orgs = Organization.api_get_list()
+        assert test_org in orgs
         step("Delete the organization")
         test_org.api_delete()
         step("Check that the organization is not on org list")
