@@ -22,7 +22,7 @@ from modules.tap_object_model import Space, User
 
 
 @log_components()
-@components(TAP.user_management)
+@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class GetSpaceUsers(TapTestCase):
     @classmethod
     @cleanup_after_failed_setup()

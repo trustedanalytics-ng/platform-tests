@@ -22,7 +22,7 @@ from modules.runner.decorators import components, priority
 
 
 @log_components()
-@components(TAP.user_management)
+@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class DeleteSpaceUser(TapTestCase):
 
     @classmethod

@@ -22,7 +22,7 @@ from modules.tap_object_model import Organization, Space, User
 
 
 @log_components()
-@components(TAP.user_management)
+@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 class Spaces(TapTestCase):
     @classmethod
     @cleanup_after_failed_setup(Organization.cf_api_tear_down_test_orgs)
