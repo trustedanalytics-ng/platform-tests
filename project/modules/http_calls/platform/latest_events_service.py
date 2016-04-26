@@ -14,6 +14,13 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.5.7'
+from modules.api_client import PlatformApiClient
 
+
+def api_get_latest_events(org_guid=None, client=None):
+    """GET /rest/les/events"""
+    client = client or PlatformApiClient.get_admin_client()
+    params = {}
+    if org_guid is not None:
+        params = {"org": org_guid}
+    return client.request("GET", "rest/les/events", params=params, log_msg="PLATFORM: get latest events")

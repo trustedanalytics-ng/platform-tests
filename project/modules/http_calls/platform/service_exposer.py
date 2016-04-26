@@ -14,6 +14,17 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.5.7'
+from modules.api_client import PlatformApiClient
 
+
+def api_tools_service_instances(service_label, space_guid, org_guid=None, client=None):
+    """GET /rest/tools/service_instances"""
+    client = client or PlatformApiClient.get_admin_client()
+    params = {
+        "service": service_label,
+        "space": space_guid
+    }
+    if org_guid is not None:
+        params.update({"org": org_guid})
+    return client.request("GET", "rest/tools/service_instances", params=params,
+                          log_msg="PLATFORM: get tools for service instance")

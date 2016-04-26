@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from ..http_calls import platform as api
+from ..http_calls.platform import service_catalog
 
 
 class ServiceBinding(object):
@@ -25,7 +25,7 @@ class ServiceBinding(object):
 
     @classmethod
     def api_get_list(cls, app_guid, client=None):
-        response = api.api_get_app_bindings(app_guid, client=client)
+        response = service_catalog.api_get_app_bindings(app_guid, client=client)
         service_bindings = []
         for instance in response:
             entity = instance["entity"]

@@ -20,7 +20,7 @@ import pytest
 
 from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
 from modules.file_utils import generate_csv_file
-from modules.http_calls import platform as api
+from modules.http_calls.platform import das, hdfs_uploader
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import DataSet, Transfer
@@ -78,7 +78,7 @@ class SubmitTransfer(TapTestCase):
     @priority.medium
     def test_no_token_in_create_transfer_response(self):
         self.step("Create new transfer and check that 'token' field was not returned in response")
-        response = api.api_create_transfer(
+        response = das.api_create_transfer(
             source=Urls.test_transfer_link,
             title=get_test_name(),
             is_public=False,
@@ -118,7 +118,7 @@ class SubmitTransferFromLocalFile(SubmitTransfer):
         self.step("Generate sample csv file")
         file_path = generate_csv_file(column_count=10, row_count=10)
         self.step("Create new transfer and check that 'token' field was not returned in response")
-        response = api.api_create_transfer_by_file_upload(
+        response = hdfs_uploader.api_create_transfer_by_file_upload(
             source=file_path,
             title="test-transfer-{}".format(time.time()),
             is_public=False,

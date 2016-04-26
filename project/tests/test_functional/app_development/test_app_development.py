@@ -17,7 +17,7 @@
 import pytest
 
 from modules.constants import TapComponent as TAP
-from modules.http_calls import platform as api
+from modules.http_calls.platform import platform_pages as api
 from modules.markers import priority, components
 from modules.runner.tap_test_case import TapTestCase
 from tests.fixtures.test_data import TestData

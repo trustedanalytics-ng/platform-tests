@@ -21,10 +21,10 @@ from retry import retry
 
 from ..constants import ServiceLabels
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, platform as api, application_broker as broker_client
+from ..http_calls import cloud_foundry as cf, application_broker as broker_client
+from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
 from ..test_names import get_test_name
 from . import ServiceKey
-
 
 
 @functools.total_ordering
@@ -76,15 +76,15 @@ class ServiceInstance(object):
             raise ValueError("service_plan_guid, or service_label and service_plan_name have to be supplied")
         if service_plan_guid is None:
             # retrieve plan guid based on service name and plan name
-            response = api.api_get_service_plans(service_type_label=service_label, client=client)
+            response = service_catalog.api_get_service_plans(service_type_label=service_label, client=client)
             service_plan_data = next((item for item in response if item["entity"]["name"] == service_plan_name), None)
             if service_plan_data is None:
                 raise ValueError("No such plan {} for service {}".format(service_plan_name, service_label))
             service_plan_guid = service_plan_data["metadata"]["guid"]
         try:
-            response = api.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
-                                                       org_guid=org_guid, space_guid=space_guid, params=params,
-                                                       client=client)
+            response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
+                                                                   org_guid=org_guid, space_guid=space_guid,
+                                                                   params=params, client=client)
             return cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid, service_label=service_label)
         except UnexpectedResponseError as e:
             if e.status == 504 and "Gateway Timeout" in e.error_message:
@@ -94,7 +94,8 @@ class ServiceInstance(object):
     @classmethod
     def api_get_list(cls, space_guid=None, service_type_guid=None, client=None):
         instances = []
-        response = api.api_get_service_instances(space_guid=space_guid, service_guid=service_type_guid, client=client)
+        response = service_catalog.api_get_service_instances(space_guid=space_guid, service_guid=service_type_guid,
+                                                             client=client)
         for data in response:
             bound_apps = [{"app_guid": binding_data["guid"], "app_name": binding_data["name"]}
                           for binding_data in data["bound_apps"]]
@@ -108,7 +109,8 @@ class ServiceInstance(object):
     def api_get_keys(cls, space_guid, client=None):
         """Return a dict mapping instances to their keys, retrieved from /rest/service_instances/summary."""
         keys = {}
-        response = api.api_get_service_instances_summary(space_guid=space_guid, service_keys=True, client=client)
+        response = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
+                                                                     client=client)
         for service_data in response:
             for instance_data in service_data.get("instances", []):
                 instance = cls(guid=instance_data["guid"], name=instance_data["name"], space_guid=space_guid,
@@ -123,8 +125,8 @@ class ServiceInstance(object):
 
     def api_get_credentials(self, client=None):
         """Return hostname, login, password from /rest/tools/service_instances"""
-        response = api.api_tools_service_instances(service_label=self.service_label, space_guid=self.space_guid,
-                                                   client=client)
+        response = service_exposer.api_tools_service_instances(service_label=self.service_label,
+                                                               space_guid=self.space_guid, client=client)
         return {
             "hostname": response[self.name]["hostname"],
             "login": response[self.name]["login"],
@@ -132,11 +134,11 @@ class ServiceInstance(object):
         }
 
     def api_delete(self, client=None):
-        api.api_delete_service_instance(self.guid, client=client)
+        service_catalog.api_delete_service_instance(self.guid, client=client)
 
     @classmethod
     def api_get_data_science_service_instances(cls, space_guid, org_guid, service_label):
-        return api.api_tools_service_instances(service_label, space_guid, org_guid)
+        return service_exposer.api_tools_service_instances(service_label, space_guid, org_guid)
 
     # ----------------------------------------- CF API ----------------------------------------- #
 
@@ -210,7 +212,7 @@ class AtkInstance(ServiceInstance):
 
     @classmethod
     def api_get_list_from_data_science_atk(cls, org_guid, client=None):
-        response = api.api_get_atk_instances(org_guid, client=client)
+        response = app_launcher.api_get_atk_instances(org_guid, client=client)
         atk_instances = []
         if response["instances"] is not None:
             for data in response["instances"]:

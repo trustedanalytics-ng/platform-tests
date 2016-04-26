@@ -18,8 +18,8 @@ import functools
 
 from ..tap_logger import get_logger
 from ..test_names import get_test_name
-from ..http_calls import cloud_foundry as cf, platform as api
-
+from ..http_calls import cloud_foundry as cf
+from ..http_calls.platform import user_management
 
 logger = get_logger(__name__)
 
@@ -47,13 +47,13 @@ class Space(object):
     @classmethod
     def api_create(cls, org, name=None, client=None):
         name = get_test_name() if name is None else name
-        response = api.api_create_space(org.guid, name, client=client)
+        response = user_management.api_create_space(org.guid, name, client=client)
         space = cls(name=name, guid=response, org_guid=org.guid)
         return space
 
     @classmethod
     def api_get_list(cls, client=None):
-        response = api.api_get_spaces(client)
+        response = user_management.api_get_spaces(client)
         spaces = []
         for space_data in response:
             org_guid = space_data["entity"]["organization_guid"]
@@ -72,7 +72,7 @@ class Space(object):
         return spaces
 
     def api_delete(self, client=None):
-        api.api_delete_space(self.guid, client=client)
+        user_management.api_delete_space(self.guid, client=client)
 
     # -------------------------------- cf api -------------------------------- #
 

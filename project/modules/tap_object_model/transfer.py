@@ -17,12 +17,8 @@
 import functools
 import time
 
-from ..http_calls import platform as api
-from ..tap_logger import get_logger
+from ..http_calls.platform import das, hdfs_uploader
 from ..test_names import get_test_name
-
-
-logger = get_logger(__name__)
 
 
 @functools.total_ordering
@@ -65,8 +61,8 @@ class Transfer(object):
                    client=None):
         title = get_test_name() if title is None else title
         cls.TEST_TRANSFER_TITLES.append(title)
-        response = api.api_create_transfer(category=category, is_public=is_public, org_guid=org_guid,
-                                           source=source, title=title, client=client)
+        response = das.api_create_transfer(category=category, is_public=is_public, org_guid=org_guid, source=source,
+                                           title=title, client=client)
         new_transfer = cls(category=category, id=response["id"], id_in_object_store=response["idInObjectStore"],
                            is_public=is_public, org_guid=org_guid, source=source, state=response["state"],
                            timestamps=response["timestamps"], title=title, user_id=user_id)
@@ -76,19 +72,19 @@ class Transfer(object):
     def api_create_by_file_upload(cls, org_guid, file_path, category="other", is_public=False, title=None, client=None):
         title = get_test_name() if title is None else title
         cls.TEST_TRANSFER_TITLES.append(title)
-        api.api_create_transfer_by_file_upload(org_guid, source=file_path, category=category, is_public=is_public,
-                                               title=title, client=client)
+        hdfs_uploader.api_create_transfer_by_file_upload(org_guid, source=file_path, category=category,
+                                                         is_public=is_public, title=title, client=client)
         new_transfer = next(t for t in cls.api_get_list(org_guid_list=[org_guid]) if t.title == title)
         return new_transfer
 
     @classmethod
     def api_get_list(cls, org_guid_list=None, client=None):
-        response = api.api_get_transfers(org_guid_list, client=client)
+        response = das.api_get_transfers(org_guid_list, client=client)
         return [cls._from_api_response(transfer_data) for transfer_data in response]
 
     @classmethod
     def api_get(cls, transfer_id, client=None):
-        response = api.api_get_transfer(transfer_id, client=client)
+        response = das.api_get_transfer(transfer_id, client=client)
         return cls._from_api_response(response)
 
     @classmethod
@@ -102,7 +98,7 @@ class Transfer(object):
         return transfer
 
     def api_delete(self, client=None):
-        return api.api_delete_transfer(self.id, client=client)
+        return das.api_delete_transfer(self.id, client=client)
 
     def ensure_finished(self, timeout=150):
         transfer = self.get_until_finished(self.id, timeout)

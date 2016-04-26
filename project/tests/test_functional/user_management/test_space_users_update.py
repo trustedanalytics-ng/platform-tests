@@ -17,7 +17,7 @@
 import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.http_calls import platform as api
+from modules.http_calls.platform import user_management
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import Space, User
@@ -96,7 +96,8 @@ class UpdateSpaceUser(TapTestCase):
         self.step("Check that updating user which is not in space returns error")
         space_users = User.api_get_list_via_space(self.test_space.guid)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                            api.api_update_space_user_roles, self.test_space.guid, invalid_guid, roles)
+                                            user_management.api_update_space_user_roles, self.test_space.guid,
+                                            invalid_guid, roles)
         self.assertListEqual(User.api_get_list_via_space(self.test_space.guid), space_users)
 
     @priority.low
@@ -105,7 +106,8 @@ class UpdateSpaceUser(TapTestCase):
         roles = User.SPACE_ROLES["auditor"]
         self.step("Check that updating user using invalid space guid return an error")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                            api.api_update_space_user_roles, invalid_guid, self.test_user.guid, roles)
+                                            user_management.api_update_space_user_roles, invalid_guid,
+                                            self.test_user.guid, roles)
 
     @priority.low
     def test_send_space_role_update_request_with_empty_body(self):
@@ -113,5 +115,6 @@ class UpdateSpaceUser(TapTestCase):
         test_user = User.api_create_by_adding_to_space(org_guid=TestData.test_org.guid, space_guid=self.test_space.guid)
         self.step("Send request with empty body")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT, HttpStatus.MSG_MUST_HAVE_AT_LEAST_ONE_ROLE,
-                                            api.api_update_space_user_roles, self.test_space.guid, test_user.guid)
+                                            user_management.api_update_space_user_roles, self.test_space.guid,
+                                            test_user.guid)
         self._assert_user_in_space_with_roles(test_user, self.test_space.guid)

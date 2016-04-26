@@ -20,7 +20,7 @@ import time
 from enum import Enum
 
 from ..exceptions import JobException
-from ..http_calls import platform as api
+from ..http_calls.platform import workflow_scheduler as job_scheduler
 from ..test_names import get_test_name
 
 
@@ -105,7 +105,7 @@ class Job(object):
 
     @classmethod
     def api_get_list(cls, org_guid, amount=1, unit=TimeUnit.DAYS):
-        response = api.api_get_jobs_list(org_guid, amount, unit)
+        response = job_scheduler.api_get_jobs_list(org_guid, amount, unit)
         return [cls._from_api_response(job_data) for job_data in response]
 
     @classmethod
@@ -119,10 +119,11 @@ class Job(object):
         end = end_job.strftime(cls.TIME_TEMPLATE)
         cls.__validate_job_import_method(import_mode, last_value, check_column)
         jdbc_uri = cls.__create_db_uri(db_hostname=db_hostname, port=port, db_name=db_name)
-        coordinator_id = api.api_create_job(org_guid, name, start=start, end=end, amount=frequency_amount,
-                                            unit=frequency_unit, zone_id=zone_id, check_column=check_column,
-                                            import_mode=import_mode, jdbc_uri=jdbc_uri, last_value=last_value,
-                                            password=password, table=table, target_dir=target_dir, username=username)
+        coordinator_id = job_scheduler.api_create_job(org_guid, name, start=start, end=end, amount=frequency_amount,
+                                                      unit=frequency_unit, zone_id=zone_id, check_column=check_column,
+                                                      import_mode=import_mode, jdbc_uri=jdbc_uri, last_value=last_value,
+                                                      password=password, table=table, target_dir=target_dir,
+                                                      username=username)
         return cls(app_name=name, coordinator_id=coordinator_id["id"])
 
     def api_update_job_details(self, org_guid):
@@ -132,7 +133,7 @@ class Job(object):
                 break
             if self.coordinator_id == job.coordinator_id:
                 self.id = job.id
-        response = api.api_get_job_details(org_guid, self.id)
+        response = job_scheduler.api_get_job_details(org_guid, self.id)
         job = self._from_api_response(response)
         self.app_name = job.app_name
         self.actions = job.actions

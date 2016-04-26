@@ -16,7 +16,7 @@
 
 from retry import retry
 
-from ..http_calls import platform as api
+from ..http_calls.platform import platform_operations
 
 
 class Platform(object):
@@ -31,7 +31,7 @@ class Platform(object):
         :param refresh should data be refreshed? could take time
         :return:
         """
-        metrics_data = api.api_get_platform_operations(client)
+        metrics_data = platform_operations.api_get_platform_operations(client)
 
         if refresh:
             self.refresh_data(client)
@@ -51,7 +51,7 @@ class Platform(object):
         :param timestamp: timestamp of previous call
         :return: platform metrics
         """
-        metrics = api.api_get_platform_operations(client)
+        metrics = platform_operations.api_get_platform_operations(client)
         if timestamp == metrics["timestamp"]:
             txt = "retrieved metrics from previous timestamp, previous {}, retrieved: {}".format(timestamp,
                                                                                                  metrics["timestamp"])
@@ -65,7 +65,7 @@ class Platform(object):
         :param client: user used for refresh operations. Default
         :return:
         """
-        api.api_refresh_platform_operations(client)
+        platform_operations.api_refresh_platform_operations(client)
 
 
 class PlatformMetrics(object):

@@ -19,11 +19,7 @@ import datetime
 
 from retry import retry
 
-from ..tap_logger import get_logger
-from ..http_calls import platform as api
-
-
-logger = get_logger(__name__)
+from ..http_calls.platform import data_catalog, dataset_publisher
 
 
 @functools.total_ordering
@@ -56,8 +52,8 @@ class DataSet(object):
         org_guids = None
         if org_list is not None:
             org_guids = [org.guid for org in org_list]
-        response = api.api_get_datasets(org_guids, query, filters, size, time_from, only_private, only_public,
-                                        client=client)
+        response = data_catalog.api_get_datasets(org_guids, query, filters, size, time_from, only_private, only_public,
+                                                 client=client)
         data_sets = []
         for data in response["hits"]:
             data_set = cls(id=data["id"], category=data["category"], title=data["title"], format=data["format"],
@@ -86,7 +82,7 @@ class DataSet(object):
 
     @classmethod
     def api_get(cls, data_set_id, client=None):
-        response = api.api_get_dataset(data_set_id, client)
+        response = data_catalog.api_get_dataset(data_set_id, client)
         source = response["_source"]
         return cls(id=response["_id"], category=source["category"], title=source["title"], format=source["format"],
                    creation_time=source["creationTime"], is_public=source["isPublic"], org_guid=source["orgUUID"],
@@ -94,20 +90,21 @@ class DataSet(object):
                    source_uri=source["sourceUri"], target_uri=source["targetUri"])
 
     def api_publish(self, client=None):
-        return api.api_publish_dataset(category=self.category, creation_time=self.creation_time,
-                                       data_sample=self.data_sample, format=self.format, is_public=self.is_public,
-                                       org_guid=self.org_guid, record_count=self.record_count, size=self.size,
-                                       source_uri=self.source_uri, target_uri=self.target_uri, title=self.title,
-                                       client=client)
+        return dataset_publisher.api_publish_dataset(category=self.category, creation_time=self.creation_time,
+                                                     data_sample=self.data_sample, format=self.format,
+                                                     is_public=self.is_public, org_guid=self.org_guid,
+                                                     record_count=self.record_count, size=self.size,
+                                                     source_uri=self.source_uri, target_uri=self.target_uri,
+                                                     title=self.title, client=client)
 
     def api_update(self, creation_time=None, target_uri=None, category=None, format=None, record_count=None,
                    is_public=None, org_guid=None, source_uri=None, size=None, data_sample=None, title=None,
                    client=None):
-        api.api_update_dataset(self.id, creation_time, target_uri, category, format, record_count, is_public, org_guid,
-                               source_uri, size, data_sample, title, client)
+        data_catalog.api_update_dataset(self.id, creation_time, target_uri, category, format, record_count,
+                                        is_public, org_guid, source_uri, size, data_sample, title, client)
 
     def api_delete(self, client=None):
-        api.api_delete_dataset(self.id, client)
+        data_catalog.api_delete_dataset(self.id, client)
 
     def get_details(self):
         return dict(accessibility="PUBLIC" if self.is_public else "PRIVATE", title=self.title, category=self.category,

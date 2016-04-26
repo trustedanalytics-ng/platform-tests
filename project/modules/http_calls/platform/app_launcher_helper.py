@@ -14,6 +14,11 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.5.7'
+from modules.api_client import PlatformApiClient
 
+
+def api_get_atk_instances(org_guid, client=None):
+    """GET /rest/orgs/{organization_guid}/atkinstances"""
+    client = client or PlatformApiClient.get_admin_client()
+    return client.request("GET", "rest/orgs/{}/atkinstances".format(org_guid),
+                          log_msg="PLATFORM: get list of atk instances")

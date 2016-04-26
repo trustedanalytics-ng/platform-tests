@@ -16,7 +16,8 @@
 
 import functools
 
-from ..http_calls import cloud_foundry as cf, platform as api, application_broker as broker_client
+from ..http_calls import cloud_foundry as cf, application_broker as broker_client
+from ..http_calls.platform import service_catalog
 
 
 @functools.total_ordering
@@ -30,7 +31,6 @@ class ServiceType(object):
         self.description = description
         self.space_guid = space_guid
         self.service_plans = service_plans  # service plan is a dict with keys "guid", and "name"
-
 
     def __eq__(self, other):
         return all([getattr(self, ca) == getattr(other, ca) for ca in self.COMPARABLE_ATTRIBUTES])
@@ -61,12 +61,12 @@ class ServiceType(object):
 
     @classmethod
     def api_get_list_from_marketplace(cls, space_guid, client=None):
-        response = api.api_get_marketplace_services(space_guid=space_guid, client=client)
+        response = service_catalog.api_get_marketplace_services(space_guid=space_guid, client=client)
         return [cls._from_details(space_guid, data) for data in response]
 
     @classmethod
     def api_get(cls, space_guid, service_guid, client=None):
-        response = api.api_get_service(service_guid=service_guid, client=client)
+        response = service_catalog.api_get_service(service_guid=service_guid, client=client)
         return cls._from_details(space_guid, response)
 
     def api_get_service_plans(self, client=None):
@@ -74,7 +74,7 @@ class ServiceType(object):
         Return a list of dicts with "guid" and "name" keys
         retrieved from /rest/services/{service_type_label}/service_plans
         """
-        response = api.api_get_service_plans(self.label, client)
+        response = service_catalog.api_get_service_plans(self.label, client)
         service_plans = []
         for sp_data in response:
             name = sp_data["entity"]["name"]

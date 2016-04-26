@@ -19,12 +19,9 @@ import functools
 from retry import retry
 
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, platform as api
-from ..tap_logger import get_logger
+from ..http_calls import cloud_foundry as cf
+from ..http_calls.platform import metrics_provider, user_management
 from ..test_names import get_test_name
-
-
-logger = get_logger(__name__)
 
 
 @functools.total_ordering
@@ -50,13 +47,13 @@ class Organization(object):
     def api_create(cls, name=None, client=None):
         name = get_test_name() if name is None else name
         cls.TEST_ORG_NAMES.append(name)
-        response = api.api_create_organization(name, client=client)
+        response = user_management.api_create_organization(name, client=client)
         org = cls(name=name, guid=response)
         return org
 
     @classmethod
     def api_get_list(cls, client=None):
-        response = api.api_get_organizations(client=client)
+        response = user_management.api_get_organizations(client=client)
         organizations = []
         for organization_data in response:
             org = cls(name=organization_data["name"], guid=organization_data["guid"])
@@ -65,13 +62,13 @@ class Organization(object):
 
     def rename(self, new_name, client=None):
         self.name = new_name
-        return api.api_rename_organization(self.guid, new_name, client=client)
+        return user_management.api_rename_organization(self.guid, new_name, client=client)
 
     def api_delete(self, client=None):
-        api.api_delete_organization(self.guid, client=client)
+        user_management.api_delete_organization(self.guid, client=client)
 
     def api_get_metrics(self, client=None):
-        self.metrics = api.api_get_org_metrics(self.guid, client=client)
+        self.metrics = metrics_provider.api_get_org_metrics(self.guid, client=client)
 
     @classmethod
     def cf_api_get_list(cls):

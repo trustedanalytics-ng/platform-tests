@@ -14,6 +14,16 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.5.7'
+from modules.api_client import PlatformApiClient
 
+
+def api_get_platform_operations(client=None):
+    """GET /rest/platform/summary"""
+    client = client or PlatformApiClient.get_admin_client()
+    return client.request("GET", "rest/platform/summary", log_msg="PLATFORM/OPERATIONS: metrics")
+
+
+def api_refresh_platform_operations(client=None):
+    """POST /rest/platform/summary/refresh_cache"""
+    client = client or PlatformApiClient.get_admin_client()
+    return client.request("POST", "rest/platform/summary/refresh_cache", log_msg="PLATFORM/OPERATIONS: refresh")

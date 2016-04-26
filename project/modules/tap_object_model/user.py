@@ -18,16 +18,13 @@ import functools
 import random
 import string
 
+from configuration import config
 from .. import gmail_api
 from ..api_client import PlatformApiClient
-from configuration import config
 from ..exceptions import NoSuchUserException
-from ..http_calls import cloud_foundry as cf, platform as api, uaa
-from ..tap_logger import get_logger
+from ..http_calls import cloud_foundry as cf, uaa
+from ..http_calls.platform import user_management
 from ..test_names import get_test_name
-
-
-logger = get_logger(__name__)
 
 
 @functools.total_ordering
@@ -76,10 +73,10 @@ class User(object):
         username = get_test_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
         cls.TEST_USERNAMES.append(username)
-        api.api_add_organization_user(org_guid, username, roles, client=inviting_client)
+        user_management.api_add_organization_user(org_guid, username, roles, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = PlatformApiClient.get_client(username)
-        api.api_register_new_user(code, password, client=client)
+        user_management.api_register_new_user(code, password, client=client)
         org_users = cls.api_get_list_via_organization(org_guid=org_guid)
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
@@ -93,10 +90,10 @@ class User(object):
         username = get_test_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
         cls.TEST_USERNAMES.append(username)
-        api.api_add_space_user(org_guid, space_guid, username, roles, inviting_client)
+        user_management.api_add_space_user(org_guid, space_guid, username, roles, inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = PlatformApiClient.get_client(username)
-        api.api_register_new_user(code, password, client=client)
+        user_management.api_register_new_user(code, password, client=client)
         space_users = cls.api_get_list_via_space(space_guid)
         new_user = next((user for user in space_users if user.username == username), None)
         new_user.password = password
@@ -104,7 +101,7 @@ class User(object):
 
     @classmethod
     def api_get_list_via_organization(cls, org_guid, client=None):
-        response = api.api_get_organization_users(org_guid, client=client)
+        response = user_management.api_get_organization_users(org_guid, client=client)
         users = []
         for user_data in response:
             user = cls(guid=user_data["guid"], username=user_data["username"])
@@ -114,7 +111,7 @@ class User(object):
 
     @classmethod
     def api_get_list_via_space(cls, space_guid, client=None):
-        response = api.api_get_space_users(space_guid, client=client)
+        response = user_management.api_get_space_users(space_guid, client=client)
         users = []
         for user_data in response:
             user = cls(guid=user_data["guid"], username=user_data["username"])
@@ -124,7 +121,7 @@ class User(object):
 
     @classmethod
     def api_get_pending_invitations(cls, client=None):
-        return api.api_get_invitations(client=client)
+        return user_management.api_get_invitations(client=client)
 
     def login(self):
         """Return a logged-in API client for this user."""
@@ -138,28 +135,28 @@ class User(object):
         return client
 
     def api_add_to_organization(self, org_guid, roles=ORG_ROLES["manager"], client=None):
-        api.api_add_organization_user(org_guid, self.username, roles, client=client)
+        user_management.api_add_organization_user(org_guid, self.username, roles, client=client)
         self.org_roles[org_guid] = list(set(self.org_roles.get(org_guid, set())) | set(roles))
 
     def api_add_to_space(self, space_guid, org_guid, roles=SPACE_ROLES["manager"], client=None):
-        api.api_add_space_user(org_guid=org_guid, space_guid=space_guid, username=self.username,
+        user_management.api_add_space_user(org_guid=org_guid, space_guid=space_guid, username=self.username,
                                roles=roles, client=client)
         self.space_roles[space_guid] = list(roles)
 
     def api_update_org_roles(self, org_guid, new_roles=None, client=None):
-        api.api_update_org_user_roles(org_guid, self.guid, new_roles, client=client)
+        user_management.api_update_org_user_roles(org_guid, self.guid, new_roles, client=client)
         self.org_roles[org_guid] = list(new_roles)
 
     def api_update_space_roles(self, space_guid, new_roles=None, client=None):
-        api.api_update_space_user_roles(space_guid, self.guid, new_roles, client=client)
+        user_management.api_update_space_user_roles(space_guid, self.guid, new_roles, client=client)
         if new_roles is not None:
             self.space_roles[space_guid] = list(new_roles)
 
     def api_delete_from_organization(self, org_guid, client=None):
-        api.api_delete_organization_user(org_guid, self.guid, client=client)
+        user_management.api_delete_organization_user(org_guid, self.guid, client=client)
 
     def api_delete_from_space(self, space_guid, client=None):
-        api.api_delete_space_user(space_guid, self.guid, client=client)
+        user_management.api_delete_space_user(space_guid, self.guid, client=client)
 
     @classmethod
     def get_admin(cls):

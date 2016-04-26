@@ -22,7 +22,8 @@ from retry import retry
 import yaml
 
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, platform as api
+from ..http_calls import cloud_foundry as cf
+from ..http_calls.platform import service_catalog
 from ..tap_logger import log_http_request, log_http_response
 from ..test_names import get_test_name
 
@@ -137,7 +138,7 @@ class Application(object):
     @classmethod
     def api_get_list(cls, space_guid, service_label=None, client=None):
         """Get list of applications from Console / service-catalog API"""
-        response = api.api_get_filtered_applications(space_guid, service_label, client=client)
+        response = service_catalog.api_get_filtered_applications(space_guid, service_label, client=client)
         applications = []
         for app in response:
             application = cls(name=app["name"], space_guid=space_guid, guid=app["guid"], state=app["state"],
@@ -146,20 +147,20 @@ class Application(object):
         return applications
 
     def api_get_summary(self, client=None):
-        response = api.api_get_app_summary(self.guid, client=client)
+        response = service_catalog.api_get_app_summary(self.guid, client=client)
         return self._get_details_from_response(response)
 
-    def api_delete(self, cascade=True, client=None):
-        api.api_delete_app(self.guid, cascade=cascade, client=client)
+    def api_delete(self, client=None):
+        service_catalog.api_delete_app(self.guid, client=client)
 
     def api_restage(self, client=None):
-        api.api_change_app_status(self.guid, self.STATUS["restage"], client=client)
+        service_catalog.api_change_app_status(self.guid, self.STATUS["restage"], client=client)
 
     def api_start(self, client=None):
-        api.api_change_app_status(self.guid, self.STATUS["start"], client=client)
+        service_catalog.api_change_app_status(self.guid, self.STATUS["start"], client=client)
 
     def api_stop(self, client=None):
-        api.api_change_app_status(self.guid, self.STATUS["stop"], client=client)
+        service_catalog.api_change_app_status(self.guid, self.STATUS["stop"], client=client)
 
     @retry(AssertionError, tries=30, delay=2)
     def ensure_started(self):

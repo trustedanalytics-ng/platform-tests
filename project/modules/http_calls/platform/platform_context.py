@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.5.7'
+from modules.api_client import PlatformApiClient
 
+
+def api_get_external_tools(client=None):
+    """GET /rest/platform_context"""
+    client = client or PlatformApiClient.get_admin_client()
+    return client.request("GET", "rest/platform_context", log_msg="PLATFORM: get external tool info")

@@ -13,7 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.5.7'
-

@@ -22,7 +22,7 @@ import pytest
 from modules import gmail_api
 from configuration import config
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.http_calls import platform as api
+from modules.http_calls.platform import user_management
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import Invitation, Organization, User
@@ -147,7 +147,8 @@ class Onboarding(TapTestCase):
         invitation = Invitation.api_send()
         self.step("Check that an error is returned when the user tries to register without a password")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_PASSWORD_CANNOT_BE_EMPTY,
-                                            api.api_register_new_user, code=invitation.code, org_name=get_test_name())
+                                            user_management.api_register_new_user, code=invitation.code,
+                                            org_name=get_test_name())
         self.step("Check that the user was not created")
         username_list = [user.username for user in User.cf_api_get_all_users()]
         self.assertNotIn(invitation.username, username_list, "User was created")
@@ -173,7 +174,7 @@ class Onboarding(TapTestCase):
         self.step("Check that an error is returned when user registers without passing an org name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST,
                                             HttpStatus.MSG_ORGANIZATION_CANNOT_CONTAIN_ONLY_WHITESPACES,
-                                            api.api_register_new_user, code=invitation.code,
+                                            user_management.api_register_new_user, code=invitation.code,
                                             password=User.generate_password())
         self.step("Check that the user was not created")
         username_list = [user.username for user in User.cf_api_get_all_users()]

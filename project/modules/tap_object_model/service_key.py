@@ -17,7 +17,7 @@
 import functools
 
 from ..test_names import get_test_name
-from ..http_calls import platform as api
+from ..http_calls.platform import service_catalog
 
 
 @functools.total_ordering
@@ -44,12 +44,12 @@ class ServiceKey(object):
         return hash((self.guid, self.name, self.credentias, self.service_instance_guid))
 
     def api_delete(self, client=None):
-        api.api_delete_service_key(service_key_guid=self.guid, client=client)
+        service_catalog.api_delete_service_key(service_key_guid=self.guid, client=client)
 
     @classmethod
     def api_create(cls, service_instance_guid, name=None, client=None):
         service_key_name = name or get_test_name()
-        response = api.api_create_service_key(service_instance_guid, service_key_name, client)
+        response = service_catalog.api_create_service_key(service_instance_guid, service_key_name, client)
         return cls(guid=response["guid"], name=response["name"],
                    service_instance_guid=response["service_instance_guid"], credentials=response["credentials"])
     

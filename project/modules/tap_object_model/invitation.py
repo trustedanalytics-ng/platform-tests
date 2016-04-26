@@ -17,7 +17,7 @@
 import functools
 
 from .. import gmail_api
-from ..http_calls import platform as api
+from ..http_calls.platform import user_management as api
 from ..test_names import get_test_name
 from ..tap_logger import get_logger
 from . import User

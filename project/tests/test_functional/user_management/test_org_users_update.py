@@ -19,7 +19,7 @@ import itertools
 import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.http_calls import platform as api
+from modules.http_calls.platform import user_management
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import Organization, User
@@ -197,8 +197,8 @@ class UpdateOrganizationUser(TapTestCase):
         self.step("Check that updating user which is not in an organization returns an error")
         org_users = User.api_get_list_via_organization(org_guid=org.guid)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                            api.api_update_org_user_roles, org_guid=org.guid, user_guid=invalid_guid,
-                                            new_roles=roles)
+                                            user_management.api_update_org_user_roles, org_guid=org.guid,
+                                            user_guid=invalid_guid, new_roles=roles)
         self.assertListEqual(User.api_get_list_via_organization(org_guid=org.guid), org_users)
 
     @priority.low
@@ -208,8 +208,8 @@ class UpdateOrganizationUser(TapTestCase):
         roles = User.ORG_ROLES["billing_manager"]
         self.step("Check that updating user using invalid org guid returns an error")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                            api.api_update_org_user_roles, org_guid=invalid_guid, user_guid=user_guid,
-                                            new_roles=roles)
+                                            user_management.api_update_org_user_roles, org_guid=invalid_guid,
+                                            user_guid=user_guid, new_roles=roles)
 
     @priority.low
     def test_cannot_update_org_user_with_incorrect_role(self):
@@ -294,5 +294,6 @@ class UpdateOrganizationUser(TapTestCase):
         test_user = User.api_create_by_adding_to_organization(org_guid=self.test_org.guid, roles=expected_roles)
         self.step("Send request with empty body")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT, HttpStatus.MSG_CANNOT_PERFORM_REQ_WITHOUT_ROLES,
-                                            api.api_update_org_user_roles, self.test_org.guid, test_user.guid)
+                                            user_management.api_update_org_user_roles, self.test_org.guid,
+                                            test_user.guid)
         self.assert_user_in_org_and_roles(test_user, self.test_org.guid, expected_roles)

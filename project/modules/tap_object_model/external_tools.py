@@ -21,11 +21,7 @@ import requests
 
 from configuration.config import CONFIG
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import platform as api
-from ..tap_logger import get_logger
-
-
-logger = get_logger(__name__)
+from ..http_calls.platform import platform_context
 
 
 @functools.total_ordering
@@ -57,7 +53,7 @@ class ExternalTools(object):
 
     @classmethod
     def api_get_external_tools(cls, client=None):
-        response = api.api_get_external_tools(client)
+        response = platform_context.api_get_external_tools(client)
         tools_list = []
         tools = response["external_tools"]
         for tool_category, tool_list in tools.items():

@@ -16,7 +16,7 @@
 
 import functools
 
-from ..http_calls import platform as api
+from ..http_calls.platform import latest_events_service as les, metrics_provider
 
 
 @functools.total_ordering
@@ -41,7 +41,7 @@ class LatestEvent(object):
 
     @classmethod
     def api_get_latest_events(cls, org_guid=None, client=None):
-        response = api.api_get_latest_events(org_guid, client)["events"]
+        response = les.api_get_latest_events(org_guid, client)["events"]
         events = []
         for event_data in response:
             event = cls(event_id=event_data["id"], category=event_data["category"], message=event_data["message"],
@@ -52,7 +52,7 @@ class LatestEvent(object):
 
     @classmethod
     def api_get_latest_events_from_org_metrics(cls, org_guid, client=None):
-        response = api.api_get_org_metrics(org_guid, client)["latestEvents"]
+        response = metrics_provider.api_get_org_metrics(org_guid, client)["latestEvents"]
         events = []
         for event_data in response:
             event = cls(event_id=event_data["id"], category=event_data["category"], message=event_data["message"],
