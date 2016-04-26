@@ -78,6 +78,7 @@ class SubmitTransfer(SubmitTransferBase):
         transfer = self._create_transfer(category=None, org_guid=self.org.guid)
         self.step("Get transfer and check it's category")
         transfer_list = Transfer.api_get_list(org_guid_list=[self.org.guid])
+        transfer.category = "other"
         self.assertIn(transfer, transfer_list, "Transfer was not found")
 
     @priority.medium
