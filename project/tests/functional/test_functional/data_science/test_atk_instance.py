@@ -70,6 +70,7 @@ class DataScienceAtkInstance(TapTestCase):
         self.step("Check that service instance exists in data science atk list")
         self.assertIsNotNone(self.atk_from_data_science_list, "Atk instance not found in data science list")
 
+    @unittest.skip("DPNG-6832")
     def test_3_validate_atk_instance_creator(self):
         admin_user = User.get_admin()
         self.step("Check atk instance creator")
@@ -78,10 +79,12 @@ class DataScienceAtkInstance(TapTestCase):
         self.assertEqual(self.atk_from_data_science_list.creator_guid, admin_user.guid,
                          "Atk creator guid doesn't match")
 
+    @unittest.skip("DPNG-6832")
     def test_4_validate_atk_app_and_bindings(self):
         self.__class__.validator = ApplicationStackValidator(self, self.atk_instance)
         self.validator.validate(expected_bindings=self.atk_bindings)
 
+    @unittest.skip("DPNG-6832")
     def test_5_validate_delete_atk_instance(self):
         self.step("Delete atk instance")
         self.atk_instance.api_delete()
