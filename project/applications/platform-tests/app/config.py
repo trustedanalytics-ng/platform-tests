@@ -94,17 +94,17 @@ class RunnerConfig(_BaseConfig):
     example environment variable setting:
     required:
         VCAP_APPLICATION={"uris": ["platform-tests.<tapdomain>"]}
-        REFERENCE_ORG=<reference_org_name>
-        REFERENCE_SPACE=<reference_space_name>
+        CORE_ORG_NAME=<core_org_name>
+        CORE_SPACE_NAME=<core_space_name>
     use only locally:
         INTERPRETER=<path to interpreter to use with run_tests.py>
     """
     VCAP_APPLICATION = "VCAP_APPLICATION"
-    REFERENCE_ORG = "REFERENCE_ORG"
-    REFERENCE_SPACE = "REFERENCE_SPACE"
+    CORE_ORG_NAME = "CORE_ORG_NAME"
+    CORE_SPACE_NAME = "CORE_SPACE_NAME"
     _default_config = {
-        "reference_org": "seedorg",
-        "reference_space": "seedspace",
+        "core_org_name": "seedorg",
+        "core_space_name": "seedspace",
         "python_interpreter": "python3",
         "run_tests": "run_tests.py",
         "cwd": "project",
@@ -121,12 +121,12 @@ class RunnerConfig(_BaseConfig):
         except KeyError:
             raise IncorrectConfigurationException()
 
-        reference_org = os.environ.get(self.REFERENCE_ORG)
-        if reference_org is not None:
-            environment_config["reference_org"] = reference_org
-        reference_space = os.environ.get(self.REFERENCE_SPACE)
-        if reference_space is not None:
-            environment_config["reference_space"] = reference_space
+        core_org_name = os.environ.get(self.CORE_ORG_NAME)
+        if core_org_name is not None:
+            environment_config["core_org_name"] = core_org_name
+        core_space_name = os.environ.get(self.CORE_SPACE_NAME)
+        if core_space_name is not None:
+            environment_config["core_space_name"] = core_space_name
 
         return environment_config
 

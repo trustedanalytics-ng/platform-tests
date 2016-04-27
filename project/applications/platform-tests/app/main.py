@@ -25,7 +25,7 @@ import pymongo
 
 from config import AppConfig
 from model import TestSuiteModel
-from run_tests import Runner
+from runner import Runner
 
 
 app = flask.Flask(__name__)
@@ -94,7 +94,7 @@ class TestSuiteResults(flask_restful.Resource):
 if __name__ == "__main__":
     config = AppConfig()
     api = ExceptionHandlingApi(app, catch_all_404s=True)
-    api.add_resource(TestSuite, "/testsuites")
-    api.add_resource(TestSuiteResults, "/testsuites/<suite_id>/results")
+    api.add_resource(TestSuite, "/rest/platform_tests/testsuites")
+    api.add_resource(TestSuiteResults, "/rest/platform_tests/testsuites/<suite_id>/results")
 
     app.run(host=config.hostname, port=config.port, debug=config.debug)

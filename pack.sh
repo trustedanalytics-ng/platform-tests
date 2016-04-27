@@ -37,4 +37,4 @@ echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
 
 # assemble the artifact
 VERSION=$(grep current_version .bumpversion.cfg | cut -d " " -f 3)
-zip -r platform-tests-${VERSION}.zip $VENDOR deploy/ project/ SMOKE_TESTS_README.md build_info.ini
+zip -r platform-tests-${VERSION}.zip $VENDOR deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt

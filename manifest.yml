@@ -1,9 +1,6 @@
 applications:
 - buildpack: python_buildpack
-  command: platform-tests-app/app/main.py
+  command: project/applications/platform-tests/app/main.py
   name: platform-tests
   services:
   - platform-tests-mongodb
-  env:
-    REFERENCE_ORG: seedorg
-    REFERENCE_SPACE: seedspace

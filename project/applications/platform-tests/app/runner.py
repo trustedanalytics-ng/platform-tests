@@ -64,8 +64,8 @@ class Runner(object):
             "-s", self._config.suite_name,
             "--admin-username", self._username,
             "--admin-password", self._password,
-            "--reference-org", self._config.reference_org,
-            "--reference-space", self._config.reference_space,
+            "--reference-org", self._config.core_org_name,
+            "--reference-space", self._config.core_space_name,
             "--database-url", self._db_config.uri,
             "--test-run-id", str(self._current_suite.id)
         ]
