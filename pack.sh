@@ -20,7 +20,7 @@
 set -e
 VENDOR=vendor/
 SECRETS_PATH=./project/configuration/secrets/
-REQUIREMENTS_PATH=./project/requirements.txt
+REQUIREMENTS_PATH=./requirements.txt
 
 # prepare dependencies
 if [ -d $VENDOR ]; then
