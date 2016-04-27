@@ -19,6 +19,7 @@ from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHtt
 
 from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_token import ClientAuthToken
+from modules.http_client.client_auth.client_auth_no_auth import ClientAuthNoAuth
 from modules.http_client.client_auth.client_auth_type import ClientAuthType
 from modules.http_client.client_auth.client_auth_factory import ClientAuthFactory, \
     ClientAuthFactoryInvalidAuthTypeException
@@ -42,6 +43,9 @@ class TestClientAuthFactory(MockHttpSession):
 
     def test_get_should_return_auth_http_basic(self):
         self._assertClientAuthInstance(ClientAuthType.HTTP_BASIC, ClientAuthHttpBasic)
+
+    def test_get_should_return_auth_no_auth(self):
+        self._assertClientAuthInstance(ClientAuthType.NO_AUTH, ClientAuthNoAuth)
 
     def test_get_should_return_exception_for_undefined_type(self):
         self.assertRaises(

@@ -250,6 +250,7 @@ def parse_arguments():
                         action='store_true',
                         help="Pass this parameter if environment has kerberos.")
     parser.add_argument("--jumpbox-address",
+                        default=None,
                         action='store_true',
                         help="Address of the jumpbox machine (jump.<domain> of empty)")
     parser.add_argument("--pushed-app-proxy",

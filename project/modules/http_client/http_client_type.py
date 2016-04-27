@@ -26,4 +26,5 @@ class HttpClientType(Enum):
     APPLICATION = "Application"
     CLOUD_FOUNDRY = "CloudFoundry"
     BROKER = "Broker"
+    WEBHDFS = "Webhdfs"
     SERVICE_TOOL = "ServiceTool"

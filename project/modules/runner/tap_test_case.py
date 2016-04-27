@@ -147,11 +147,16 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
         obj_list = get_list_method(*args, **kwargs)
         self.assertNotIn(something, obj_list)
 
-    @retry(AssertionError, tries=10, delay=2)
+    @retry(AssertionError, tries=30, delay=2)
     def assertInWithRetry(self, something, get_list_method, *args, **kwargs):
         """Use when adding something takes longer"""
         obj_list = get_list_method(*args, **kwargs)
         self.assertIn(something, obj_list)
+
+    @retry(AssertionError, tries=2, delay=360)
+    def assertGreaterWithRetry(self, get_list_method, list_to_compare, *args, **kwargs):
+        obj_list = get_list_method(*args, **kwargs)
+        self.assertGreater(len(obj_list), len(list_to_compare))
 
     @retry(AssertionError, tries=60, delay=2)
     def get_from_list_by_attribute_with_retry(self, attr_name, attr_value, get_list_method, *args, **kwargs):

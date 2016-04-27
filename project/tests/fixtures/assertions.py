@@ -34,7 +34,7 @@ def assert_not_in_with_retry(something, get_list_method, *args, **kwargs):
     assert something not in obj_list, "{} was found on the list".format(something)
 
 
-@retry(AssertionError, tries=20, delay=3)
+@retry(AssertionError, tries=30, delay=2)
 def assert_in_with_retry(something, get_list_method, *args, **kwargs):
     """Use when adding something takes longer"""
     obj_list = get_list_method(*args, **kwargs)
@@ -53,6 +53,10 @@ def assert_raises_http_exception(status, error_message_phrase, callableObj, *arg
         "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.status, e.value.error_message,
                                                             status, error_message_phrase)
 
+@retry(AssertionError, tries=2, delay=360)
+def assert_greater_with_retry(get_list_method, list_to_compare, *args, **kwargs):
+    obj_list = get_list_method(*args, **kwargs)
+    assert len(obj_list) > len(list_to_compare)
 
 def assert_returns_http_error(callable_obj, *args, **kwargs):
     with pytest.raises(UnexpectedResponseError) as e:

@@ -163,6 +163,10 @@ class SshTunnel(object):
         self.client.stop()
 
 
+class SshTunnelException(Exception):
+    pass
+
+
 class CdhManagerSshTunnel(SshTunnel):
 
     CDH_MANAGER_HOSTNAME = "cdh-manager-0"

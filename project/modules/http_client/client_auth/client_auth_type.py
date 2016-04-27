@@ -24,4 +24,5 @@ class ClientAuthType(Enum):
     TOKEN_CF = "CFToken"
     TOKEN_UAA = "UaaToken"
     HTTP_BASIC = "HttpBasic"
+    WEBHDFS = "WebhdfsAuth"
     NO_AUTH = "NoAuth"

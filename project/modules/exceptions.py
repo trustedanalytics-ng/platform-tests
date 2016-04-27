@@ -47,6 +47,10 @@ class JobException(Exception):
     pass
 
 
+class RedirectionLimitException(Exception):
+    pass
+
+
 class NoSuchUserException(Exception):
 
     def __init__(self, message, *args, **kwargs):

@@ -16,6 +16,7 @@
 
 from ..config import Config
 from .http_session import HttpSession
+from .webhdfs_session import WebhdfsSession
 from .client_auth_base import ClientAuthBase
 from .client_auth_http_basic import ClientAuthHttpBasic
 from .client_auth_login_page import ClientAuthLoginPage
@@ -45,6 +46,9 @@ class ClientAuthFactory(object):
 
         elif auth_type == ClientAuthType.LOGIN_PAGE:
             return ClientAuthLoginPage(Config.auth_login_url(), session)
+
+        elif auth_type == ClientAuthType.WEBHDFS:
+            return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, WebhdfsSession(username, password))
 
         elif auth_type == ClientAuthType.NO_AUTH:
             return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, session)

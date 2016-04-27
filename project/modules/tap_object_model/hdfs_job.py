@@ -19,6 +19,7 @@ import functools
 import time
 from enum import Enum
 
+from ..webhdfs_tools import WebhdfsTools
 from ..exceptions import JobException
 from ..http_calls.platform import workflow_scheduler as api
 from ..test_names import generate_test_object_name
@@ -157,6 +158,28 @@ class HdfsJob(object):
                 raise AssertionError("Job failed to work and was killed")
             if self.status == JobStatus.SUCCEEDED.value:
                 return
+
+    @staticmethod
+    def get_files_list(webhdfs, hdfs_path):
+        files_data = WebhdfsTools.list_directory(webhdfs, hdfs_path)["FileStatuses"]["FileStatus"]
+        return [file["pathSuffix"] for file in files_data]
+
+    @staticmethod
+    def get_file_content(webhdfs, hdfs_path, file_name):
+        respose_string = WebhdfsTools.open_and_read(webhdfs, "{}/{}".format(hdfs_path, file_name))
+        response_list = [response_row.split(",") for response_row in respose_string.splitlines()]
+        for row_list in response_list:
+            del row_list[0]  # remove row enumeration added by api
+        return response_list
+
+    @classmethod
+    def check_response(cls, hdfs_response, test_rows):
+        test_rows_values = []
+        for row in test_rows:
+            test_rows_values.append([str(key["value"]).lower() for key in row])
+        for record in hdfs_response:
+            if record not in test_rows_values:
+                raise JobException("HDFS file doesn't contain expected data")
 
 
 

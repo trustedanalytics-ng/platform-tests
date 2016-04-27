@@ -30,7 +30,7 @@ from modules.http_calls import cloud_foundry as cf
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Organization, ServiceType, ServiceInstance, Space, Transfer, User, Application
+from modules.tap_object_model import Organization, ServiceType, Space, User, Application, ServiceInstance
 from modules.test_names import generate_test_object_name
 from .context import Context
 from .test_data import TestData

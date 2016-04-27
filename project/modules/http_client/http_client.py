@@ -35,6 +35,10 @@ class HttpClient(object):
         """Client auth."""
         return self._auth
 
+    @url.setter
+    def url(self, url):
+        self._url = url
+
     def request(self, method: HttpMethod, path, headers=None, files=None, params=None, data=None, body=None, msg="",
                 raw_response=False):
         """Perform request and return response."""
@@ -42,7 +46,7 @@ class HttpClient(object):
             self._auth.authenticate()
         return self._auth.session.request(
             method=method,
-            url="{}{}".format(self._url, path),
+            url="{}{}".format(self.url, path),
             headers=headers,
             files=files,
             params=params,
