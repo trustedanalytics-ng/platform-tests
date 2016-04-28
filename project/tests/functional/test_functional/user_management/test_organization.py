@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import unittest
+
 from modules.constants import TapComponent as TAP
 from modules.remote_logger.remote_logger_decorator import log_components
 from modules.runner.tap_test_case import TapTestCase
@@ -62,6 +64,7 @@ class TestOrganization(TapTestCase):
         self.step("Check that the organization is not on org list")
         self.assertNotInWithRetry(deleted_org, Organization.api_get_list)
 
+    @unittest.skip
     @priority.medium
     def test_get_more_than_50_organizations(self):
         self.step("Get list of organization and check how many there are")
