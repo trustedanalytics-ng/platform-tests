@@ -15,6 +15,7 @@
 #
 
 import re
+import time
 
 from retry import retry
 
@@ -69,13 +70,9 @@ class iPythonConsole(TapTestCase):
         cls.step("Get credentials for the new ipython service instance")
         ipython.get_credentials()
 
-    @retry(AssertionError, tries=5, delay=5)
-    def _assert_atk_client_is_installed(self, ipython_terminal):
-        self.step("Check in terminal output that atk client was successfully installed")
-        success_pattern = "Successfully installed .* trustedanalytics"
-        output = ipython_terminal.get_output()
-        self.assertIsNotNone(re.search(success_pattern, output[-2]))
-        self.assertIn("#", output[-1])
+    def _find_pattern_in_output(self, ipython_terminal, pattern, eof_pattern):
+        output = ipython_terminal.get_output(eof_pattern)
+        self.assertIsNotNone(re.search(pattern, str(output)))
 
     @priority.high
     def test_iPython_terminal(self):
@@ -85,9 +82,7 @@ class iPythonConsole(TapTestCase):
         self.assertTrue(any("#" in item for item in initial_output), "Terminal prompt missing")
         self.step("Check that Python interpreter runs OK in iPython terminal")
         terminal.send_input("python\r")  # Run Python in the terminal
-        output = terminal.get_output()
-        self.assertIn("Python", output[-2])
-        self.assertIn(">>>", output[-1])
+        self._find_pattern_in_output(terminal, "Python", ">>>")
 
     @priority.high
     def test_iPython_interactive_mode_hello_world(self):
@@ -101,14 +96,16 @@ class iPythonConsole(TapTestCase):
     @priority.medium
     def test_iPython_connect_to_atk_client(self):
         self.step("Get atk app from seedspace")
-        atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"), None)
+        atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"),
+                       None)
         if atk_app is None:
             raise AssertionError("Atk app not found in seedspace")
         self.atk_url = atk_app.urls[0]
         self.step("Create new iPython terminal and install atk client")
         terminal = self.ipython.connect_to_terminal(terminal_no=self.terminal_no)
         terminal.send_input("pip2 install http://{}/client\r".format(self.atk_url))
-        self._assert_atk_client_is_installed(terminal)
+        self.step("Check in terminal output that atk client was successfully installed")
+        self._find_pattern_in_output(terminal, "Successfully installed .* trustedanalytics", eof_pattern="#")
         self.step("Create new iPython notebook")
         notebook = self.ipython.create_notebook()
         self.step("import atk client in the notebook")

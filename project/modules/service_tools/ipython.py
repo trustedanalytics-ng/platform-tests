@@ -19,6 +19,7 @@ import datetime
 import json
 import ssl
 import uuid
+import time
 
 import requests
 from retry import retry
@@ -60,17 +61,21 @@ class iPythonWSBase(metaclass=abc.ABCMeta):
             logger.info(msg)
         self.ws_connection.send(msg)
 
-    def get_output(self):
+    def get_output(self, eof_pattern="#"):
         """Retrieve all messages"""
         output = []
-        try:
-            while True:
-                msg = self.ws_connection.recv()
-                output.append(msg)
-                logger.info(msg)
-        except websocket.WebSocketTimeoutException:
-            # Timeout means there are no more messages
-            pass
+        for _ in range(5):
+            try:
+                while True:
+                    msg = self.ws_connection.recv()
+                    output.append(msg)
+                    logger.info(msg)
+            except websocket.WebSocketTimeoutException:
+                # Timeout means there are no more messages
+                pass
+            if eof_pattern in output[-1]:
+                break
+            time.sleep(5)
         return output
 
 
