@@ -22,8 +22,8 @@ from modules.runner.decorators import components, priority
 from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class PasswordTests(TapTestCase):
 
     NEW_PASSWORD = "NEW_PASSWORD"

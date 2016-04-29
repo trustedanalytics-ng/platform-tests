@@ -25,7 +25,7 @@ from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
 @log_components()
-@components(TAP.user_management, TAP.auth_gateway)
+@components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 class AddNewUserToOrganization(TapTestCase):
     ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]

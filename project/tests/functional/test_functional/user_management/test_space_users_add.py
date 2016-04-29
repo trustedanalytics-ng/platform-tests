@@ -94,8 +94,8 @@ class AddNewUserToSpace(BaseTestClass):
                              "User with incorrect roles was added to space")
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class AddExistingUserToSpace(AddNewUserToSpace):
 
     def _get_test_user(self, org_guid, space_guid, space_role=User.ORG_ROLES["manager"]):
@@ -115,8 +115,8 @@ class AddExistingUserToSpace(AddNewUserToSpace):
         self._assert_user_in_space_with_roles(user_not_in_space, space.guid)
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class AddUserToSpace(BaseTestClass):
     @priority.low
     def test_cannot_create_new_user_with_long_username(self):

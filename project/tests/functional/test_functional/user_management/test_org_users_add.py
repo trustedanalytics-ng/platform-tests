@@ -119,8 +119,8 @@ class AddNewUserToOrganization(BaseTestClass):
         self.assertListEqual(User.api_get_list_via_organization(org.guid), org_users)
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class AddExistingUserToOrganization(AddNewUserToOrganization):
 
     def _get_test_org(self):
@@ -137,8 +137,8 @@ class AddExistingUserToOrganization(AddNewUserToOrganization):
         return self.test_client
 
 
-@log_components()
-@components(TAP.user_management, TAP.auth_gateway)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class AddUserToOrganization(BaseTestClass):
 
     @priority.low

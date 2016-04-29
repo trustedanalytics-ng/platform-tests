@@ -22,8 +22,8 @@ from modules.tap_object_model import Space, User
 from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class GetSpaceUsers(TapTestCase):
     @classmethod
     @teardown_fixtures.cleanup_after_failed_setup

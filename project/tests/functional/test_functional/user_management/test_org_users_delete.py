@@ -42,7 +42,7 @@ class DeleteOrganizationUser(TapTestCase):
         org_users = User.api_get_list_via_organization(org_guid)
         self.assertNotIn(user, org_users, "User is among org users, although they shouldn't")
 
-    @priority.high
+    @priority.medium
     def test_admin_deletes_the_only_org_user_non_manager(self):
         deleted_user = self.test_user
         self.step("Create a test organization")

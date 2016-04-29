@@ -23,8 +23,8 @@ from modules.tap_object_model import Organization, Space, User
 from tests.fixtures import teardown_fixtures
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class UpdateSpaceUser(TapTestCase):
 
     @classmethod

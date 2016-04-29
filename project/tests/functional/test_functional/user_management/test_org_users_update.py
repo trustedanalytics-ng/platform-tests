@@ -25,8 +25,8 @@ from modules.tap_object_model import Organization, User
 from tests.fixtures import setup_fixtures, teardown_fixtures
 
 
-@log_components()
-@components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@log_components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@components(TAP.user_management)
 class UpdateOrganizationUser(TapTestCase):
     ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
