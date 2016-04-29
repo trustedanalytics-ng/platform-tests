@@ -47,6 +47,7 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
     HBASE_TABLE_NAME = "pipeline"
     ONE_WORKER_PLAN_NAME = "1 worker"
     SHARED_PLAN_NAME = "shared"
+    BARE_PLAN_NAME = "bare"
     hbase_namespace = None
     db_and_table_name = None
 
@@ -80,7 +81,7 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
                                    service_plan_name=cls.SHARED_PLAN_NAME)
         ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
                                    service_label=ServiceLabels.HBASE, name="hbase1",
-                                   service_plan_name=cls.SHARED_PLAN_NAME)
+                                   service_plan_name=cls.BARE_PLAN_NAME)
 
         cls.step("Login to cf, target test org and space")
         cf.cf_login(cls.test_org.name, cls.test_space.name)
