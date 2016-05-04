@@ -31,6 +31,7 @@ class ServiceLabels(object):
     INFLUX_DB = "influxdb088"
     IPYTHON = "ipython"
     KAFKA = "kafka"
+    KERBEROS = "kerberos"
     LOGSTASH = "logstash14"
     MEMCACHED = "memcached14"
     MONGO_DB = "mongodb26"

@@ -82,6 +82,9 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
         ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
                                    service_label=ServiceLabels.HBASE, name="hbase1",
                                    service_plan_name=cls.BARE_PLAN_NAME)
+        ServiceInstance.api_create(org_guid=cls.test_org.guid, space_guid=cls.test_space.guid,
+                                   service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
+                                   service_plan_name=cls.SHARED_PLAN_NAME)
 
         cls.step("Login to cf, target test org and space")
         cf.cf_login(cls.test_org.name, cls.test_space.name)
