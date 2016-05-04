@@ -161,3 +161,7 @@ class ServiceCatalogHttpStatus(HttpStatus):
     """Services http status messages"""
 
     MSG_SERVICE_NAME_TAKEN = "Provided name {} is already in use by other instance."
+    MSG_BOUND_INSTANCE = "Please delete the service_bindings associations for your service_instances."
+    MSG_APP_NOT_FOUND = "The app could not be found: {}"
+    MSG_SERVICE_INST_NOT_FOUND = "The service instance could not be found: {}"
+    MSG_SERVICE_BINDING_NOT_FOUND = "The service binding could not be found: {}"

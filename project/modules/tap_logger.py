@@ -147,5 +147,18 @@ def log_http_response(response, logged_body_length=None):
 
 def step(message):
     separator = "=" * 20
-    step_logger = get_logger(LoggerType.STEP_LOGGER)
-    step_logger.info("{0} {1} {0}".format(separator, message))
+    _log_separator(logger_type=LoggerType.STEP_LOGGER, separator=separator, message=message)
+
+
+def log_fixture(message):
+    separator = "*" * 20
+    _log_separator(logger_type=LoggerType.FIXTURE_LOGGER, separator=separator, message=message)
+
+
+def log_finalizer(message):
+    separator = "*" * 20
+    _log_separator(logger_type=LoggerType.FINALIZER_LOGGER, separator=separator, message=message)
+
+
+def _log_separator(logger_type, separator, message):
+    get_logger(logger_type).info("{0} {1} {0}".format(separator, message))

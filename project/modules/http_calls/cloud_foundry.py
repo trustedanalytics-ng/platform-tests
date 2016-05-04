@@ -30,10 +30,14 @@ from ..tap_logger import get_logger, log_command
 cli_logger = get_logger(LoggerType.CF_CLI)
 
 
-def cf_login(organization_name, space_name):
+def cf_login(organization_name, space_name, credentials=None):
+    if credentials is None:
+        username = CONFIG["admin_username"]
+        password = CONFIG["admin_password"]
+    else:
+        username = credentials[0]
+        password = credentials[1]
     api_url = "api.{}".format(CONFIG["domain"])
-    username = CONFIG["admin_username"]
-    password = CONFIG["admin_password"]
     command = ["cf", "login", "-a", api_url, "-u", username, "-p", password, "-o", organization_name, "-s", space_name]
     if not CONFIG["ssl_validation"]:
         command.append("--skip-ssl-validation")

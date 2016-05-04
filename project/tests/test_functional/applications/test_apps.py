@@ -16,82 +16,103 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP
+from modules.constants import TapComponent as TAP, HttpStatus
+from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
 from modules.markers import priority, components
-from modules.runner.tap_test_case import TapTestCase
-from modules.tap_object_model import Application, Organization, Space
-from tests.fixtures.test_data import TestData
+from modules.tap_logger import step
+from modules.tap_object_model import Application, User
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.service_catalog, TAP.user_management)
+pytestmark = [components.service_catalog]
 
 
-@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf", "example_app_path")
-class TapApp(TapTestCase):
+class TestTapApp:
 
-    pytestmark = [components.service_catalog]
+    @pytest.fixture(scope="function")
+    def remove_from_space(self, request, test_space, test_org_manager):
+        def fin():
+            test_org_manager.api_delete_from_space(space_guid=test_space.guid)
+        request.addfinalizer(fin)
+
+    def _check_user_can_do_app_flow(self, test_org, test_space, example_app_path, client):
+        step("Push example application")
+        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
+        step("Check the application is running")
+        assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
+        step("Stop the application and check that it is stopped")
+        test_app.api_stop(client=client)
+        assertions.assert_equal_with_retry(False, test_app.cf_api_app_is_running)
+        step("Start the application and check that it has started")
+        test_app.api_start(client=client)
+        assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
+        step("Delete the application and check that it doesn't exist")
+        test_app.api_delete(client=client)
+        apps = Application.cf_api_get_list_by_space(test_space.guid)
+        assert test_app not in apps
 
     @priority.high
-    def test_api_push_stop_start_restage_delete(self):
-        self.step("Push example application")
-        test_app = Application.push(
-            space_guid=TestData.test_space.guid,
-            source_directory=TestData.example_app_repo_path
-        )
-        self.step("Check the application is running")
-        self.assertEqualWithinTimeout(120, True, test_app.cf_api_app_is_running)
+    def test_admin_can_manage_app(self, test_org, test_space, example_app_path, admin_client):
+        cf.cf_login(test_org.name, test_space.name)
+        self._check_user_can_do_app_flow(test_org, test_space, example_app_path, client=admin_client)
 
-        self.step("Stop the application and check that it is stopped")
-        test_app.api_stop()
-        self.assertEqualWithinTimeout(120, False, test_app.cf_api_app_is_running)
-
-        self.step("Start the application and check that it has started")
-        test_app.api_start()
-        self.assertEqualWithinTimeout(120, True, test_app.cf_api_app_is_running)
-
-        self.step("Delete the application and check that it doesn't exist")
-        test_app.api_delete()
-        self.assertNotIn(test_app, Application.cf_api_get_list_by_space(TestData.test_space.guid))
-
-
-class DeleteSpaceAndOrg(TapTestCase):
-    pytestmark = [components.user_management, components.service_catalog]
-
-    @pytest.fixture(scope="function", autouse=True)
-    def create_org_space_push_app(self, request, example_app_path):
-        self.step("Create test organization and space")
-        self.test_org = Organization.api_create()
-        self.test_space = Space.api_create(self.test_org)
-        self.step("Login to cf targeting test org and test space")
-        cf.cf_login(self.test_org.name, self.test_space.name)
-        self.test_app = Application.push(
-            space_guid=self.test_space.guid,
-            source_directory=example_app_path
-        )
-        self.step("Check the application is running")
-        self.assertEqualWithinTimeout(120, True, self.test_app.cf_api_app_is_running)
+    @priority.high
+    def test_developer_can_manage_app(self, test_org, test_space, example_app_path, test_org_manager,
+                                      remove_from_space):
+        space_developer = test_org_manager
+        space_developer.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
+                                         roles=User.SPACE_ROLES["developer"])
+        space_developer_client = space_developer.login()
+        cf.cf_login(test_org.name, test_space.name, credentials=(space_developer.username, space_developer.password))
+        self._check_user_can_do_app_flow(test_org, test_space, example_app_path, client=space_developer_client)
 
     @priority.low
-    def test_delete_space_and_org_after_app_creation_and_deletion(self):
-        self.step("Delete the test application")
-        self.test_app.api_delete()
-        self.step("Delete the space using platform api")
-        self.test_space.api_delete()
-        self.step("Check that the space is gone")
-        self.assertNotInWithRetry(self.test_space, Space.api_get_list)
-        self.step("Delete the organization using platform api")
-        self.test_org.api_delete()
-        self.step("Check that the organization is gone")
-        self.assertNotInWithRetry(self.test_org, Organization.api_get_list)
+    def test_non_developer_cannot_push_app(self, test_org, test_space, example_app_path, test_org_manager,
+                                           remove_from_space):
+        step("Add user to space as manager")
+        space_manager = test_org_manager
+        space_manager.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
+                                       roles=User.SPACE_ROLES["manager"])
+        step("Login as this user")
+        cf.cf_login(test_org.name, test_space.name, credentials=(space_manager.username, space_manager.password))
+
+        step("Check that manager cannot push app")
+        with pytest.raises(CommandExecutionException):
+            Application.push(space_guid=test_space.guid, source_directory=example_app_path)
 
     @priority.low
-    def test_delete_space_and_org_without_deleting_an_app(self):
-        self.step("Delete the space using platform api")
-        self.test_space.api_delete()
-        self.step("Check that the space is gone")
-        self.assertNotInWithRetry(self.test_space, Space.api_get_list)
-        self.step("Delete the test organization using platform api")
-        self.test_org.api_delete()
-        self.step("Check that the organization is gone")
-        self.assertNotInWithRetry(self.test_org, Organization.api_get_list)
+    def test_non_developer_cannot_manage_app(self, test_org, test_space, example_app_path, test_org_manager,
+                                             remove_from_space):
+        step("Push example app as admin")
+        cf.cf_login(test_org.name, test_space.name)
+        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
+        apps = Application.cf_api_get_list_by_space(test_space.guid)
+        assert test_app in apps
+
+        step("Add user to space as manager")
+        space_manager = test_org_manager
+        space_manager.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
+                                       roles=User.SPACE_ROLES["manager"])
+        space_manager_client = space_manager.login()
+        step("Check that manager cannot stop app")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                                test_app.api_stop, client=space_manager_client)
+        step("Check that manager cannot start app")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                                test_app.api_start, client=space_manager_client)
+        step("Check that manager cannot delete app")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                                test_app.api_delete, client=space_manager_client)
+        apps = Application.cf_api_get_list_by_space(test_space.guid)
+        assert test_app in apps
+
+    @priority.medium
+    def test_compare_app_list_with_cf(self, core_space):
+        step("Get application list from platform")
+        platform_app_list = Application.api_get_list(core_space.guid)
+        step("Get application list from cf")
+        cf_app_list = Application.cf_api_get_list_by_space(core_space.guid)
+        step("Compare app lists from platform and cf")
+        assert sorted(platform_app_list) == sorted(cf_app_list)

@@ -25,3 +25,5 @@ class LoggerType(object):
     SHELL_COMMAND = "shell command"
     STEP_LOGGER = "STEP"
     GATLING_RUNNER = "gatling runner"
+    FIXTURE_LOGGER = "FIXTURE"
+    FINALIZER_LOGGER = "FINALIZER"

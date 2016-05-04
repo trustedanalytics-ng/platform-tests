@@ -137,4 +137,17 @@ def api_get_app_bindings(app_guid, client=None):
     return response["resources"]
 
 
+def api_create_service_binding(app_guid, service_instance_guid, client=None):
+    """POST /rest/apps/{app_guid}/service_bindings"""
+    client = client or PlatformApiClient.get_admin_client()
+    return client.request("POST", "rest/apps/{}/service_bindings".format(app_guid),
+                          body={"service_instance_guid": service_instance_guid},
+                          log_msg="PLATFORM: Create binding for app and service")
+
+def api_delete_service_binding(binding_guid, client=None):
+    """DELETE /rest/service_bindings/{binding_guid}"""
+    client = client or PlatformApiClient.get_admin_client()
+    return client.request("DELETE", "rest/service_bindings/{}".format(binding_guid), log_msg="PLATFORM: delete binding")
+
+
 

@@ -34,6 +34,8 @@ class Application(object):
 
     MANIFEST_NAME = "manifest.yml"
 
+    COMPARABLE_ATTRIBUTES = ["name", "guid", "space_guid", "is_running", "is_started"]
+
     def __init__(self, name, guid, space_guid, state, instances, urls):
         """local_path - directory where application manifest is located"""
         self.name = name
@@ -43,6 +45,12 @@ class Application(object):
         self.instances = instances
         self.urls = tuple(urls)
         self.request_session = requests.session()
+
+    def __eq__(self, other):
+        return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
+
+    def __lt__(self, other):
+        return self.guid < other.guid
 
     def __repr__(self):
         return "{0} (name={1}, guid={2})".format(self.__class__.__name__, self.name, self.guid)
