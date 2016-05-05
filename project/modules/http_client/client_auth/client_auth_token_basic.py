@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-from configuration import config
 from .client_auth_token_base import ClientAuthTokenBase
 
 
@@ -52,7 +51,3 @@ class ClientAuthTokenBasic(ClientAuthTokenBase):
     def token_name(self) -> str:
         """Token name."""
         return "access_token"
-
-    @property
-    def auth_credentials(self) -> tuple:
-        return config.CONFIG["cf_auth"]

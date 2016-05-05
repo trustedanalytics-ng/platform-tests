@@ -14,21 +14,14 @@
 # limitations under the License.
 #
 
-from configuration import config
+from .uaa_credentials_provider import UaaCredentialsProvider
 from ..http_client.client_auth.http_method import HttpMethod
-from ..http_client.http_client_credentials import HttpClientCredentials
 from ..http_client.http_client_factory import HttpClientFactory
-from ..http_client.http_client_type import HttpClientType
 
 
 def uaa_api_user_delete(user_id):
     """DELETE /users/{id}"""
-    credentials = HttpClientCredentials(
-        HttpClientType.UAA,
-        config.CONFIG["admin_username"],
-        config.CONFIG["admin_password"]
-    )
-    HttpClientFactory.get(credentials).request(
+    HttpClientFactory.get(UaaCredentialsProvider.get()).request(
         method=HttpMethod.DELETE,
         path="Users/{}".format(user_id),
         msg="UAA: delete user"

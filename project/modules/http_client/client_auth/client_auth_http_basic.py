@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from requests.auth import AuthBase
+from requests.auth import AuthBase, HTTPBasicAuth
 
 from .client_auth_base import ClientAuthBase
 
@@ -24,11 +24,9 @@ class ClientAuthHttpBasic(ClientAuthBase):
 
     def authenticate(self) -> AuthBase:
         """Use session credentials to authenticate."""
-        # @TODO: Implement missing authenticate method
-        raise NotImplementedError()
+        return HTTPBasicAuth(self.session.username, self.session.password)
 
     @property
     def authenticated(self) -> bool:
         """Check if current user is authenticated."""
-        # @TODO: Implement missing authenticated method
-        raise NotImplementedError()
+        return True

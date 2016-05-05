@@ -18,7 +18,7 @@ import unittest
 
 from requests import Request
 
-from ..client_auth.http_token_auth import HTTPTokenAuth
+from modules.http_client.client_auth.http_token_auth import HTTPTokenAuth
 
 
 class TestHttpTokenAuth(unittest.TestCase):

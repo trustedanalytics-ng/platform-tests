@@ -32,7 +32,6 @@ class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
         self._token = None
         self._token_timestamp = None
         self._response = None
-        self._auth_credentials = None
         super().__init__(url, session)
 
     @property
@@ -46,7 +45,6 @@ class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
             HttpMethod.POST, self._url,
             headers=self.request_headers,
             data=self.request_data,
-            auth=self.auth_credentials,
             log_message="Token has been retrieved."
         )
         self._set_token()
@@ -82,10 +80,6 @@ class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
     @abstractproperty
     def token_format(self) -> str:
         """Token format."""
-
-    @abstractproperty
-    def auth_credentials(self) -> tuple:
-        """Credentials for obtaining token."""
 
 
 class ClientAuthTokenMissingResponseTokenKeyException(Exception):

@@ -15,10 +15,9 @@
 #
 
 import unittest
-from unittest import mock
+from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 
-from .mock_dynamic_config import mock_dynamic_config
-from .mock_http_session import MockHttpSession
+from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
 from modules.http_client.client_auth.client_auth_token_uaa import ClientAuthTokenUaa
 from modules.http_client.client_auth.client_auth_type import ClientAuthType
@@ -26,7 +25,6 @@ from modules.http_client.client_auth.client_auth_factory import ClientAuthFactor
     ClientAuthFactoryInvalidAuthTypeException
 
 
-@mock.patch("modules.http_client.client_auth.client_auth_token_uaa.dynamic_config", mock_dynamic_config)
 class TestClientAuthFactory(MockHttpSession):
     """Unit: ClientAuthFactory."""
 
@@ -44,13 +42,7 @@ class TestClientAuthFactory(MockHttpSession):
         self._assertClientAuthInstance(ClientAuthType.TOKEN_UAA, ClientAuthTokenUaa)
 
     def test_get_should_return_auth_http_basic(self):
-        self.assertRaises(
-            NotImplementedError,
-            ClientAuthFactory.get,
-            self.USERNAME,
-            self.PASSWORD,
-            ClientAuthType.HTTP_BASIC
-        )
+        self._assertClientAuthInstance(ClientAuthType.HTTP_BASIC, ClientAuthHttpBasic)
 
     def test_get_should_return_auth_login_page(self):
         self.assertRaises(

@@ -14,31 +14,34 @@
 # limitations under the License.
 #
 
-from modules.constants import TapComponent
-from modules.tap_object_model import Application
+from ..constants import TapComponent
+from ..tap_object_model import Application
+from ..http_client.http_client_credentials import HttpClientCredentials
+from ..http_client.http_client_type import HttpClientType
 
 
-class _DynamicConfig(object):
+class UaaCredentialsProvider(object):
+    """ Provide credentials for UAA http client. """
 
-    __config = {}
+    _credentials = None
 
-    def get(self, attribute_name):
-        if attribute_name not in self.__config:
-            getattr(self, attribute_name)()
-        return self.__config[attribute_name]
+    @classmethod
+    def get(cls) -> HttpClientCredentials:
+        """ Return http credentials. """
+        if cls._credentials is None:
+            cls._provide_credentials()
+        return cls._credentials
 
-    def uaa_auth(self) -> tuple:
-        """
-        Retrieves uaa credentials (username and password) from user-management env.
-        """
+    @classmethod
+    def _provide_credentials(cls):
+        """ Retrieve credentials from user-management environment variables. """
         apps = Application.cf_api_get_list()
         user_management = next(a for a in apps if a.name == TapComponent.user_management.value)
         user_management_env = user_management.cf_api_env()
         upsi = user_management_env["VCAP_SERVICES"]["user-provided"]
         sso = next(x for x in upsi if x["name"] == "sso")
-        uaa_login = sso["credentials"]["clientId"]
-        uaa_password = sso["credentials"]["clientSecret"]
-        self.__config["uaa_auth"] = (uaa_login, uaa_password)
-
-
-dynamic_config = _DynamicConfig()
+        cls._credentials = HttpClientCredentials(
+            HttpClientType.UAA,
+            sso["credentials"]["clientId"],
+            sso["credentials"]["clientSecret"]
+        )

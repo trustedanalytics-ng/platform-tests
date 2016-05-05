@@ -16,7 +16,7 @@
 
 import unittest
 
-from .mock_http_session import MockHttpSession
+from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.client_auth.http_session import HttpSession

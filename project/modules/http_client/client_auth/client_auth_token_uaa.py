@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-from configuration.dynamic_config import dynamic_config
 from .client_auth_token_base import ClientAuthTokenBase
 
 
@@ -50,8 +49,3 @@ class ClientAuthTokenUaa(ClientAuthTokenBase):
     def token_name(self) -> str:
         """Token name."""
         return "access_token"
-
-    @property
-    def auth_credentials(self) -> tuple:
-        """Credentials for obtaining token."""
-        return dynamic_config.get("uaa_auth")

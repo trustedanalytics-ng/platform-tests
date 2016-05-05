@@ -16,9 +16,9 @@
 
 import unittest
 
+from modules.http_client.http_client_type import HttpClientType
 from modules.http_client.http_client_credentials import HttpClientCredentials, \
     HttpClientCredentialsInvalidPropertyTypeException, HttpClientCredentialsEmptyPropertyException
-from modules.http_client.http_client_type import HttpClientType
 
 
 class TestHttpClientCredentials(unittest.TestCase):

@@ -15,9 +15,9 @@
 #
 
 import unittest
+from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 
-from .mock_dynamic_config import mock_dynamic_config
-from .mock_http_session import MockHttpSession
+from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_base import ClientAuthBase
 from modules.http_client.client_auth.client_auth_token_uaa import ClientAuthTokenUaa
 from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
@@ -27,7 +27,6 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.http_client_type import HttpClientType
 
 
-@unittest.mock.patch("modules.http_client.client_auth.client_auth_token_uaa.dynamic_config", mock_dynamic_config)
 class TestHttpClientFactory(MockHttpSession):
     """Unit: HttpClientFactory."""
 
@@ -45,8 +44,7 @@ class TestHttpClientFactory(MockHttpSession):
         self._assertHttpClientInstance(HttpClientType.PLATFORM, ClientAuthTokenBasic)
 
     def test_get_should_return_client_for_application_broker(self):
-        credentials = self._get_credentials(HttpClientType.APPLICATION_BROKER)
-        self.assertRaises(NotImplementedError, HttpClientFactory.get, credentials)
+        self._assertHttpClientInstance(HttpClientType.APPLICATION_BROKER, ClientAuthHttpBasic)
 
     def test_get_should_return_client_for_console(self):
         credentials = self._get_credentials(HttpClientType.CONSOLE)
