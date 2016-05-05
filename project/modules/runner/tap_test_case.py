@@ -22,6 +22,7 @@ from retry import retry
 from unittest.suite import _ErrorHolder
 
 from ..constants import LoggerType, Priority
+from .custom_runners import TapTestResult
 from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger
 from ..tap_object_model.flows import cleaner
@@ -92,7 +93,7 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
         #       [][1] - exc_info, None if no exception
 
         # check if test (not subtest) was a success and tearDown an error
-        if (len(errors) == 3 and not result._is_subTest(errors[1][0]) and
+        if (len(errors) == 3 and not TapTestResult._is_subTest(errors[1][0]) and
                 errors[1][1] is None and errors[2][1] is not None):
             # in such case the test is only emited as an error,
             # adding extra test success

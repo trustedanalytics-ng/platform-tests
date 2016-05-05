@@ -19,7 +19,6 @@ import time
 
 from .base import BaseDocument
 from modules.runner.db.client import DBClient
-from modules.runner.tap_test_case import TapTestCase
 from modules.constants import TestResult
 from modules.platform_version import VersionedComponent
 
@@ -27,7 +26,7 @@ from modules.platform_version import VersionedComponent
 class TestResultDocument(BaseDocument):
     COLLECTION_NAME = "test_result"
 
-    def __init__(self, db_client: DBClient, run_id: str, suite: str, test_obj: TapTestCase, test_order: int,
+    def __init__(self, db_client: DBClient, run_id: str, suite: str, test_obj, test_order: int,
                  platform_components: list):
         super().__init__(db_client)
         self.__run_id = run_id
