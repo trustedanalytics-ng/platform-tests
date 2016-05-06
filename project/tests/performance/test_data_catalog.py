@@ -34,7 +34,7 @@ class DataCatalogPerformanceTest(unittest.TestCase):
     def test_add_data_set(self):
         """Test adding data set to data catalog."""
         parameters = GatlingRunnerParameters(
-            simulation_name=SimulationName.ADD_DATA_SET.value,
+            simulation_name=SimulationName.ADD_DATA_SET,
             platform=CONFIG["domain"],
             organization=CONFIG["ref_org_name"],
             space=CONFIG["ref_space_name"],
@@ -44,5 +44,5 @@ class DataCatalogPerformanceTest(unittest.TestCase):
         )
         gatling_runner = GatlingRunner(parameters)
         result = gatling_runner.run()
-        self.assertTrue(result.number_of_failed_requests.name < 10, "Percentage of failed requests is to high.")
+        self.assertTrue(result.number_of_failed_requests.percentage < 10, "Percentage of failed requests is to high.")
         self.assertTrue(result.number_of_slow_requests.percentage < 20, "Percentage of slow requests is to high.")
