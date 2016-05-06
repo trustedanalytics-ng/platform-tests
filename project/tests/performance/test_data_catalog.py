@@ -17,16 +17,17 @@
 import unittest
 
 from configuration.config import CONFIG
+from modules.constants import TapComponent as Tap
 from modules.gatling_runner.gatling_runner import GatlingRunner
 from modules.gatling_runner.gatling_runner_parameters import GatlingRunnerParameters
 from modules.gatling_runner.simulation.simulation_name import SimulationName
-from modules.remote_logger.remote_logger_decorator import log_components
-from modules.runner.decorators import components, priority
-from modules.constants import TapComponent as Tap
+from modules.markers import components, priority
 
 
-@log_components()
-@components(Tap.data_catalog, Tap.das, Tap.hdfs_downloader, Tap.metadata_parser)
+logged_components = (Tap.data_catalog, Tap.das, Tap.hdfs_downloader, Tap.metadata_parser)
+pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+
+
 class DataCatalogPerformanceTest(unittest.TestCase):
     """Data catalog gatling performance tests."""
 
