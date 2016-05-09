@@ -18,9 +18,10 @@ import os
 
 
 class Path:
-    test_root_directory = os.path.join("tests", "functional")
+    test_root_directory = os.path.join("tests")
     test_directories = {
         "test_functional": os.path.join(test_root_directory, "test_functional"),
         "test_smoke": os.path.join(test_root_directory, "test_smoke"),
         "test_monitoring": os.path.join(test_root_directory, "test_monitoring"),
+        "test_performance": os.path.join(test_root_directory, "test_performance"),
     }
