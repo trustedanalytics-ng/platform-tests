@@ -54,7 +54,7 @@ class Ws2kafka2hdfs(TapTestCase):
     topic_name = None
 
     @pytest.fixture(scope="class")
-    def setup_kafka_zookeeper_hdfs_instances(self, test_org, test_space):
+    def setup_kafka_zookeeper_hdfs_instances(self, request, test_org, test_space):
         self.step("Create instances for kafka, zookeeper, hdfs")
         ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
                                    service_label=ServiceLabels.KAFKA, name=self.KAFKA_INSTANCE_NAME,
@@ -66,8 +66,18 @@ class Ws2kafka2hdfs(TapTestCase):
                                    service_label=ServiceLabels.HDFS, name=self.HDFS_INSTANCE_NAME,
                                    service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
 
+    @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def workaround_for_kerberos_service(self, test_space, setup_kafka_zookeeper_hdfs_instances):
+    def delete_pushed_apps(cls, request):
+        def fin():
+            pushed_apps = [cls.app_ws2kafka, cls.app_kafka2hdfs]
+            for app in pushed_apps:
+                if app is not None:
+                    app.api_delete()
+        request.addfinalizer(fin)
+
+    @pytest.fixture(scope="class", autouse=True)
+    def workaround_for_kerberos_service(self, request, test_space, setup_kafka_zookeeper_hdfs_instances):
         self.step("Get credentials for kerberos-service")
         user_provided_services = Upsi.cf_api_get_list()
         kerb_upsi = next((upsi for upsi in user_provided_services if upsi.name == self.KERBEROS_SERVICE), None)

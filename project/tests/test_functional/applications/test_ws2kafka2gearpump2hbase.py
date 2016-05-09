@@ -54,24 +54,30 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
     db_and_table_name = None
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_kafka_zookeeper_hbase_instances(self, test_org, test_space):
+    def setup_kafka_zookeeper_hbase_instances(self, request, test_org, test_space):
+        test_instances = []
         self.step("Create instances of kafka, zookeeper, hbase")
-        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                   service_label=ServiceLabels.KAFKA, name="kafka-inst",
-                                   service_plan_name=self.SHARED_PLAN_NAME)
-        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                   service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
-                                   service_plan_name=self.SHARED_PLAN_NAME)
-        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                   service_label=ServiceLabels.HBASE, name="hbase1",
-                                   service_plan_name=self.BARE_PLAN_NAME)
-        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                   service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
-                                   service_plan_name=self.SHARED_PLAN_NAME)
+        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                         service_label=ServiceLabels.KAFKA, name="kafka-inst",
+                                                         service_plan_name=self.SHARED_PLAN_NAME))
+        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                         service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
+                                                         service_plan_name=self.SHARED_PLAN_NAME))
+        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                         service_label=ServiceLabels.HBASE, name="hbase1",
+                                                         service_plan_name=self.BARE_PLAN_NAME))
+        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                         service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
+                                                         service_plan_name=self.SHARED_PLAN_NAME))
+
+        def fin():
+            for instance in test_instances:
+                instance.api_delete()
+        request.addfinalizer(fin)
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def push_apps(cls, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances):
+    def push_apps(cls, request, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances):
         cls.step("Get ws2kafka app sources")
         github_auth = config.CONFIG["github_auth"]
         ingestion_repo = AppSources(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER, gh_auth=github_auth)
@@ -90,6 +96,12 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
         app_hbase_reader = Application.push(space_guid=test_space.guid, source_directory=hbase_reader_path,
                                             name=get_test_name(short=True))
         cls.hbase_reader = HbaseClient(app_hbase_reader)
+        pushed_apps = [cls.app_ws2kafka, app_hbase_reader]
+
+        def fin():
+            for app in pushed_apps:
+                app.api_delete()
+        request.addfinalizer(fin)
 
     def _send_ws_messages(self, connection_string):
         self.step("Send messages to {}".format(connection_string))

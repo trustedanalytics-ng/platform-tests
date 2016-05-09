@@ -44,6 +44,8 @@ class MarketplaceServices(TapTestCase):
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def marketplace_services(cls, test_org, test_space):
+        cls.test_org = test_org
+        cls.test_space = test_space
         cls.step("Get list of available services from Marketplace")
         cls.marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
 
