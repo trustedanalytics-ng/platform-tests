@@ -20,7 +20,7 @@ class TestData:
     test_space = None
     test_org_manager = None
     test_org_manager_client = None
-    admin = None
+    admin_user = None
     admin_client = None
     core_org = None
     core_space = None

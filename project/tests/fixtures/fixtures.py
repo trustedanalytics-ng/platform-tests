@@ -101,8 +101,9 @@ def login_to_cf(test_org, test_space):
 @pytest.fixture(scope="session")
 def admin_user():
     log_fixture("admin_user: Retrieve admin user")
-    TestData.admin = User.get_admin()
-    return TestData.admin
+    admin_user = User.get_admin()
+    TestData.admin_user = admin_user
+    return admin_user
 
 
 @pytest.fixture(scope="session")

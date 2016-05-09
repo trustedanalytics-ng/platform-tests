@@ -217,8 +217,7 @@ class AtkInstance(ServiceInstance):
         if response["instances"] is not None:
             for data in response["instances"]:
                 instance = cls(guid=data["service_guid"], name=data["name"], space_guid=None, org_guid=org_guid,
-                               scoring_engine=data["scoring_engine"], state=data["state"],
-                               creator_guid=data["metadata"].get("creator_guid"),
+                               state=data["state"], creator_guid=data["metadata"].get("creator_guid"), 
                                creator_name=data["metadata"].get("creator_name"))
                 atk_instances.append(instance)
         return atk_instances
