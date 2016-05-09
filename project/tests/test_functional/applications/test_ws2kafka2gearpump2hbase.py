@@ -66,7 +66,7 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
                                    service_label=ServiceLabels.HBASE, name="hbase1",
                                    service_plan_name=self.BARE_PLAN_NAME)
         ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                   service_label=ServiceLabels.HBASE, name="kerberos-instance",
+                                   service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
                                    service_plan_name=self.SHARED_PLAN_NAME)
 
     @classmethod
