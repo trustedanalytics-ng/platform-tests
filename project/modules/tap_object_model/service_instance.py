@@ -53,12 +53,12 @@ class ServiceInstance(object):
 
     @classmethod
     @retry(AssertionError, tries=100, delay=3)
-    def _get_instance_with_retry(cls, instance_name, space_guid):
+    def _get_instance_with_retry(cls, instance_name, space_guid, service_label):
         """Wait for created instance and return it"""
         instance_list = cls.api_get_list(space_guid)
         instance = next((i for i in instance_list if i.name == instance_name), None)
         if instance is None:
-            raise AssertionError("Instance was not created")
+            raise AssertionError("Instance {} was not created".format(service_label))
         return instance
 
     # ----------------------------------------- Platform API ----------------------------------------- #
@@ -88,7 +88,7 @@ class ServiceInstance(object):
             return cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid, service_label=service_label)
         except UnexpectedResponseError as e:
             if e.status == 504 and "Gateway Timeout" in e.error_message:
-                return cls._get_instance_with_retry(name, space_guid)
+                return cls._get_instance_with_retry(name, space_guid, service_label)
             raise
 
     @classmethod
