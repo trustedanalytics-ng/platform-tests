@@ -61,24 +61,7 @@ class GatlingSshConnector(object):
         sftp = self._open_sftp()
         sftp.chdir(self.PATH_TO_RESULTS)
         folders_before = sftp.listdir()
-        self._exec_command([
-            'java',
-            '-Dsimulation={}'.format(self._parameters.simulation_name.value),
-            '-Dplatform={}'.format(self._parameters.platform),
-            '-Dproxy={}'.format(self._parameters.proxy),
-            '-DproxyHttpPort={}'.format(self._parameters.proxy_http_port),
-            '-DproxyHttpsPort={}'.format(self._parameters.proxy_https_port),
-            '-Dusername={}'.format(self._parameters.username),
-            '-Dpassword={}'.format(self._parameters.password),
-            '-Dorganization={}'.format(self._parameters.organization),
-            '-Dspace={}'.format(self._parameters.space),
-            '-Dusers={}'.format(self._parameters.users),
-            '-DusersAtOnce={}'.format(self._parameters.users_at_once),
-            '-Dramp={}'.format(self._parameters.ramp),
-            '-Drepeat={}'.format(self._parameters.repeat),
-            '-Dduration={}'.format(self._parameters.duration),
-            '-jar', Config.gatling_package_file_name(),
-            '>', self._parameters.log_file, '2>&1', '&'])
+        self._exec_command(self._command())
         sleep(self.WAIT_AFTER_SIMULATION_START)
         folders_after = sftp.listdir()
         sftp.close()
@@ -118,6 +101,34 @@ class GatlingSshConnector(object):
                 sftp.put(Config.gatling_package_file_path(), Config.gatling_package_file_name())
             finally:
                 sftp.close()
+
+    def _command(self):
+        """Simulation execution command."""
+        command = [
+            'java',
+            '-Dsimulation={}'.format(self._parameters.simulation_name.value),
+            '-Dplatform={}'.format(self._parameters.platform),
+            '-Dusername={}'.format(self._parameters.username),
+            '-Dpassword={}'.format(self._parameters.password),
+            '-Dorganization={}'.format(self._parameters.organization),
+            '-Dspace={}'.format(self._parameters.space),
+            '-Dusers={}'.format(self._parameters.users),
+            '-DusersAtOnce={}'.format(self._parameters.users_at_once),
+            '-Dramp={}'.format(self._parameters.ramp),
+            '-Drepeat={}'.format(self._parameters.repeat),
+            '-Dduration={}'.format(self._parameters.duration),
+        ]
+        if self._parameters.proxy is not None:
+            command.extend([
+                '-Dproxy={}'.format(self._parameters.proxy),
+                '-DproxyHttpPort={}'.format(self._parameters.proxy_http_port),
+                '-DproxyHttpsPort={}'.format(self._parameters.proxy_https_port),
+            ])
+        command.extend([
+            '-jar', Config.gatling_package_file_name(),
+            '>', self._parameters.log_file, '2>&1', '&'
+        ])
+        return command
 
     def _exec_command(self, command_items):
         """Execute remote command."""
