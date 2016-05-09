@@ -88,12 +88,12 @@ class GatlingRunnerParameters(object):
     @property
     def proxy_http_port(self):
         """Connection proxy http port number."""
-        return self.__proxy_http_port if self.__proxy_http_port is not None else Config.GATLING_PROXY_HTTP_PORT
+        return self.__proxy_http_port if self.__proxy_http_port is not None else Config.gatling_proxy_http_port()
 
     @property
     def proxy_https_port(self):
         """Connection proxy https port number."""
-        return self.__proxy_https_port if self.__proxy_https_port is not None else Config.GATLING_PROXY_HTTPS_PORT
+        return self.__proxy_https_port if self.__proxy_https_port is not None else Config.gatling_proxy_https_port()
 
     @property
     def users(self):

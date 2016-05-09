@@ -26,19 +26,19 @@ class Config(object):
     DOWNLOAD_DIRECTORY = os.path.join(os.path.dirname(__file__), "download")
 
     # Gatling package repository default settings
-    REPO_URL = ""
-    REPO_NAME = "performance-tests"
-    REPO_VERSION = "0.0.3"
+    GATLING_REPO_URL = os.environ.get("GATLING_REPO_URL")
+    GATLING_REPO_NAME = os.environ.get("GATLING_REPO_NAME")
+    GATLING_REPO_VERSION = os.environ.get("GATLING_REPO_VERSION")
 
     # Gatling ssh connector default settings
-    SSH_PORT = 22
-    SSH_USERNAME = "ubuntu"
-    SSH_HOST = ""
+    GATLING_SSH_PORT = os.environ.get("GATLING_SSH_PORT")
+    GATLING_SSH_USERNAME = os.environ.get("GATLING_SSH_USERNAME")
+    GATLING_SSH_HOST = os.environ.get("GATLING_SSH_HOST")
 
     # Gatling tests connection proxy settings
-    GATLING_PROXY = "proxy-mu.intel.com"
-    GATLING_PROXY_HTTP_PORT = 911
-    GATLING_PROXY_HTTPS_PORT = 912
+    GATLING_PROXY = os.environ.get("GATLING_PROXY")
+    GATLING_PROXY_HTTP_PORT = os.environ.get("GATLING_PROXY_HTTP_PORT")
+    GATLING_PROXY_HTTPS_PORT = os.environ.get("GATLING_PROXY_HTTPS_PORT")
 
     # How long (in seconds) to wait before make next gatling results check
     TIME_BEFORE_NEXT_TRY = 300
@@ -50,19 +50,30 @@ class Config(object):
     def gatling_ssh_username(cls):
         """Gatling ssh username."""
         return CONFIG["gatling_ssh_username"] \
-            if "gatling_ssh_username" in CONFIG else cls.SSH_USERNAME
+            if "gatling_ssh_username" in CONFIG else cls.GATLING_SSH_USERNAME
 
     @classmethod
     def gatling_ssh_host(cls):
         """Gatling ssh remote host."""
         return CONFIG["gatling_ssh_host"] \
-            if "gatling_ssh_host" in CONFIG else cls.SSH_HOST
+            if "gatling_ssh_host" in CONFIG else cls.GATLING_SSH_HOST
 
     @classmethod
     def gatling_ssh_port(cls):
         """Gatling ssh remote port."""
-        return CONFIG["gatling_ssh_port"] \
-            if "gatling_ssh_port" in CONFIG else cls.SSH_PORT
+        port = CONFIG["gatling_ssh_port"] \
+            if "gatling_ssh_port" in CONFIG else cls.GATLING_SSH_PORT
+        return cls.int_value(port)
+
+    @classmethod
+    def gatling_proxy_http_port(cls):
+        """Gatling proxy http port."""
+        return cls.int_value(cls.GATLING_PROXY_HTTP_PORT)
+
+    @classmethod
+    def gatling_proxy_https_port(cls):
+        """Gatling proxy https port."""
+        return cls.int_value(cls.GATLING_PROXY_HTTPS_PORT)
 
     @staticmethod
     def gatling_ssh_key_path():
@@ -81,19 +92,19 @@ class Config(object):
     def gatling_repo_url(cls):
         """Gatling package repository url address."""
         return CONFIG["gatling_repo_url"] \
-            if "gatling_repo_url" in CONFIG else cls.REPO_URL
+            if "gatling_repo_url" in CONFIG else cls.GATLING_REPO_URL
 
     @classmethod
     def gatling_repo_name(cls):
         """Gatling package name."""
         return CONFIG["gatling_repo_name"] \
-            if "gatling_repo_name" in CONFIG else cls.REPO_NAME
+            if "gatling_repo_name" in CONFIG else cls.GATLING_REPO_NAME
 
     @classmethod
     def gatling_repo_version(cls):
         """Gatling package version."""
         return CONFIG["gatling_repo_version"] \
-            if "gatling_repo_version" in CONFIG else cls.REPO_VERSION
+            if "gatling_repo_version" in CONFIG else cls.GATLING_REPO_VERSION
 
     @classmethod
     def gatling_package_file_name(cls):
@@ -117,3 +128,10 @@ class Config(object):
     def gatling_package_file_path(cls):
         """Path to gatling package file."""
         return os.path.join(cls.DOWNLOAD_DIRECTORY, cls.gatling_package_file_name())
+
+    @staticmethod
+    def int_value(value):
+        """Convert value to integer if not none."""
+        if value is not None:
+            value = int(value)
+        return value
