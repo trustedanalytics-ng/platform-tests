@@ -47,19 +47,18 @@ class TestScoringEngineInstance(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_test_users(cls, test_org, test_space):
+    def create_test_users(cls, test_org, test_space, admin_user):
         space_manager = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
                                                            roles=User.SPACE_ROLES["manager"])
         space_auditor = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
                                                            roles=User.SPACE_ROLES["auditor"])
         space_developer = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
                                                              roles=User.SPACE_ROLES["developer"])
-        cls.authorised_users = [TestData.admin, space_developer]
+        cls.authorised_users = [admin_user, space_developer]
         cls.unauthorised_users = [space_manager, space_auditor]
 
     @long
     @priority.high
-    @pytest.mark.skip("DPNG-6705")
     def test_create_delete_for_different_users(self):
         for user in self.authorised_users:
             with self.subTest(user=user):
@@ -135,7 +134,7 @@ class TestScoringEngineInstance(TapTestCase):
         self.assertIn(instance, summary, "Instance not found in summary")
         self.assertEqual(summary[instance], [], "There are keys for the instance")
         validator = ApplicationStackValidator(self, instance)
-        validator.validate(expected_bindings=[ServiceLabels.HDFS])
+        validator.validate(expected_bindings=[ServiceLabels.KERBEROS, ServiceLabels.HDFS])
         return validator.application
 
     def _delete_scoring_engine(self, instance, client):
