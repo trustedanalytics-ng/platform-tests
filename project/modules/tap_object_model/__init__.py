@@ -22,7 +22,7 @@ from .user import User
 from .invitation import Invitation
 from .job import Job
 from .kubernetes_cluster import KubernetesCluster
-from .latest_event import LatestEvent
+from .latest_event import EventCategory, EventMessage, LatestEvent
 from .organization import Organization
 from .platform import Platform
 from .service_binding import ServiceBinding

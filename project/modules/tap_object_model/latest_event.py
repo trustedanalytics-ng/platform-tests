@@ -19,6 +19,20 @@ import functools
 from ..http_calls.platform import latest_events_service as les, metrics_provider
 
 
+class EventCategory:
+    data_catalog = "data-catalog"
+    service_creation = "service-creation"
+
+
+class EventMessage:
+    dataset_added = "{} - Dataset added"
+    dataset_deleted = "{} - Dataset deleted"
+    create_service_started = "CreateService operation started"
+    create_service_failed = "Service spawning failed with error: Application flapping: " \
+                            "Error occurred while getting app instances"
+    create_service_succeded = "Service spawning succeded"
+
+
 @functools.total_ordering
 class LatestEvent(object):
 

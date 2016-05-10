@@ -14,19 +14,76 @@
 # limitations under the License.
 #
 
-from modules.constants import TapComponent as TAP
-from modules.runner.tap_test_case import TapTestCase
+import pytest
+
+from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, Urls
 from modules.markers import components, priority
-from modules.tap_object_model import LatestEvent
+from modules.tap_logger import step
+from modules.tap_object_model import DataSet, EventCategory, EventMessage, LatestEvent, ServiceInstance, Transfer
 
 
-logged_components = (TAP.latest_events_service,)
+logged_components = (TAP.latest_events_service, TAP.service_catalog)
+pytestmark = [components.latest_events_service]
 
 
-class LatestEventsService(TapTestCase):
-    pytestmark = [components.latest_events_service]
+class TestLatestEventsService:
 
-    @priority.low
-    def test_latest_events(self):
-        self.step("Check that latest events service does not crash after basic request")
-        LatestEvent.api_get_latest_events()
+    @pytest.fixture(scope="function")
+    def events_before(self, test_org):
+        step("Retrieve latest events from the test organization")
+        return LatestEvent.api_get_latest_events(org_guid=test_org.guid)
+
+    @staticmethod
+    def _assert_event_is_correct(tested_event, category, message, org_guid):
+        assert tested_event.category.strip() == category
+        assert tested_event.message.strip() == message
+        assert tested_event.org_id == org_guid
+
+    @priority.medium
+    def test_data_catalog_events(self, test_org, add_admin_to_test_org, events_before, context):
+        step("Produce an event in the test organization - create a dataset")
+        transfer = Transfer.api_create(context, org_guid=test_org.guid, source=Urls.test_transfer_link)
+        transfer.ensure_finished()
+        step("Ensure that a dataset has been created")
+        data_set = DataSet.api_get_matching_to_transfer(transfer_title=transfer.title, org=test_org)
+        step("Retrieve latest events. Check that there is one new event related to dataset creation.")
+        events_after_create = LatestEvent.api_get_latest_events(org_guid=test_org.guid)
+        assert len(events_after_create) == len(events_before) + 1
+        self._assert_event_is_correct(events_after_create[0], category=EventCategory.data_catalog,
+                                      org_guid=test_org.guid,
+                                      message=EventMessage.dataset_added.format(Urls.test_transfer_link))
+        step("Produce an event in the test organization - delete the dataset")
+        data_set.api_delete()
+        step("Retrieve latest events. Check that there is one new event related to dataset creation.")
+        events_after_delete = LatestEvent.api_get_latest_events(org_guid=test_org.guid)
+        assert len(events_after_delete) == len(events_after_create) + 1
+        self._assert_event_is_correct(events_after_delete[0], category=EventCategory.data_catalog,
+                                      org_guid=test_org.guid,
+                                      message=EventMessage.dataset_deleted.format(Urls.test_transfer_link))
+
+    @priority.medium
+    def test_failed_instance_creation_event(self, test_org, test_space, events_before):
+        step("Trigger failed instance creation")
+        with pytest.raises(AssertionError):
+            ServiceInstance.api_create(test_org.guid, test_space.guid, ServiceLabels.SCORING_ENGINE,
+                                       service_plan_name=ServicePlan.SIMPLE_ATK)
+        step("Retrieve latest events. Check there are two new events related to failed instance creation")
+        events_after = LatestEvent.api_get_latest_events(org_guid=test_org.guid)
+        assert len(events_after) == len(events_before) + 2
+        self._assert_event_is_correct(events_after[1], category=EventCategory.service_creation, org_guid=test_org.guid,
+                                      message=EventMessage.create_service_started.format(Urls.test_transfer_link))
+        self._assert_event_is_correct(events_after[0], category=EventCategory.service_creation, org_guid=test_org.guid,
+                                      message=EventMessage.create_service_failed.format(Urls.test_transfer_link))
+
+    @priority.medium
+    def test_successful_instance_creation_event(self, test_org, test_space, events_before):
+        step("Create example instance")
+        ServiceInstance.api_create(test_org.guid, test_space.guid, ServiceLabels.ATK,
+                                   service_plan_name=ServicePlan.SIMPLE_ATK)
+        step("Retrieve latest events. Check there are two new events related to successful instance creation")
+        events_after = LatestEvent.api_get_latest_events(org_guid=test_org.guid)
+        assert len(events_after) == len(events_before) + 2
+        self._assert_event_is_correct(events_after[1], category=EventCategory.service_creation, org_guid=test_org.guid,
+                                      message=EventMessage.create_service_started.format(Urls.test_transfer_link))
+        self._assert_event_is_correct(events_after[0], category=EventCategory.service_creation, org_guid=test_org.guid,
+                                      message=EventMessage.create_service_succeded)
