@@ -155,9 +155,10 @@ def parse_arguments():
     parser.add_argument("-s", "--suite",
                         default=None,
                         help="a group of tests to execute (directory or file path)")
-    parser.add_argument("-t", "--test",
+    parser.add_argument("-t", "--tests",
                         default=None,
-                        help="pass single test name")
+                        nargs="+",
+                        help="only run tests that match any test names")
     parser.add_argument("-f", "--file",
                         default=None,
                         help="path to a file with a list of tests to execute")

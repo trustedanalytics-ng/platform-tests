@@ -100,5 +100,12 @@ if __name__ == "__main__":
     if len(tags) > 0:
         pytest_options += ["-m", " and ".join(tags)]
 
+    if args.tests:
+        pytest_options.extend([
+            "-k",
+            " or ".join(args.tests)
+        ])
+
+    logger.info("pytest_options: %s", pytest_options)
 
     pytest.main(pytest_options)
