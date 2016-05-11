@@ -68,7 +68,8 @@ if __name__ == "__main__":
                               ref_space_name=args.reference_space,
                               test_run_id=args.test_run_id,
                               disable_remote_logger=args.disable_remote_logger,
-                              remote_logger_retry_count=args.remote_logger_retry_count)
+                              remote_logger_retry_count=args.remote_logger_retry_count,
+                              kerberos=args.kerberos)
 
     for key in config.LOGGED_CONFIG_KEYS:
         logger.info("{}={}".format(key, config.CONFIG.get(key)))

@@ -54,7 +54,8 @@ CONFIG = {
     "failed_tests_file_path": os.path.join("..", "failed_tests.log"),
     "remote_log_enabled": True,
     "remote_logger_retry_count": 5,
-    "cf_auth": ("cf", "")
+    "cf_auth": ("cf", ""),
+    "kerberos": False
 }
 
 LOGGED_CONFIG_KEYS = ["domain", "admin_username", "client_type", "proxy", "ssl_validation", "platfom_version",
@@ -65,7 +66,7 @@ def update_test_config(domain=None, proxy=None, client_type=None, logged_respons
                        logging_level=None, repository=None, platform_version="master", database_url=None,
                        test_suite=None, local_appstack=None, admin_username=None, admin_password=None,
                        ref_org_name=None, ref_space_name=None, test_run_id=None, disable_remote_logger=None,
-                       remote_logger_retry_count=None):
+                       remote_logger_retry_count=None, kerberos=None):
     defaults = __CONFIG.defaults()
     defaults.update(__SECRETS.defaults())
     CONFIG["platform_version"] = platform_version
@@ -115,6 +116,8 @@ def update_test_config(domain=None, proxy=None, client_type=None, logged_respons
     CONFIG["ref_org_name"] = ref_org_name if ref_org_name is not None else "seedorg"
     CONFIG["ref_space_name"] = ref_space_name if ref_space_name is not None else "seedspace"
     CONFIG["test_run_id"] = test_run_id
+    if kerberos is not None:
+        CONFIG["kerberos"] = kerberos
 
 
 def setup_admin_login(domain, defaults, admin_username=None, admin_password=None):
@@ -140,7 +143,8 @@ update_test_config(domain=os.environ.get("TEST_ENVIRONMENT"),
                    client_type=os.environ.get("TEST_CLIENT_TYPE"),
                    logged_response_body_length=os.environ.get("LOGGED_RESPONSE_BODY_LENGTH"),
                    platform_version=os.environ.get("PLATFORM_VERSION", "master"),
-                   database_url=os.environ.get("DATABASE_URL"))
+                   database_url=os.environ.get("DATABASE_URL"),
+                   kerberos=os.environ.get("KERBEROS"))
 
 
 def parse_arguments():
@@ -223,6 +227,9 @@ def parse_arguments():
     parser.add_argument("--remote-logger-retry-count",
                         type=int,
                         help="Set number of retries for remote logger.")
+    parser.add_argument("--kerberos",
+                        action='store_true',
+                        help="Pass this parameter if environment has kerberos.")
     return parser.parse_args()
 
 
