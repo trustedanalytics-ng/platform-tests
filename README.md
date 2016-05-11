@@ -1,3 +1,5 @@
+[![Dependency Status](https://www.versioneye.com/user/projects/57317530a0ca350050840a1a/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57317530a0ca350050840a1a)
+
 ## Running api tests
 
 ### Requirements
