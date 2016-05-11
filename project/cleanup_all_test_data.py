@@ -59,7 +59,7 @@ if __name__ == "__main__":
                         help="environment where tests are to be run, e.g. daily.gotapaas.com")
     parser.add_argument("-l", "--logging-level",
                         choices=["DEBUG", "INFO", "WARNING"],
-                        default="INFO")
+                        default="DEBUG")
     args = parser.parse_args()
     config.update_test_config(domain=args.environment, logging_level=args.logging_level)
 
