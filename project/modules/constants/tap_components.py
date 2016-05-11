@@ -39,6 +39,7 @@ class TapComponent(Enum):
     hive_broker = "hive-broker"
     kafka_broker = "kafka-broker"
     kerberos_service = "kerberos-service"
+    kubernetes_broker = "kubernetes-broker"
     latest_events_service = "latest-events-service"
     metadata_parser = "metadataparser"
     metrics_provider = "metrics-provider"

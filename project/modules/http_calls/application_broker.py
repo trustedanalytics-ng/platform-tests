@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from .application_broker_credentials_provider import ApplicationBrokerCredentialsProvider
+from .credential_providers.application_broker import ApplicationBrokerCredentialsProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 
@@ -24,7 +24,7 @@ def app_broker_get_catalog():
     return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
         method=HttpMethod.GET,
         path="catalog",
-        msg="APP BROKER: get catalog",
+        msg="APP BROKER: get catalog"
     )
 
 

@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import json
+
 from configuration.config import CONFIG
 from .. import command as cmd
 from ..constants import LoggerType
@@ -69,7 +71,6 @@ def cf_delete_service(service):
     command = ["cf", "delete-service", service, "-f"]
     log_command(command)
     return cmd.run(command)
-
 
 # ====================================================== cf api ====================================================== #
 
@@ -159,9 +160,12 @@ def cf_api_get_space_services(space_guid, label=None):
 # -------------------------------------------------- service --------------------------------------------------------- #
 
 
-def cf_api_get_services():
+def cf_api_get_services(service_name=None):
     """GET /v2/services"""
-    return __get_all_pages(endpoint="services", log_msg="CF: get all services")
+    params = {}
+    if service_name is not None:
+        params["q"] = "label:{}".format(service_name)
+    return __get_all_pages(endpoint="services", query_params=params, log_msg="CF: get all services")
 
 
 # -------------------------------------------------- service plans --------------------------------------------------- #
@@ -174,6 +178,12 @@ def cf_api_get_service_plans(service_guid=None):
         params["q"] = "service_guid:{}".format(service_guid)
     return CfApiClient.get_client().request("GET", "service_plans", params=params, log_msg="CF: get service plans")
 
+
+def cf_api_update_service_access(service_guid, enable_service=True):
+    """PUT /v2/service_plans/{service_guid}"""
+    body = {"public": enable_service}
+    return CfApiClient.get_client().request("PUT", "service_plans/{}".format(service_guid), body=body,
+                                            log_msg="CF: update service access")
 
 # ------------------------------------------------------ users ------------------------------------------------------- #
 

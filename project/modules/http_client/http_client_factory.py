@@ -47,6 +47,9 @@ class HttpClientFactory(object):
         elif client_type == HttpClientType.APPLICATION_BROKER:
             return cls._get_instance(credentials, Config.service_application_broker_url(), ClientAuthType.HTTP_BASIC)
 
+        elif client_type == HttpClientType.KUBERNETES_BROKER:
+            return cls._get_instance(credentials, Config.service_kubernetes_broker_url(), ClientAuthType.HTTP_BASIC)
+
         else:
             raise HttpClientFactoryInvalidClientTypeException(client_type)
 

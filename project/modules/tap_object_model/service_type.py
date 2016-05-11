@@ -16,8 +16,10 @@
 
 import functools
 
-from ..http_calls import cloud_foundry as cf, application_broker as broker_client
+from ..http_calls import cloud_foundry as cf, application_broker, kubernetes_broker
 from ..http_calls.platform import service_catalog
+from .. import test_names
+
 
 
 @functools.total_ordering
@@ -88,22 +90,54 @@ class ServiceType(object):
         return [cls._from_details(space_guid, data) for data in response["resources"]]
 
     @classmethod
-    def cf_api_get_list(cls):
-        response = cf.cf_api_get_services()
+    def cf_api_get_list(cls, name=None, get_plans=False):
+        response = cf.cf_api_get_services(service_name=name)
         services = []
-
-        for service in response:
-            services.append(cls._from_details(space_guid=None, details=service))
+        for service_info in response:
+            service = cls._from_details(space_guid=None, details=service_info)
+            if get_plans:
+                plans_response = cf.cf_api_get_service_plans(service_guid=service.guid)
+                service.service_plans = []
+                for plan_info in plans_response["resources"]:
+                    service.service_plans.append({"name": plan_info["entity"]["name"],
+                                                  "guid": plan_info["metadata"]["guid"]})
+            services.append(service)
         return services
 
     @classmethod
     def app_broker_create_service_in_catalog(cls, service_name, description, app_guid):
-        service = broker_client.app_broker_create_service(app_guid, description, service_name)
-        service_plans = service.get("plans")
-        return cls(label=service["name"], guid=service["id"], description=service["description"],
-                   space_guid=service["app"]["entity"]["space_guid"], service_plans=service_plans)
+        response = application_broker.app_broker_create_service(app_guid, description, service_name)
+        service_plans = response.get("plans")
+        return cls(label=response["name"], guid=response["id"], description=response["description"],
+                   space_guid=response["app"]["entity"]["space_guid"], service_plans=service_plans)
 
+    @classmethod
+    def k8s_broker_create_dynamic_service(cls, org_guid, space_guid, service_name=None):
+        if service_name is None:
+            service_name = test_names.get_test_name(short=True)
+        kubernetes_broker.k8s_broker_create_service_offering(org_guid=org_guid, space_guid=space_guid,
+                                                             service_name=service_name)
+        return service_name
 
+    @classmethod
+    def k8s_broker_get_catalog(cls):
+        response = kubernetes_broker.k8s_broker_get_catalog()
+        services = []
+        for service_info in response["services"]:
+            plans = []
+            for plan_info in service_info["plans"]:
+                plans.append({"name": plan_info["name"], "guid": plan_info["id"]})
+            service = cls(label=service_info["name"], guid=service_info["id"], description=service_info["description"],
+                          space_guid=None, service_plans=plans)
+            services.append(service)
+        return services
 
+    def cf_api_enable_service_access(self, plan=None):
+        if plan is None:
+            plan = self.service_plans[0]
+        cf.cf_api_update_service_access(plan["guid"], enable_service=True)
 
-
+    def cf_api_disable_service_access(self, plan=None):
+        if plan is None:
+            plan = self.service_plans[0]
+        cf.cf_api_update_service_access(plan["guid"], enable_service=False)

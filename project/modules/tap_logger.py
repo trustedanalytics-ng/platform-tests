@@ -143,3 +143,9 @@ def log_http_response(response, logged_body_length=None):
         "-----------------------------------------\n"
     ]
     get_logger(LoggerType.HTTP_RESPONSE).debug("\n".join(msg))
+
+
+def step(message):
+    separator = "=" * 20
+    step_logger = get_logger(LoggerType.STEP_LOGGER)
+    step_logger.info("{0} {1} {0}".format(separator, message))

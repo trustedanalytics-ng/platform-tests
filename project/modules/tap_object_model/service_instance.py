@@ -21,7 +21,7 @@ from retry import retry
 
 from ..constants import ServiceLabels
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, application_broker as broker_client
+from ..http_calls import cloud_foundry as cf, application_broker as app,kubernetes_broker as k8s
 from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
 from ..test_names import get_test_name
 from . import ServiceKey
@@ -193,7 +193,7 @@ class ServiceInstance(object):
     def app_broker_create_instance(cls, organization_guid, plan_id, service_id, space_guid):
         instance_name = get_test_name()
         instance_guid = uuid.uuid4()
-        broker_client.app_broker_new_service_instance(instance_guid, organization_guid, plan_id, service_id, space_guid,
+        app.app_broker_new_service_instance(instance_guid, organization_guid, plan_id, service_id, space_guid,
                                                       instance_name)
         return cls(guid=instance_guid, name=instance_name, service_label=None, space_guid=space_guid)
 

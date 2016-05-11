@@ -14,10 +14,10 @@
 # limitations under the License.
 #
 
-from . import cloud_foundry as cf
-from ..http_client.http_client_credentials import HttpClientCredentials
-from ..http_client.http_client_type import HttpClientType
-from ..constants import TapComponent
+from modules.http_calls import cloud_foundry as cf
+from modules.http_client.http_client_credentials import HttpClientCredentials
+from modules.http_client.http_client_type import HttpClientType
+from modules.constants import TapComponent
 
 
 class ApplicationBrokerCredentialsProvider(object):

@@ -3,6 +3,7 @@
 *.pyc
 *.pyo
 *.log
+*.iml
 *__pycache__/
 *.cache
 *key.dat
