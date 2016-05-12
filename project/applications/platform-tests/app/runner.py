@@ -26,6 +26,7 @@ import time
 from config import RunnerConfig, DatabaseConfig
 from model import TestSuiteModel
 
+
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

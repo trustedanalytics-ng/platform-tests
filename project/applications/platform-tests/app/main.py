@@ -24,6 +24,7 @@ import flask_restful
 import pymongo
 
 from config import AppConfig
+from credentials_validator import CredentialsValidator
 from model import TestSuiteModel
 from runner import Runner
 
@@ -31,7 +32,8 @@ from runner import Runner
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
 
-runner = Runner()
+
+app_config = AppConfig()
 
 
 class ExceptionHandlingApi(flask_restful.Api):
@@ -46,11 +48,8 @@ class ExceptionHandlingApi(flask_restful.Api):
 
 
 class TestSuite(flask_restful.Resource):
-
-    @staticmethod
-    def _validate_credentials(username, password, minimal_len=1):
-        if len(username) < minimal_len or len(password) < minimal_len:
-            raise ValueError()
+    runner = Runner()
+    credentials_validator = CredentialsValidator(tap_domain=app_config.tap_domain)
 
     def get(self):
         """Return a list of test suites."""
@@ -64,7 +63,7 @@ class TestSuite(flask_restful.Resource):
         else, call Runner.run
         return suite id from Runner.run
         """
-        if runner.is_busy:
+        if self.runner.is_busy:
             flask_restful.abort(429, message="Runner is busy")
 
         username = password = None
@@ -72,11 +71,12 @@ class TestSuite(flask_restful.Resource):
             request_body = json.loads(flask.request.data.decode())
             username = request_body["username"]
             password = request_body["password"]
-            self._validate_credentials(username, password)
         except (ValueError, KeyError):
             flask_restful.abort(400, message="Bad request")
+        if not self.credentials_validator.validate(username, password):
+            flask_restful.abort(401, message="Incorrect credentials")
 
-        new_suite = runner.run(username=username, password=password)
+        new_suite = self.runner.run(username=username, password=password)
         return flask.jsonify(new_suite.to_dict())
 
 
@@ -92,9 +92,8 @@ class TestSuiteResults(flask_restful.Resource):
 
 
 if __name__ == "__main__":
-    config = AppConfig()
     api = ExceptionHandlingApi(app, catch_all_404s=True)
     api.add_resource(TestSuite, "/rest/platform_tests/testsuites")
     api.add_resource(TestSuiteResults, "/rest/platform_tests/testsuites/<suite_id>/results")
 
-    app.run(host=config.hostname, port=config.port, debug=config.debug)
+    app.run(host=app_config.hostname, port=app_config.port, debug=app_config.debug)

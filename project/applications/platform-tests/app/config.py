@@ -20,7 +20,13 @@ import os
 
 
 class _BaseConfig(object):
+    """
+    example environment variable setting:
+    required:
+        VCAP_APPLICATION={"uris": ["platform-tests.<tapdomain>"]}
+    """
     _default_config = {}
+    VCAP_APPLICATION = "VCAP_APPLICATION"
 
     def __init__(self):
         self._config = self._default_config.copy()
@@ -29,6 +35,13 @@ class _BaseConfig(object):
     @abc.abstractmethod
     def _parse_environment_variables(self) -> dict:
         pass
+
+    def _parse_tap_domain(self):
+        try:
+            vcap_application = json.loads(os.environ[self.VCAP_APPLICATION])
+            return vcap_application["uris"][0].split(".", 1)[1]
+        except KeyError:
+            raise IncorrectConfigurationException()
 
     def __getattr__(self, item):
         return self._config.get(item)
@@ -83,6 +96,7 @@ class AppConfig(_BaseConfig):
 
     def _parse_environment_variables(self) -> dict:
         environment_config = {}
+        environment_config["tap_domain"] = self._parse_tap_domain()
         vcap_app_port = os.environ.get(self.VCAP_APP_PORT)
         if vcap_app_port is not None:
             environment_config["port"] = int(vcap_app_port)
@@ -93,15 +107,14 @@ class RunnerConfig(_BaseConfig):
     """
     example environment variable setting:
     required:
-        VCAP_APPLICATION={"uris": ["platform-tests.<tapdomain>"]}
         CORE_ORG_NAME=<core_org_name>
         CORE_SPACE_NAME=<core_space_name>
     use only locally:
-        INTERPRETER=<path to interpreter to use with run_tests.py>
+        LOCAL_INTERPRETER=<path to interpreter to use with run_tests.py>
     """
-    VCAP_APPLICATION = "VCAP_APPLICATION"
     CORE_ORG_NAME = "CORE_ORG_NAME"
     CORE_SPACE_NAME = "CORE_SPACE_NAME"
+    LOCAL_INTERPRETER = "LOCAL_INTERPRETER"
     _default_config = {
         "core_org_name": "seedorg",
         "core_space_name": "seedspace",
@@ -114,19 +127,16 @@ class RunnerConfig(_BaseConfig):
 
     def _parse_environment_variables(self) -> dict:
         environment_config = {}
-
-        try:
-            vcap_application = json.loads(os.environ[self.VCAP_APPLICATION])
-            environment_config["tap_domain"] = vcap_application["uris"][0].split(".", 1)[1]
-        except KeyError:
-            raise IncorrectConfigurationException()
-
+        environment_config["tap_domain"] = self._parse_tap_domain()
         core_org_name = os.environ.get(self.CORE_ORG_NAME)
         if core_org_name is not None:
             environment_config["core_org_name"] = core_org_name
         core_space_name = os.environ.get(self.CORE_SPACE_NAME)
         if core_space_name is not None:
             environment_config["core_space_name"] = core_space_name
+        local_interpreter = os.environ.get(self.LOCAL_INTERPRETER)
+        if local_interpreter is not None:
+            environment_config["python_interpreter"] = os.path.expanduser(local_interpreter)
 
         return environment_config
 
