@@ -49,6 +49,9 @@ class Application(object):
     def __eq__(self, other):
         return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
 
+    def __hash__(self):
+        return hash((self.name, self.guid))
+
     def __lt__(self, other):
         return self.guid < other.guid
 
