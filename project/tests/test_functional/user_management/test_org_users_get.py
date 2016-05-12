@@ -48,7 +48,7 @@ class GetOrganizationUsers(TapTestCase):
             cls.non_managers[(roles,)] = user
             cls.non_manager_clients[roles] = user.login()
 
-        def fin(self):
+        def fin():
             for user in users:
                 user.cf_api_delete()
         request.addfinalizer(fin)
