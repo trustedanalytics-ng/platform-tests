@@ -13,17 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import base64
+import os
+import io
 
 import pytest
 from retry import retry
 
 from configuration import config
 from modules.api_client import ConsoleClient
-from modules.constants import HttpStatus
+from modules.constants import HttpStatus, ApplicationPath
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import DataSet, Invitation, Organization, ServiceType, Space, Transfer, User
+from modules.tap_object_model import DataSet, Invitation, Organization, ServiceType, Space, Transfer, User, Application
 from modules.test_names import is_test_object_name
 from .context import Context
 from .test_data import TestData
@@ -84,6 +87,40 @@ def login_to_cf(test_org, test_space):
 
 
 @pytest.fixture(scope="session")
+def test_sample_app(request, test_org, test_space):
+    log_fixture("test_sample_app: Login to cf targeting test org and test space")
+    cf.cf_login(test_org.name, test_space.name)
+    log_fixture("test_sample_app: Push app to cf")
+    app = Application.push(
+        space_guid=test_space.guid,
+        source_directory=ApplicationPath.SAMPLE_APP
+    )
+
+    def fin():
+        log_fixture("test_sample_app: Delete sample app")
+        app.api_delete()
+    request.addfinalizer(fin)
+
+    return app
+
+
+@pytest.fixture(scope="session")
+def test_sample_service(request, test_org, test_space, test_sample_app):
+    log_fixture("test_sample_service: Register sample app in marketplace")
+    service = ServiceType.register_app_in_marketplace(app_name=test_sample_app.name, app_guid=test_sample_app.guid,
+                                                      org_guid=test_org.guid, space_guid=test_space.guid)
+    log_fixture("test_sample_service: Get service plans")
+    service.api_get_service_plans()
+
+    def fin():
+        log_fixture("test_sample_service: Delete service")
+        service.api_delete()
+    request.addfinalizer(fin)
+
+    return service
+
+
+@pytest.fixture(scope="session")
 def admin_user():
     log_fixture("admin_user: Retrieve admin user")
     admin_user = User.get_admin()
@@ -96,6 +133,23 @@ def admin_client():
     log_fixture("admin_client: Get http client for admin")
     TestData.admin_client = ConsoleClient.get_admin_client()
     return TestData.admin_client
+
+
+@pytest.fixture(scope="session")
+def space_users_clients(request, test_org, test_space, admin_client):
+    context = Context()
+    log_fixture("clients: Create clients")
+    _clients = {}
+    for role, value in User.SPACE_ROLES.items():
+        _clients[role] = User.api_create_by_adding_to_space(context, org_guid=test_org.guid, space_guid=test_space.guid,
+                                                            roles=value).login()
+    _clients["admin"] = admin_client
+
+    def fin():
+        log_finalizer("clients: Delete test users")
+        context.cleanup()
+    request.addfinalizer(fin)
+    return _clients
 
 
 @pytest.fixture(scope="session")
@@ -148,3 +202,12 @@ def tear_down_test_objects(object_list: list):
             item.cleanup()
         except UnexpectedResponseError as e:
             log_finalizer("Error while deleting {}: {}".format(item, e))
+
+
+@pytest.fixture
+def example_image():
+    file_path = os.path.join("fixtures", "example_image.png")
+    content64 = io.BytesIO()
+    content64.write(bytes("data:image/png;base64,", "utf8"))
+    base64.encode(open(file_path, "rb"), content64)
+    return content64.getvalue()

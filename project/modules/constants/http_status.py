@@ -166,6 +166,8 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_APP_NOT_FOUND = "The app could not be found: {}"
     MSG_SERVICE_INST_NOT_FOUND = "The service instance could not be found: {}"
     MSG_SERVICE_BINDING_NOT_FOUND = "The service binding could not be found: {}"
+    MSG_NOT_AUTHORIZED = "You are not authorized"
+    MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE = "Can't remove service with existing instances from catalog"
 
 
 class KubernetesBrokerHttpStatus(HttpStatus):

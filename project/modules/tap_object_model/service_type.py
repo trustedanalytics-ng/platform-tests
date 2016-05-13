@@ -15,11 +15,11 @@
 #
 
 import functools
+import json
 
 from ..http_calls import cloud_foundry as cf, application_broker, kubernetes_broker
 from ..http_calls.platform import service_catalog
-from .. import test_names
-
+from ..test_names import generate_test_object_name
 
 
 @functools.total_ordering
@@ -27,13 +27,15 @@ class ServiceType(object):
 
     COMPARABLE_ATTRIBUTES = ["label", "guid", "description", "space_guid"]
 
-    def __init__(self, label, guid, description, space_guid, service_plans, tags=None):
+    def __init__(self, label, guid, description, space_guid, service_plans, tags=None, display_name=None, image=None):
         self.label = label
         self.guid = guid
         self.description = description
         self.space_guid = space_guid
         self.service_plans = service_plans  # service plan is a dict with keys "guid", and "name"
         self.tags = tags
+        self.display_name = display_name
+        self.image = image
 
     def __eq__(self, other):
         return all([getattr(self, ca) == getattr(other, ca) for ca in self.COMPARABLE_ATTRIBUTES])
@@ -59,8 +61,10 @@ class ServiceType(object):
         if service_plans is not None:  # in cf response there are no service plans, but an url
             service_plans = [{"guid": sp["metadata"]["guid"], "name": sp["entity"]["name"]}
                              for sp in entity["service_plans"]]
+        extra = json.loads(entity.get("extra") or "{}")
         return cls(label=entity["label"], guid=metadata["guid"], description=entity["description"],
-                   space_guid=space_guid, service_plans=service_plans, tags=entity.get("tags"))
+                   space_guid=space_guid, service_plans=service_plans, tags=entity.get("tags"),
+                   display_name=extra.get("displayName"), image=extra.get("imageUrl"))
 
     @classmethod
     def api_get_list_from_marketplace(cls, space_guid, client=None):
@@ -70,6 +74,15 @@ class ServiceType(object):
     @classmethod
     def api_get(cls, space_guid, service_guid, client=None):
         response = service_catalog.api_get_service(service_guid=service_guid, client=client)
+        return cls._from_details(space_guid, response)
+
+    @classmethod
+    def register_app_in_marketplace(cls, app_name, app_guid, org_guid, space_guid, service_name=None,
+                                    service_description=None, image=None, display_name=None, tags=None, client=None):
+        service_name = generate_test_object_name(short=True) if service_name is None else service_name
+        service_description = generate_test_object_name(short=True) if service_description is None else service_description
+        response = service_catalog.api_create_service(service_name, service_description, org_guid, app_name, app_guid,
+                                                      image, display_name, tags, client)
         return cls._from_details(space_guid, response)
 
     def api_get_service_plans(self, client=None):
@@ -84,6 +97,9 @@ class ServiceType(object):
             guid = sp_data["metadata"]["guid"]
             service_plans.append({"name": name, "guid": guid})
         self.service_plans = service_plans
+
+    def api_delete(self, client=None):
+        service_catalog.api_delete_service(self.guid, client)
 
     @classmethod
     def cf_api_get_list_from_marketplace_by_space(cls, space_guid):
@@ -115,7 +131,7 @@ class ServiceType(object):
     @classmethod
     def k8s_broker_create_dynamic_service(cls, org_guid, space_guid, service_name=None):
         if service_name is None:
-            service_name = test_names.generate_test_object_name(short=True)
+            service_name = generate_test_object_name(short=True)
         kubernetes_broker.k8s_broker_create_service_offering(org_guid=org_guid, space_guid=space_guid,
                                                              service_name=service_name)
         return service_name
