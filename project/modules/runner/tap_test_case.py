@@ -122,13 +122,13 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
         status_first_digit = e.exception.status // 100
         self.assertIn(status_first_digit, (4, 5), "Status code: {}. Expected: 4XX or 5XX".format(e.exception.status))
 
-    def assertEqualWithinTimeout(self, timeout, expected_result, callable_obj, *args, **kwargs):
+    def assertEqualWithinTimeout(self, timeout, expected_result, callable_obj, sleep=5, *args, **kwargs):
         now = time.time()
         while time.time() - now < timeout:
             result = callable_obj(*args, **kwargs)
             if result == expected_result:
                 return
-            time.sleep(5)
+            time.sleep(sleep)
         self.fail("{} and {} are not equal - within {}s".format(result, expected_result, timeout))
 
     def assert_user_in_org_and_roles(self, invited_user, org_guid, expected_roles):

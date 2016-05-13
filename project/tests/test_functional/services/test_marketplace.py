@@ -72,9 +72,8 @@ class MarketplaceServices(TapTestCase):
         service_key_exception = None
         try:
             self.step("Check that the instance exists in summary and has no service keys")
-            summary = ServiceInstance.api_get_keys(space_guid)
-            self.assertIn(instance, summary)
-            self.assertEqual(summary[instance], [])  # there are no keys for this instance
+            self.assertEqualWithinTimeout(timeout=5, expected_result=[], callable_obj=self._get_service_keys,
+                                          sleep=1, instance=instance)
             self.step("Create a key for the instance and check it's correctness")
             instance_key = ServiceKey.api_create(instance.guid)
             summary = ServiceInstance.api_get_keys(space_guid)
@@ -97,6 +96,11 @@ class MarketplaceServices(TapTestCase):
             raise e
         if service_key_exception is not None:
             raise service_key_exception
+
+    def _get_service_keys(self, instance):
+        summary = ServiceInstance.api_get_keys(instance.space_guid)
+        self.assertIn(instance, summary)
+        return summary[instance]
 
     def _create_ipython_instance_and_login(self, param_key, param_value):
         param = {param_key: param_value}
@@ -167,8 +171,9 @@ class MarketplaceServices(TapTestCase):
         expected_instance_list = ServiceInstance.api_get_list(TestData.test_space.guid)
         self.step("Check that instance cannot be created with empty name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            ServiceInstance.api_create, TestData.test_org.guid, TestData.test_space.guid,
-                                            ServiceLabels.KAFKA, "", service_plan_name="shared")
+                                            ServiceInstance.api_create, TestData.test_org.guid,
+                                            TestData.test_space.guid, ServiceLabels.KAFKA, "",
+                                            service_plan_name="shared")
         self.assertUnorderedListEqual(expected_instance_list, ServiceInstance.api_get_list(TestData.test_space.guid),
                                       "New instance was created")
 
