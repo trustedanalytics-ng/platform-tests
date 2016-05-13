@@ -26,7 +26,7 @@ logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [components.user_management]
 
 
-class Space(TapTestCase):
+class TestSpace(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)

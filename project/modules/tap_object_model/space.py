@@ -64,7 +64,7 @@ class Space(object):
 
     @classmethod
     def api_get_list_in_org(cls, org_guid, client=None):
-        response = api.api_get_spaces_in_org(org_guid=org_guid, client=client)
+        response = user_management.api_get_spaces_in_org(org_guid=org_guid, client=client)
         spaces = []
         for space_data in response:
             space = cls(name=space_data["entity"]["name"], guid=space_data["metadata"]["guid"], org_guid=org_guid)

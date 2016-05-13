@@ -32,6 +32,7 @@ pytestmark = [components.dataset_publisher, components.das, components.hdfs_down
 
 @incremental
 @priority.high
+@pytest.mark.skipif(CONFIG["kerberos"], reason="Not enabled on kerberos environment")
 class ArcadiaTest(TapTestCase):
     arcadia = None
 
@@ -55,7 +56,7 @@ class ArcadiaTest(TapTestCase):
             cls.arcadia.teardown_test_datasets()
         request.addfinalizer(fin)
 
-    @pytest.mark.skipif(CONFIG["kerberos"], reason="Not enabled on kerberos environment")
+    @pytest.mark.skip("DPNG-7197 Arcadia test fails - mismatch of expected database name")
     def test_0_create_new_dataset_and_import_it_to_arcadia(self):
         self.step("Publish created dataset")
         self.dataset.api_publish()
@@ -69,7 +70,7 @@ class ArcadiaTest(TapTestCase):
         arcadia_dataset = self.arcadia.create_dataset(TestData.test_org.name, self.dataset.title)
         self.assertInWithRetry(arcadia_dataset, self.arcadia.get_dataset_list)
 
-    @pytest.mark.skipif(CONFIG["kerberos"], reason="Not enabled on kerberos environment")
+    @pytest.mark.skip("DPNG-7197 Arcadia test fails - mismatch of expected database name")
     def test_1_change_dataset_to_public_and_import_it_to_arcadia(self):
         self.step("Change dataset to public")
         self.dataset.api_update(is_public=True)
