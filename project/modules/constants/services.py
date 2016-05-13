@@ -28,6 +28,7 @@ class ServiceLabels(object):
     H2O = "h2o"
     HBASE = "hbase"
     HDFS = "hdfs"
+    HIVE = "hive"
     INFLUX_DB = "influxdb088"
     IPYTHON = "ipython"
     KAFKA = "kafka"
@@ -39,6 +40,7 @@ class ServiceLabels(object):
     MYSQL = "mysql56"
     NATS = "nats"
     NEO4J = "neo4j21"
+    ORIENT_DB = "orientdb"
     PSQL = "postgresql93"
     RABBIT_MQ = "rabbitmq33"
     REDIS = "redis28"
@@ -50,6 +52,4 @@ class ServiceLabels(object):
     ZOOKEEPER = "zookeeper"
     ZOOKEEPER_WSSB = "zookeeper-wssb"
 
-
-PARAMETRIZED_SERVICE_INSTANCES = [ServiceLabels.SCORING_ENGINE, ServiceLabels.GEARPUMP_DASHBOARD]
-
+    parametrized = [SCORING_ENGINE, GEARPUMP_DASHBOARD]

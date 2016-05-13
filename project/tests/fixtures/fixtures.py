@@ -135,7 +135,6 @@ def core_space():
     TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
     return TestData.core_space
 
-
 def delete_or_not_found(delete_method):
     try:
         delete_method()

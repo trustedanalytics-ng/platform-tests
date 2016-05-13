@@ -17,9 +17,11 @@
 import pytest
 
 from configuration import config
-from modules.constants import Path
+from modules.constants import Path, ServiceLabels
 from modules.mongo_reporter.reporter import MongoReporter
 from modules.tap_logger import get_logger
+from modules.tap_object_model import ServiceType
+import tests.fixtures.fixtures as fixtures
 
 
 pytest_plugins = ["tests.fixtures.fixtures", "tests.fixtures.db_logging", "tests.fixtures.remote_logging"]
@@ -66,3 +68,19 @@ def pytest_runtest_setup(item):
         previous_fail = getattr(item.parent, "_previous_fail", None)
         if previous_fail is not None:
             pytest.skip("previous test failed ({})".format(previous_fail.name))
+
+
+def pytest_generate_tests(metafunc):
+    """Parametrize marketplace fixture with tuples of ServiceType and plan dict."""
+    if "marketplace" in metafunc.funcargnames:
+        core_space = fixtures.core_space()
+        marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
+        marketplace = [s for s in marketplace if s.label not in ServiceLabels.parametrized]
+        test_cases = []
+        ids = []
+        for service_type in marketplace:
+            for plan in service_type.service_plans:
+                test_cases.append((service_type, plan))
+                ids.append("{}_{}".format(service_type.label, plan["name"]))
+        metafunc.parametrize("marketplace", test_cases, ids=ids)
+

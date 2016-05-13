@@ -17,6 +17,8 @@
 from datetime import datetime
 import socket
 
+from bson import ObjectId
+
 from .client import DBClient
 
 
@@ -34,6 +36,8 @@ class MongoReporter(object):
     def __new__(cls, mongo_uri, run_id=None):
         if cls._instance is None:
             cls._instance = object.__new__(cls)
+            if run_id is not None:
+                run_id = ObjectId(run_id)
             cls._instance._db_client = DBClient(uri=mongo_uri)
             cls._instance._run_id = run_id
             cls._instance._test_counter = 0
@@ -165,6 +169,5 @@ class MongoReporter(object):
             self._run_id = self._db_client.insert(collection_name=self._test_run_collection_name,
                                                   document=self._mongo_run_document)
         else:
-            self._db_client.replace(collection_name=self._test_run_collection_name,
-                                    document_id=self._run_id,
+            self._db_client.replace(collection_name=self._test_run_collection_name, document_id=self._run_id,
                                     new_document=self._mongo_run_document)

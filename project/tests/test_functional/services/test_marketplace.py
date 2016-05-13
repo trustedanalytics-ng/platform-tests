@@ -18,8 +18,7 @@ import itertools
 
 import pytest
 
-from modules.constants import PARAMETRIZED_SERVICE_INSTANCES, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels,\
-    TapComponent as TAP
+from modules.constants import ServiceLabels, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.service_tools.ipython import iPython
@@ -120,7 +119,7 @@ class MarketplaceServices(TapTestCase):
     @long
     @priority.high
     def test_create_and_delete_service_instance_and_keys(self):
-        tested_service_types = [st for st in self.marketplace if st.label not in PARAMETRIZED_SERVICE_INSTANCES +
+        tested_service_types = [st for st in self.marketplace if st.label not in ServiceLabels.parametrized +
                                 self.SERVICES_TESTED_SEPARATELY]
         for service_type in tested_service_types:
             for plan in service_type.service_plans:
