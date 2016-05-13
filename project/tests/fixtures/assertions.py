@@ -33,11 +33,11 @@ def assert_not_in_with_retry(something, get_list_method, *args, **kwargs):
     assert something not in obj_list, "{} was found on the list".format(something)
 
 
-@retry(AssertionError, tries=10, delay=2)
+@retry(AssertionError, tries=20, delay=3)
 def assert_in_with_retry(something, get_list_method, *args, **kwargs):
     """Use when adding something takes longer"""
     obj_list = get_list_method(*args, **kwargs)
-    assert something in obj_list
+    assert something in obj_list, "{} was not found on the list".format(something)
 
 
 def assert_raises_http_exception(status, error_message_phrase, callableObj, *args, **kwargs):

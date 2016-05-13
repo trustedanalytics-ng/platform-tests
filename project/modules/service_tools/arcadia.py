@@ -99,6 +99,11 @@ class Arcadia(object):
         except ValueError:
             return response.text
 
+    @staticmethod
+    def escape_string(string):
+        escaped_chars = ",./<>?;':\"\|}{[]~`!@#$%^&*()_+-="
+        return "".join([c if c not in escaped_chars else "_" for c in string])
+
     def login(self):
         self._request(
             method="GET",

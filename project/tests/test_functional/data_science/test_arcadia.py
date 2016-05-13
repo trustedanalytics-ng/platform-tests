@@ -23,7 +23,7 @@ from modules.markers import components, incremental, priority
 from modules.service_tools.arcadia import Arcadia
 from modules.tap_object_model import DataSet
 from modules.tap_object_model.flows import data_catalog
-from tests.fixtures.test_data import TestData
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.dataset_publisher, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
@@ -40,6 +40,7 @@ class ArcadiaTest(TapTestCase):
     @pytest.fixture(scope="class", autouse=True)
     def create_transfer(cls, request, test_org, add_admin_to_test_org):
         cls.transfer, cls.dataset = data_catalog.create_dataset_from_link(org=test_org, source=Urls.test_transfer_link)
+        cls.test_org = test_org
 
         def fin():
             cls.dataset.api_delete()
@@ -56,31 +57,31 @@ class ArcadiaTest(TapTestCase):
             cls.arcadia.teardown_test_datasets()
         request.addfinalizer(fin)
 
-    @pytest.mark.skip("DPNG-7197 Arcadia test fails - mismatch of expected database name")
     def test_0_create_new_dataset_and_import_it_to_arcadia(self):
         self.step("Publish created dataset")
         self.dataset.api_publish()
-        self.step("Check that organization name is visible on the database list in arcadia")
+        self.step("Check that organization guid is visible on the database list in arcadia")
+        expected_db_name = Arcadia.escape_string(self.test_org.guid)
         db_list = self.arcadia.get_database_list()
-        self.assertIn(TestData.test_org.name, db_list, "Organization not found in database list in arcadia")
+        assert expected_db_name in db_list, "{} was not found in db list".format(expected_db_name)
         self.step("Check that dataset name is visible on the table list in arcadia")
-        table_list = self.arcadia.get_table_list(TestData.test_org.name)
-        self.assertIn(self.dataset.title, table_list, "Dataset not found in table list in arcadia")
+        assertions.assert_in_with_retry(Arcadia.escape_string(self.dataset.title),
+                                        self.arcadia.get_table_list, expected_db_name)
         self.step("Create new dataset in arcadia")
-        arcadia_dataset = self.arcadia.create_dataset(TestData.test_org.name, self.dataset.title)
-        self.assertInWithRetry(arcadia_dataset, self.arcadia.get_dataset_list)
+        arcadia_dataset = self.arcadia.create_dataset(self.test_org.name, self.dataset.title)
+        assertions.assert_in_with_retry(arcadia_dataset, self.arcadia.get_dataset_list)
 
-    @pytest.mark.skip("DPNG-7197 Arcadia test fails - mismatch of expected database name")
+    @pytest.mark.skip("Publishing public datasets is not currently supported.")
     def test_1_change_dataset_to_public_and_import_it_to_arcadia(self):
         self.step("Change dataset to public")
         self.dataset.api_update(is_public=True)
         self.dataset = DataSet.api_get(self.dataset.id)
-        self.assertTrue(self.dataset.is_public, "Dataset was not updated")
+        assert self.dataset.is_public, "Dataset was not updated"
         self.step("Publish updated dataset")
         self.dataset.api_publish()
         self.step("Check that dataset name is visible on the public table list in arcadia")
         table_list = self.arcadia.get_table_list("public")
-        self.assertIn(self.dataset.title, table_list, "Dataset not found in table list in arcadia")
+        assert self.dataset.title in table_list, "Dataset not found in table list in arcadia"
         self.step("Create new dataset in arcadia")
         arcadia_dataset = self.arcadia.create_dataset("public", self.dataset.title)
-        self.assertInWithRetry(arcadia_dataset, self.arcadia.get_dataset_list)
+        assertions.assert_in_with_retry(arcadia_dataset, self.arcadia.get_dataset_list)
