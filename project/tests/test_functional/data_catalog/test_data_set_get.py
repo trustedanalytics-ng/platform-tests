@@ -20,7 +20,7 @@ from modules.constants import TapComponent as TAP, Urls
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import DataSet, Organization, Transfer
-from tests.fixtures.test_data import TestData
+from tests.fixtures import test_data
 
 
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
@@ -31,11 +31,11 @@ class GetDataSets(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_test_data_sets(cls, request, test_org, add_admin_to_test_org):
+    def create_test_data_sets(cls, request, test_org, add_admin_to_test_org, class_context):
         cls.step("Create new transfer for each category")
         cls.transfers = []
         for category in DataSet.CATEGORIES:
-            cls.transfers.append(Transfer.api_create(category, is_public=False, org_guid=test_org.guid,
+            cls.transfers.append(Transfer.api_create(class_context, category, is_public=False, org_guid=test_org.guid,
                                                      source=Urls.test_transfer_link))
         cls.step("Ensure that transfers are finished")
         for transfer in cls.transfers:
@@ -44,12 +44,10 @@ class GetDataSets(TapTestCase):
         transfer_titles = [t.title for t in cls.transfers]
         cls.datasets = [d for d in DataSet.api_get_list(org_list=[test_org]) if d.title in transfer_titles]
 
-        def fin():
-            for dataset in cls.datasets:
-                dataset.api_delete()
-            for transfer in cls.transfers:
-                transfer.api_delete()
-        request.addfinalizer(fin)
+    @pytest.fixture(scope="function")
+    def setup_context(self, context):
+        # TODO no longer needed when this class removes unittest dependency
+        self.context = context
 
     def _filter_datasets(self, org, filters=(), only_private=False, only_public=False):
         ds_list = DataSet.api_get_list(org_list=[org], filters=filters, only_private=only_private,
@@ -71,7 +69,7 @@ class GetDataSets(TapTestCase):
         self.step("Retrieve datasets by categories")
         for category in DataSet.CATEGORIES:
             with self.subTest(category=category):
-                filtered_datasets = self._filter_datasets(TestData.test_org, ({"category": [category]},))
+                filtered_datasets = self._filter_datasets(test_data.TestData.test_org, ({"category": [category]},))
                 expected_datasets = [d for d in self.datasets if d.category == category]
                 self.assertListEqual(filtered_datasets, expected_datasets)
 
@@ -80,7 +78,7 @@ class GetDataSets(TapTestCase):
         self.step("Sort datasets by creation time and retrieve first two")
         time_range = sorted([dataset.creation_time for dataset in self.datasets][:2])
         self.step("Retrieve datasets for specified time range")
-        filtered_datasets = self._filter_datasets(TestData.test_org, ({"creationTime": time_range},))
+        filtered_datasets = self._filter_datasets(test_data.TestData.test_org, ({"creationTime": time_range},))
         expected_datasets = [d for d in self.datasets if time_range[0] <= d.creation_time <= time_range[1]]
         self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
@@ -90,7 +88,7 @@ class GetDataSets(TapTestCase):
         self.step("Retrieve datasets by file format")
         for file_format in DataSet.FILE_FORMATS:
             with self.subTest(file_format=file_format):
-                filtered_datasets = self._filter_datasets(TestData.test_org, ({"format": [file_format]},))
+                filtered_datasets = self._filter_datasets(test_data.TestData.test_org, ({"format": [file_format]},))
                 expected_datasets = [d for d in self.datasets if d.format == file_format]
                 self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
@@ -98,14 +96,14 @@ class GetDataSets(TapTestCase):
     @pytest.mark.public_dataset
     def test_get_public_datasets_from_current_org(self):
         self.step("Retrieve only public datasets")
-        filtered_datasets = self._filter_datasets(TestData.test_org, only_public=True)
+        filtered_datasets = self._filter_datasets(test_data.TestData.test_org, only_public=True)
         expected_datasets = [d for d in self.datasets if d.is_public]
         self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
     @priority.medium
     def test_get_private_datasets_from_current_org(self):
         self.step("Retrieve only private datasets")
-        filtered_datasets = self._filter_datasets(TestData.test_org, only_private=True)
+        filtered_datasets = self._filter_datasets(test_data.TestData.test_org, only_private=True)
         expected_datasets = [d for d in self.datasets if not d.is_public]
         self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
@@ -128,9 +126,10 @@ class GetDataSets(TapTestCase):
         self.assertEqual(dataset.source_uri, transfer.source)
 
     @priority.medium
+    @pytest.mark.usefixtures("setup_context")
     def test_get_data_sets_from_another_org(self):
         self.step("Create another test organization")
-        org = Organization.api_create()
+        org = Organization.api_create(self.context)
         self.step("Retrieve datasets from the new org")
         public_datasets = [ds for ds in self.datasets if ds.is_public]
         private_datasets = [ds for ds in self.datasets if not ds.is_public]

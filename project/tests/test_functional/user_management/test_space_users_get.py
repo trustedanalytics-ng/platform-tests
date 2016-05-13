@@ -31,15 +31,10 @@ class GetSpaceUsers(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def space_and_users(cls, request, test_org):
+    def space_and_users(cls, request, test_org, class_context):
         cls.test_space = Space.api_create(org=test_org)
-        cls.test_users = [User.api_create_by_adding_to_organization(org_guid=test_org.guid) for _ in range(2)]
-
-        def fin():
-            cls.test_space.api_delete()
-            for user in cls.test_users:
-                user.cf_api_delete()
-        request.addfinalizer(fin)
+        cls.test_users = [User.api_create_by_adding_to_organization(class_context, org_guid=test_org.guid)
+                          for _ in range(2)]
 
     def test_get_user_list_from_space(self):
         self.step("Check that space is empty")
@@ -54,7 +49,7 @@ class GetSpaceUsers(TapTestCase):
     def test_cannot_get_user_list_from_deleted_space(self):
         self.step("Create and delete the space")
         deleted_space = Space.api_create(TestData.test_org)
-        deleted_space.cf_api_delete()
+        deleted_space.cleanup()
         self.step("Check that retrieving list of users in the deleted space returns an error")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
                                             User.api_get_list_via_space, deleted_space.guid)

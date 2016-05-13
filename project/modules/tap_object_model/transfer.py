@@ -18,7 +18,7 @@ import functools
 import time
 
 from ..http_calls.platform import das, hdfs_uploader
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 
 @functools.total_ordering
@@ -29,8 +29,6 @@ class Transfer(object):
                              "state", "title", "user_id"]
     new_status = "NEW"
     finished_status = "FINISHED"
-
-    TEST_TRANSFER_TITLES = []
 
     def __init__(self, category=None, id=None, id_in_object_store=None, is_public=None, org_guid=None, source=None,
                  state=None, timestamps=None, title=None, user_id=None, from_local_file=False):
@@ -57,24 +55,25 @@ class Transfer(object):
                    timestamps=api_response["timestamps"], title=api_response["title"], user_id=api_response["userId"])
 
     @classmethod
-    def api_create(cls, category="other", is_public=False, org_guid=None, source=None, title=None, user_id=0,
+    def api_create(cls, context, category="other", is_public=False, org_guid=None, source=None, title=None, user_id=0,
                    client=None):
-        title = get_test_name() if title is None else title
-        cls.TEST_TRANSFER_TITLES.append(title)
+        title = generate_test_object_name() if title is None else title
         response = das.api_create_transfer(category=category, is_public=is_public, org_guid=org_guid, source=source,
                                            title=title, client=client)
         new_transfer = cls(category=category, id=response["id"], id_in_object_store=response["idInObjectStore"],
                            is_public=is_public, org_guid=org_guid, source=source, state=response["state"],
                            timestamps=response["timestamps"], title=title, user_id=user_id)
+        context.transfers.append(new_transfer)
         return new_transfer
 
     @classmethod
-    def api_create_by_file_upload(cls, org_guid, file_path, category="other", is_public=False, title=None, client=None):
-        title = get_test_name() if title is None else title
-        cls.TEST_TRANSFER_TITLES.append(title)
+    def api_create_by_file_upload(cls, context, org_guid, file_path, category="other", is_public=False, title=None,
+                                  client=None):
+        title = generate_test_object_name() if title is None else title
         hdfs_uploader.api_create_transfer_by_file_upload(org_guid, source=file_path, category=category,
                                                          is_public=is_public, title=title, client=client)
         new_transfer = next(t for t in cls.api_get_list(org_guid_list=[org_guid]) if t.title == title)
+        context.transfers.append(new_transfer)
         return new_transfer
 
     @classmethod
@@ -99,6 +98,9 @@ class Transfer(object):
 
     def api_delete(self, client=None):
         return das.api_delete_transfer(self.id, client=client)
+
+    def cleanup(self):
+        self.api_delete()
 
     def ensure_finished(self, timeout=150):
         transfer = self.get_until_finished(self.id, timeout)

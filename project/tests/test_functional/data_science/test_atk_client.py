@@ -24,7 +24,7 @@ from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, long, priority
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceType, Transfer
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
 
 
@@ -41,11 +41,12 @@ class Atk(TapTestCase):
     atk_virtualenv = None
     atk_url = None
     data_set_hdfs_path = None
-    transfer_title = get_test_name()
+    transfer_title = generate_test_object_name()
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def atk_virtualenv(cls, request):
+    def atk_virtualenv(cls, request, class_context):
+        cls.context = class_context  # TODO move to methods when dependency on unittest is removed
         cls.atk_virtualenv = ATKtools("atk_virtualenv")
         cls.atk_virtualenv.create()
 
@@ -64,7 +65,7 @@ class Atk(TapTestCase):
         atk_service = next((s for s in marketplace if s.label == ServiceLabels.ATK), None)
         self.assertIsNotNone(atk_service, msg="No atk service found in marketplace.")
         self.step("Create atk service instance")
-        atk_instance_name = get_test_name()
+        atk_instance_name = generate_test_object_name()
         atk_instance = ServiceInstance.api_create(
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
@@ -88,7 +89,7 @@ class Atk(TapTestCase):
     @pytest.mark.bugs("DPNG-2010 Cannot get JDBC connection when publishing dataset to Hive")
     def test_4_create_data_set_and_publish_it_in_hive(self):
         self.step("Create transfer and check it's finished")
-        transfer = Transfer.api_create(source=Urls.test_transfer_link, org_guid=TestData.test_org.guid,
+        transfer = Transfer.api_create(self.context, source=Urls.test_transfer_link, org_guid=TestData.test_org.guid,
                                        title=self.transfer_title)
         transfer.ensure_finished()
         self.step("Publish in hive the data set created based on the submitted transfer")

@@ -20,7 +20,8 @@ from modules.constants import TapComponent as TAP, UserManagementHttpStatus as H
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import Space, User
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
+from tests.fixtures import fixtures
 
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
@@ -36,10 +37,6 @@ class BaseTestClass(TapTestCase):
         cls.test_user = test_org_manager
         cls.step("Create test space")
         cls.test_space = Space.api_create(cls.test_org)
-
-        def fin():
-            cls.test_space.api_delete()
-        request.addfinalizer(fin)
 
     def _assert_user_in_space_with_roles(self, expected_user, space_guid):
         # TODO move to TapTestCase
@@ -58,15 +55,20 @@ class AddNewUserToSpace(BaseTestClass):
     pytestmark = [components.auth_gateway, components.auth_proxy, components.user_management]
 
     def _get_test_user(self, org_guid, space_guid, space_role=User.ORG_ROLES["manager"]):
-        return User.api_create_by_adding_to_space(org_guid, space_guid, roles=space_role)
+        user = User.api_create_by_adding_to_space(self.context, org_guid, space_guid, roles=space_role)
+        return user
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup_context(self, context):
+        # TODO move to methods when dependency on unittest is removed
+        self.context = context
 
     @priority.high
     def test_add_user_to_space(self):
-        self.step("Create new platform user with each role by adding him to space")
-        for space_role in self.ALL_SPACE_ROLES:
-            with self.subTest(space_role=space_role):
-                new_user = self._get_test_user(self.test_org.guid, self.test_space.guid, [space_role])
-                self._assert_user_in_space_with_roles(new_user, self.test_space.guid)
+        # TODO parametrize
+        self.step("Create new platform user with each role by adding them to space")
+        new_user = self._get_test_user(self.test_org.guid, self.test_space.guid, User.SPACE_ROLES["manager"])
+        self._assert_user_in_space_with_roles(new_user, self.test_space.guid)
 
     @priority.low
     def test_cannot_add_user_with_no_roles(self):
@@ -92,8 +94,8 @@ class AddNewUserToSpace(BaseTestClass):
         roles = ["i-don't-exist"]
         self.step("Check that error is raised when trying to add user using incorrect roles")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            User.api_create_by_adding_to_space, self.test_org.guid, self.test_space.guid,
-                                            roles=roles)
+                                            User.api_create_by_adding_to_space, self.context, self.test_org.guid,
+                                            self.test_space.guid, roles=roles)
         self.step("Assert user list did not change")
         self.assertListEqual(User.api_get_list_via_space(self.test_space.guid), space_users,
                              "User with incorrect roles was added to space")
@@ -102,61 +104,81 @@ class AddNewUserToSpace(BaseTestClass):
 class AddExistingUserToSpace(AddNewUserToSpace):
     pytestmark = [components.user_management]
 
+    @classmethod
+    @pytest.fixture(scope="class", autouse=True)
+    def user(cls, request, test_org, class_context):
+        cls.step("Create new platform user by adding to the organization")
+        cls.test_user = User.api_create_by_adding_to_organization(class_context, test_org.guid)
+
+    @pytest.fixture(scope="function", autouse=True)
+    def cleanup(self, request):
+        def fin():
+            fixtures.delete_or_not_found(self.test_user.api_delete_from_space, space_guid=self.test_space.guid)
+        request.addfinalizer(fin)
+
     def _get_test_user(self, org_guid, space_guid, space_role=User.ORG_ROLES["manager"]):
-        self.step("Create new platform user by adding to the organization")
-        test_user = User.api_create_by_adding_to_organization(org_guid)
         self.step("Add the user to space with role {}".format(space_role))
-        test_user.api_add_to_space(space_guid, org_guid, roles=space_role)
-        return test_user
+        self.test_user.api_add_to_space(space_guid, org_guid, roles=space_role)
+        return self.test_user
 
     @priority.low
     def test_add_existing_user_by_updating_roles(self):
-        user_not_in_space = User.api_create_by_adding_to_organization(self.test_org.guid)
-        self.step("Create test space")
-        space = Space.api_create(self.test_org)
         self.step("Update user with a space role")
-        user_not_in_space.api_update_space_roles(space.guid, new_roles=User.SPACE_ROLES["auditor"])
-        self._assert_user_in_space_with_roles(user_not_in_space, space.guid)
+        self.test_user.api_update_space_roles(self.test_space.guid, new_roles=User.SPACE_ROLES["auditor"])
+        self._assert_user_in_space_with_roles(self.test_user, self.test_space.guid)
 
 
-class AddUserToSpace(BaseTestClass):
+class AddUserToSpace(TapTestCase):
     pytestmark = [components.user_management]
+
+    @pytest.fixture(scope="function", autouse=True)
+    def setup_context(self, context):
+        # TODO move to methods when dependency on unittest is removed
+        self.context = context
+
+    @classmethod
+    @pytest.fixture(scope="class", autouse=True)
+    def space(cls, request, test_org):
+        cls.test_org = test_org
+        cls.step("Create test space")
+        cls.test_space = Space.api_create(cls.test_org)
+        request.addfinalizer(lambda: fixtures.delete_or_not_found(cls.test_space.api_delete))
 
     @priority.low
     @pytest.mark.bugs("DPNG-5743 Adding a user with long username to space throws 500 while expected 400")
     def test_cannot_create_new_user_with_long_username(self):
-        long_username = "x" * 300 + get_test_name(email=True)
+        long_username = "x" * 300 + generate_test_object_name(email=True)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMPTY,
-                                            User.api_create_by_adding_to_space, self.test_org.guid,
+                                            User.api_create_by_adding_to_space, self.context, self.test_org.guid,
                                             self.test_space.guid, username=long_username)
 
     @priority.low
     def test_cannot_create_new_user_with_non_email_username(self):
         non_email = "non_email_username"
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                            User.api_create_by_adding_to_space, self.test_org.guid,
+                                            User.api_create_by_adding_to_space, self.context, self.test_org.guid,
                                             self.test_space.guid, username=non_email)
 
     @priority.medium
     def test_cannot_create_user_with_existing_username(self):
-        test_user = User.api_create_by_adding_to_space(self.test_org.guid, self.test_space.guid)
+        test_user = User.api_create_by_adding_to_space(self.context, self.test_org.guid, self.test_space.guid)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                            User.api_create_by_adding_to_space, self.test_org.guid,
+                                            User.api_create_by_adding_to_space, self.context, self.test_org.guid,
                                             self.test_space.guid, username=test_user.username)
 
     @priority.low
     def test_cannot_create_user_with_special_characters_username(self):
-        test_username = get_test_name(email=True)
+        test_username = generate_test_object_name(email=True)
         test_username = test_username.replace("@", "\n\t@")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                            User.api_create_by_adding_to_space, self.test_org.guid,
+                                            User.api_create_by_adding_to_space, self.context, self.test_org.guid,
                                             self.test_space.guid, username=test_username)
 
     @priority.low
     def test_cannot_create_user_with_non_ascii_characters_username(self):
-        test_username = get_test_name(email=True)
+        test_username = generate_test_object_name(email=True)
         test_username = "ąśćżźł" + test_username
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST,
                                             HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                            User.api_create_by_adding_to_space, self.test_org.guid,
+                                            User.api_create_by_adding_to_space, self.context, self.test_org.guid,
                                             self.test_space.guid, username=test_username)

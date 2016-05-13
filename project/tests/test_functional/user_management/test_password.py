@@ -32,13 +32,9 @@ class Password(TapTestCase):
     NEW_PASSWORD = "NEW_PASSWORD"
 
     @pytest.fixture(scope="function", autouse=True)
-    def user(self, request, test_org):
+    def user(self, request, test_org, context):
         self.step("Create test user")
-        self.test_user = User.api_create_by_adding_to_organization(org_guid=test_org.guid)
-
-        def fin():
-            self.test_user.cf_api_delete()
-        request.addfinalizer(fin)
+        self.test_user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
 
     @priority.high
     def test_reset_password(self):
@@ -74,7 +70,7 @@ class Password(TapTestCase):
         self.test_user.login()
 
     @priority.high
-    def test_change_pass(self):
+    def test_change_password(self):
         self.step("Login to the platform")
         client = self.test_user.get_client()
         self.test_user.login()

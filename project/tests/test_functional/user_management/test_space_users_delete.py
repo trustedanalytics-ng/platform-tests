@@ -35,7 +35,7 @@ class DeleteSpaceUser(TapTestCase):
         self.test_space = Space.api_create(test_org)
 
         def fin():
-            self.test_space.api_delete()
+            self.test_space.cleanup()
         request.addfinalizer(fin)
 
     @priority.high

@@ -23,14 +23,14 @@ from ..exceptions import UnexpectedResponseError
 from ..tap_logger import log_http_request, log_http_response
 from configuration import config
 from ..tap_object_model import ServiceInstance
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 
 class DataScience(object):
 
     def __init__(self, org_guid, space_guid, service_label, service_plan_name, instance_name=None, params=None):
         if instance_name is None:
-            instance_name = get_test_name()
+            instance_name = generate_test_object_name()
         self.login = None
         self.password = None
         self.instance_url = None

@@ -52,3 +52,6 @@ class ServiceBinding(object):
 
     def api_delete(self):
         service_catalog.api_delete_service_binding(self.guid)
+
+    def cleanup(self):
+        self.api_delete()

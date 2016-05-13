@@ -17,15 +17,15 @@
 from .. import DataSet, Transfer
 
 
-def create_dataset_from_link(org, source, is_public=False, category=DataSet.CATEGORIES[0]) -> tuple:
-    transfer = Transfer.api_create(org_guid=org.guid, source=source, category=category, is_public=is_public)
+def create_dataset_from_link(context, org, source, is_public=False, category=DataSet.CATEGORIES[0]) -> tuple:
+    transfer = Transfer.api_create(context, org_guid=org.guid, source=source, category=category, is_public=is_public)
     transfer.ensure_finished()
     data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title)
     return transfer, data_set
 
 
-def create_dataset_from_file(org, file_path) -> tuple:
-    transfer = Transfer.api_create_by_file_upload(org_guid=org.guid, file_path=file_path)
+def create_dataset_from_file(context, org, file_path) -> tuple:
+    transfer = Transfer.api_create_by_file_upload(context, org_guid=org.guid, file_path=file_path)
     transfer.ensure_finished()
     data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title)
     return transfer, data_set

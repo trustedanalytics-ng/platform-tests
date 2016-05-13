@@ -30,8 +30,8 @@ from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, priority
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_object_model import Application, ServiceInstance
-from modules.test_names import get_test_name
-from tests.fixtures.test_data import TestData
+from modules.test_names import generate_test_object_name
+from tests.fixtures import fixtures, test_data
 
 
 logged_components = (TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)
@@ -55,25 +55,21 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
 
     @pytest.fixture(scope="class", autouse=True)
     def setup_kafka_zookeeper_hbase_instances(self, request, test_org, test_space):
-        test_instances = []
         self.step("Create instances of kafka, zookeeper, hbase")
-        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                         service_label=ServiceLabels.KAFKA, name="kafka-inst",
-                                                         service_plan_name=self.SHARED_PLAN_NAME))
-        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                         service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
-                                                         service_plan_name=self.SHARED_PLAN_NAME))
-        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                         service_label=ServiceLabels.HBASE, name="hbase1",
-                                                         service_plan_name=self.BARE_PLAN_NAME))
-        test_instances.append(ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                         service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
-                                                         service_plan_name=self.SHARED_PLAN_NAME))
-
-        def fin():
-            for instance in test_instances:
-                instance.api_delete()
-        request.addfinalizer(fin)
+        kafka = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                           service_label=ServiceLabels.KAFKA, name="kafka-inst",
+                                           service_plan_name=self.SHARED_PLAN_NAME)
+        zookeeper = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                               service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
+                                               service_plan_name=self.SHARED_PLAN_NAME)
+        hbase = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                           service_label=ServiceLabels.HBASE, name="hbase1",
+                                           service_plan_name=self.BARE_PLAN_NAME)
+        kerberos = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+                                              service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
+                                              service_plan_name=self.SHARED_PLAN_NAME)
+        test_instances = [kafka, zookeeper, hbase, kerberos]
+        request.addfinalizer(lambda: fixtures.tear_down_test_objects(test_instances))
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -92,16 +88,13 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
 
         cls.step("Push apps")
         cls.app_ws2kafka = Application.push(space_guid= test_space.guid, source_directory=ws2kafka_path,
-                                            name=get_test_name(short=True))
+                                            name=generate_test_object_name(short=True))
         app_hbase_reader = Application.push(space_guid=test_space.guid, source_directory=hbase_reader_path,
-                                            name=get_test_name(short=True))
+                                            name=generate_test_object_name(short=True))
         cls.hbase_reader = HbaseClient(app_hbase_reader)
         pushed_apps = [cls.app_ws2kafka, app_hbase_reader]
 
-        def fin():
-            for app in pushed_apps:
-                app.api_delete()
-        request.addfinalizer(fin)
+        request.addfinalizer(lambda: fixtures.tear_down_test_objects(pushed_apps))
 
     def _send_ws_messages(self, connection_string):
         self.step("Send messages to {}".format(connection_string))
@@ -118,10 +111,10 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
 
     def test_0_create_gearpump_instance(self):
         self.step("Create gearpump instance")
-        self.__class__.gearpump = Gearpump(TestData.test_org.guid, TestData.test_space.guid,
+        self.__class__.gearpump = Gearpump(test_data.TestData.test_org.guid, test_data.TestData.test_space.guid,
                                            service_plan_name=self.ONE_WORKER_PLAN_NAME)
         self.step("Check that gearpump instance has been created")
-        instances = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
+        instances = ServiceInstance.api_get_list(space_guid=test_data.TestData.test_space.guid)
         if self.gearpump.data_science.instance not in instances:
             raise AssertionError("gearpump instance is not on list of instances")
         self.gearpump.data_science.get_credentials()

@@ -22,8 +22,9 @@ from modules.constants import HttpStatus
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Organization, Space, User
-from modules.tap_object_model.flows import cleaner
+from modules.tap_object_model import DataSet, Invitation, Organization, Space, Transfer, User
+from modules.test_names import is_test_object_name
+from .context import Context
 from .test_data import TestData
 
 
@@ -34,25 +35,17 @@ from .test_data import TestData
 
 @pytest.fixture(scope="session")
 def test_org(request):
+    context = Context()
     log_fixture("test_org: Create test organization")
-    TestData.test_org = Organization.api_create()
+    test_org = Organization.api_create(context)
+    TestData.test_org = test_org
 
     def fin():
         log_finalizer("test_org: Delete test organization")
-        # TODO delete this when cleanups are more in order
-        delete_or_not_found(TestData.test_org.cf_api_delete)
+        context.cleanup()
     request.addfinalizer(fin)
 
-    return TestData.test_org
-
-
-@pytest.fixture(scope="session", autouse=True)
-def cleanup_everything(request):
-    # TODO make cleanup more precise: orgs with updated names, main test org, user, etc.
-    def fin():
-        log_finalizer("cleanup_everything: Tear down test objects")
-        cleaner.tear_down_all()
-    request.addfinalizer(fin)
+    return test_org
 
 
 @pytest.fixture(scope="session")
@@ -64,15 +57,15 @@ def test_space(request, test_org):
 
 @pytest.fixture(scope="session")
 def test_org_manager(request, test_org):
+    context = Context()
     log_fixture("test_org_manager: Add org manager to test org")
-    TestData.test_org_manager = User.api_create_by_adding_to_organization(org_guid=test_org.guid)
-
+    test_org_manager = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
+    TestData.test_org_manager = test_org_manager
     def fin():
         log_finalizer("test_org_manager: Delete test org manager")
-        delete_or_not_found(TestData.test_org_manager.cf_api_delete)
+        context.cleanup()
     request.addfinalizer(fin)
-
-    return TestData.test_org_manager
+    return test_org_manager
 
 
 @pytest.fixture(scope="session")
@@ -126,9 +119,62 @@ def core_space():
     TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
     return TestData.core_space
 
-def delete_or_not_found(delete_method):
+
+
+def log_objects(object_list, object_type_name):
+    # TODO delete - this is temporary, for validation purposes
+    if len(object_list) == 0:
+        log_finalizer("No {}s to delete".format(object_type_name))
+    else:
+        log_finalizer("Remaining {} {}{}:\n{}".format(len(object_list), object_type_name,
+                                                      "s" if len(object_list) != 1 else "",
+                                                      "\n".join([str(x) for x in object_list])))
+
+
+def get_objects_and_log():
+    # TODO delete - this is temporary, for validation purposes
+    log_finalizer("logging remaining objects")
+    all_data_sets = DataSet.api_get_list()
+    test_data_sets = [x for x in all_data_sets if is_test_object_name(x.title)]
+    log_objects(test_data_sets, "data set")
+    all_transfers = Transfer.api_get_list()
+    test_transfers = [x for x in all_transfers if is_test_object_name(x.title)]
+    log_objects(test_transfers, "transfer")
+    all_users = User.cf_api_get_all_users()
+    test_users = [x for x in all_users if is_test_object_name(x.username)]
+    log_objects(test_users, "user")
+    all_pending_invitations = Invitation.api_get_list()
+    test_invitations = [x for x in all_pending_invitations if is_test_object_name(x.username)]
+    log_objects(test_invitations, "invitation")
+    all_orgs = Organization.cf_api_get_list()
+    test_orgs = [x for x in all_orgs if is_test_object_name(x.name)]
+    log_objects(test_orgs, "org")
+
+
+
+@pytest.fixture(scope="class", autouse=True)
+def log_remaining_objects_class(request):
+    # TODO delete - this is temporary, for validation purposes
+    request.addfinalizer(lambda: get_objects_and_log())
+
+
+@pytest.fixture(scope="session", autouse=True)
+def log_remaining_objects_session(request):
+    # TODO delete - this is temporary, for validation purposes
+    request.addfinalizer(lambda: get_objects_and_log())
+
+
+def delete_or_not_found(delete_method, *args, **kwargs):
     try:
-        delete_method()
+        delete_method(*args, **kwargs)
     except UnexpectedResponseError as e:
         if e.status != HttpStatus.CODE_NOT_FOUND:
             raise
+
+
+def tear_down_test_objects(object_list: list):
+    for item in object_list:
+        try:
+            item.cleanup()
+        except UnexpectedResponseError as e:
+            log_finalizer("Error while deleting {}: {}".format(item, e))

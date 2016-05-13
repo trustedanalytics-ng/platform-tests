@@ -18,7 +18,6 @@ import pytest
 from retry import retry
 
 from modules.constants import HttpStatus, TapComponent as TAP, Urls
-from modules.exceptions import UnexpectedResponseError
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import DataSet
@@ -39,17 +38,10 @@ class UpdateDeleteDataSet(TapTestCase):
         self.assertEqual(updated_value, expected_value, "Data set was not updated")
 
     @pytest.fixture(scope="function", autouse=True)
-    def create_dataset(self, request, test_org, add_admin_to_test_org):
+    def create_dataset(self, request, test_org, add_admin_to_test_org, context):
         self.step("Create data set")
-        transfer, self.dataset = data_catalog.create_dataset_from_link(org=test_org, source=Urls.test_transfer_link)
-
-        def fin():
-            try:
-                transfer.api_delete()
-                self.dataset.api_delete()
-            except UnexpectedResponseError:
-                pass
-        request.addfinalizer(fin)
+        transfer, self.dataset = data_catalog.create_dataset_from_link(context, org=test_org,
+                                                                       source=Urls.test_transfer_link)
 
     @priority.high
     def test_delete_dataset(self):

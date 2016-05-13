@@ -21,7 +21,7 @@ from enum import Enum
 
 from ..exceptions import JobException
 from ..http_calls.platform import workflow_scheduler as job_scheduler
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 
 class TimeUnit(Enum):
@@ -112,7 +112,7 @@ class Job(object):
     def api_create(cls, org_guid, *, name=None, frequency_amount=None, frequency_unit=None, zone_id=None,
                    check_column=None, import_mode=None, db_hostname=None, db_name=None, port=None, last_value=None,
                    password=None, table=None, target_dir=None, username=None, end_job_minutes_later=None):
-        name = get_test_name() if name is None else name
+        name = generate_test_object_name() if name is None else name
         start_job = datetime.datetime.now()
         end_job = start_job + datetime.timedelta(minutes=end_job_minutes_later)
         start = start_job.strftime(cls.TIME_TEMPLATE)

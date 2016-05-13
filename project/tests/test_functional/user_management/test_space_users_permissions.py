@@ -16,11 +16,11 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.api_client import PlatformApiClient
-from modules.tap_object_model import Organization, Space, User
-from modules.runner.tap_test_case import TapTestCase
+from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.markers import components, priority
+from modules.runner.tap_test_case import TapTestCase
+from modules.tap_object_model import Organization, Space, User
 from tests.fixtures.test_data import TestData
 
 
@@ -32,7 +32,8 @@ class SpaceUserPermissions(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def user_clients(cls, test_org, test_space):
+    def user_clients(cls, request, test_org, test_space, class_context):
+        cls.context = class_context  # TODO move to methods when dependency on unittest is removed
         cls.client_permission = {
             "admin": True,
             "org_manager": True,
@@ -41,14 +42,20 @@ class SpaceUserPermissions(TapTestCase):
             "other_org_manager": False,
             "other_user": False
         }
-        second_test_org = Organization.api_create()
+        second_test_org = Organization.api_create(class_context)
+        org_manager = User.api_create_by_adding_to_organization(class_context, test_org.guid)
+        space_manager_in_org = User.api_create_by_adding_to_space(class_context, test_org.guid, test_space.guid)
+        org_user = User.api_create_by_adding_to_organization(class_context, test_org.guid,
+                                                             roles=User.ORG_ROLES["auditor"])
+        other_org_manager = User.api_create_by_adding_to_organization(class_context, second_test_org.guid)
+        other_user = User.api_create_by_adding_to_organization(class_context, second_test_org.guid, roles=[])
         cls.user_clients = {
             "admin": PlatformApiClient.get_admin_client(),
-            "org_manager": User.api_create_by_adding_to_organization(test_org.guid).login(),
-            "space_manager_in_org": User.api_create_by_adding_to_space(test_org.guid, test_space.guid).login(),
-            "org_user": User.api_create_by_adding_to_organization(test_org.guid, roles=User.ORG_ROLES["auditor"]).login(),
-            "other_org_manager": User.api_create_by_adding_to_organization(second_test_org.guid).login(),
-            "other_user": User.api_create_by_adding_to_organization(second_test_org.guid, roles=[]).login()
+            "org_manager": org_manager.login(),
+            "space_manager_in_org": space_manager_in_org.login(),
+            "org_user": org_user.login(),
+            "other_org_manager": other_org_manager.login(),
+            "other_user": other_user.login()
         }
 
     def _assert_user_in_space_with_roles(self, expected_user, space_guid):
@@ -65,7 +72,7 @@ class SpaceUserPermissions(TapTestCase):
 
     @priority.medium
     def test_get_user_list(self):
-        test_user = User.api_create_by_adding_to_space(TestData.test_org.guid, TestData.test_space.guid)
+        test_user = User.api_create_by_adding_to_space(self.context, TestData.test_org.guid, TestData.test_space.guid)
         self.step("Try to get user list from space by using every client type.")
         for client, is_authorized in self.client_permission.items():
             with self.subTest(user_type=client):
@@ -84,13 +91,14 @@ class SpaceUserPermissions(TapTestCase):
             with self.subTest(user_type=client):
                 user_list = User.api_get_list_via_space(TestData.test_space.guid)
                 if is_authorized:
-                    test_user = User.api_create_by_adding_to_space(TestData.test_org.guid, TestData.test_space.guid,
+                    test_user = User.api_create_by_adding_to_space(self.context, TestData.test_org.guid,
+                                                                   TestData.test_space.guid,
                                                                    inviting_client=self.user_clients[client])
                     self._assert_user_in_space_with_roles(test_user, TestData.test_space.guid)
                 else:
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                        User.api_create_by_adding_to_space, TestData.test_org.guid,
-                                                        TestData.test_space.guid,
+                                                        User.api_create_by_adding_to_space, self.context,
+                                                        TestData.test_org.guid, TestData.test_space.guid,
                                                         inviting_client=self.user_clients[client])
                     self.assertUnorderedListEqual(User.api_get_list_via_space(TestData.test_space.guid), user_list,
                                                   "User was added")
@@ -98,28 +106,26 @@ class SpaceUserPermissions(TapTestCase):
     @priority.medium
     def test_add_existing_user(self):
         self.step("Try to add existing user to space with every client type.")
+        test_user = User.api_create_by_adding_to_organization(self.context, TestData.test_org.guid)
         for client, is_authorized in self.client_permission.items():
             with self.subTest(user_type=client):
                 if is_authorized:
-                    test_user = User.api_create_by_adding_to_organization(TestData.test_org.guid)
                     test_user.api_add_to_space(TestData.test_space.guid, TestData.test_org.guid,
                                                client=self.user_clients[client])
                     self._assert_user_in_space_with_roles(test_user, TestData.test_space.guid)
                 else:
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                        User.api_create_by_adding_to_space,
-                                                        TestData.test_org.guid,
-                                                        TestData.test_space.guid,
+                                                        User.api_create_by_adding_to_space, self.context,
+                                                        TestData.test_org.guid, TestData.test_space.guid,
                                                         inviting_client=self.user_clients[client])
 
     @priority.medium
     def test_update_role(self):
         new_roles = User.SPACE_ROLES["auditor"]
         self.step("Try to change user space role using every client type.")
+        test_user = User.api_create_by_adding_to_organization(self.context, TestData.test_org.guid)
         for client, is_authorized in self.client_permission.items():
             with self.subTest(userType=client):
-                test_user = User.api_create_by_adding_to_space(TestData.test_org.guid, TestData.test_space.guid,
-                                                               roles=User.SPACE_ROLES["developer"])
                 if is_authorized:
                     test_user.api_update_space_roles(TestData.test_space.guid, new_roles=new_roles,
                                                      client=self.user_clients[client])
@@ -128,15 +134,14 @@ class SpaceUserPermissions(TapTestCase):
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                                         test_user.api_update_space_roles, TestData.test_space.guid,
                                                         new_roles=new_roles, client=self.user_clients[client])
-                    self.assertListEqual(test_user.space_roles.get(TestData.test_space.guid),
-                                         list(User.SPACE_ROLES["developer"]), "User roles were updated")
 
     @priority.medium
     def test_delete_user(self):
+        test_user = User.api_create_by_adding_to_organization(self.context, TestData.test_org.guid)
         self.step("Try to delete user from space using every client type")
         for client, is_authorized in self.client_permission.items():
             with self.subTest(userType=client):
-                test_user = User.api_create_by_adding_to_space(TestData.test_org.guid, TestData.test_space.guid)
+                test_user.api_add_to_space(org_guid=TestData.test_org.guid, space_guid=TestData.test_space.guid)
                 self._assert_user_in_space_with_roles(test_user, TestData.test_space.guid)
                 if is_authorized:
                     test_user.api_delete_from_space(TestData.test_space.guid, client=self.user_clients[client])
@@ -145,7 +150,8 @@ class SpaceUserPermissions(TapTestCase):
                     self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                                         test_user.api_delete_from_space, TestData.test_space.guid,
                                                         client=self.user_clients[client])
-                    self.assertIn(test_user, User.api_get_list_via_space(TestData.test_space.guid), "User was deleted")
+                    self.assertIn(test_user, User.api_get_list_via_space(TestData.test_space.guid),
+                                  "User was deleted")
 
     @priority.medium
     def test_add_space(self):

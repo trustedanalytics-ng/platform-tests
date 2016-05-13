@@ -23,7 +23,7 @@ from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components
 from modules.service_tools.psql import PsqlTable, PsqlColumn, PsqlRow
 from modules.tap_object_model import Application, ServiceInstance, ServiceType
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 
 
 logged_components = (TAP.service_catalog,)
@@ -48,14 +48,19 @@ class Postgres(TapTestCase):
         self.step("Create postgres service instance")
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
-        instance_name = get_test_name()
-        return ServiceInstance.api_create(
+        instance_name = generate_test_object_name()
+        psql_instance = ServiceInstance.api_create(
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.PSQL,
             name=instance_name,
             service_plan_guid=psql.service_plan_guids[0]
         )
+
+        def fin():
+            psql_instance.cleanup()
+        request.addfinalizer(fin)
+        return psql_instance
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -66,11 +71,12 @@ class Postgres(TapTestCase):
                                                  gh_auth=config.CONFIG["github_auth"])
         psql_app_path = sql_api_sources.clone_or_pull()
         cls.step("Push psql api app to cf")
-        cls.psql_app = Application.push(
-            space_guid=test_space.guid,
-            source_directory=psql_app_path,
-            bound_services=(postgres_instance.name,)
-        )
+        cls.psql_app = Application.push(space_guid=test_space.guid, source_directory=psql_app_path,
+                                        bound_services=(postgres_instance.name,))
+
+        def fin():
+            cls.psql_app.cleanup()
+        request.addfinalizer(fin)
 
     @pytest.fixture(scope="function", autouse=True)
     def cleanup_psql_tables(self, request):

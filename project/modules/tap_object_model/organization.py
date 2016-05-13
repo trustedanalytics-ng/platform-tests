@@ -18,10 +18,11 @@ import functools
 
 from retry import retry
 
+from ..constants import HttpStatus
 from ..exceptions import UnexpectedResponseError
 from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import metrics_provider, user_management
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 
 @functools.total_ordering
@@ -44,11 +45,20 @@ class Organization(object):
         return self.guid < other.guid
 
     @classmethod
-    def api_create(cls, name=None, client=None):
-        name = get_test_name() if name is None else name
-        cls.TEST_ORG_NAMES.append(name)
-        response = user_management.api_create_organization(name, client=client)
+    def api_create(cls, context, name=None, client=None):
+        if name is None:
+            name = generate_test_object_name()
+        try:
+            response = user_management.api_create_organization(name, client=client)
+        except UnexpectedResponseError as e:
+            # If exception occurred (other than conflict), check whether org is on the list and if so, delete it.
+            if e.status != HttpStatus.CODE_CONFLICT:
+                org = next((o for o in cls.api_get_list() if o.name == name), None)
+                if org is not None:
+                    org.cleanup()
+            raise
         org = cls(name=name, guid=response)
+        context.orgs.append(org)
         return org
 
     @classmethod
@@ -81,3 +91,6 @@ class Organization(object):
     @retry(UnexpectedResponseError, tries=2, delay=5)
     def cf_api_delete(self):
         cf.cf_api_delete_org(self.guid)
+
+    def cleanup(self):
+        self.cf_api_delete()

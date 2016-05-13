@@ -38,24 +38,17 @@ class ArcadiaTest(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_transfer(cls, request, test_org, add_admin_to_test_org):
-        cls.transfer, cls.dataset = data_catalog.create_dataset_from_link(org=test_org, source=Urls.test_transfer_link)
+    def create_transfer(cls, request, test_org, add_admin_to_test_org, class_context):
         cls.test_org = test_org
-
-        def fin():
-            cls.dataset.api_delete()
-            cls.transfer.api_delete()
-        request.addfinalizer(fin)
+        cls.transfer, cls.dataset = data_catalog.create_dataset_from_link(class_context, org=test_org,
+                                                                          source=Urls.test_transfer_link)
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def get_arcadia(cls, request):
         cls.step("Get arcadia dataconnection")
         cls.arcadia = Arcadia()
-
-        def fin():
-            cls.arcadia.teardown_test_datasets()
-        request.addfinalizer(fin)
+        request.addfinalizer(lambda: cls.arcadia.teardown_test_datasets())
 
     def test_0_create_new_dataset_and_import_it_to_arcadia(self):
         self.step("Publish created dataset")

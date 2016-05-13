@@ -40,15 +40,11 @@ class Gateway(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def space_developer_user(cls, request, test_org, test_space):
+    def space_developer_user(cls, test_org, test_space, class_context):
         cls.step("Create space developer client")
-        space_developer_user = User.api_create_by_adding_to_space(test_org.guid, test_space.guid,
+        space_developer_user = User.api_create_by_adding_to_space(class_context, test_org.guid, test_space.guid,
                                                                   roles=User.SPACE_ROLES["developer"])
         cls.space_developer_client = space_developer_user.login()
-
-        def fin():
-            space_developer_user.cf_api_delete()
-        request.addfinalizer(fin)
 
     def test_0_create_gateway_instance(self):
         self.step("Create gateway instance")

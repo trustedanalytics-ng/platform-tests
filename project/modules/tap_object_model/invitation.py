@@ -18,9 +18,8 @@ import functools
 
 from .. import gmail_api
 from ..http_calls.platform import user_management as api
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 from ..tap_logger import get_logger
-from . import User
 
 
 logger = get_logger(__name__)
@@ -43,16 +42,16 @@ class Invitation(object):
         return self.username < other.username
 
     @classmethod
-    def api_send(cls, username=None, inviting_client=None):
+    def api_send(cls, context, username=None, inviting_client=None):
         """Send invitation to a new user using inviting_client."""
-        username = get_test_name(email=True) if username is None else username
-        User.TEST_USERNAMES.append(username)
+        username = generate_test_object_name(email=True) if username is None else username
         response = api.api_invite_user(username, client=inviting_client)
         try:
             code = gmail_api.extract_code_from_message(response["details"])
         except AssertionError:  # Not all responses include code
             code = None
         invitation = cls(username=username, code=code)
+        context.invitations.append(invitation)
         return invitation
 
     @classmethod
@@ -69,3 +68,6 @@ class Invitation(object):
 
     def api_delete(self, client=None):
         api.api_delete_invitation(email=self.username, client=client)
+
+    def cleanup(self):
+        self.api_delete()

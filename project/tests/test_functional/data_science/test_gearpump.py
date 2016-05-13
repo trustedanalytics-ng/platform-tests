@@ -42,7 +42,7 @@ class GearpumpConsole(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_gearpump(cls, test_org, test_space):
+    def create_gearpump(cls, request, test_org, test_space):
         cls.step("Create gearpump instance with plan: 1 worker")
         cls.gearpump = Gearpump(test_org.guid, test_space.guid, service_plan_name=cls.ONE_WORKER_PLAN_NAME)
         cls.step("Check that gearpump instance has been created")

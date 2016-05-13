@@ -16,7 +16,7 @@
 
 import functools
 
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 from ..http_calls.platform import service_catalog
 
 
@@ -46,9 +46,12 @@ class ServiceKey(object):
     def api_delete(self, client=None):
         service_catalog.api_delete_service_key(service_key_guid=self.guid, client=client)
 
+    def cleanup(self):
+        self.api_delete()
+
     @classmethod
     def api_create(cls, service_instance_guid, name=None, client=None):
-        service_key_name = name or get_test_name()
+        service_key_name = name or generate_test_object_name()
         response = service_catalog.api_create_service_key(service_instance_guid, service_key_name, client)
         return cls(guid=response["guid"], name=response["name"],
                    service_instance_guid=response["service_instance_guid"], credentials=response["credentials"])

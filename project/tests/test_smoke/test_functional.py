@@ -38,9 +38,9 @@ def test_test_admin_can_login_to_platform():
 @components.user_management
 @components.auth_gateway
 @components.auth_proxy
-def test_create_and_delete_organization():
+def test_create_and_delete_organization(context):
     step("Create organization")
-    test_org = Organization.api_create()
+    test_org = Organization.api_create(context)
     step("Check that organization is on the list")
     orgs = Organization.api_get_list()
     assert test_org in orgs
@@ -54,9 +54,9 @@ def test_create_and_delete_organization():
 @components.user_management
 @components.auth_gateway
 @components.auth_proxy
-def test_onboarding():
+def test_onboarding(context):
     step("Onboard new user")
-    test_user, test_org = onboarding.onboard(check_email=False)
+    test_user, test_org = onboarding.onboard(context, check_email=False)
     step("Check that user is created")
     users = User.cf_api_get_all_users()
     assert test_user in users
@@ -68,9 +68,9 @@ def test_onboarding():
 @components.user_management
 @components.auth_gateway
 @components.auth_proxy
-def test_add_new_user_to_and_delete_from_org(core_org):
+def test_add_new_user_to_and_delete_from_org(core_org, context):
     step("Add new user to organization")
-    test_user, test_org = onboarding.onboard(check_email=False)
+    test_user, test_org = onboarding.onboard(context, check_email=False)
     test_user.api_add_to_organization(core_org.guid, roles=User.ORG_ROLES["manager"],)
     step("Check that the user is added")
     users = User.api_get_list_via_organization(org_guid=core_org.guid)
@@ -98,9 +98,9 @@ def test_create_and_delete_space(core_org):
 @components.user_management
 @components.auth_gateway
 @components.auth_proxy
-def test_add_new_user_to_and_delete_from_space(core_org, core_space):
+def test_add_new_user_to_and_delete_from_space(core_org, core_space, context):
     step("Add new user to space")
-    test_user, test_org = onboarding.onboard(check_email=False)
+    test_user, test_org = onboarding.onboard(context, check_email=False)
     test_user.api_add_to_space(core_space.guid, core_org.guid, roles=User.SPACE_ROLES["manager"])
     step("Check that the user is added")
     users = User.api_get_list_via_space(space_guid=core_space.guid)
@@ -139,9 +139,9 @@ def transfer_flow(transfer, core_org):
 @components.hdfs_downloader
 @components.metadata_parser
 @components.data_catalog
-def test_add_and_delete_transfer_from_link(core_org):
+def test_add_and_delete_transfer_from_link(core_org, context):
     step("Create a transfer")
-    transfer = Transfer.api_create(category="other", source=Urls.test_transfer_link, org_guid=core_org.guid)
+    transfer = Transfer.api_create(context, category="other", source=Urls.test_transfer_link, org_guid=core_org.guid)
     transfer_flow(transfer, core_org)
 
 
@@ -149,11 +149,11 @@ def test_add_and_delete_transfer_from_link(core_org):
 @components.hdfs_uploader
 @components.metadata_parser
 @components.data_catalog
-def test_add_and_delete_transfer_from_file(core_org):
+def test_add_and_delete_transfer_from_file(core_org, context):
     step("Generate a test csv file")
     file_path = generate_csv_file(column_count=10, row_count=100)
     step("Create a transfer by file upload")
-    transfer = Transfer.api_create_by_file_upload(category="health", org_guid=core_org.guid, file_path=file_path)
+    transfer = Transfer.api_create_by_file_upload(context, category="health", org_guid=core_org.guid, file_path=file_path)
     transfer_flow(transfer, core_org)
 
 

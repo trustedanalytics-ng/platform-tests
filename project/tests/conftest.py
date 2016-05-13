@@ -24,7 +24,8 @@ from modules.tap_object_model import ServiceType
 import tests.fixtures.fixtures as fixtures
 
 
-pytest_plugins = ["tests.fixtures.fixtures", "tests.fixtures.db_logging", "tests.fixtures.remote_logging"]
+pytest_plugins = ["tests.fixtures.context", "tests.fixtures.db_logging", "tests.fixtures.fixtures",
+                  "tests.fixtures.remote_logging"]
 
 
 logger = get_logger(__name__)

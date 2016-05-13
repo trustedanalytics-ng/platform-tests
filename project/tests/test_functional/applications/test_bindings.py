@@ -37,7 +37,7 @@ class TestBindings:
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
 
         def fin():
-            fixtures.delete_or_not_found(test_app.api_delete)
+            fixtures.delete_or_not_found(test_app.cleanup)
         request.addfinalizer(fin)
         return test_app
 
@@ -48,7 +48,7 @@ class TestBindings:
                                               service_plan_name="free")
 
         def fin():
-            fixtures.delete_or_not_found(instance.api_delete)
+            fixtures.delete_or_not_found(instance.cleanup)
         request.addfinalizer(fin)
         return instance
 
@@ -58,7 +58,7 @@ class TestBindings:
         test_binding = ServiceBinding.api_create(test_app.guid, test_instance.guid)
 
         def fin():
-            fixtures.delete_or_not_found(test_binding.api_delete)
+            fixtures.delete_or_not_found(test_binding.cleanup)
         request.addfinalizer(fin)
         return test_binding
 
@@ -111,7 +111,7 @@ class TestBindingErrors:
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
 
         def fin():
-            fixtures.delete_or_not_found(test_app.api_delete)
+            fixtures.delete_or_not_found(test_app.cleanup)
         request.addfinalizer(fin)
         return test_app
 

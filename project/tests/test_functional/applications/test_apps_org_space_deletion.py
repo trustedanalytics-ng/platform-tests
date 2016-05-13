@@ -32,30 +32,24 @@ pytestmark = [components.user_management, components.service_catalog]
 class TestDeleteSpaceAndOrg:
 
     @pytest.fixture(scope="function")
-    def org_space_app(self):
+    def org_space_app(self, context):
         step("Create test organization and space")
-        test_org = Organization.api_create()
+        test_org = Organization.api_create(context)
         test_space = Space.api_create(test_org)
-
         step("Login to cf targeting test org and test space")
         cf.cf_login(test_org.name, test_space.name)
-
         step("Push example app")
         example_app_path = ApplicationPath.SAMPLE_APP
         test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
-
         return test_org, test_space, test_app
 
     def _delete_org_space(self, test_org, test_space):
         step("Delete the space using platform api")
         test_space.api_delete()
-
         step("Check that the space is gone")
         assertions.assert_not_in_with_retry(test_space, Space.api_get_list)
-
         step("Delete the organization using platform api")
         test_org.api_delete()
-
         step("Check that the organization is gone")
         assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
 

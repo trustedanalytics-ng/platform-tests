@@ -22,7 +22,7 @@ import requests
 from configuration import config
 from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger, log_http_request, log_http_response
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 logger = get_logger(__name__)
 
@@ -162,7 +162,7 @@ class Arcadia(object):
     def create_dataset(self, org_name, dataset_name, arcadia_dataset_name=None,
                        dataset_type="singletable"):
         """POST /arc/datasets/dataset"""
-        test_name = get_test_name() or arcadia_dataset_name
+        test_name = generate_test_object_name() or arcadia_dataset_name
         dataset_detail = "{}.{}".format(org_name, dataset_name)
         data = {
             "dataconnection_id": self.data_connection.dc_id,

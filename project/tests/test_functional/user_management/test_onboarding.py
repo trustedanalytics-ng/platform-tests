@@ -27,7 +27,7 @@ from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import Invitation, Organization, User
 from modules.tap_object_model.flows import onboarding
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
 
 
@@ -40,6 +40,11 @@ class Onboarding(TapTestCase):
     EXPECTED_EMAIL_SUBJECT = "Invitation to join Trusted Analytics platform"
     CLIENT_ID = "intel.data.tests@gmail.com"
     SENDER_PATTERN = "TrustedAnalytics <support@{}>"
+
+    @pytest.fixture(scope="function", autouse=True)
+    def cleanup(self, context):
+        # TODO move to methods when dependency on unittest is removed
+        self.context = context
 
     def _assert_message_correct(self, message_subject, message_content, message_sender):
         self.step("Check that the e-mail invitation message is correct")
@@ -82,73 +87,74 @@ class Onboarding(TapTestCase):
     @priority.high
     def test_simple_onboarding(self):
         self.step("Send an invite to a new user")
-        invitation = Invitation.api_send()
+        invitation = Invitation.api_send(self.context)
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=1)
         self.assertEqual(len(messages), 1, "There are {} messages for the user. Expected: 1".format(len(messages)))
         message = messages[0]
         self._assert_message_correct(message["subject"], message["content"], message["sender"])
         self.step("Register the new user")
-        user, organization = onboarding.register(code=invitation.code, username=invitation.username)
+        user, org = onboarding.register(self.context, code=invitation.code, username=invitation.username)
         self.step("Check that the user and their organization exist")
         organizations = Organization.api_get_list()
-        self.assertIn(organization, organizations, "New organization was not found")
-        self.assert_user_in_org_and_roles(user, organization.guid, User.ORG_ROLES["manager"])
+        self.assertIn(org, organizations, "New organization was not found")
+        self.assert_user_in_org_and_roles(user, org.guid, User.ORG_ROLES["manager"])
 
     @priority.medium
+    @pytest.mark.usefixtures("test_org_manager")
     def test_cannot_invite_existing_user(self):
-        self.step("Invite a test user. The new user registers.")
-        user, organization = onboarding.onboard()
         self.step("Check that sending invitation to the same user causes an error.")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT,
-                                            HttpStatus.MSG_USER_ALREADY_EXISTS.format(user.username),
-                                            Invitation.api_send, username=user.username)
+                                            HttpStatus.MSG_USER_ALREADY_EXISTS.format(TestData.test_org_manager.username),
+                                            Invitation.api_send, self.context,
+                                            username=TestData.test_org_manager.username)
 
     @priority.high
     @pytest.mark.usefixtures("test_org")
     def test_non_admin_user_cannot_invite_another_user(self):
         self.step("Create a test user")
-        non_admin_user = User.api_create_by_adding_to_organization(org_guid=TestData.test_org.guid)
-        non_admin_user_client = non_admin_user.login()
+        user = User.api_create_by_adding_to_organization(self.context, org_guid=TestData.test_org.guid)
+        non_admin_user_client = user.login()
         self.step("Check an error is returned when non-admin tries to onboard another user")
-        username = get_test_name(email=True)
+        username = generate_test_object_name(email=True)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_DENIED,
-                                            Invitation.api_send, username=username,
+                                            Invitation.api_send, self.context, username=username,
                                             inviting_client=non_admin_user_client)
         self._assert_user_received_messages(username, 0)
 
     @priority.medium
     def test_cannot_create_an_account_with_invalid_code(self):
         self.step("An error is returned when user registers with invalid code")
-        username = get_test_name(email=True)
+        username = generate_test_object_name(email=True)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                            onboarding.register, code="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                                            username=username)
+                                            onboarding.register, self.context,
+                                            code="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", username=username)
 
     @priority.medium
     def test_cannot_use_the_same_activation_code_twice(self):
         self.step("Invite a user")
-        invitation = Invitation.api_send()
+        invitation = Invitation.api_send(self.context)
         self.step("The new user registers")
-        onboarding.register(invitation.code, invitation.username)
+        onboarding.register(self.context, invitation.code, invitation.username)
         self.step("Check that error is returned when the user tries to use code twice")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                            onboarding.register, code=invitation.code, username=invitation.username)
+                                            onboarding.register, self.context, code=invitation.code,
+                                            username=invitation.username)
 
     @priority.low
     def test_invite_user_with_non_email_username(self):
         self.step("Check that passing invalid email results in error")
         username = "non_mail_username"
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                            Invitation.api_send, username=username)
+                                            Invitation.api_send, self.context, username=username)
 
     @priority.medium
     def test_user_cannot_register_without_password(self):
         self.step("Invite a new user")
-        invitation = Invitation.api_send()
+        invitation = Invitation.api_send(self.context)
         self.step("Check that an error is returned when the user tries to register without a password")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_PASSWORD_CANNOT_BE_EMPTY,
                                             user_management.api_register_new_user, code=invitation.code,
-                                            org_name=get_test_name())
+                                            org_name=generate_test_object_name())
         self.step("Check that the user was not created")
         username_list = [user.username for user in User.cf_api_get_all_users()]
         self.assertNotIn(invitation.username, username_list, "User was created")
@@ -157,12 +163,12 @@ class Onboarding(TapTestCase):
     @pytest.mark.usefixtures("test_org")
     def test_user_cannot_register_already_existing_organization(self):
         self.step("Invite a new user")
-        invitation = Invitation.api_send()
+        invitation = Invitation.api_send(self.context)
         self.step("Check that an error is returned when the user registers with an already-existing org name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT,
                                             HttpStatus.MSG_ORGANIZATION_ALREADY_EXISTS.format(TestData.test_org.name),
-                                            onboarding.register, code=invitation.code, username=invitation.username,
-                                            org_name=TestData.test_org.name)
+                                            onboarding.register, self.context, code=invitation.code,
+                                            username=invitation.username, org_name=TestData.test_org.name)
         self.step("Check that the user was not created")
         username_list = [user.username for user in User.cf_api_get_all_users()]
         self.assertNotIn(invitation.username, username_list, "User was created")
@@ -170,7 +176,7 @@ class Onboarding(TapTestCase):
     @priority.low
     def test_user_cannot_register_with_no_organization_name(self):
         self.step("Invite a new user")
-        invitation = Invitation.api_send()
+        invitation = Invitation.api_send(self.context)
         self.step("Check that an error is returned when user registers without passing an org name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST,
                                             HttpStatus.MSG_ORGANIZATION_CANNOT_CONTAIN_ONLY_WHITESPACES,

@@ -25,7 +25,7 @@ from ..exceptions import UnexpectedResponseError
 from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import service_catalog
 from ..tap_logger import log_http_request, log_http_response
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 
 class Application(object):
@@ -90,7 +90,7 @@ class Application(object):
             jar_path = os.path.join(jar_path, manifest["applications"][0]["path"])
 
         # change manifest values
-        name = get_test_name(short=True) if name is None else name
+        name = generate_test_object_name(short=True) if name is None else name
         manifest["applications"][0]["name"] = name
         if bound_services is not None:
             manifest["applications"][0]["services"] = list(bound_services)
@@ -163,6 +163,9 @@ class Application(object):
 
     def api_delete(self, client=None):
         service_catalog.api_delete_app(self.guid, client=client)
+
+    def cleanup(self):
+        self.api_delete()
 
     def api_restage(self, client=None):
         service_catalog.api_change_app_status(self.guid, self.STATUS["restage"], client=client)

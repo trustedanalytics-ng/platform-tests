@@ -18,9 +18,9 @@ import argparse
 import configparser
 import os
 
-
 from modules import tap_logger
 from modules.markers import priority
+
 
 # secrets config
 secret_file_path = os.path.join("configuration", "secrets", ".secret.ini")

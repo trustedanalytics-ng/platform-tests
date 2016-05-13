@@ -29,38 +29,38 @@ pytestmark = [components.user_management]
 
 class GetOrganizationUsers(TapTestCase):
 
-    ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
-    NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
-
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def users(cls, request, test_org):
+    def users(cls, request, test_org, class_context):
         cls.step("Create test users")
-        users = [User.api_create_by_adding_to_organization(org_guid=test_org.guid) for _ in range(3)]
-        cls.manager = users[0]
-        cls.manager_client = users[0].login()
-        cls.step("Add non-manager roles to users in the test org")
-        cls.non_managers = {}
-        cls.non_manager_clients = {}
-        for index, roles in enumerate(cls.NON_MANAGER_ROLES):
-            user = users[index + 1]
-            user.api_update_org_roles(org_guid=TestData.test_org.guid, new_roles=[roles])
-            cls.non_managers[(roles,)] = user
-            cls.non_manager_clients[roles] = user.login()
+        manager = User.api_create_by_adding_to_organization(class_context, org_guid=test_org.guid)
+        cls.manager_client = manager.login()
+        auditor = User.api_create_by_adding_to_organization(class_context, org_guid=test_org.guid,
+                                                            roles=User.ORG_ROLES["auditor"])
+        cls.auditor_client = auditor.login()
+        billing_manager = User.api_create_by_adding_to_organization(class_context, org_guid=test_org.guid,
+                                                                    roles=User.ORG_ROLES["billing_manager"])
+        cls.billing_manager_client = billing_manager.login()
 
-        def fin():
-            for user in users:
-                user.cf_api_delete()
-        request.addfinalizer(fin)
+    @pytest.fixture(scope="function")
+    def setup_context(self, context):
+        # TODO no longer needed when this class removes unittest dependency
+        self.context = context
+
+    def _cannot_get_org_users(self, client):
+        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                            User.api_get_list_via_organization, org_guid=TestData.test_org.guid,
+                                            client=client)
 
     @priority.low
-    def test_non_manager_in_org_cannot_get_org_users(self):
-        for role, client in self.non_manager_clients.items():
-            with self.subTest(user_role=role):
-                self.step("Check that non-manager cannot get list of users in org")
-                self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                    User.api_get_list_via_organization, org_guid=TestData.test_org.guid,
-                                                    client=client)
+    def test_org_auditor_cannot_get_org_users(self):
+        self.step("Check that auditor cannot get list of users in org")
+        self._cannot_get_org_users(client=self.auditor_client)
+
+    @priority.low
+    def test_billing_manager_cannot_get_org_users(self):
+        self.step("Check that billing manager cannot get list of users in org")
+        self._cannot_get_org_users(client=self.billing_manager_client)
 
     @priority.high
     def test_manager_can_get_org_users(self):
@@ -70,9 +70,10 @@ class GetOrganizationUsers(TapTestCase):
         self.assertUnorderedListEqual(user_list, expected_users)
 
     @priority.low
+    @pytest.mark.usefixtures("setup_context")
     def test_user_not_in_org_cannot_get_org_users(self):
         self.step("Create new org")
-        org = Organization.api_create()
+        org = Organization.api_create(self.context)
         self.step("Check that the user cannot get list of users in the test org")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                             User.api_get_list_via_organization, org_guid=org.guid,

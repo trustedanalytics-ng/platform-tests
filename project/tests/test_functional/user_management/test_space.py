@@ -30,25 +30,33 @@ class TestSpace(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def organization(cls):
-        cls.step("Create an organization")
-        cls.test_org = Organization.api_create()
+    def organization(cls, test_org):
+        cls.test_org = test_org
+
+    @pytest.fixture(scope="function")
+    def setup_context(self, context):
+        # TODO no longer needed when this class removes unittest dependency
+        self.context = context
 
     @priority.medium
+    @pytest.mark.usefixtures("setup_context")
     def test_get_spaces_list_in_new_org(self):
         self.step("Create new organization")
-        org = Organization.api_create()
+        org = Organization.api_create(self.context)
         self.step("Get list of spaces in the org and check that there are none")
         spaces = Space.api_get_list_in_org(org_guid=org.guid)
         self.assertEqual(len(spaces), 0, "There are spaces in a new organization")
 
     @priority.high
-    def test_create_space(self):
+    def test_create_and_delete_space(self):
         self.step("Create new space in the organization")
         space = Space.api_create(org=self.test_org)
         self.step("Check that the space is on the org space list")
         spaces = Space.api_get_list()
         self.assertIn(space, spaces)
+        self.step("Delete the test space")
+        space.api_delete()
+        self.assertNotInWithRetry(space, Space.api_get_list)
 
     @priority.medium
     def test_cannot_create_space_with_existing_name(self):
@@ -73,15 +81,6 @@ class TestSpace(TapTestCase):
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, Space.api_create,
                                             name="", org=self.test_org)
 
-    @priority.high
-    def test_delete_space(self):
-        self.step("Create a space")
-        space = Space.api_create(org=self.test_org)
-        self.step("Delete the space")
-        space.api_delete()
-        self.step("Check that the deleted space is not present on the space list")
-        self.assertNotInWithRetry(space, Space.api_get_list)
-
     @priority.low
     def test_cannot_delete_not_existing_space(self):
         self.step("Create a space")
@@ -93,11 +92,12 @@ class TestSpace(TapTestCase):
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND, space.api_delete)
 
     @priority.low
+    @pytest.mark.usefixtures("setup_context")
     def test_cannot_delete_space_with_user(self):
         self.step("Create a space")
         space = Space.api_create(org=self.test_org)
         self.step("Add new platform user to the space")
-        User.api_create_by_adding_to_space(org_guid=self.test_org.guid, space_guid=space.guid)
+        User.api_create_by_adding_to_space(self.context, org_guid=self.test_org.guid, space_guid=space.guid)
         self.step("Delete the space")
         space.api_delete()
         self.step("Check that the space is not on the space list")

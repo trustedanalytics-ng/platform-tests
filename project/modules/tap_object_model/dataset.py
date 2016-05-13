@@ -112,6 +112,9 @@ class DataSet(object):
     def api_delete(self, client=None):
         data_catalog.api_delete_dataset(self.id, client)
 
+    def cleanup(self):
+        self.api_delete()
+
     def get_details(self):
         return dict(accessibility=DatasetAccess.PUBLIC.name if self.is_public else DatasetAccess.PRIVATE.name,
                     title=self.title, category=self.category, recordCount=self.record_count, sourceUri=self.source_uri,

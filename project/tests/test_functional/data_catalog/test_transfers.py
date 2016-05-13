@@ -24,7 +24,7 @@ from modules.http_calls.platform import das, hdfs_uploader
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_object_model import DataSet, Transfer
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
 
 
@@ -38,11 +38,17 @@ class SubmitTransfer(TapTestCase):
     DEFAULT_CATEGORY = "other"
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
 
+    @pytest.fixture(scope="function", autouse=True)
+    def cleanup(self, context):
+        # TODO move to methods when dependency on unittest is removed
+        self.context = context
+
     def _create_transfer(self, org_guid, category):
         self.step("Create new transfer and wait until it's finished")
-        transfer = Transfer.api_create(category=category, source=Urls.test_transfer_link, org_guid=org_guid)
-        transfer.ensure_finished()
-        return transfer
+        self.transfer = Transfer.api_create(self.context, category=category, source=Urls.test_transfer_link,
+                                            org_guid=org_guid)
+        self.transfer.ensure_finished()
+        return self.transfer
 
     @priority.high
     def test_submit_transfer(self):
@@ -80,7 +86,7 @@ class SubmitTransfer(TapTestCase):
         self.step("Create new transfer and check that 'token' field was not returned in response")
         response = das.api_create_transfer(
             source=Urls.test_transfer_link,
-            title=get_test_name(),
+            title=generate_test_object_name(),
             is_public=False,
             org_guid=TestData.test_org.guid,
             category=self.DEFAULT_CATEGORY
@@ -98,9 +104,10 @@ class SubmitTransferFromLocalFile(SubmitTransfer):
         self.step("Generate sample csv file")
         file_path = generate_csv_file(column_count=column_count, row_count=row_count, size=size, file_name=file_name)
         self.step("Create a transfer with new category")
-        transfer = Transfer.api_create_by_file_upload(category=category, org_guid=org_guid, file_path=file_path)
-        transfer.ensure_finished()
-        return transfer
+        self.transfer = Transfer.api_create_by_file_upload(self.context, category=category, org_guid=org_guid,
+                                                           file_path=file_path)
+        self.transfer.ensure_finished()
+        return self.transfer
 
     @priority.medium
     def test_submit_transfer_from_large_file(self):

@@ -31,7 +31,7 @@ pytestmark = [priority.medium, components.kubernetes_broker]
 @incremental
 @pytest.mark.skip("Skipped until dynamic service deletion is implemented")
 class TestKubernetes:
-    service_name = test_names.get_test_name(short=True)
+    service_name = test_names.generate_test_object_name(short=True)
     test_service = None
     test_instance = None
 

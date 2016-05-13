@@ -23,7 +23,7 @@ from modules.http_calls import application_broker as broker_client
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components, incremental
 from modules.tap_object_model import Application, ServiceInstance, ServiceType
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
 
 
@@ -52,7 +52,7 @@ class ApplicationBroker(TapTestCase):
 @pytest.mark.usefixtures("test_org", "test_space", "login_to_cf")
 class ApplicationBrokerFlow(TapTestCase):
 
-    service_name = get_test_name(short=True)
+    service_name = generate_test_object_name(short=True)
     test_app = None
     cf_service = None
 

@@ -29,8 +29,9 @@ def is_test_object_name(name):
     return re.match(test_name_regex, name) is not None
 
 
-def get_test_name(email=False, short=False):
+def generate_test_object_name(email=False, short=False):
     """Return string with hostname and date for use as name of test org, user, transfer, etc."""
+    # TODO add global counter
     str_format = "%Y%m%d_%H%M%S" if short else "%Y%m%d_%H%M%S_%f"
     hostname = socket.gethostname().replace("-", "_").lower()
     now = datetime.now().strftime(str_format)

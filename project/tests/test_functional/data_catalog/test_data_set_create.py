@@ -37,6 +37,11 @@ class CreateDatasets(TapTestCase):
                           "dataSample", "isPublic", "creationTime"}
     FROM_FILE = False
 
+    @pytest.fixture(scope="function", autouse=True)
+    def cleanup(self, context):
+        # TODO move to methods when dependency on unittest is removed
+        self.context = context
+
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def target_uri(cls, test_org, core_space):
@@ -64,7 +69,8 @@ class CreateDatasets(TapTestCase):
 
     def _get_transfer_and_dataset(self, file_source, access):
         self.step("Create transfer by providing a csv from url")
-        transfer = Transfer.api_create(DataSet.CATEGORIES[0], access.value, TestData.test_org.guid, file_source)
+        transfer = Transfer.api_create(self.context, DataSet.CATEGORIES[0], access.value, TestData.test_org.guid,
+                                       file_source)
         transfer.ensure_finished()
         self.step("Get data set matching to transfer {}".format(transfer.title))
         data_set = DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=transfer.title)

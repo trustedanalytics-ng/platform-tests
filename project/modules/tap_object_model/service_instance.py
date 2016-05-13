@@ -21,9 +21,9 @@ from retry import retry
 
 from ..constants import ServiceLabels
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, application_broker as app,kubernetes_broker as k8s
+from ..http_calls import cloud_foundry as cf, application_broker as app
 from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 from . import ServiceKey
 
 
@@ -71,7 +71,7 @@ class ServiceInstance(object):
         - service_plan_guid - one api call is used, or
         - service_label and service_plan_name - an additional call is made to retrieve service_plan_guid
         """
-        name = get_test_name() if name is None else name
+        name = generate_test_object_name() if name is None else name
         if all([x is None for x in (service_label, service_plan_name, service_plan_guid)]):
             raise ValueError("service_plan_guid, or service_label and service_plan_name have to be supplied")
         if service_plan_guid is None:
@@ -136,6 +136,9 @@ class ServiceInstance(object):
     def api_delete(self, client=None):
         service_catalog.api_delete_service_instance(self.guid, client=client)
 
+    def cleanup(self):
+        self.api_delete()
+
     @classmethod
     def api_get_data_science_service_instances(cls, space_guid, org_guid, service_label):
         return service_exposer.api_tools_service_instances(service_label, space_guid, org_guid)
@@ -149,7 +152,7 @@ class ServiceInstance(object):
         - service_plan_guid - one api call is used, or
         - service_label and service_plan_name - 2 additional calls are made to retrieve service_plan_guid
         """
-        name = get_test_name() if name is None else name
+        name = generate_test_object_name() if name is None else name
         if all([x is None for x in (service_label, service_plan_name, service_plan_guid)]):
             raise ValueError("service_plan_guid, or service_label and service_plan_name have to be supplied")
         if service_plan_guid is None:
@@ -191,7 +194,7 @@ class ServiceInstance(object):
 
     @classmethod
     def app_broker_create_instance(cls, organization_guid, plan_id, service_id, space_guid):
-        instance_name = get_test_name()
+        instance_name = generate_test_object_name()
         instance_guid = uuid.uuid4()
         app.app_broker_new_service_instance(instance_guid, organization_guid, plan_id, service_id, space_guid,
                                                       instance_name)

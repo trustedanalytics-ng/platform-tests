@@ -18,12 +18,12 @@ import itertools
 
 import pytest
 
-from modules.constants import ServiceLabels, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, TapComponent as TAP
+from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.service_tools.ipython import iPython
 from modules.tap_object_model import ServiceInstance, ServiceKey, ServiceType, Space, User
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
 
 
@@ -50,13 +50,15 @@ class MarketplaceServices(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class")
-    def non_space_developer_users(cls, test_org, test_space):
-        cls.step("Create space auditor client")
-        cls.space_auditor_client = User.api_create_by_adding_to_space(test_org.guid, test_space.guid,
-                                                                      roles=User.SPACE_ROLES["auditor"]).login()
+    def non_space_developer_users(cls, request, test_org, test_space, class_context):
+        cls.step("Create space auditor")
+        space_auditor = User.api_create_by_adding_to_space(class_context, test_org.guid, test_space.guid,
+                                                           roles=User.SPACE_ROLES["auditor"])
+        cls.space_auditor_client = space_auditor.login()
         cls.step("Create space manager client")
-        cls.space_manager_client = User.api_create_by_adding_to_space(test_org.guid, test_space.guid,
-                                                                      roles=User.SPACE_ROLES["manager"]).login()
+        space_manager = User.api_create_by_adding_to_space(class_context, test_org.guid, test_space.guid,
+                                                           roles=User.SPACE_ROLES["manager"])
+        cls.space_manager_client = space_manager.login()
 
     def _create_and_delete_service_instance_and_keys(self, org_guid, space_guid, service_label, plan_guid):
         self.step("Create service instance")
@@ -142,7 +144,7 @@ class MarketplaceServices(TapTestCase):
 
     @priority.medium
     def test_cannot_create_service_instance_with_name_of_an_existing_instance(self):
-        existing_name = get_test_name()
+        existing_name = generate_test_object_name()
         self.step("Create service instance")
         instance = ServiceInstance.api_create(
             org_guid=TestData.test_org.guid,

@@ -114,7 +114,7 @@ class ServiceType(object):
     @classmethod
     def k8s_broker_create_dynamic_service(cls, org_guid, space_guid, service_name=None):
         if service_name is None:
-            service_name = test_names.get_test_name(short=True)
+            service_name = test_names.generate_test_object_name(short=True)
         kubernetes_broker.k8s_broker_create_service_offering(org_guid=org_guid, space_guid=space_guid,
                                                              service_name=service_name)
         return service_name

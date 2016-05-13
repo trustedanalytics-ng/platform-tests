@@ -22,7 +22,7 @@ from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as H
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceKey, Transfer, User
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
 
 
@@ -37,22 +37,25 @@ class TestScoringEngineInstance(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def model_transfer(cls, test_org, test_space, add_admin_to_test_org):
+    def model_transfer(cls, request, test_org, test_space, add_admin_to_test_org, class_context):
         # TODO change to a session-scoped fixture
         cls.step("Create a transfer and get hdfs path")
-        transfer = Transfer.api_create(category="other", org_guid=test_org.guid, source=Urls.model_url)
+        transfer = Transfer.api_create(class_context, category="other", org_guid=test_org.guid, source=Urls.model_url)
         transfer.ensure_finished()
         ds = DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=transfer.title)
         cls.hdfs_path = ds.target_uri
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_test_users(cls, test_org, test_space, admin_user):
-        space_manager = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
+    def create_test_users(cls, test_org, test_space, admin_user, class_context):
+        space_manager = User.api_create_by_adding_to_space(class_context, org_guid=test_org.guid,
+                                                           space_guid=test_space.guid,
                                                            roles=User.SPACE_ROLES["manager"])
-        space_auditor = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
+        space_auditor = User.api_create_by_adding_to_space(class_context, org_guid=test_org.guid,
+                                                           space_guid=test_space.guid,
                                                            roles=User.SPACE_ROLES["auditor"])
-        space_developer = User.api_create_by_adding_to_space(org_guid=test_org.guid, space_guid=test_space.guid,
+        space_developer = User.api_create_by_adding_to_space(class_context, org_guid=test_org.guid,
+                                                             space_guid=test_space.guid,
                                                              roles=User.SPACE_ROLES["developer"])
         cls.authorised_users = [admin_user, space_developer]
         cls.unauthorised_users = [space_manager, space_auditor]
@@ -70,13 +73,13 @@ class TestScoringEngineInstance(TapTestCase):
         for user in self.unauthorised_users:
             with self.subTest(user=user):
                 client = user.login()
-                name = get_test_name()
+                name = generate_test_object_name()
                 self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                                     self._create_scoring_engine, client, name)
 
     def _check_create_delete_for_user(self, user):
         client = user.login()
-        name = get_test_name()
+        name = generate_test_object_name()
 
         self.step("Try to create scoring engine instance")
         instance, application = self._create_scoring_engine(client, name)

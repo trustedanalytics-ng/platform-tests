@@ -34,12 +34,18 @@ pytestmark = [components.data_catalog, components.das, components.hdfs_downloade
 @pytest.mark.usefixtures("test_org", "add_admin_to_test_org")
 class DataSetFromHdfs(TapTestCase):
 
+    @pytest.fixture(scope="function", autouse=True)
+    def cleanup(self, context):
+        # TODO move to methods when dependency on unittest is removed
+        self.context = context
+
     @priority.medium
     def test_create_dataset_from_hdfs_uri(self):
         self.step("Create source dataset")
-        _, source_dataset = data_catalog.create_dataset_from_link(TestData.test_org, Urls.test_transfer_link)
+        _, source_dataset = data_catalog.create_dataset_from_link(self.context, TestData.test_org,
+                                                                  Urls.test_transfer_link)
         self.step("Create dataset from hdfs uri")
-        _, dataset = data_catalog.create_dataset_from_link(TestData.test_org, source_dataset.target_uri)
+        _, dataset = data_catalog.create_dataset_from_link(self.context, TestData.test_org, source_dataset.target_uri)
         self.assertEqual(dataset.source_uri, source_dataset.target_uri)
 
     @classmethod
@@ -51,18 +57,12 @@ class DataSetFromHdfs(TapTestCase):
             cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=TestData.test_org)
         request.addfinalizer(fin)
 
-    @classmethod
     @pytest.fixture(scope="function")
-    def create_data_set(cls, request):
-        cls.step("Create data set from model file")
+    def create_data_set(self, request, context):
+        self.step("Create data set from model file")
         model_path = os.path.join("fixtures", "data_sets", "lda.csv")
-        transfer, cls.initial_dataset = data_catalog.create_dataset_from_file(org=TestData.test_org,
-                                                                              file_path=model_path)
-
-        def fin():
-            transfer.api_delete()
-            cls.initial_dataset.api_delete()
-        request.addfinalizer(fin)
+        transfer, self.initial_dataset = data_catalog.create_dataset_from_file(context, org=TestData.test_org,
+                                                                               file_path=model_path)
 
     @priority.low
     @pytest.mark.usefixtures("atk_virtualenv", "create_data_set")
@@ -88,5 +88,5 @@ class DataSetFromHdfs(TapTestCase):
         hdfs_model_path = response.split("hdfs_model_path: ", 1)[1]
 
         self.step("Create dataset by providing retrieved model file path")
-        _, ds = data_catalog.create_dataset_from_link(org=TestData.test_org, source=hdfs_model_path)
+        _, ds = data_catalog.create_dataset_from_link(self.context, org=TestData.test_org, source=hdfs_model_path)
         self.assertEqual(ds.source_uri, hdfs_model_path)

@@ -135,9 +135,10 @@ class TapTestCase(unittest.TestCase, metaclass=SeparatorMeta):
         self.step("Check that the user is in the organization with expected roles ({}).".format(expected_roles))
         org_users = user.User.api_get_list_via_organization(org_guid)
         self.assertIn(invited_user, org_users, "Invited user is not on org users list")
-        invited_user_roles = list(invited_user.org_roles.get(org_guid, []))
-        self.assertUnorderedListEqual(invited_user_roles, list(expected_roles),
-                                      "User's roles in org: {}, expected {}".format(invited_user_roles,
+        org_user = next(user for user in org_users if user.username == invited_user.username)
+        org_user_roles = list(org_user.org_roles.get(org_guid, []))
+        self.assertUnorderedListEqual(org_user_roles, list(expected_roles),
+                                      "User's roles in org: {}, expected {}".format(org_user_roles,
                                                                                     list(expected_roles)))
 
     @retry(AssertionError, tries=10, delay=2)

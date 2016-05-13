@@ -54,7 +54,7 @@ class iPythonConsole(TapTestCase):
         cls._assert_ipython_instance_created(cls.ipython.instance, space_guid=test_space.guid, ipython=cls.ipython)
         cls.step("Login into iPython")
         cls.ipython.login()
-        # TODO add finalizer to delete ipython instance
+        request.addfinalizer(lambda: cls.ipython.instance.api_delete())
 
     @classmethod
     @retry(AssertionError, tries=5, delay=5)

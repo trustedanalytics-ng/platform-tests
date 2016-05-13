@@ -20,9 +20,8 @@ from configuration import config
 from modules.hive import Hive
 from modules.tap_logger import get_logger
 from modules.tap_object_model import DataSet, Invitation, Organization, Transfer, User
-from modules.tap_object_model.flows import cleaner
 from modules.test_names import is_test_object_name
-
+from tests.fixtures import fixtures
 
 logger = get_logger(__name__)
 
@@ -66,27 +65,27 @@ if __name__ == "__main__":
     all_data_sets = DataSet.api_get_list()
     test_data_sets = [x for x in all_data_sets if is_test_object_name(x.title)]
     log_deleted_objects(test_data_sets, "data set")
-    cleaner.tear_down_test_objects(test_data_sets, "api_delete")
+    fixtures.tear_down_test_objects(test_data_sets)
 
     all_transfers = Transfer.api_get_list()
     test_transfers = [x for x in all_transfers if is_test_object_name(x.title)]
     log_deleted_objects(test_transfers, "transfer")
-    cleaner.tear_down_test_objects(test_transfers, "api_delete")
+    fixtures.tear_down_test_objects(test_transfers)
 
     all_users = User.cf_api_get_all_users()
     test_users = [x for x in all_users if is_test_object_name(x.username)]
     log_deleted_objects(test_users, "user")
-    cleaner.tear_down_test_objects(test_users, "cf_api_delete")
+    fixtures.tear_down_test_objects(test_users)
 
     all_pending_invitations = Invitation.api_get_list()
     test_invitations = [x for x in all_pending_invitations if is_test_object_name(x.username)]
     log_deleted_objects(test_invitations, "invitation")
-    cleaner.tear_down_test_objects(test_invitations, "api_delete")
+    fixtures.tear_down_test_objects(test_invitations)
 
     all_orgs = Organization.cf_api_get_list()
     test_orgs = [x for x in all_orgs if is_test_object_name(x.name)]
     log_deleted_objects(test_orgs, "organization")
-    cleaner.tear_down_test_objects(test_orgs, "cf_api_delete")
+    fixtures.tear_down_test_objects(test_orgs,)
 
     remove_hive_databases()
 

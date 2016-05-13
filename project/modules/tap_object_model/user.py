@@ -24,7 +24,7 @@ from ..api_client import PlatformApiClient
 from ..exceptions import NoSuchUserException
 from ..http_calls import cloud_foundry as cf, uaa
 from ..http_calls.platform import user_management
-from ..test_names import get_test_name
+from ..test_names import generate_test_object_name
 
 
 @functools.total_ordering
@@ -41,7 +41,6 @@ class User(object):
         "auditor": {"auditors"},
         "developer": {"developers"}
     }
-    TEST_USERNAMES = []
 
     def __init__(self, guid=None, username=None, password=None, org_roles=None, space_roles=None):
         self.guid = guid
@@ -68,11 +67,10 @@ class User(object):
         return "".join([random.choice(base) for _ in range(length)])
 
     @classmethod
-    def api_create_by_adding_to_organization(cls, org_guid, username=None, password=None, roles=ORG_ROLES["manager"],
-                                             inviting_client=None):
-        username = get_test_name(email=True) if username is None else username
+    def api_create_by_adding_to_organization(cls, context, org_guid, username=None, password=None,
+                                             roles=ORG_ROLES["manager"], inviting_client=None):
+        username = generate_test_object_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
-        cls.TEST_USERNAMES.append(username)
         user_management.api_add_organization_user(org_guid, username, roles, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = PlatformApiClient.get_client(username)
@@ -81,21 +79,22 @@ class User(object):
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
             raise AssertionError("New user was not found in the organization")
+        context.users.append(new_user)
         new_user.password = password
         return new_user
 
     @classmethod
-    def api_create_by_adding_to_space(cls, org_guid, space_guid, username=None, password=None,
+    def api_create_by_adding_to_space(cls, context, org_guid, space_guid, username=None, password=None,
                                       roles=SPACE_ROLES["manager"], inviting_client=None):
-        username = get_test_name(email=True) if username is None else username
+        username = generate_test_object_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
-        cls.TEST_USERNAMES.append(username)
         user_management.api_add_space_user(org_guid, space_guid, username, roles, inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = PlatformApiClient.get_client(username)
         user_management.api_register_new_user(code, password, client=client)
         space_users = cls.api_get_list_via_space(space_guid)
         new_user = next((user for user in space_users if user.username == username), None)
+        context.users.append(new_user)
         new_user.password = password
         return new_user
 
@@ -188,6 +187,6 @@ class User(object):
         response = cf.cf_api_get_org_users(org_guid=org_guid, space_guid=space_guid)
         return cls._get_user_list_from_cf_api_response(response)
 
-    def cf_api_delete(self):
+    def cleanup(self):
         cf.cf_api_delete_user(self.guid)
         # uaa.uaa_api_user_delete(self.guid)
