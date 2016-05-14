@@ -119,10 +119,6 @@ class User(object):
             users.append(user)
         return users
 
-    @classmethod
-    def api_get_pending_invitations(cls, client=None):
-        return user_management.api_get_invitations(client=client)
-
     def login(self):
         """Return a logged-in API client for this user."""
         client = PlatformApiClient.get_client(self.username)

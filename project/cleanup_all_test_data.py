@@ -19,7 +19,7 @@ import argparse
 from configuration import config
 from modules.hive import Hive
 from modules.tap_logger import get_logger
-from modules.tap_object_model import DataSet, Organization, Transfer, User
+from modules.tap_object_model import DataSet, Invitation, Organization, Transfer, User
 from modules.tap_object_model.flows import cleaner
 from modules.test_names import is_test_object_name
 
@@ -78,8 +78,8 @@ if __name__ == "__main__":
     log_deleted_objects(test_users, "user")
     cleaner.tear_down_test_objects(test_users, "cf_api_delete")
 
-    all_pending_invitations = User.api_get_pending_invitations()
-    test_invitations = [x for x in all_pending_invitations if is_test_object_name(x)]
+    all_pending_invitations = Invitation.api_get_list()
+    test_invitations = [x for x in all_pending_invitations if is_test_object_name(x.username)]
     log_deleted_objects(test_invitations, "invitation")
     cleaner.tear_down_test_objects(test_invitations, "api_delete")
 
