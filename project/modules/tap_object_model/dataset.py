@@ -16,10 +16,16 @@
 
 import functools
 import datetime
+from enum import Enum
 
 from retry import retry
 
 from ..http_calls.platform import data_catalog, dataset_publisher
+
+
+class DatasetAccess(Enum):
+    PUBLIC = True
+    PRIVATE = False
 
 
 @functools.total_ordering
@@ -107,8 +113,9 @@ class DataSet(object):
         data_catalog.api_delete_dataset(self.id, client)
 
     def get_details(self):
-        return dict(accessibility="PUBLIC" if self.is_public else "PRIVATE", title=self.title, category=self.category,
-                    recordCount=self.record_count, sourceUri=self.source_uri, size=self.size, orgUUID=self.org_guid,
-                    targetUri=self.target_uri, format=self.format, dataSample=self.data_sample, isPublic=self.is_public,
+        return dict(accessibility=DatasetAccess.PUBLIC.name if self.is_public else DatasetAccess.PRIVATE.name,
+                    title=self.title, category=self.category, recordCount=self.record_count, sourceUri=self.source_uri,
+                    size=self.size, orgUUID=self.org_guid, targetUri=self.target_uri, format=self.format,
+                    dataSample=self.data_sample, isPublic=self.is_public,
                     creationTime=datetime.datetime.strptime(self.creation_time, "%Y-%m-%dT%H:%M:%S.%f")
                     .strftime("%Y-%m-%dT%H:%M"))

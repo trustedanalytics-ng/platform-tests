@@ -23,7 +23,7 @@ from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import download_file, get_csv_data, get_csv_record_count
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
-from modules.tap_object_model import Application, DataSet, Transfer
+from modules.tap_object_model import Application, DataSet, DatasetAccess as Access, Transfer
 from tests.fixtures.test_data import TestData
 
 
@@ -35,16 +35,16 @@ pytestmark = [components.data_catalog, components.das, components.hdfs_downloade
 class CreateDatasets(TapTestCase):
     DETAILS_TO_COMPARE = {"accessibility", "title", "category", "sourceUri", "size", "orgUUID", "targetUri", "format",
                           "dataSample", "isPublic", "creationTime"}
-    ACCESSIBILITIES = {True: "PUBLIC", False: "PRIVATE"}
     FROM_FILE = False
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def target_uri(cls, test_org, core_space):
         cls.step("Get target uri from hdfs instance")
-        hdfs = next(app for app in Application.cf_api_get_list_by_space(core_space.guid) if "hdfs-downloader" in app.name)
-        cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri'].replace("%{organization}",
-                                                                                                     TestData.test_org.guid)
+        hdfs = next(app for app in Application.cf_api_get_list_by_space(core_space.guid)
+                    if "hdfs-downloader" in app.name)
+        cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri']\
+            .replace("%{organization}", TestData.test_org.guid)
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -52,42 +52,60 @@ class CreateDatasets(TapTestCase):
         source = Urls.test_transfer_link
         cls.file_path = download_file(source)
 
-    def _get_expected_dataset_details(self, org_uuid, format, is_public, file_path, transfer, from_file=False):
-        return {'accessibility': self.ACCESSIBILITIES[is_public], 'title': transfer.title,
+    def _get_expected_dataset_details(self, org_uuid, format, access, file_path, transfer, from_file=False):
+        return {'accessibility': access.name, 'title': transfer.title,
                 'category': transfer.category, 'recordCount': get_csv_record_count(file_path),
                 'sourceUri': os.path.split(file_path)[1] if from_file else Urls.test_transfer_link,
                 'size': os.path.getsize(file_path), 'orgUUID': org_uuid,
                 'targetUri': self.target_uri + "{}".format(transfer.id_in_object_store), 'format': format,
-                'dataSample': ",".join(get_csv_data(file_path)), 'isPublic': is_public,
+                'dataSample': ",".join(get_csv_data(file_path)), 'isPublic': access.value,
                 'creationTime': datetime.datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime(
                     "%Y-%m-%dT%H:%M")}
 
-    def _get_transfer_and_dataset(self, file_source, is_public):
+    def _get_transfer_and_dataset(self, file_source, access):
         self.step("Create transfer by providing a csv from url")
-        transfer = Transfer.api_create(DataSet.CATEGORIES[0], is_public, TestData.test_org.guid, file_source)
+        transfer = Transfer.api_create(DataSet.CATEGORIES[0], access.value, TestData.test_org.guid, file_source)
         transfer.ensure_finished()
         self.step("Get data set matching to transfer {}".format(transfer.title))
         data_set = DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=transfer.title)
         return transfer, data_set
 
+    def _get_dataset_current_and_expected_details(self, access):
+        transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, access)
+        self.step("Generate expected dataset summary and get real dataset summary")
+        expected_details = self._get_expected_dataset_details(TestData.test_org.guid, "CSV", access, self.file_path,
+                                                              transfer, from_file=self.FROM_FILE)
+        ds_details = dataset.get_details()
+        return ds_details, expected_details
+
     @priority.medium
-    def test_create_dataset(self):
-        for is_public, access in self.ACCESSIBILITIES.items():
-            transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, is_public)
-            self.step("Generate expected dataset summary and get real dataset summary")
-            expected_details = self._get_expected_dataset_details(TestData.test_org.guid, "CSV", is_public,
-                                                                  self.file_path, transfer, from_file=self.FROM_FILE)
-            ds_details = dataset.get_details()
-            self.step("Compare dataset details with expected values")
-            for key in self.DETAILS_TO_COMPARE:
-                with self.subTest(accessibility=access, detail=key):
-                    self.assertEqual(expected_details[key], ds_details[key])
+    def test_create_private_dataset(self):
+        ds_details, expected_details = self._get_dataset_current_and_expected_details(Access.PRIVATE)
+        self.step("Compare private dataset details with expected values")
+        for key in self.DETAILS_TO_COMPARE:
+            with self.subTest(is_public=Access.PRIVATE.value, detail=key):
+                self.assertEqual(expected_details[key], ds_details[key])
+
+    @priority.medium
+    @pytest.mark.public_dataset
+    def test_create_public_dataset(self):
+        ds_details, expected_details = self._get_dataset_current_and_expected_details(Access.PUBLIC)
+        self.step("Compare public dataset details with expected values")
+        for key in self.DETAILS_TO_COMPARE:
+            with self.subTest(is_public=Access.PUBLIC.value, detail=key):
+                self.assertEqual(expected_details[key], ds_details[key])
 
     @priority.medium
     @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
-    def test_create_dataset_recordcount(self):
-        label = "recordCount"
-        for is_public, access in self.ACCESSIBILITIES.items():
-            transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, is_public)
-            with self.subTest(accessibility=access, detail=label):
-                self.assertEqual(dataset.record_count, get_csv_record_count(self.file_path))
+    def test_create_private_dataset_recordcount(self):
+        transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, Access.PRIVATE)
+        self.step("Check that record count is valid")
+        self.assertEqual(dataset.record_count, get_csv_record_count(self.file_path))
+
+    @priority.medium
+    @pytest.mark.public_dataset
+    @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
+    def test_create_public_dataset_recordcount(self):
+        transfer, dataset = self._get_transfer_and_dataset(Urls.test_transfer_link, Access.PUBLIC)
+        self.step("Check that record count is valid")
+        self.assertEqual(dataset.record_count, get_csv_record_count(self.file_path))

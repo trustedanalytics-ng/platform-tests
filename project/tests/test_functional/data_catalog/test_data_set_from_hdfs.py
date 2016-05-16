@@ -56,7 +56,8 @@ class DataSetFromHdfs(TapTestCase):
     def create_data_set(cls, request):
         cls.step("Create data set from model file")
         model_path = os.path.join("fixtures", "data_sets", "lda.csv")
-        transfer, cls.initial_dataset = data_catalog.create_dataset_from_file(org=TestData.test_org, file_path=model_path)
+        transfer, cls.initial_dataset = data_catalog.create_dataset_from_file(org=TestData.test_org,
+                                                                              file_path=model_path)
 
         def fin():
             transfer.api_delete()
@@ -68,7 +69,8 @@ class DataSetFromHdfs(TapTestCase):
     @pytest.mark.skip("We don't know how this should work")
     def test_create_transfer_from_atk_model_file(self):
         self.step("Get atk app from seedspace")
-        atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"), None)
+        atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"),
+                       None)
         if atk_app is None:
             raise AssertionError("Atk app not found in seedspace")
 
@@ -80,7 +82,7 @@ class DataSetFromHdfs(TapTestCase):
         ATKtools.check_uaac_token()
         atk_test_script_path = os.path.join("fixtures", "atk_test_scripts", "atk_create_model.py")
         response = self.atk_virtualenv.run_atk_script(atk_test_script_path, atk_app.urls[0],
-                                                      arguments={"--target_uri": initial_dataset.target_uri})
+                                                      arguments={"--target_uri": self.initial_dataset.target_uri})
 
         self.step("Retrieve path to model file created by atk")
         hdfs_model_path = response.split("hdfs_model_path: ", 1)[1]

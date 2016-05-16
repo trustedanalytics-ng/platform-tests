@@ -67,6 +67,7 @@ class UpdateDeleteDataSet(TapTestCase):
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY, self.dataset.api_delete)
 
     @priority.medium
+    @pytest.mark.public_dataset
     def test_change_private_to_public_to_private(self):
         self.step("Update data set from private to public")
         self.dataset.api_update(is_public=True)

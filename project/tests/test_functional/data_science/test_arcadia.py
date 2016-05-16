@@ -71,7 +71,7 @@ class ArcadiaTest(TapTestCase):
         arcadia_dataset = self.arcadia.create_dataset(self.test_org.name, self.dataset.title)
         assertions.assert_in_with_retry(arcadia_dataset, self.arcadia.get_dataset_list)
 
-    @pytest.mark.skip("Publishing public datasets is not currently supported.")
+    @pytest.mark.public_dataset
     def test_1_change_dataset_to_public_and_import_it_to_arcadia(self):
         self.step("Change dataset to public")
         self.dataset.api_update(is_public=True)

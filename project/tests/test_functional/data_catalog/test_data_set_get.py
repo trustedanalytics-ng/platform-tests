@@ -34,10 +34,8 @@ class GetDataSets(TapTestCase):
     def create_test_data_sets(cls, request, test_org, add_admin_to_test_org):
         cls.step("Create new transfer for each category")
         cls.transfers = []
-        is_public = True
         for category in DataSet.CATEGORIES:
-            is_public = not is_public  # half of the transfers will be created as public, half - as private
-            cls.transfers.append(Transfer.api_create(category, is_public, org_guid=test_org.guid,
+            cls.transfers.append(Transfer.api_create(category, is_public=False, org_guid=test_org.guid,
                                                      source=Urls.test_transfer_link))
         cls.step("Ensure that transfers are finished")
         for transfer in cls.transfers:
@@ -97,6 +95,7 @@ class GetDataSets(TapTestCase):
                 self.assertUnorderedListEqual(filtered_datasets, expected_datasets)
 
     @priority.medium
+    @pytest.mark.public_dataset
     def test_get_public_datasets_from_current_org(self):
         self.step("Retrieve only public datasets")
         filtered_datasets = self._filter_datasets(TestData.test_org, only_public=True)
