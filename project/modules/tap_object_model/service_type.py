@@ -27,12 +27,13 @@ class ServiceType(object):
 
     COMPARABLE_ATTRIBUTES = ["label", "guid", "description", "space_guid"]
 
-    def __init__(self, label, guid, description, space_guid, service_plans):
+    def __init__(self, label, guid, description, space_guid, service_plans, tags=None):
         self.label = label
         self.guid = guid
         self.description = description
         self.space_guid = space_guid
         self.service_plans = service_plans  # service plan is a dict with keys "guid", and "name"
+        self.tags = tags
 
     def __eq__(self, other):
         return all([getattr(self, ca) == getattr(other, ca) for ca in self.COMPARABLE_ATTRIBUTES])
@@ -59,7 +60,7 @@ class ServiceType(object):
             service_plans = [{"guid": sp["metadata"]["guid"], "name": sp["entity"]["name"]}
                              for sp in entity["service_plans"]]
         return cls(label=entity["label"], guid=metadata["guid"], description=entity["description"],
-                   space_guid=space_guid, service_plans=service_plans)
+                   space_guid=space_guid, service_plans=service_plans, tags=entity.get("tags"))
 
     @classmethod
     def api_get_list_from_marketplace(cls, space_guid, client=None):
@@ -141,3 +142,4 @@ class ServiceType(object):
         if plan is None:
             plan = self.service_plans[0]
         cf.cf_api_update_service_access(plan["guid"], enable_service=False)
+

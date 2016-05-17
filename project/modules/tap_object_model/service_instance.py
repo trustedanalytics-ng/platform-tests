@@ -21,7 +21,7 @@ from retry import retry
 
 from ..constants import ServiceLabels
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, application_broker as app
+from ..http_calls import cloud_foundry as cf, application_broker as app, kubernetes_broker
 from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
 from ..test_names import generate_test_object_name
 from . import ServiceKey
@@ -194,7 +194,7 @@ class ServiceInstance(object):
         services = []
         for data in si_data:
             services.append(cls(guid=data["metadata"]["guid"], name=data["entity"]["name"], service_label=None,
-                            space_guid=data["entity"]["space_guid"]))
+                                space_guid=data["entity"]["space_guid"]))
         return services
 
     @classmethod
@@ -209,7 +209,6 @@ class ServiceInstance(object):
                                    service_label=service_label)
             service_instances.append(service_instance)
         return service_instances
-
 
     # ----------------------------------------- APPLICATION BROKER API ----------------------------------------- #
 
@@ -241,7 +240,7 @@ class AtkInstance(ServiceInstance):
         if response["instances"] is not None:
             for data in response["instances"]:
                 instance = cls(guid=data["service_guid"], name=data["name"], space_guid=None, org_guid=org_guid,
-                               state=data["state"], creator_guid=data["metadata"].get("creator_guid"), 
+                               state=data["state"], creator_guid=data["metadata"].get("creator_guid"),
                                creator_name=data["metadata"].get("creator_name"))
                 atk_instances.append(instance)
         return atk_instances

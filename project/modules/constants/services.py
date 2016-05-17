@@ -36,6 +36,7 @@ class ServiceLabels(object):
     LOGSTASH = "logstash14"
     MEMCACHED = "memcached14"
     MONGO_DB = "mongodb26"
+    MONGO_DB_30_MULTINODE = "mongodb30-multinode"
     MOSQUITTO = "mosquitto14"
     MYSQL = "mysql56"
     NATS = "nats"
@@ -55,11 +56,14 @@ class ServiceLabels(object):
 
 class ServicePlan(object):
     BARE = "bare"
+    CLUSTERED = "clustered"
+    CLUSTERED_PERSISTENT = "clustered persistent"
     CREATE_USER_DIRECTORY = "create-user-directory"
     ENCRYPTED = "encrypted"
     FREE = "free"
     GET_USER_DIRECTORY = "get-user-directory"
     MULTITENANT = "multitenant"
+    PERSISTENT = "persistent"
     SHARED = "shared"
     SIMPLE = "simple"
     SIMPLE_ATK = "Simple"

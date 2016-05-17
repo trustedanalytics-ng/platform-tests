@@ -76,11 +76,18 @@ class Config(object):
             else "http://application-broker.{}/{}/".format(CONFIG["domain"], CONFIG["cf_api_version"])
 
     @staticmethod
-    def service_kubernetes_broker_url():
-        """Application broker service url."""
+    def service_kubernetes_broker_basic_url():
+        """Kubernetes broker service basic url."""
         return CONFIG["service_application_broker_url"] \
             if "service_kubernetes_broker_url" in CONFIG \
             else "http://kubernetes-broker.{}/{}/".format(CONFIG["domain"], CONFIG["cf_api_version"])
+
+    @staticmethod
+    def service_kubernetes_broker_token_url():
+        """Kubernetes broker service token url."""
+        return CONFIG["service_application_broker_url"] \
+            if "service_kubernetes_broker_url" in CONFIG \
+            else "http://kubernetes-broker.{}/".format(CONFIG["domain"])
 
     @staticmethod
     def service_demiurge_url():

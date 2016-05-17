@@ -14,14 +14,17 @@
 # limitations under the License.
 #
 
+from configuration.config import CONFIG
+from ...http_client.http_client_configuration import HttpClientConfiguration
 from ...http_client.http_client_type import HttpClientType
 from ...http_client.config import Config
 from ...constants import TapComponent
 from .base_broker import BaseBrokerConfigurationProvider
+from .base import BaseConfigurationProvider
 
 
 # noinspection PyAbstractClass
-class KubernetesBrokerConfigurationProvider(BaseBrokerConfigurationProvider):
+class KubernetesBrokerBasicConfigurationProvider(BaseBrokerConfigurationProvider):
     """Provide configuration for kubernetes broker http client."""
 
     @classmethod
@@ -37,4 +40,18 @@ class KubernetesBrokerConfigurationProvider(BaseBrokerConfigurationProvider):
     @classmethod
     def http_client_url(cls) -> str:
         """Provide http client url."""
-        return Config.service_kubernetes_broker_url()
+        return Config.service_kubernetes_broker_basic_url()
+
+
+class KubernetesBrokerTokenConfigurationProvider(BaseConfigurationProvider):
+    """Provide configuration for cloud foundry http client."""
+
+    @classmethod
+    def provide_configuration(cls) -> HttpClientConfiguration:
+        """Provide http client configuration."""
+        return HttpClientConfiguration(
+            HttpClientType.CLOUD_FOUNDRY,
+            Config.service_kubernetes_broker_token_url(),
+            CONFIG["admin_username"],
+            CONFIG["admin_password"]
+        )

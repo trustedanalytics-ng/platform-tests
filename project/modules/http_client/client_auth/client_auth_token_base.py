@@ -45,7 +45,8 @@ class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
             HttpMethod.POST, self._url,
             headers=self.request_headers,
             data=self.request_data,
-            log_message="Token has been retrieved."
+            auth=("cf", ""),
+            log_message="Retrieve token."
         )
         self._set_token()
         self._http_auth = HTTPTokenAuth(self._token)

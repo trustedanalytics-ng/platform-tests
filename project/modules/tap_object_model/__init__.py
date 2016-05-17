@@ -22,6 +22,7 @@ from .user import User
 from .invitation import Invitation
 from .job import Job
 from .kubernetes_cluster import KubernetesCluster
+from .kubernetes_instance import KubernetesInstance
 from .latest_event import EventCategory, EventMessage, LatestEvent
 from .organization import Organization
 from .platform import Platform
