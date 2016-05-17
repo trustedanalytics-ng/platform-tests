@@ -81,3 +81,10 @@ class Config(object):
         return CONFIG["service_application_broker_url"] \
             if "service_kubernetes_broker_url" in CONFIG \
             else "http://kubernetes-broker.{}/{}/".format(CONFIG["domain"], CONFIG["cf_api_version"])
+
+    @staticmethod
+    def service_demiurge_url():
+        """Demiurge service url."""
+        return CONFIG["service_demiurge_url"] \
+            if "service_demiurge_url" in CONFIG \
+            else "http://demiurge.{}/".format(CONFIG["domain"])

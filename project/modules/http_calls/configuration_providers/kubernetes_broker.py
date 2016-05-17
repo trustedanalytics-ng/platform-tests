@@ -35,7 +35,7 @@ class KubernetesBrokerConfigurationProvider(BaseConfigurationProvider):
                 app_guid = app["metadata"]["guid"]
         kubernetes_broker_env = cf.cf_api_get_app_env(app_guid)
         cls._configuration = HttpClientConfiguration(
-            HttpClientType.KUBERNETES_BROKER,
+            HttpClientType.BROKER,
             Config.service_kubernetes_broker_url(),
             kubernetes_broker_env["environment_json"]["AUTH_USER"],
             kubernetes_broker_env["environment_json"]["AUTH_PASS"]

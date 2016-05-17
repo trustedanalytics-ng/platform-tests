@@ -224,4 +224,3 @@ class AtkInstance(ServiceInstance):
                                creator_name=data["metadata"].get("creator_name"))
                 atk_instances.append(instance)
         return atk_instances
-

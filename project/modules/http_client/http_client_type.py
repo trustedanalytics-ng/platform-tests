@@ -24,5 +24,4 @@ class HttpClientType(Enum):
     CONSOLE = "Console"
     PLATFORM = "Platform"
     CLOUD_FOUNDRY = "CloudFoundry"
-    APPLICATION_BROKER = "ApplicationBroker"
-    KUBERNETES_BROKER = "KubernetesBroker"
+    BROKER = "Broker"

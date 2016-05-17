@@ -14,29 +14,30 @@
 # limitations under the License.
 #
 
-from .. import cloud_foundry as cf
-from ...http_client.http_client_configuration import HttpClientConfiguration
-from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config
-from ...constants import TapComponent
 from .base_provider import BaseConfigurationProvider
+from modules.http_calls import cloud_foundry as cf
+from modules.http_client.http_client_configuration import HttpClientConfiguration
+from modules.http_client.http_client_type import HttpClientType
+from modules.http_client.config import Config
+from modules.constants import TapComponent
 
 
-class ApplicationBrokerConfigurationProvider(BaseConfigurationProvider):
-    """Provide configuration for application broker http client."""
+
+class DemiurgeConfigurationProvider(BaseConfigurationProvider):
+    """ Provide configuration for demiurge http client. """
 
     @classmethod
     def provide_configuration(cls):
-        """Retrieve configuration from application-broker environment variables."""
+        """Retrieve configuration form demiurge environment variables."""
         response = cf.cf_api_get_apps()
         app_guid = None
         for app in response:
-            if app["entity"]["name"] == TapComponent.application_broker.value:
+            if app["entity"]["name"] == TapComponent.demiurge.value:
                 app_guid = app["metadata"]["guid"]
-        app_broker_env = cf.cf_api_get_app_env(app_guid)
+        demiurge_env = cf.cf_api_get_app_env(app_guid)
         cls._configuration = HttpClientConfiguration(
             HttpClientType.BROKER,
-            Config.service_application_broker_url(),
-            app_broker_env["environment_json"]["AUTH_USER"],
-            app_broker_env["environment_json"]["AUTH_PASS"]
+            Config.service_demiurge_url(),
+            demiurge_env["environment_json"]["USERNAME"],
+            demiurge_env["environment_json"]["PASSWORD"]
         )

@@ -28,6 +28,7 @@ class TapComponent(Enum):
     das = "das"
     data_catalog = "data-catalog"
     dataset_publisher = "dataset-publisher"
+    demiurge = "demiurge"
     gearpump_broker = "gearpump-broker"
     gearpump_dashboard = "gearpump-dashboard"
     h2o_broker = "h2o-broker"

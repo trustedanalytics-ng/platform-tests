@@ -21,6 +21,7 @@ from .external_tools import ExternalTools
 from .user import User
 from .invitation import Invitation
 from .job import Job
+from .kubernetes_cluster import KubernetesCluster
 from .latest_event import LatestEvent
 from .organization import Organization
 from .platform import Platform

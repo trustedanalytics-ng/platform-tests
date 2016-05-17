@@ -43,10 +43,7 @@ class HttpClientFactory(object):
         elif client_type == HttpClientType.CLOUD_FOUNDRY:
             return cls._get_instance(configuration, ClientAuthType.TOKEN_BASIC)
 
-        elif client_type == HttpClientType.APPLICATION_BROKER:
-            return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)
-
-        elif client_type == HttpClientType.KUBERNETES_BROKER:
+        elif client_type == HttpClientType.BROKER:
             return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)
 
         else:
