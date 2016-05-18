@@ -14,12 +14,11 @@
 # limitations under the License.
 #
 
-from .application_path import ApplicationPath
-from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus
-from .logger_type import LoggerType
-from .project_paths import Path
-from .services import ServiceLabels
-from .sources import TapGitHub
-from .tap_components import TapComponent
-from .urls import Urls
+import os
 
+
+class ApplicationPath(object):
+    """Paths to directories with applications."""
+
+    BASE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "applications")
+    SAMPLE_APP = os.path.join(BASE_PATH, "sample-app")

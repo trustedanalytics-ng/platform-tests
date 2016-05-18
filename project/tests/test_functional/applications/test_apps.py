@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, HttpStatus
+from modules.constants import ApplicationPath, TapComponent as TAP, HttpStatus
 from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
 from modules.markers import priority, components
@@ -37,8 +37,9 @@ class TestTapApp:
             test_org_manager.api_delete_from_space(space_guid=test_space.guid)
         request.addfinalizer(fin)
 
-    def _check_user_can_do_app_flow(self, test_org, test_space, example_app_path, client):
+    def _check_user_can_do_app_flow(self, test_org, test_space, client):
         step("Push example application")
+        example_app_path = ApplicationPath.SAMPLE_APP
         test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
         step("Check the application is running")
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
@@ -54,23 +55,22 @@ class TestTapApp:
         assert test_app not in apps
 
     @priority.high
-    def test_admin_can_manage_app(self, test_org, test_space, example_app_path, admin_client):
+    def test_admin_can_manage_app(self, test_org, test_space, admin_client):
         cf.cf_login(test_org.name, test_space.name)
-        self._check_user_can_do_app_flow(test_org, test_space, example_app_path, client=admin_client)
+        self._check_user_can_do_app_flow(test_org, test_space, client=admin_client)
 
     @priority.high
-    def test_developer_can_manage_app(self, test_org, test_space, example_app_path, test_org_manager,
+    def test_developer_can_manage_app(self, test_org, test_space, test_org_manager, test_org_manager_client,
                                       remove_from_space):
         space_developer = test_org_manager
         space_developer.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                          roles=User.SPACE_ROLES["developer"])
-
         cf.cf_login(test_org.name, test_space.name, credentials=(space_developer.username, space_developer.password))
-        self._check_user_can_do_app_flow(test_org, test_space, example_app_path, client=space_developer.get_client())
+        space_developer_client = test_org_manager_client
+        self._check_user_can_do_app_flow(test_org, test_space, client=space_developer_client)
 
     @priority.low
-    def test_non_developer_cannot_push_app(self, test_org, test_space, example_app_path, test_org_manager,
-                                           remove_from_space):
+    def test_non_developer_cannot_push_app(self, test_org, test_space, test_org_manager, remove_from_space):
         step("Add user to space as manager")
         space_manager = test_org_manager
         space_manager.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
@@ -79,31 +79,34 @@ class TestTapApp:
         cf.cf_login(test_org.name, test_space.name, credentials=(space_manager.username, space_manager.password))
 
         step("Check that manager cannot push app")
+        example_app_path = ApplicationPath.SAMPLE_APP
         with pytest.raises(CommandExecutionException):
             Application.push(space_guid=test_space.guid, source_directory=example_app_path)
 
     @priority.low
-    def test_non_developer_cannot_manage_app(self, test_org, test_space, example_app_path, test_org_manager,
+    def test_non_developer_cannot_manage_app(self, test_org, test_space, test_org_manager, test_org_manager_client,
                                              remove_from_space):
         step("Push example app as admin")
         cf.cf_login(test_org.name, test_space.name)
+        example_app_path = ApplicationPath.SAMPLE_APP
         test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
         apps = Application.cf_api_get_list_by_space(test_space.guid)
         assert test_app in apps
 
         step("Add user to space as manager")
         space_manager = test_org_manager
+        space_manager_client = test_org_manager_client
         space_manager.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                        roles=User.SPACE_ROLES["manager"])
         step("Check that manager cannot stop app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_stop, client=space_manager.get_client())
+                                                test_app.api_stop, client=space_manager_client)
         step("Check that manager cannot start app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_start, client=space_manager.get_client())
+                                                test_app.api_start, client=space_manager_client)
         step("Check that manager cannot delete app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_delete, client=space_manager.get_client())
+                                                test_app.api_delete, client=space_manager_client)
         apps = Application.cf_api_get_list_by_space(test_space.guid)
         assert test_app in apps
 

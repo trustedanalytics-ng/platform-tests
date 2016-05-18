@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import ServiceCatalogHttpStatus, ServiceLabels, TapComponent as TAP
+from modules.constants import ApplicationPath, ServiceCatalogHttpStatus, ServiceLabels, TapComponent as TAP
 from modules.markers import priority, components
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceBinding, ServiceInstance
@@ -30,8 +30,9 @@ pytestmark = [components.service_catalog]
 class TestBindings:
 
     @pytest.fixture(scope="function")
-    def test_app(self, request, test_space, example_app_path, login_to_cf):
+    def test_app(self, request, test_space, login_to_cf):
         step("Push test app")
+        example_app_path = ApplicationPath.SAMPLE_APP
         test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
 
@@ -103,8 +104,9 @@ class TestBindingErrors:
     INCORRECT_GUID = "incorrect_guid"
 
     @pytest.fixture(scope="class")
-    def test_app(self, request, test_space, example_app_path, login_to_cf):
+    def test_app(self, request, test_space, login_to_cf):
         step("Push test app")
+        example_app_path = ApplicationPath.SAMPLE_APP
         test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
 

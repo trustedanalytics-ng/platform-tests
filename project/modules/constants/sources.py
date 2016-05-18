@@ -14,13 +14,6 @@
 # limitations under the License.
 #
 
-class CfEnvApp:
-    repo_name = "cf-env"
-    repo_owner = "cloudfoundry-community"
-    # older commit where the app uses version of Ruby compatible with TAP cf version < 222
-    commit_id = "f3d2ad1"
-
-
 class TapGitHub:
 
     intel_data = "intel-data"

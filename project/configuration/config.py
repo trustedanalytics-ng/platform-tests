@@ -113,8 +113,8 @@ def update_test_config(domain=None, proxy=None, client_type=None, logged_respons
         CONFIG["remote_log_enabled"] = not disable_remote_logger
     if remote_logger_retry_count is not None:
         CONFIG["remote_logger_retry_count"] = remote_logger_retry_count
-    CONFIG["ref_org_name"] = ref_org_name if ref_org_name is not None else "seedorg"
-    CONFIG["ref_space_name"] = ref_space_name if ref_space_name is not None else "seedspace"
+    CONFIG["ref_org_name"] = ref_org_name if ref_org_name is not None else "trustedanalytics"
+    CONFIG["ref_space_name"] = ref_space_name if ref_space_name is not None else "platform"
     CONFIG["test_run_id"] = test_run_id
     if kerberos is not None:
         CONFIG["kerberos"] = kerberos

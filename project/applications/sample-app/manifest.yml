@@ -1,0 +1,4 @@
+applications:
+- buildpack: python_buildpack
+  command: python main.py
+  name: sample-app

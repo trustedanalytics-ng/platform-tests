@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP
+from modules.constants import ApplicationPath, TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf
 from modules.markers import components, priority
 from modules.tap_logger import step
@@ -32,7 +32,7 @@ pytestmark = [components.user_management, components.service_catalog]
 class TestDeleteSpaceAndOrg:
 
     @pytest.fixture(scope="function")
-    def org_space_app(self, example_app_path):
+    def org_space_app(self):
         step("Create test organization and space")
         test_org = Organization.api_create()
         test_space = Space.api_create(test_org)
@@ -41,6 +41,7 @@ class TestDeleteSpaceAndOrg:
         cf.cf_login(test_org.name, test_space.name)
 
         step("Push example app")
+        example_app_path = ApplicationPath.SAMPLE_APP
         test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
 
         return test_org, test_space, test_app

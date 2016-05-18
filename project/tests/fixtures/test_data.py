@@ -24,5 +24,3 @@ class TestData:
     admin_client = None
     core_org = None
     core_space = None
-
-    example_app_repo_path = None

@@ -17,9 +17,8 @@
 import abc
 import json
 import time
-import requests
-from bs4 import BeautifulSoup
 
+from bs4 import BeautifulSoup
 import requests
 
 from configuration import config
@@ -122,27 +121,31 @@ class ConsoleClient(PlatformApiClient):
     def create_login_url(self, path):
         return "{}://{}/{}".format(config.CONFIG["login.do_scheme"], self._login_endpoint, path)
 
-    def _get_csrf_code(self):
+    def _get_csrf_data(self):
+        csrf_data = {}
         url = self.create_login_url("login")
-        data = self.get(url, "authenticate: get login form")
-        return self._parse_csrf_code(data)
+        response = self.get(url, "authenticate: get login form")
+        csrf_code = self._parse_csrf_code(response)
+        if csrf_code is not None:
+            csrf_data["X-Uaa-Csrf"] = csrf_code
+        return csrf_data
 
     @staticmethod
     def _parse_csrf_code(message):
         soup = BeautifulSoup(message, 'html.parser')
-        input = soup.find("input", attrs={"name":"X-Uaa-Csrf"})
-
-        if input is None:
-            raise AssertionError("Can't find code in given message: {}".format(message))
-        return input['value']
+        input = soup.find("input", attrs={"name": "X-Uaa-Csrf"})
+        code = None
+        if input is not None:
+            code = input["value"]
+        return code
 
     def authenticate(self, password):
-        csrf_code = self._get_csrf_code()
-
+        data = {"username": self._username, "password": password}
+        data.update(self._get_csrf_data())
         request = requests.Request(
             method="POST",
             url=self.create_login_url("login.do"),
-            data={"username": self._username, "password": password, "X-Uaa-Csrf": csrf_code},
+            data=data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
         request = self._session.prepare_request(request)

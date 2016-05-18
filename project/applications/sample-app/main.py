@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 # Copyright (c) 2016 Intel Corporation
 #
@@ -14,12 +15,22 @@
 # limitations under the License.
 #
 
-from .application_path import ApplicationPath
-from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus
-from .logger_type import LoggerType
-from .project_paths import Path
-from .services import ServiceLabels
-from .sources import TapGitHub
-from .tap_components import TapComponent
-from .urls import Urls
 
+import flask
+import os
+
+
+app = flask.Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return "Test app"
+
+
+if __name__ == "__main__":
+    VCAP_APP_PORT = "VCAP_APP_PORT"
+    app_port = int(os.environ.get(VCAP_APP_PORT, "8080"))
+    app_host = "0.0.0.0"
+    app.debug = True
+    app.run(host=app_host, port=app_port)

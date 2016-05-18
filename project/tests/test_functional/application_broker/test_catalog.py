@@ -18,7 +18,7 @@ import uuid
 
 import pytest
 
-from modules.constants import HttpStatus, TapComponent as TAP
+from modules.constants import ApplicationPath, HttpStatus, TapComponent as TAP
 from modules.http_calls import application_broker as broker_client
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components, incremental
@@ -49,7 +49,7 @@ class ApplicationBroker(TapTestCase):
 
 @incremental
 @priority.medium
-@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf", "example_app_path")
+@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf")
 class ApplicationBrokerFlow(TapTestCase):
 
     service_name = get_test_name(short=True)
@@ -59,7 +59,7 @@ class ApplicationBrokerFlow(TapTestCase):
     def test_0_push_example_app(self):
         self.__class__.test_app = Application.push(
             space_guid=TestData.test_space.guid,
-            source_directory=TestData.example_app_repo_path
+            source_directory=ApplicationPath.SAMPLE_APP
         )
 
     def test_1_register_service(self):

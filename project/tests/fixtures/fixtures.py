@@ -17,9 +17,8 @@
 import pytest
 
 from configuration import config
-from modules import app_sources
 from modules.api_client import ConsoleClient
-from modules.constants import CfEnvApp, HttpStatus
+from modules.constants import HttpStatus
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.tap_logger import log_fixture, log_finalizer
@@ -81,15 +80,6 @@ def test_org_manager_client(test_org_manager):
     log_fixture("test_org_manager_client: Login as test org manager")
     TestData.test_org_manager_client = test_org_manager.login()
     return TestData.test_org_manager_client
-
-
-@pytest.fixture(scope="session")
-def example_app_path():
-    log_fixture("example_app_path: Clone example application")
-    sources = app_sources.AppSources(repo_name=CfEnvApp.repo_name, repo_owner=CfEnvApp.repo_owner)
-    TestData.example_app_repo_path = sources.clone_or_pull()
-    sources.checkout_commit(commit_id=CfEnvApp.commit_id)
-    return TestData.example_app_repo_path
 
 
 @pytest.fixture(scope="class")
