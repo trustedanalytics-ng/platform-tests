@@ -14,12 +14,11 @@
 # limitations under the License.
 #
 
-from .config import Config
 from .http_client import HttpClient
 from .http_client_type import HttpClientType
 from .client_auth.client_auth_type import ClientAuthType
 from .client_auth.client_auth_factory import ClientAuthFactory
-from .http_client_credentials import HttpClientCredentials
+from .http_client_configuration import HttpClientConfiguration
 
 
 class HttpClientFactory(object):
@@ -28,48 +27,48 @@ class HttpClientFactory(object):
     _INSTANCES = {}
 
     @classmethod
-    def get(cls, credentials: HttpClientCredentials) -> HttpClient:
-        """Create http client for given type and user credentials."""
-        client_type = credentials.client_type
+    def get(cls, configuration: HttpClientConfiguration) -> HttpClient:
+        """Create http client for given configuration."""
+        client_type = configuration.client_type
 
         if client_type == HttpClientType.UAA:
-            return cls._get_instance(credentials, Config.service_uaa_url(), ClientAuthType.TOKEN_UAA)
+            return cls._get_instance(configuration, ClientAuthType.TOKEN_UAA)
 
         elif client_type == HttpClientType.CONSOLE:
-            return cls._get_instance(credentials, Config.service_console_url(), ClientAuthType.LOGIN_PAGE)
+            return cls._get_instance(configuration, ClientAuthType.LOGIN_PAGE)
 
         elif client_type == HttpClientType.PLATFORM:
-            return cls._get_instance(credentials, Config.service_platform_url(), ClientAuthType.TOKEN_BASIC)
+            return cls._get_instance(configuration, ClientAuthType.TOKEN_BASIC)
 
         elif client_type == HttpClientType.CLOUD_FOUNDRY:
-            return cls._get_instance(credentials, Config.service_cloud_foundry_url(), ClientAuthType.TOKEN_BASIC)
+            return cls._get_instance(configuration, ClientAuthType.TOKEN_BASIC)
 
         elif client_type == HttpClientType.APPLICATION_BROKER:
-            return cls._get_instance(credentials, Config.service_application_broker_url(), ClientAuthType.HTTP_BASIC)
+            return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)
 
         elif client_type == HttpClientType.KUBERNETES_BROKER:
-            return cls._get_instance(credentials, Config.service_kubernetes_broker_url(), ClientAuthType.HTTP_BASIC)
+            return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)
 
         else:
             raise HttpClientFactoryInvalidClientTypeException(client_type)
 
     @classmethod
-    def _get_instance(cls, credentials, client_url, auth_type):
+    def _get_instance(cls, configuration, auth_type):
         """Check if there is already created requested client type and return it otherwise create new instance."""
-        if credentials.uid in cls._INSTANCES:
-            return cls._INSTANCES[credentials.uid]
-        return cls._create_instance(credentials, client_url, auth_type)
+        if configuration.uid in cls._INSTANCES:
+            return cls._INSTANCES[configuration.uid]
+        return cls._create_instance(configuration, auth_type)
 
     @classmethod
-    def _create_instance(cls, credentials, client_url, auth_type):
+    def _create_instance(cls, configuration, auth_type):
         """Create new client instance."""
         auth = ClientAuthFactory.get(
-            username=credentials.username,
-            password=credentials.password,
+            username=configuration.username,
+            password=configuration.password,
             auth_type=auth_type
         )
-        instance = HttpClient(client_url, auth)
-        cls._INSTANCES[credentials.uid] = instance
+        instance = HttpClient(configuration.url, auth)
+        cls._INSTANCES[configuration.uid] = instance
         return instance
 
 

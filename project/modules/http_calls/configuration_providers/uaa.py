@@ -14,34 +14,28 @@
 # limitations under the License.
 #
 
-from ..constants import TapComponent
-from ..tap_object_model import Application
-from ..http_client.http_client_credentials import HttpClientCredentials
-from ..http_client.http_client_type import HttpClientType
+from ...constants import TapComponent
+from ...tap_object_model import Application
+from ...http_client.http_client_configuration import HttpClientConfiguration
+from ...http_client.http_client_type import HttpClientType
+from ...http_client.config import Config
+from .base_provider import BaseConfigurationProvider
 
 
-class UaaCredentialsProvider(object):
-    """ Provide credentials for UAA http client. """
-
-    _credentials = None
-
-    @classmethod
-    def get(cls) -> HttpClientCredentials:
-        """ Return http credentials. """
-        if cls._credentials is None:
-            cls._provide_credentials()
-        return cls._credentials
+class UaaConfigurationProvider(BaseConfigurationProvider):
+    """Provide configuration for UAA http client."""
 
     @classmethod
-    def _provide_credentials(cls):
-        """ Retrieve credentials from user-management environment variables. """
+    def provide_configuration(cls):
+        """Retrieve configuration from user-management environment variables."""
         apps = Application.cf_api_get_list()
         user_management = next(a for a in apps if a.name == TapComponent.user_management.value)
         user_management_env = user_management.cf_api_env()
         upsi = user_management_env["VCAP_SERVICES"]["user-provided"]
         sso = next(x for x in upsi if x["name"] == "sso")
-        cls._credentials = HttpClientCredentials(
+        cls._configuration = HttpClientConfiguration(
             HttpClientType.UAA,
+            Config.service_uaa_url(),
             sso["credentials"]["clientId"],
             sso["credentials"]["clientSecret"]
         )

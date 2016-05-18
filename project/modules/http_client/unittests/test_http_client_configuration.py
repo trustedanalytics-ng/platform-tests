@@ -17,39 +17,43 @@
 import unittest
 
 from modules.http_client.http_client_type import HttpClientType
-from modules.http_client.http_client_credentials import HttpClientCredentials, \
-    HttpClientCredentialsInvalidPropertyTypeException, HttpClientCredentialsEmptyPropertyException
+from modules.http_client.http_client_configuration import HttpClientConfiguration, \
+    HttpClientConfigurationInvalidPropertyTypeException, HttpClientConfigurationEmptyPropertyException
 
 
-class TestHttpClientCredentials(unittest.TestCase):
-    """Unit: HttpClientCredentials."""
+class TestHttpClientConfiguration(unittest.TestCase):
+    """Unit: HttpClientConfiguration."""
 
     CLIENT_TYPE = HttpClientType.UAA
+    URL = "api.test.platform.eu"
     USERNAME = "username"
     PASSWORD = "password"
 
     def test_init_should_return_valid_object_instance(self):
-        credentials = HttpClientCredentials(self.CLIENT_TYPE, self.USERNAME, self.PASSWORD)
-        self.assertEqual(self.CLIENT_TYPE, credentials.client_type)
-        self.assertEqual(self.USERNAME, credentials.username)
-        self.assertEqual(self.PASSWORD, credentials.password)
-        self.assertEqual("HttpClientType.UAA_username_password", credentials.uid)
-        self.assertIsInstance(credentials, HttpClientCredentials, "Invalid credentials class.")
+        configuration = HttpClientConfiguration(self.CLIENT_TYPE, self.URL, self.USERNAME, self.PASSWORD)
+        self.assertEqual(self.CLIENT_TYPE, configuration.client_type)
+        self.assertEqual(self.URL, configuration.url)
+        self.assertEqual(self.USERNAME, configuration.username)
+        self.assertEqual(self.PASSWORD, configuration.password)
+        self.assertEqual("HttpClientType.UAA_api.test.platform.eu_username_password", configuration.uid)
+        self.assertIsInstance(configuration, HttpClientConfiguration, "Invalid credentials class.")
 
     def test_init_should_return_exception_when_invalid_property_type(self):
         self.assertRaises(
-            HttpClientCredentialsInvalidPropertyTypeException,
-            HttpClientCredentials,
+            HttpClientConfigurationInvalidPropertyTypeException,
+            HttpClientConfiguration,
             "Undefined",
+            self.URL,
             self.USERNAME,
             self.PASSWORD,
         )
 
     def test_init_should_return_exception_when_empty_property_value(self):
         self.assertRaises(
-            HttpClientCredentialsEmptyPropertyException,
-            HttpClientCredentials,
+            HttpClientConfigurationEmptyPropertyException,
+            HttpClientConfiguration,
             "",
+            self.URL,
             self.USERNAME,
             self.PASSWORD,
         )

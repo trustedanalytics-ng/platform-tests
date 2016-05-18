@@ -15,34 +15,28 @@
 #
 
 from .. import cloud_foundry as cf
-from ...http_client.http_client_credentials import HttpClientCredentials
+from ...http_client.http_client_configuration import HttpClientConfiguration
 from ...http_client.http_client_type import HttpClientType
+from ...http_client.config import Config
 from ...constants import TapComponent
+from .base_provider import BaseConfigurationProvider
 
 
-class KubernetesBrokerCredentialsProvider(object):
-    """ Provide credentials for kubernetes broker http client. """
-
-    _credentials = None
-
-    @classmethod
-    def get(cls) -> HttpClientCredentials:
-        """ Return http credentials. """
-        if cls._credentials is None:
-            cls._provide_credentials()
-        return cls._credentials
+class KubernetesBrokerConfigurationProvider(BaseConfigurationProvider):
+    """Provide configuration for kubernetes broker http client."""
 
     @classmethod
-    def _provide_credentials(cls):
-        """ Retrieve credentials form kubernetes-broker environment variables. """
+    def provide_configuration(cls):
+        """Retrieve configuration form kubernetes-broker environment variables."""
         response = cf.cf_api_get_apps()
         app_guid = None
         for app in response:
             if app["entity"]["name"] == TapComponent.kubernetes_broker.value:
                 app_guid = app["metadata"]["guid"]
         kubernetes_broker_env = cf.cf_api_get_app_env(app_guid)
-        cls._credentials = HttpClientCredentials(
+        cls._configuration = HttpClientConfiguration(
             HttpClientType.KUBERNETES_BROKER,
+            Config.service_kubernetes_broker_url(),
             kubernetes_broker_env["environment_json"]["AUTH_USER"],
             kubernetes_broker_env["environment_json"]["AUTH_PASS"]
         )

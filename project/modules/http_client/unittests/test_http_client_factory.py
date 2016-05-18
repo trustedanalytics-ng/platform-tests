@@ -15,14 +15,14 @@
 #
 
 import unittest
-from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 
+from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_base import ClientAuthBase
 from modules.http_client.client_auth.client_auth_token_uaa import ClientAuthTokenUaa
 from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
 from modules.http_client.http_client import HttpClient
-from modules.http_client.http_client_credentials import HttpClientCredentials
+from modules.http_client.http_client_configuration import HttpClientConfiguration
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.http_client_type import HttpClientType
 
@@ -47,29 +47,29 @@ class TestHttpClientFactory(MockHttpSession):
         self._assertHttpClientInstance(HttpClientType.APPLICATION_BROKER, ClientAuthHttpBasic)
 
     def test_get_should_return_client_for_console(self):
-        credentials = self._get_credentials(HttpClientType.CONSOLE)
-        self.assertRaises(NotImplementedError, HttpClientFactory.get, credentials)
+        configuration = self._get_configuration(HttpClientType.CONSOLE)
+        self.assertRaises(NotImplementedError, HttpClientFactory.get, configuration)
 
     def test_get_should_create_only_one_instance(self):
         # given
-        credentials = HttpClientCredentials(HttpClientType.UAA, "username", "password")
-        self.assertNotIn(credentials.uid, HttpClientFactory._INSTANCES, "Invalid instance reference.")
+        configuration = self._get_configuration(HttpClientType.UAA)
+        self.assertNotIn(configuration.uid, HttpClientFactory._INSTANCES, "Invalid instance reference.")
         # when
-        HttpClientFactory.get(credentials)
-        HttpClientFactory.get(credentials)
+        HttpClientFactory.get(configuration)
+        HttpClientFactory.get(configuration)
         # then
-        self.assertIn(credentials.uid, HttpClientFactory._INSTANCES, "Missing instance reference.")
+        self.assertIn(configuration.uid, HttpClientFactory._INSTANCES, "Missing instance reference.")
         self.assertEqual(1, len(HttpClientFactory._INSTANCES), "Invalid number of instances.")
 
     def _assertHttpClientInstance(self, client_type, auth: ClientAuthBase):
-        credentials = self._get_credentials(client_type)
-        client = HttpClientFactory.get(credentials)
+        configuration = self._get_configuration(client_type)
+        client = HttpClientFactory.get(configuration)
         self.assertIsInstance(client, HttpClient, "Invalid client class.")
         self.assertIsInstance(client._auth, auth, "Invalid auth class.")
-        self.assertIn(credentials.uid, HttpClientFactory._INSTANCES, "Missing instance reference.")
+        self.assertIn(configuration.uid, HttpClientFactory._INSTANCES, "Missing instance reference.")
 
-    def _get_credentials(self, client_type):
-        return HttpClientCredentials(client_type, "username", "password")
+    def _get_configuration(self, client_type):
+        return HttpClientConfiguration(client_type, "api.test.platform.eu", "username", "password")
 
 
 if __name__ == '__main__':

@@ -14,14 +14,14 @@
 # limitations under the License.
 #
 
-from .credential_providers.kubernetes_broker import KubernetesBrokerCredentialsProvider
+from .configuration_providers.kubernetes_broker import KubernetesBrokerConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 
 
 def k8s_broker_get_catalog():
     """GET /v$/catalog"""
-    return HttpClientFactory.get(KubernetesBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(KubernetesBrokerConfigurationProvider.get()).request(
         method=HttpMethod.GET,
         path="catalog",
         msg="K8S BROKER: get catalog"
@@ -30,7 +30,7 @@ def k8s_broker_get_catalog():
 
 def k8s_broker_delete_service_instance(instance_guid):
     """DELETE /v$/service_instances/:instanceId"""
-    return HttpClientFactory.get(KubernetesBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(KubernetesBrokerConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
         path="service_instances/{}".format(instance_guid),
         msg="K8S BROKER: delete service instance"
@@ -46,7 +46,7 @@ def k8s_broker_create_service_offering(org_guid, space_guid, service_name=None):
         "updateBroker": True,
         "dynamicService": {"serviceName": service_name, "planName": service_name}
     }
-    return HttpClientFactory.get(KubernetesBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(KubernetesBrokerConfigurationProvider.get()).request(
         method=HttpMethod.PUT,
         path="dynamicservice",
         body=body,

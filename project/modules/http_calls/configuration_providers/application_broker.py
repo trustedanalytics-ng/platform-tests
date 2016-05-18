@@ -14,35 +14,29 @@
 # limitations under the License.
 #
 
-from modules.http_calls import cloud_foundry as cf
-from modules.http_client.http_client_credentials import HttpClientCredentials
-from modules.http_client.http_client_type import HttpClientType
-from modules.constants import TapComponent
+from .. import cloud_foundry as cf
+from ...http_client.http_client_configuration import HttpClientConfiguration
+from ...http_client.http_client_type import HttpClientType
+from ...http_client.config import Config
+from ...constants import TapComponent
+from .base_provider import BaseConfigurationProvider
 
 
-class ApplicationBrokerCredentialsProvider(object):
-    """ Provide credentials for application broker http client. """
-
-    _credentials = None
-
-    @classmethod
-    def get(cls) -> HttpClientCredentials:
-        """ Return http credentials. """
-        if cls._credentials is None:
-            cls._provide_credentials()
-        return cls._credentials
+class ApplicationBrokerConfigurationProvider(BaseConfigurationProvider):
+    """Provide configuration for application broker http client."""
 
     @classmethod
-    def _provide_credentials(cls):
-        """ Retrieve credentials form application-broker environment variables. """
+    def provide_configuration(cls):
+        """Retrieve configuration from application-broker environment variables."""
         response = cf.cf_api_get_apps()
         app_guid = None
         for app in response:
             if app["entity"]["name"] == TapComponent.application_broker.value:
                 app_guid = app["metadata"]["guid"]
         app_broker_env = cf.cf_api_get_app_env(app_guid)
-        cls._credentials = HttpClientCredentials(
+        cls._configuration = HttpClientConfiguration(
             HttpClientType.APPLICATION_BROKER,
+            Config.service_application_broker_url(),
             app_broker_env["environment_json"]["AUTH_USER"],
             app_broker_env["environment_json"]["AUTH_PASS"]
         )

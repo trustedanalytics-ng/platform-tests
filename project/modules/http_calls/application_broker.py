@@ -14,14 +14,14 @@
 # limitations under the License.
 #
 
-from .credential_providers.application_broker import ApplicationBrokerCredentialsProvider
+from .configuration_providers.application_broker import ApplicationBrokerConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 
 
 def app_broker_get_catalog():
     """GET /v$/catalog"""
-    return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(ApplicationBrokerConfigurationProvider.get()).request(
         method=HttpMethod.GET,
         path="catalog",
         msg="APP BROKER: get catalog"
@@ -37,7 +37,7 @@ def app_broker_create_service(app_guid, description, service_name):
         "description": description,
         "name": service_name
     }
-    return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(ApplicationBrokerConfigurationProvider.get()).request(
         method=HttpMethod.POST,
         path="catalog",
         body=query,
@@ -47,7 +47,7 @@ def app_broker_create_service(app_guid, description, service_name):
 
 def app_broker_delete_service(service_id):
     """DELETE /v$/catalog/:serviceId"""
-    return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(ApplicationBrokerConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
         path="catalog/{}".format(service_id),
         msg="APP BROKER: delete service",
@@ -63,7 +63,7 @@ def app_broker_new_service_instance(instance_guid, organization_guid, plan_id, s
         "space_guid": space_guid,
         "parameters": {"name": instance_name}
     }
-    return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(ApplicationBrokerConfigurationProvider.get()).request(
         method=HttpMethod.PUT,
         path="service_instances/{}".format(instance_guid),
         body=query,
@@ -73,7 +73,7 @@ def app_broker_new_service_instance(instance_guid, organization_guid, plan_id, s
 
 def app_broker_delete_service_instance(instance_guid):
     """DELETE /v$/service_instances/:instanceId"""
-    return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(ApplicationBrokerConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
         path="service_instances/{}".format(instance_guid),
         msg="APP BROKER: delete service instance",
@@ -82,7 +82,7 @@ def app_broker_delete_service_instance(instance_guid):
 
 def app_broker_bind_service_instance(instance_guid, application_guid):
     """PUT /v$/service_instances/:instanceId/service_bindings/:app_guid"""
-    return HttpClientFactory.get(ApplicationBrokerCredentialsProvider.get()).request(
+    return HttpClientFactory.get(ApplicationBrokerConfigurationProvider.get()).request(
         method=HttpMethod.PUT,
         path="service_instances/{}/service_bindings/{}".format(instance_guid, application_guid),
         msg="APP BROKER: bind service instance to app",
