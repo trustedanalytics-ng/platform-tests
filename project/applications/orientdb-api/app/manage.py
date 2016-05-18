@@ -14,12 +14,11 @@
 # limitations under the License.
 #
 
-import os
+from flask_script import Manager
 
+from main import app
 
-class ApplicationPath(object):
-    """Paths to directories with applications."""
+manager = Manager(app)
 
-    BASE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "applications")
-    ORIENTDB_API = os.path.join(BASE_PATH, "orientdb-api")
-    SAMPLE_APP = os.path.join(BASE_PATH, "sample-app")
+if __name__ == '__main__':
+    manager.run()

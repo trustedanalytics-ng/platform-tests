@@ -13,13 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import os
-
-
-class ApplicationPath(object):
-    """Paths to directories with applications."""
-
-    BASE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "applications")
-    ORIENTDB_API = os.path.join(BASE_PATH, "orientdb-api")
-    SAMPLE_APP = os.path.join(BASE_PATH, "sample-app")

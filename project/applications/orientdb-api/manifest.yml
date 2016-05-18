@@ -1,0 +1,7 @@
+applications:
+- buildpack: python_buildpack
+  command: gunicorn app.manage:app --bind :$VCAP_APP_PORT
+  memory: 128M
+  name: orientdb_api
+  services:
+  - orientdb_instance
