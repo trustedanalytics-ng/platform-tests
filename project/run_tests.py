@@ -70,7 +70,8 @@ if __name__ == "__main__":
                               remote_logger_retry_count=args.remote_logger_retry_count,
                               kerberos=args.kerberos,
                               jumpbox_address=args.jumpbox_address,
-                              pushed_app_proxy=args.pushed_app_proxy)
+                              pushed_app_proxy=args.pushed_app_proxy,
+                              kubernetes=args.kubernetes)
 
     for key in config.LOGGED_CONFIG_KEYS:
         logger.info("{}={}".format(key, config.CONFIG.get(key)))

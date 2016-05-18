@@ -67,7 +67,7 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
                        logging_level=None, repository=None, platform_version="master", database_url=None,
                        test_suite=None, local_appstack=None, admin_username=None, admin_password=None,
                        ref_org_name=None, ref_space_name=None, test_run_id=None, disable_remote_logger=None,
-                       remote_logger_retry_count=None, kerberos=None, jumpbox_address=None,
+                       remote_logger_retry_count=None, kerberos=None, jumpbox_address=None, kubernetes=None,
                        pushed_app_proxy=None):
     defaults = __CONFIG.defaults()
     defaults.update(__SECRETS.defaults())
@@ -122,6 +122,23 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
     if kerberos is not None:
         CONFIG["kerberos"] = kerberos
     CONFIG["jumpbox_address"] = jumpbox_address
+    CONFIG["kubernetes"] = ensure_bool(kubernetes) if kubernetes is not None else False
+
+
+def ensure_bool(value):
+    """Ensurance that return value is always bool. Converts from string if necessary."""
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, str):
+        if value.lower() == "true":
+            return True
+        elif value.lower() == "false":
+            return False
+        else:
+            raise Exception(str(value) + " is not 'true' or 'false' string!")
+
+    raise Exception(str(type(value)) + " is not a string or bool type!")
 
 
 def setup_admin_login(domain, defaults, admin_username=None, admin_password=None):
@@ -147,7 +164,8 @@ update_test_config(domain=os.environ.get("TEST_ENVIRONMENT"),
                    platform_version=os.environ.get("PLATFORM_VERSION", "master"),
                    database_url=os.environ.get("DATABASE_URL"),
                    kerberos=os.environ.get("KERBEROS"),
-                   jumpbox_address=os.environ.get("JUMPBOX_ADDRESS"))
+                   jumpbox_address=os.environ.get("JUMPBOX_ADDRESS"),
+                   kubernetes=os.environ.get("KUBERNETES"))
 
 
 def parse_arguments():
@@ -237,4 +255,7 @@ def parse_arguments():
     parser.add_argument("--pushed-app-proxy",
                         default=None,
                         help="Proxy to be set in pushed app manifest, e.g. proxy-mu.intel.com (no port)")
+    parser.add_argument("--kubernetes",
+                        action='store_true',
+                        help="Pass this parameter if environment has kubernetes.")
     return parser.parse_args()

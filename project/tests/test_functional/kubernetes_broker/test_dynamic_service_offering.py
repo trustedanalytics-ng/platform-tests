@@ -15,9 +15,9 @@
 #
 
 import pytest
-
 from retry import retry
 
+from configuration import config
 from modules.exceptions import UnexpectedResponseError
 from modules.markers import incremental, priority, components
 from modules.tap_object_model import ServiceInstance, ServiceType
@@ -30,6 +30,7 @@ pytestmark = [priority.medium, components.kubernetes_broker]
 
 @incremental
 @pytest.mark.skip("Skipped until dynamic service deletion is implemented")
+@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestKubernetes:
     service_name = test_names.generate_test_object_name(short=True)
     test_service = None

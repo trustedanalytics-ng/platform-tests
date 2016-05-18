@@ -16,6 +16,7 @@
 
 import pytest
 
+from configuration.config import CONFIG
 from modules.constants import ServiceLabels, TapGitHub
 from modules.api_client import AppClient
 from modules.exceptions import UnexpectedResponseError
@@ -46,9 +47,24 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
             params = app_info.get("push_options", {}).get("params", "")
             return "--no-start" not in params
 
-        cls.expected_app_names = {app_info["name"] for app_info in appstack_yml["apps"] if should_be_started(app_info)}
-        cls.expected_upsi_names = {app_info["name"] for app_info in appstack_yml["user_provided_services"]}
-        cls.expected_broker_names = {app_info["name"] for app_info in appstack_yml["brokers"]}
+        def should_exist(app_info):
+            push_if_flag = app_info.get("push_if", "true")
+            normalized_push_if_flag = push_if_flag.lower()
+            if normalized_push_if_flag == "true":
+                return True
+            elif normalized_push_if_flag == "false":
+                return False
+            elif push_if_flag == "{{ kubernetes_used }}":
+                return CONFIG["kubernetes"]
+
+            raise Exception("unrecognized push_if flag value: {}".format(push_if_flag))
+
+        cls.expected_app_names = {app_info["name"] for app_info in appstack_yml["apps"]
+                                  if should_be_started(app_info) and should_exist(app_info)}
+        cls.expected_upsi_names = {app_info["name"] for app_info in appstack_yml["user_provided_services"]
+                                   if should_exist(app_info)}
+        cls.expected_broker_names = {app_info["name"] for app_info in appstack_yml["brokers"]
+                                     if should_exist(app_info)}
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)

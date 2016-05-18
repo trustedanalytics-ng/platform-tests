@@ -14,8 +14,10 @@
 # limitations under the License.
 #
 
+import pytest
 from retry import retry
 
+from configuration import config
 from modules.constants import TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.markers import components, incremental, priority
@@ -30,6 +32,7 @@ pytestmark = [components.demiurge, components.kubernetes_broker]
 
 @incremental
 @priority.high
+@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestCluster:
     CLUSTERED_TAG = "clustered"
 

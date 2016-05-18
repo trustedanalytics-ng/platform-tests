@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+import pytest
+
+from configuration import config
 from modules.constants import TapComponent as TAP
 from modules.http_calls import kubernetes_broker as k8s_broker_client
 from modules.markers import components, priority
@@ -25,6 +28,7 @@ pytestmark = [components.kubernetes_broker]
 
 
 @priority.medium
+@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestKubernetesCatalog:
     KUBERNETES_TAG = "k8s"
 
