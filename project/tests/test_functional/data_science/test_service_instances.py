@@ -38,7 +38,7 @@ class DataScienceInstances(TapTestCase):
 
     @priority.high
     def test_create_and_delete_service_instances(self):
-        services = [ServiceLabels.IPYTHON, ServiceLabels.RSTUDIO]
+        services = [ServiceLabels.JUPYTER, ServiceLabels.RSTUDIO]
         for service_type in [s for s in self.marketplace if s.label in services]:
             plan = next(iter(service_type.service_plans))
             with self.subTest(service=service_type.label):

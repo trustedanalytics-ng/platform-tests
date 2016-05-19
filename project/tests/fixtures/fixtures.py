@@ -120,7 +120,6 @@ def core_space():
     return TestData.core_space
 
 
-
 def log_objects(object_list, object_type_name):
     # TODO delete - this is temporary, for validation purposes
     if len(object_list) == 0:
@@ -149,7 +148,6 @@ def get_objects_and_log():
     all_orgs = Organization.cf_api_get_list()
     test_orgs = [x for x in all_orgs if is_test_object_name(x.name)]
     log_objects(test_orgs, "org")
-
 
 
 @pytest.fixture(scope="class", autouse=True)

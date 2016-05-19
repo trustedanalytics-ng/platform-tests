@@ -15,7 +15,6 @@
 #
 
 import abc
-import datetime
 import json
 import ssl
 import uuid
@@ -30,6 +29,7 @@ from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger, log_http_request, log_http_response
 from configuration import config
 from ..tap_object_model import ServiceInstance
+from ..test_names import generate_test_object_name
 
 logger = get_logger(__name__)
 
@@ -38,7 +38,7 @@ def _generate_uuid():
     return str(uuid.uuid4()).replace("-", "")
 
 
-class iPythonWSBase(metaclass=abc.ABCMeta):
+class JupyterWSBase(metaclass=abc.ABCMeta):
 
     def __init__(self, ws_connection):
         self.ws_connection = ws_connection
@@ -61,7 +61,7 @@ class iPythonWSBase(metaclass=abc.ABCMeta):
             logger.info(msg)
         self.ws_connection.send(msg)
 
-    def get_output(self, eof_pattern="#"):
+    def get_output(self):
         """Retrieve all messages"""
         output = []
         for _ in range(5):
@@ -72,14 +72,12 @@ class iPythonWSBase(metaclass=abc.ABCMeta):
                     logger.info(msg)
             except websocket.WebSocketTimeoutException:
                 # Timeout means there are no more messages
-                pass
-            if eof_pattern in output[-1]:
                 break
             time.sleep(5)
         return output
 
 
-class iPythonTerminal(iPythonWSBase):
+class JupyterTerminal(JupyterWSBase):
 
     def __init__(self, ws_connection, number):
         super().__init__(ws_connection)
@@ -92,7 +90,7 @@ class iPythonTerminal(iPythonWSBase):
         return json.dumps(["stdin", msg])
 
 
-class iPythonNotebook(iPythonWSBase):
+class JupyterNotebook(JupyterWSBase):
 
     def __init__(self, ws_connection, session_id, path):
         super().__init__(ws_connection)
@@ -132,10 +130,13 @@ class iPythonNotebook(iPythonWSBase):
         }
         return json.dumps(msg)
 
-    def _get_frame_with_msg_type(self, msg_type):
+    def _get_frames_with_msg_type(self, msg_type):
         output = self.get_output()
         output = [json.loads(item) for item in output]
-        return next(frame for frame in output if frame["msg_type"] == msg_type)
+        return [frame for frame in output if frame["msg_type"] == msg_type]
+
+    def _get_frame_with_msg_type(self, msg_type):
+        return next(iter(self._get_frames_with_msg_type(msg_type)))
 
     def get_command_result(self):
         result_frame = self._get_frame_with_msg_type("execute_request")
@@ -143,8 +144,10 @@ class iPythonNotebook(iPythonWSBase):
         return content
 
     def get_stream_result(self):
-        stream_frame = self._get_frame_with_msg_type("stream")
-        content = stream_frame["content"]["text"]
+        stream_frame = self._get_frames_with_msg_type("stream")
+        content = []
+        for frame in stream_frame:
+            content.append(frame["content"]["text"])
         return content
 
     def check_command_status(self):
@@ -160,13 +163,13 @@ class iPythonNotebook(iPythonWSBase):
         return reply_frame["content"]["prompt"]
 
 
-class iPython(object):
+class Jupyter(object):
     WS_TIMEOUT = 5  # (seconds) - timeout for unresponsive socket
 
     def __init__(self, org_guid, space_guid, instance_name=None, params=None):
-        """Create iPython service instance"""
+        """Create Jupyter service instance"""
         if instance_name is None:
-            instance_name = ServiceLabels.IPYTHON + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            instance_name = generate_test_object_name(short=True, prefix=ServiceLabels.JUPYTER)
         self.cookie = None
         self.password = None
         self.instance_url = None
@@ -176,7 +179,7 @@ class iPython(object):
             self.http_session.verify = False
             self.ws_sslopt = {"cert_reqs": ssl.CERT_NONE}
         self.instance = ServiceInstance.api_create(org_guid=org_guid, space_guid=space_guid, name=instance_name,
-                                                   service_label=ServiceLabels.IPYTHON,
+                                                   service_label=ServiceLabels.JUPYTER,
                                                    service_plan_name="free", params=params)
 
     def __repr__(self):
@@ -226,7 +229,7 @@ class iPython(object):
             timeout=self.WS_TIMEOUT,
             sslopt=self.ws_sslopt
         )
-        return iPythonTerminal(ws_connection, terminal_no)
+        return JupyterTerminal(ws_connection, terminal_no)
 
     def create_notebook(self, python_version=2):
         python_version = "python{}".format(python_version)
@@ -256,4 +259,4 @@ class iPython(object):
             timeout=self.WS_TIMEOUT,
             sslopt=self.ws_sslopt
         )
-        return iPythonNotebook(ws_connection, session_id, notebook_path)
+        return JupyterNotebook(ws_connection, session_id, notebook_path)

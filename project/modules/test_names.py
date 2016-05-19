@@ -29,11 +29,12 @@ def is_test_object_name(name):
     return re.match(test_name_regex, name) is not None
 
 
-def generate_test_object_name(email=False, short=False):
-    """Return string with hostname and date for use as name of test org, user, transfer, etc."""
+def generate_test_object_name(email=False, short=False, prefix=None):
+    """Return string with hostname/prefix and date for use as name of test org, user, transfer, etc."""
     # TODO add global counter
     str_format = "%Y%m%d_%H%M%S" if short else "%Y%m%d_%H%M%S_%f"
-    hostname = socket.gethostname().replace("-", "_").lower()
     now = datetime.now().strftime(str_format)
     name_format = CONFIG["test_user_email"].replace('@', '+{}_{}@') if email else "{}_{}"
-    return name_format.format(hostname, now)
+    if prefix is None:
+        prefix = socket.gethostname().replace("-", "_").lower()
+    return name_format.format(prefix, now)

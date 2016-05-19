@@ -21,7 +21,7 @@ import pytest
 from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
-from modules.service_tools.ipython import iPython
+from modules.service_tools.jupyter import Jupyter
 from modules.tap_object_model import ServiceInstance, ServiceKey, ServiceType, Space, User
 from modules.test_names import generate_test_object_name
 from tests.fixtures.test_data import TestData
@@ -104,15 +104,15 @@ class MarketplaceServices(TapTestCase):
         self.assertIn(instance, summary)
         return summary[instance]
 
-    def _create_ipython_instance_and_login(self, param_key, param_value):
+    def _create_jupyter_instance_and_login(self, param_key, param_value):
         param = {param_key: param_value}
         self.step("Create service instance and check it exist in list")
-        ipython = iPython(self.test_org.guid, self.test_space.guid, params=param)
-        self.assertInWithRetry(ipython.instance, ServiceInstance.api_get_list, self.test_space.guid)
-        self.step("Get credentials for the new ipython service instance")
-        ipython.get_credentials()
-        ipython.login()
-        terminal = ipython.connect_to_terminal(terminal_no=0)
+        jupyter = Jupyter(self.test_org.guid, self.test_space.guid, params=param)
+        self.assertInWithRetry(jupyter.instance, ServiceInstance.api_get_list, self.test_space.guid)
+        self.step("Get credentials for the new jupyter service instance")
+        jupyter.get_credentials()
+        jupyter.login()
+        terminal = jupyter.connect_to_terminal(terminal_no=0)
         _ = terminal.get_output()
         return terminal
 
@@ -137,7 +137,7 @@ class MarketplaceServices(TapTestCase):
     def test_create_instance_with_non_required_parameter(self):
         param_key = "test_param"
         param_value = "test_value"
-        terminal = self._create_ipython_instance_and_login(param_key, param_value)
+        terminal = self._create_jupyter_instance_and_login(param_key, param_value)
         terminal.send_input("env\n")
         output = "".join(terminal.get_output())
         self.assertIn("{}={}".format(param_key, param_value), output)

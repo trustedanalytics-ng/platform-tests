@@ -30,7 +30,7 @@ class ServiceLabels(object):
     HDFS = "hdfs"
     HIVE = "hive"
     INFLUX_DB = "influxdb088"
-    IPYTHON = "ipython"
+    JUPYTER = "jupyter"
     KAFKA = "kafka"
     KERBEROS = "kerberos"
     LOGSTASH = "logstash14"
