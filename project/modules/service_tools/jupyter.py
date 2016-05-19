@@ -24,7 +24,7 @@ import requests
 from retry import retry
 import websocket
 
-from ..constants import ServiceLabels
+from ..constants import ServiceLabels, ServicePlan
 from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger, log_http_request, log_http_response
 from configuration import config
@@ -178,9 +178,10 @@ class Jupyter(object):
         if not config.CONFIG["ssl_validation"]:
             self.http_session.verify = False
             self.ws_sslopt = {"cert_reqs": ssl.CERT_NONE}
-        self.instance = ServiceInstance.api_create(org_guid=org_guid, space_guid=space_guid, name=instance_name,
-                                                   service_label=ServiceLabels.JUPYTER,
-                                                   service_plan_name="free", params=params)
+        self.instance = ServiceInstance.api_create_with_plan_name(org_guid=org_guid, space_guid=space_guid,
+                                                                  name=instance_name,
+                                                                  service_label=ServiceLabels.JUPYTER,
+                                                                  service_plan_name=ServicePlan.FREE, params=params)
 
     def __repr__(self):
         return "{} (instance_url={})".format(self.__class__.__name__, self.instance_url)

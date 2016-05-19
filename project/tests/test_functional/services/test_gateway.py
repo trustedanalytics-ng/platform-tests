@@ -18,7 +18,7 @@ import pytest
 import websocket
 
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.constants import ServiceLabels, TapComponent as TAP
+from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.http_calls.configuration_providers.cloud_foundry import CloudFoundryConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.runner.tap_test_case import TapTestCase
@@ -33,7 +33,6 @@ pytestmark = [components.gateway, components.application_broker, components.serv
 @incremental
 @priority.high
 class Gateway(TapTestCase):
-    PLAN_NAME = "Simple"
     gateway_instance = None
     kafka_instance = None
     gateway_app = None
@@ -48,11 +47,11 @@ class Gateway(TapTestCase):
 
     def test_0_create_gateway_instance(self):
         self.step("Create gateway instance")
-        gateway_instance = ServiceInstance.api_create(
+        gateway_instance = ServiceInstance.api_create_with_plan_name(
             TestData.test_org.guid,
             TestData.test_space.guid,
             ServiceLabels.GATEWAY,
-            service_plan_name=self.PLAN_NAME,
+            service_plan_name=ServicePlan.SIMPLE_ATK,
             client=self.space_developer_client
         )
         validator = ApplicationStackValidator(self, gateway_instance)

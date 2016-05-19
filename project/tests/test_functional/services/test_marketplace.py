@@ -18,7 +18,7 @@ import itertools
 
 import pytest
 
-from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ParametrizedService, ServiceLabels,\
+from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ParametrizedService, ServiceLabels, ServicePlan, \
     TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
@@ -150,12 +150,12 @@ class MarketplaceServices(TapTestCase):
     def test_cannot_create_service_instance_with_name_of_an_existing_instance(self):
         existing_name = generate_test_object_name()
         self.step("Create service instance")
-        instance = ServiceInstance.api_create(
+        instance = ServiceInstance.api_create_with_plan_name(
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.KAFKA,
             name=existing_name,
-            service_plan_name="shared"
+            service_plan_name=ServicePlan.SHARED
         )
         service_list = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
         self.step("Check that the instance was created")
@@ -177,9 +177,9 @@ class MarketplaceServices(TapTestCase):
         expected_instance_list = ServiceInstance.api_get_list(TestData.test_space.guid)
         self.step("Check that instance cannot be created with empty name")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            ServiceInstance.api_create, TestData.test_org.guid,
+                                            ServiceInstance.api_create_with_plan_name, TestData.test_org.guid,
                                             TestData.test_space.guid, ServiceLabels.KAFKA, "",
-                                            service_plan_name="shared")
+                                            service_plan_name=ServicePlan.SHARED)
         self.assertUnorderedListEqual(expected_instance_list, ServiceInstance.api_get_list(TestData.test_space.guid),
                                       "New instance was created")
 

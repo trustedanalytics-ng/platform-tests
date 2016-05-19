@@ -18,7 +18,8 @@ import pytest
 import requests
 
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, Urls
+from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, ServicePlan,\
+    Urls
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceKey, Transfer, User
@@ -32,8 +33,6 @@ pytestmark = [components.scoring_engine, components.service_catalog, components.
 
 
 class TestScoringEngineInstance(TapTestCase):
-
-    SE_PLAN_NAME = "Simple"
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -114,11 +113,11 @@ class TestScoringEngineInstance(TapTestCase):
 
     def _create_scoring_engine(self, client, name):
         self.step("Create test service instance")
-        instance = ServiceInstance.api_create(
+        instance = ServiceInstance.api_create_with_plan_name(
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.SCORING_ENGINE,
-            service_plan_name=self.SE_PLAN_NAME,
+            service_plan_name=ServicePlan.SIMPLE_ATK,
             name=name,
             params={"TAR_ARCHIVE": self.hdfs_path},
             client=client

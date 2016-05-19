@@ -25,7 +25,7 @@ import pytest
 
 from modules import app_sources
 from configuration import config
-from modules.constants import TapComponent as TAP, ServiceLabels, TapGitHub
+from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, TapGitHub
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components
 from modules.tap_object_model import Application, ServiceInstance
@@ -58,19 +58,19 @@ class Mqtt(TapTestCase):
         mqtt_demo_sources.compile_mvn()
 
         self.step("Create required service instances.")
-        ServiceInstance.api_create(
+        ServiceInstance.api_create_with_plan_name(
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.INFLUX_DB,
             name=self.INFLUX_INSTANCE_NAME,
-            service_plan_name="free"
+            service_plan_name=ServicePlan.FREE
         )
-        ServiceInstance.api_create(
+        ServiceInstance.api_create_with_plan_name(
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.MOSQUITTO,
             name=self.MQTT_INSTANCE_NAME,
-            service_plan_name="free"
+            service_plan_name=ServicePlan.FREE
         )
 
         self.step("Push mqtt app to cf")

@@ -65,23 +65,23 @@ class ServiceInstance(object):
     # ----------------------------------------- Platform API ----------------------------------------- #
 
     @classmethod
-    def api_create(cls, org_guid, space_guid, service_label, name=None, service_plan_name=None,
-                   service_plan_guid=None, params=None, client=None):
+    def api_create_with_plan_name(cls, org_guid, space_guid, service_label, name=None, service_plan_name=None,
+                                  params=None, client=None):
         """
-        Service instance can be either created passing:
-        - service_plan_guid - one api call is used, or
-        - service_label and service_plan_name - an additional call is made to retrieve service_plan_guid
+        Create service instance using using plan name - first make call to retrieve plan guid.
+        :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
+        """
+        service_plan_guid = cls._retrieve_service_plan_guid(service_label, service_plan_name, client)
+        return cls.api_create(org_guid, space_guid, service_label, name, service_plan_guid, params, client)
+
+    @classmethod
+    def api_create(cls, org_guid, space_guid, service_label, name=None, service_plan_guid=None,
+                   params=None, client=None):
+        """
+        Create service instance using using plan guid.
+        :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
         name = generate_test_object_name() if name is None else name
-        if all([x is None for x in (service_label, service_plan_name, service_plan_guid)]):
-            raise ValueError("service_plan_guid, or service_label and service_plan_name have to be supplied")
-        if service_plan_guid is None:
-            # retrieve plan guid based on service name and plan name
-            response = service_catalog.api_get_service_plans(service_type_label=service_label, client=client)
-            service_plan_data = next((item for item in response if item["entity"]["name"] == service_plan_name), None)
-            if service_plan_data is None:
-                raise ValueError("No such plan {} for service {}".format(service_plan_name, service_label))
-            service_plan_guid = service_plan_data["metadata"]["guid"]
         try:
             response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
                                                                    org_guid=org_guid, space_guid=space_guid,
@@ -92,6 +92,14 @@ class ServiceInstance(object):
             if e.status == 504 and "Gateway Timeout" in e.error_message:
                 return cls._get_instance_with_retry(name, space_guid, service_label)
             raise
+
+    @classmethod
+    def _retrieve_service_plan_guid(cls, service_label, service_plan_name, client=None):
+        response = service_catalog.api_get_service_plans(service_type_label=service_label, client=client)
+        service_plan_data = next((item for item in response if item["entity"]["name"] == service_plan_name), None)
+        if service_plan_data is None:
+            raise ValueError("No such plan {} for service {}".format(service_plan_name, service_label))
+        return service_plan_data["metadata"]["guid"]
 
     @classmethod
     def api_get_list(cls, space_guid=None, service_type_guid=None, client=None):

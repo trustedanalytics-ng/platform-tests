@@ -35,9 +35,10 @@ class DataScience(object):
         self.password = None
         self.instance_url = None
         self.session = requests.Session()
-        self.instance = ServiceInstance.api_create(org_guid=org_guid, space_guid=space_guid, name=instance_name,
-                                                   service_label=service_label,
-                                                   service_plan_name=service_plan_name, params=params)
+
+        self.instance = ServiceInstance.api_create_with_plan_name(org_guid=org_guid, space_guid=space_guid,
+                                                                  name=instance_name, service_label=service_label,
+                                                                  service_plan_name=service_plan_name, params=params)
 
     def request(self, method, instance_url, endpoint, username, body=None, data=None, params=None, files=None,
                 message_on_error=""):

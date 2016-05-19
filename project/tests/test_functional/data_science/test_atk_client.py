@@ -19,7 +19,7 @@ import os
 import pytest
 
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.constants import TapComponent as TAP, ServiceLabels, Urls
+from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, Urls
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, long, priority
 from modules.service_tools.atk import ATKtools
@@ -37,7 +37,6 @@ pytestmark = [components.service_catalog, components.application_broker, compone
 @pytest.mark.usefixtures("test_org", "test_space", "add_admin_to_test_org")
 class Atk(TapTestCase):
 
-    ATK_PLAN_NAME = "Simple"
     atk_virtualenv = None
     atk_url = None
     data_set_hdfs_path = None
@@ -68,14 +67,16 @@ class Atk(TapTestCase):
         atk_service = next((s for s in marketplace if s.label == ServiceLabels.ATK), None)
         self.assertIsNotNone(atk_service, msg="No atk service found in marketplace.")
         self.step("Create atk service instance")
+
         atk_instance_name = generate_test_object_name()
-        atk_instance = ServiceInstance.api_create(
+        atk_instance = ServiceInstance.api_create_with_plan_name(
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
             service_label=ServiceLabels.ATK,
             name=atk_instance_name,
-            service_plan_name=self.ATK_PLAN_NAME
+            service_plan_name=ServicePlan.SIMPLE_ATK
         )
+
         validator = ApplicationStackValidator(self, atk_instance)
         validator.validate()
         self.__class__.atk_url = validator.application.urls[0]

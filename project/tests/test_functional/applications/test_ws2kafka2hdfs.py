@@ -56,15 +56,20 @@ class Ws2kafka2hdfs(TapTestCase):
     @pytest.fixture(scope="class")
     def setup_kafka_zookeeper_hdfs_instances(self, request, test_org, test_space):
         self.step("Create instances for kafka, zookeeper, hdfs")
-        kafka = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                           service_label=ServiceLabels.KAFKA, name=self.KAFKA_INSTANCE_NAME,
-                                           service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
-        zookeeper = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                               service_label=ServiceLabels.ZOOKEEPER, name=self.ZOOKEEPER_INSTANCE_NAME,
-                                               service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
-        hdfs = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                          service_label=ServiceLabels.HDFS, name=self.HDFS_INSTANCE_NAME,
-                                          service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+
+        kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                          service_label=ServiceLabels.KAFKA,
+                                                          name=self.KAFKA_INSTANCE_NAME,
+                                                          service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+        zookeeper = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                              service_label=ServiceLabels.ZOOKEEPER,
+                                                              name=self.ZOOKEEPER_INSTANCE_NAME,
+                                                              service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+        hdfs = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                         service_label=ServiceLabels.HDFS,
+                                                         name=self.HDFS_INSTANCE_NAME,
+                                                         service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+
         instances = [kafka, zookeeper, hdfs]
         request.addfinalizer(lambda: fixtures.tear_down_test_objects(instances))
 

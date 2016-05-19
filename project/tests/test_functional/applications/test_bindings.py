@@ -17,7 +17,7 @@
 import pytest
 
 from configuration.config import CONFIG
-from modules.constants import ApplicationPath, ServiceCatalogHttpStatus, ServiceLabels, TapComponent as TAP
+from modules.constants import ApplicationPath, ServiceCatalogHttpStatus, ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.markers import priority, components
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceBinding, ServiceInstance
@@ -46,8 +46,8 @@ class TestBindings:
     @pytest.fixture(scope="function")
     def test_instance(self, request, test_org, test_space):
         step("Create test instance")
-        instance = ServiceInstance.api_create(test_org.guid, test_space.guid, ServiceLabels.MONGO_DB,
-                                              service_plan_name="free")
+        instance = ServiceInstance.api_create_with_plan_name(test_org.guid, test_space.guid, ServiceLabels.MONGO_DB,
+                                                             service_plan_name=ServicePlan.FREE)
 
         def fin():
             fixtures.delete_or_not_found(instance.cleanup)
@@ -121,8 +121,8 @@ class TestBindingErrors:
     @pytest.fixture(scope="class")
     def test_instance(self, request, test_org, test_space):
         step("Create test instance")
-        instance = ServiceInstance.api_create(test_org.guid, test_space.guid, ServiceLabels.MONGO_DB,
-                                              service_plan_name="free")
+        instance = ServiceInstance.api_create_with_plan_name(test_org.guid, test_space.guid, ServiceLabels.MONGO_DB,
+                                                             service_plan_name=ServicePlan.FREE)
 
         def fin():
             fixtures.delete_or_not_found(instance.api_delete)

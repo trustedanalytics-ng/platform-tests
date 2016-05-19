@@ -56,18 +56,21 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
     @pytest.fixture(scope="class", autouse=True)
     def setup_kafka_zookeeper_hbase_instances(self, request, test_org, test_space):
         self.step("Create instances of kafka, zookeeper, hbase")
-        kafka = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                           service_label=ServiceLabels.KAFKA, name="kafka-inst",
-                                           service_plan_name=self.SHARED_PLAN_NAME)
-        zookeeper = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                               service_label=ServiceLabels.ZOOKEEPER, name="zookeeper-inst",
-                                               service_plan_name=self.SHARED_PLAN_NAME)
-        hbase = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                           service_label=ServiceLabels.HBASE, name="hbase1",
-                                           service_plan_name=self.BARE_PLAN_NAME)
-        kerberos = ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
-                                              service_label=ServiceLabels.KERBEROS, name="kerberos-instance",
-                                              service_plan_name=self.SHARED_PLAN_NAME)
+
+        kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                          service_label=ServiceLabels.KAFKA, name="kafka-inst",
+                                                          service_plan_name=self.SHARED_PLAN_NAME)
+        zookeeper = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                              service_label=ServiceLabels.ZOOKEEPER,
+                                                              name="zookeeper-inst",
+                                                              service_plan_name=self.SHARED_PLAN_NAME)
+        hbase = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                          service_label=ServiceLabels.HBASE, name="hbase1",
+                                                          service_plan_name=self.BARE_PLAN_NAME)
+        kerberos = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                             service_label=ServiceLabels.KERBEROS,
+                                                             name="kerberos-instance",
+                                                             service_plan_name=self.SHARED_PLAN_NAME)
         test_instances = [kafka, zookeeper, hbase, kerberos]
         request.addfinalizer(lambda: fixtures.tear_down_test_objects(test_instances))
 
