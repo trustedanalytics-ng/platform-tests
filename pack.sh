@@ -27,7 +27,7 @@ if [ -d $VENDOR ]; then
     rm -rf $VENDOR
 fi
 mkdir $VENDOR
-pip download -d $VENDOR -r $REQUIREMENTS_PATH
+pip3 install --download $VENDOR -r $REQUIREMENTS_PATH
 
 # remove secrets
 rm -rf $SECRETS_PATH
