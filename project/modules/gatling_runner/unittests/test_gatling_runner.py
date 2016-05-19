@@ -16,7 +16,7 @@
 
 import mock
 
-from modules.gatling_runner.unitests.package_test_case import PackageTestCase
+from modules.gatling_runner.unittests.package_test_case import PackageTestCase
 from modules.gatling_runner.gatling_runner import GatlingRunner, \
     GatlingRunnerExceededNumberOfTrialsWithoutLogChangeException
 from modules.gatling_runner.simulation.simulation_result import SimulationResult

@@ -14,29 +14,27 @@
 # limitations under the License.
 #
 
-from .. import cloud_foundry as cf
-from ...http_client.http_client_configuration import HttpClientConfiguration
 from ...http_client.http_client_type import HttpClientType
 from ...http_client.config import Config
 from ...constants import TapComponent
-from .base_provider import BaseConfigurationProvider
+from .base_broker import BaseBrokerConfigurationProvider
 
 
-class ApplicationBrokerConfigurationProvider(BaseConfigurationProvider):
+# noinspection PyAbstractClass
+class ApplicationBrokerConfigurationProvider(BaseBrokerConfigurationProvider):
     """Provide configuration for application broker http client."""
 
     @classmethod
-    def provide_configuration(cls):
-        """Retrieve configuration from application-broker environment variables."""
-        response = cf.cf_api_get_apps()
-        app_guid = None
-        for app in response:
-            if app["entity"]["name"] == TapComponent.application_broker.value:
-                app_guid = app["metadata"]["guid"]
-        app_broker_env = cf.cf_api_get_app_env(app_guid)
-        cls._configuration = HttpClientConfiguration(
-            HttpClientType.BROKER,
-            Config.service_application_broker_url(),
-            app_broker_env["environment_json"]["AUTH_USER"],
-            app_broker_env["environment_json"]["AUTH_PASS"]
-        )
+    def tap_component(cls) -> TapComponent:
+        """Provide tap component."""
+        return TapComponent.application_broker
+
+    @classmethod
+    def http_client_type(cls) -> HttpClientType:
+        """Provide http client type."""
+        return HttpClientType.APPLICATION_BROKER
+
+    @classmethod
+    def http_client_url(cls) -> str:
+        """Provide http client url."""
+        return Config.service_application_broker_url()

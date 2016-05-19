@@ -16,7 +16,7 @@
 
 import json
 
-from modules.gatling_runner.unitests.package_test_case import PackageTestCase
+from modules.gatling_runner.unittests.package_test_case import PackageTestCase
 from modules.gatling_runner.simulation.simulation_result_execution import SimulationResultExecution
 from modules.gatling_runner.simulation.simulation_result_group import SimulationResultGroup
 from modules.gatling_runner.simulation.simulation_result_decoder import SimulationResultDecoder, \

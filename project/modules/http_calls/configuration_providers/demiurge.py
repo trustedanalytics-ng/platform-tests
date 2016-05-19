@@ -14,30 +14,26 @@
 # limitations under the License.
 #
 
-from .base_provider import BaseConfigurationProvider
-from modules.http_calls import cloud_foundry as cf
-from modules.http_client.http_client_configuration import HttpClientConfiguration
-from modules.http_client.http_client_type import HttpClientType
-from modules.http_client.config import Config
-from modules.constants import TapComponent
+from .base_broker import BaseBrokerConfigurationProvider
+from ...constants import TapComponent
+from ...http_client.http_client_type import HttpClientType
+from ...http_client.config import Config
 
 
-
-class DemiurgeConfigurationProvider(BaseConfigurationProvider):
+class DemiurgeConfigurationProvider(BaseBrokerConfigurationProvider):
     """ Provide configuration for demiurge http client. """
 
     @classmethod
-    def provide_configuration(cls):
-        """Retrieve configuration form demiurge environment variables."""
-        response = cf.cf_api_get_apps()
-        app_guid = None
-        for app in response:
-            if app["entity"]["name"] == TapComponent.demiurge.value:
-                app_guid = app["metadata"]["guid"]
-        demiurge_env = cf.cf_api_get_app_env(app_guid)
-        cls._configuration = HttpClientConfiguration(
-            HttpClientType.BROKER,
-            Config.service_demiurge_url(),
-            demiurge_env["environment_json"]["USERNAME"],
-            demiurge_env["environment_json"]["PASSWORD"]
-        )
+    def tap_component(cls) -> TapComponent:
+        """Provide tap component."""
+        return TapComponent.demiurge
+
+    @classmethod
+    def http_client_type(cls) -> HttpClientType:
+        """Provide http client type."""
+        return HttpClientType.BROKER
+
+    @classmethod
+    def http_client_url(cls) -> str:
+        """Provide http client url."""
+        return Config.service_demiurge_url()

@@ -25,7 +25,8 @@ class ClientAuthTokenBasic(ClientAuthTokenBase):
     def request_headers(self) -> dict:
         """Token request headers."""
         return {
-            "Accept": "application/json"
+            "Authorization": "Basic Y2Y6",
+            "Accept": "application/json",
         }
 
     @property
@@ -34,7 +35,7 @@ class ClientAuthTokenBasic(ClientAuthTokenBase):
         return {
             "username": self.session.username,
             "password": self.session.password,
-            "grant_type": "password"
+            "grant_type": "password",
         }
 
     @property

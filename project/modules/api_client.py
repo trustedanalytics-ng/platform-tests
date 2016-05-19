@@ -264,28 +264,3 @@ class AppClient(PlatformApiClient):
         else:
             self._application_name = next((k for k, v in self.APP_ENDPOINT_MAP.items() if v(endpoint)), "")
         return super().request(method, endpoint, headers, files, params, data, body, log_msg)
-
-
-class CfApiClient(AppClient):
-    """HTTP client for CF api calls. Uses token-based authentication."""
-
-    _CF_API_CLIENT = None
-
-    def __init__(self, platform_username, platform_password):
-        super().__init__(platform_username, platform_password)
-
-    @property
-    def url(self):
-        return "https://api.{}/v2/".format(config.CONFIG["domain"])
-
-    @classmethod
-    def get_client(cls):
-        if cls._CF_API_CLIENT is None:
-            admin_username = config.CONFIG["admin_username"]
-            admin_password = config.CONFIG["admin_password"]
-            cls._CF_API_CLIENT = cls(admin_username, admin_password)
-        return cls._CF_API_CLIENT
-
-    def get_oauth_token(self):
-        self._get_token()
-        return self._token

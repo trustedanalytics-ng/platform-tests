@@ -28,7 +28,7 @@ class BaseConfigurationProvider(object, metaclass=ABCMeta):
     def get(cls) -> HttpClientConfiguration:
         """Return http client configuration."""
         if cls._configuration is None:
-            cls.provide_configuration()
+            cls._configuration = cls.provide_configuration()
         return cls._configuration
 
     @abstractclassmethod

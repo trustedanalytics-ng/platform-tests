@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from modules.gatling_runner.unitests.package_test_case import PackageTestCase
+from modules.gatling_runner.unittests.package_test_case import PackageTestCase
 from modules.gatling_runner.simulation.simulation_name import SimulationName
 from modules.gatling_runner.gatling_runner_parameters import GatlingRunnerParameters, \
     GatlingRunnerParametersInvalidPropertyTypeException, GatlingRunnerParametersEmptyPropertyException

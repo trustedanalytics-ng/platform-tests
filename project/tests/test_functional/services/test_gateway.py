@@ -18,13 +18,13 @@ import pytest
 import websocket
 
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.api_client import CfApiClient
 from modules.constants import ServiceLabels, TapComponent as TAP
+from modules.http_calls.configuration_providers.cloud_foundry import CloudFoundryConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, priority
 from modules.tap_object_model import ServiceInstance, User
 from tests.fixtures.test_data import TestData
-
 
 logged_components = (TAP.gateway, TAP.application_broker, TAP.service_catalog)
 pytestmark = [components.gateway, components.application_broker, components.service_catalog]
@@ -63,7 +63,8 @@ class Gateway(TapTestCase):
 
     def test_1_send_message_to_gateway_app_instance(self):
         self.step("Retrieve oauth token")
-        token = CfApiClient.get_client().get_oauth_token()
+        http_client = HttpClientFactory.get(CloudFoundryConfigurationProvider.get())
+        token = http_client._auth._token
         self.step("Check communication with gateway app")
         header = ["Authorization: Bearer{}".format(token)]
         try:
