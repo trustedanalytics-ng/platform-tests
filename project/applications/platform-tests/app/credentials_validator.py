@@ -14,21 +14,77 @@
 # limitations under the License.
 #
 
+import logging
+import sys
+
+import bs4
 import requests
 
 
+logging.basicConfig(stream=sys.stdout)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
 class CredentialsValidator(object):
+    csrf_data_key = "X-Uaa-Csrf"
 
     def __init__(self, tap_domain):
         self._login_url = "http://login.{}/login.do".format(tap_domain)
 
+    def _get_csrf_token(self, response):
+        soup = bs4.BeautifulSoup(response.text, "html.parser")
+        input = soup.find("input", attrs={"name": self.csrf_data_key})
+        token = None
+        if input is not None:
+            token = input["value"]
+        return token
+
+    def _get_csrf_data(self, session):
+        request = requests.Request(method="GET", url=self._login_url)
+        request = session.prepare_request(request)
+        self._log_request(request)
+        response = session.send(request)
+        self._log_response(response)
+        token = self._get_csrf_token(response)
+        data = {}
+        if token is not None:
+            data[self.csrf_data_key] = token
+        return data
+
+    @staticmethod
+    def _log_request(prepared_request):
+        msg = [
+            "--------------- Request ---------------",
+            "{} {}".format(prepared_request.method, prepared_request.url)
+        ]
+        if prepared_request.headers is not None:
+            msg.append("headers: {}".format(prepared_request.headers))
+        if prepared_request.body is not None:
+            msg.append("body: ".format(prepared_request.body))
+        logger.info("\n".join(msg))
+
+    @staticmethod
+    def _log_response(response):
+        msg = [
+            "--------------- Response ---------------",
+            "Status code: {}".format(response.status_code),
+            "Headers: {}".format(response.headers),
+            "Text: {}".format(response.text)
+        ]
+        logger.info("\n".join(msg))
+
     def validate(self, username, password):
-        response = requests.post(
-            url=self._login_url,
-            data={"username": username, "password": password},
-            headers={"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
-            verify=False
-        )
-        if not response.ok or "forgotPasswordLink" in response.text:
+        session = requests.session()
+        session.verify = False
+        data = {"username": username, "password": password}
+        data.update(self._get_csrf_data(session))
+        headers = {"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"}
+        request = requests.Request(method="POST", url=self._login_url, headers=headers, data=data)
+        request = session.prepare_request(request)
+        self._log_request(request)
+        response = session.send(request)
+        self._log_response(response)
+        if not response.ok or "forgot_password" in response.text:
             return False
         return True
