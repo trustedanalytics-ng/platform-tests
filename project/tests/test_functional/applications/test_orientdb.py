@@ -23,7 +23,7 @@ from modules.tap_logger import step
 from modules.markers import priority
 from modules.service_tools.orientdb_api import OrientDbApi
 from modules.tap_object_model import Application, ServiceInstance, ServiceType
-from modules.test_names import get_test_name
+from modules.test_names import generate_test_object_name
 from modules.constants import ServiceLabels, HttpStatus
 from tests.fixtures import assertions
 
@@ -40,7 +40,7 @@ class TestOrientDB(object):
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         orient_db = next((service for service in marketplace if service.label == ServiceLabels.ORIENT_DB), None)
         assert orient_db is not None, "{} service is not available in Marketplace".format(ServiceLabels.ORIENT_DB)
-        instance_name = get_test_name()
+        instance_name = generate_test_object_name()
         return ServiceInstance.api_create(
             org_guid=test_org.guid,
             space_guid=test_space.guid,
