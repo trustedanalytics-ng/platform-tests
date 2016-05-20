@@ -76,6 +76,20 @@ def k8s_broker_create_service_offering(org_guid, space_guid, service_name=None):
     )
 
 
+def k8s_broker_delete_service(service_name=None):
+    """DELETE /v$/dynamicservice"""
+    body = {}
+    if service_name is not None:
+        body["dynamicService"] = {"serviceName": service_name}
+    response = HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
+        method=HttpMethod.DELETE,
+        path="dynamicservice",
+        body=body,
+        msg="K8S BROKER: delete service offering"
+    )
+    return response
+
+
 def k8s_broker_get_service_status(org_guid, service_id):
     """GET /v$/:org_id/service/:instance_id/status"""
     return HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(

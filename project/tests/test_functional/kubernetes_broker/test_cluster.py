@@ -27,12 +27,11 @@ from modules import test_names
 
 
 logged_components = (TAP.demiurge, TAP.kubernetes_broker)
-pytestmark = [components.demiurge, components.kubernetes_broker]
+pytestmark = [components.demiurge, components.kubernetes_broker, priority.high]
 
 
 @incremental
-@priority.high
-# @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
+@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestCluster:
     CLUSTERED_TAG = "clustered"
 

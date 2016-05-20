@@ -25,14 +25,17 @@ from .base import BaseConfigurationProvider
 
 class BaseBrokerConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMeta):
     """Base class that all broker configuration provider implementations derive from."""
+    username_env_key = "AUTH_USER"
+    password_env_key = "AUTH_PASS"
+    environment_json = "environment_json"
 
     @classmethod
     def get(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
         if username is None:
             env = cls._get_environment()
-            username = env["environment_json"]["AUTH_USER"]
-            password = env["environment_json"]["AUTH_PASS"]
+            username = env[cls.environment_json][cls.username_env_key]
+            password = env[cls.environment_json][cls.password_env_key   ]
         return HttpClientConfiguration(
             client_type=cls.http_client_type(),
             url=cls.http_client_url(),

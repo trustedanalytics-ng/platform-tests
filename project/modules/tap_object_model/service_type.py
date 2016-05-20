@@ -132,8 +132,8 @@ class ServiceType(object):
     def k8s_broker_create_dynamic_service(cls, org_guid, space_guid, service_name=None):
         if service_name is None:
             service_name = generate_test_object_name(short=True)
-        kubernetes_broker.k8s_broker_create_service_offering(org_guid=org_guid, space_guid=space_guid,
-                                                             service_name=service_name)
+        response = kubernetes_broker.k8s_broker_create_service_offering(org_guid=org_guid, space_guid=space_guid,
+                                                                        service_name=service_name)
         return service_name
 
     @classmethod
@@ -148,6 +148,10 @@ class ServiceType(object):
                           space_guid=None, service_plans=plans)
             services.append(service)
         return services
+
+    @classmethod
+    def k8s_broker_delete_dynamic_service(cls, service_name):
+        kubernetes_broker.k8s_broker_delete_service(service_name=service_name)
 
     def cf_api_enable_service_access(self, plan=None):
         if plan is None:

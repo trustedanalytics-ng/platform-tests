@@ -24,10 +24,9 @@ from modules.tap_logger import step
 
 
 logged_components = (TAP.kubernetes_broker,)
-pytestmark = [components.kubernetes_broker]
+pytestmark = [components.kubernetes_broker, priority.low]
 
 
-@priority.medium
 @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestKubernetesCatalog:
     KUBERNETES_TAG = "k8s"

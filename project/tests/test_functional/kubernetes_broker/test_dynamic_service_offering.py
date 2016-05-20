@@ -15,39 +15,26 @@
 #
 
 import pytest
-from retry import retry
 
 from configuration import config
-from modules.exceptions import UnexpectedResponseError
+from modules.constants import TapComponent as TAP
 from modules.markers import incremental, priority, components
 from modules.tap_object_model import ServiceInstance, ServiceType
 from modules.tap_logger import step
 from modules import test_names
 
-
+logged_components = (TAP.kubernetes_broker,)
 pytestmark = [priority.medium, components.kubernetes_broker]
 
 
 @incremental
-@pytest.mark.skip("Skipped until dynamic service deletion is implemented")
 @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
-class TestKubernetes:
+class TestKubernetesDynamicService:
     service_name = test_names.generate_test_object_name(short=True)
     test_service = None
     test_instance = None
 
-    @pytest.fixture(scope="class", autouse=True)
-    def cleanup(self, request):
-        def fin():
-            if self.test_service is not None:
-                self.test_service.cf_api_disable_service_access()
-        request.addfinalizer(fin)
-
-    @retry(UnexpectedResponseError, tries=10, delay=3)
-    def _delete_with_retry(self, instance):
-        instance.api_delete()
-
-    def test_create_dynamic_service(self, core_org, core_space):
+    def test_1_create_dynamic_service(self, core_org, core_space):
         step("Create new service offering in kubernetes broker")
         service_name = ServiceType.k8s_broker_create_dynamic_service(core_org.guid, core_space.guid,
                                                                      service_name=self.service_name)
@@ -56,7 +43,7 @@ class TestKubernetes:
         kubernetes_service = next((s for s in catalog if s.label == service_name), None)
         assert kubernetes_service is not None
 
-    def test_enable_service_access(self, core_space):
+    def test_2_enable_service_access(self, core_space):
         step("Check service is available in cloud foundry")
         cf_services = ServiceType.cf_api_get_list(name=self.service_name, get_plans=True)
         assert len(cf_services) == 1
@@ -70,7 +57,7 @@ class TestKubernetes:
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
         assert self.test_service in marketplace
 
-    def test_create_instance_of_kubernetes_service(self, core_org, core_space):
+    def test_3_create_instance_of_dynamic_kubernetes_service(self, core_org, core_space):
         step("Create instance of the new service and check it's on the list")
         self.__class__.test_instance = ServiceInstance.api_create(
             org_guid=core_org.guid,
@@ -79,19 +66,26 @@ class TestKubernetes:
             service_plan_guid=self.test_service.service_plans[0]["guid"]
         )
         instances = ServiceInstance.api_get_list(space_guid=core_space.guid)
+        self.test_instance.ensure_created()
         assert self.test_instance in instances
 
-    def test_delete_instance_of_kubernetes_service(self, core_space):
+    def test_4_delete_instance_of_kubernetes_service(self, core_space):
         step("Delete instance and check it's no longer on the list")
-        self._delete_with_retry(self.test_instance)
+        self.test_instance.api_delete()
         instances = ServiceInstance.api_get_list(space_guid=core_space.guid)
         assert self.test_instance not in instances
 
-    def test_disable_service_access(self, core_space):
+    def test_5_disable_service_access(self, core_space):
         step("Disable service access")
         self.test_service.cf_api_disable_service_access()
         step("Check the service is not visible in marketplace")
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
         assert self.test_service not in marketplace
 
-
+    def test_6_delete_dynamic_service(self):
+        step("Delete created dynamic service")
+        ServiceType.k8s_broker_delete_dynamic_service(service_name=self.service_name)
+        step("Check that deleted service is not in kubernetes-broker catalog")
+        catalog = ServiceType.k8s_broker_get_catalog()
+        kubernetes_service = next((s for s in catalog if s.label == self.service_name), None)
+        assert kubernetes_service is None
