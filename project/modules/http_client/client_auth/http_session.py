@@ -79,6 +79,5 @@ class HttpSession(object):
     def _create_session():
         """Create http session."""
         session = Session()
-        session.proxies = config.get_proxy()
         session.verify = config.CONFIG["ssl_validation"]
         return session

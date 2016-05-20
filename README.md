@@ -111,8 +111,6 @@ To run api tests:
 
 `--not-tagged` - run only tests which are not tagged with a particular tag `./run_tests.sh -e <domain> --not-tagged long`
 
-`--proxy` - use proxy address with port, e.g. `--proxy proxy-mu.intel.com:911`. If you omit this parameter, requests will use http/https proxy retrieved from system settings.
-
 `-l` - specify logging level. There are 3 logging levels: DEBUG (default), INFO `-l INFO`, WARNING `-l WARNING`.
 
 `--disable-remote-logger` - Run tests without retrieving logs from remote logger.
@@ -168,8 +166,6 @@ cd /platform-test/project
 **Useful options:**
 * Do not download appstack.yml from GitHub, but use local file instead:
 ` ./run_tests.sh ... [--local-appstack <path to local appstack if it is used>]`
-* Use proxy
-`./run_tests.sh ... [--proxy <proxy address with port]`
 * Get appstack from version other than master
 `./run_tests.sh ... [-v <e.g. TAP-2016-JAN-2-1>]`
 

@@ -67,7 +67,6 @@ class Arcadia(object):
         self.password = password
         self.url = "http://arcadia.{}/".format(config.CONFIG["domain"])
         self.http_session = requests.Session()
-        self.http_session.proxies = config.get_proxy()
         self.csrf_token = None
         self.login()
         self.data_connection = next(ds for ds in self.get_data_connection_list() if ds.name == "arcadia")

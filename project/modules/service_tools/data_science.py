@@ -35,9 +35,6 @@ class DataScience(object):
         self.password = None
         self.instance_url = None
         self.session = requests.Session()
-        proxy = config.CONFIG["proxy"]
-        if proxy is not None:
-            self.session.proxies = {"https": proxy, "http": proxy}
         self.instance = ServiceInstance.api_create(org_guid=org_guid, space_guid=space_guid, name=instance_name,
                                                    service_label=service_label,
                                                    service_plan_name=service_plan_name, params=params)

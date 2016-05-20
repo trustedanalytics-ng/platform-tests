@@ -33,9 +33,6 @@ class HbaseClient(object):
         self.app = app_hbase_reader
         self.tables = []
         self.session = requests.Session()
-        proxy = config.CONFIG["proxy"]
-        if proxy is not None:
-            self.session.proxies = {"https": proxy, "http": proxy}
 
     def get_namespace(self):
         reader_env = cf.cf_api_get_app_env(self.app.guid)

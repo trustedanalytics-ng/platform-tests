@@ -34,6 +34,7 @@ def log_deleted_objects(object_list, object_type_name):
                                                    "s" if len(object_list) != 1 else "",
                                                    "\n".join([str(x) for x in object_list])))
 
+
 def remove_hive_databases():
     with Hive() as hive:
         dbs = hive.exec_query("show databases;").split("\n")
@@ -50,7 +51,6 @@ def remove_hive_databases():
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Cleanup script")
     parser.add_argument("-e",
                         "--environment",

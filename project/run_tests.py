@@ -54,7 +54,6 @@ if __name__ == "__main__":
 
     config.update_test_config(client_type=args.client_type,
                               domain=args.environment,
-                              proxy=args.proxy,
                               logged_response_body_length=args.logged_response_body_length,
                               logging_level=args.logging_level,
                               platform_version=args.platform_version,

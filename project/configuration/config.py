@@ -58,11 +58,11 @@ CONFIG = {
     "kerberos": False
 }
 
-LOGGED_CONFIG_KEYS = ["domain", "admin_username", "client_type", "proxy", "ssl_validation", "platfom_version",
-                      "database_url", "ref_org_name", "ref_space_name", "jumpbox_address"]
+LOGGED_CONFIG_KEYS = ["domain", "admin_username", "client_type", "ssl_validation", "platfom_version", "database_url",
+                      "ref_org_name", "ref_space_name", "jumpbox_address"]
 
 
-def update_test_config(domain=None, proxy=None, client_type=None, logged_response_body_length=None,
+def update_test_config(domain=None, client_type=None, logged_response_body_length=None,
                        logging_level=None, repository=None, platform_version="master", database_url=None,
                        test_suite=None, local_appstack=None, admin_username=None, admin_password=None,
                        ref_org_name=None, ref_space_name=None, test_run_id=None, disable_remote_logger=None,
@@ -95,7 +95,6 @@ def update_test_config(domain=None, proxy=None, client_type=None, logged_respons
         CONFIG["kerberos_password"] = __SECRETS.get(domain, "kerberos_password",
                                                    fallback=defaults.get("kerberos_password", None))
         CONFIG["cf_api_version"] = __CONFIG.get(domain, "cf_api_version", fallback=defaults.get("cf_api_version", None))
-    CONFIG["proxy"] = proxy
     CONFIG["test_suite"] = test_suite
     if logged_response_body_length is not None:
         tap_logger.LOGGED_RESPONSE_BODY_LENGTH = logged_response_body_length
@@ -121,7 +120,6 @@ def update_test_config(domain=None, proxy=None, client_type=None, logged_respons
     CONFIG["jumpbox_address"] = jumpbox_address
 
 
-
 def setup_admin_login(domain, defaults, admin_username=None, admin_password=None):
 
     admin_username = admin_username or os.environ.get("ADMIN_USERNAME") or \
@@ -134,14 +132,12 @@ def setup_admin_login(domain, defaults, admin_username=None, admin_password=None
 
 # update settings using default values
 update_test_config(domain="daily.gotapaas.com",
-                   proxy="proxy-mu.intel.com:911",
                    client_type="console",
                    logged_response_body_length=1024,
                    logging_level="DEBUG",
                    repository="intel-data")
 # update settings using environment variables (when tests are run with PyCharm runner)
 update_test_config(domain=os.environ.get("TEST_ENVIRONMENT"),
-                   proxy=os.environ.get("TEST_PROXY"),
                    client_type=os.environ.get("TEST_CLIENT_TYPE"),
                    logged_response_body_length=os.environ.get("LOGGED_RESPONSE_BODY_LENGTH"),
                    platform_version=os.environ.get("PLATFORM_VERSION", "master"),
@@ -186,9 +182,6 @@ def parse_arguments():
                         default=[],
                         action="append",
                         help="Limit tests to those which are not included in specified group")
-    parser.add_argument("--proxy",
-                        default=None,
-                        help="set proxy for api client")
     parser.add_argument("--client-type",
                         default="console",
                         choices=["console", "app"],
@@ -238,11 +231,3 @@ def parse_arguments():
                         action='store_true',
                         help="Address of the jumpbox machine (jump.<domain> of empty)")
     return parser.parse_args()
-
-
-def get_proxy():
-    if CONFIG["proxy"] is not None:
-        return {"https": CONFIG["proxy"], "http": CONFIG["proxy"]}
-    env_http_proxy = os.environ.get("http_proxy") or os.environ.get("HTTP_PROXY")
-    env_https_proxy = os.environ.get("https_proxy") or os.environ.get("HTTPS_PROXY")
-    return {"https": env_https_proxy or env_http_proxy, "http": env_http_proxy}

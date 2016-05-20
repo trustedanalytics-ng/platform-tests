@@ -100,7 +100,6 @@ class AppSources(object):
 def github_get_file_content(repository, file_path, owner, ref=None, github_auth=None):
     url = "https://api.github.com/repos/{}/{}/contents/{}".format(owner, repository, file_path)
     session = requests.session()
-    session.proxies = config.get_proxy()
     request = session.prepare_request(requests.Request(method="GET", url=url, params={"ref": ref}, auth=github_auth))
     log_http_request(request, "")
     response = session.send(request)
