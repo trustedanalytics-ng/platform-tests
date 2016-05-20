@@ -116,8 +116,8 @@ class RunnerConfig(_BaseConfig):
     CORE_SPACE_NAME = "CORE_SPACE_NAME"
     LOCAL_INTERPRETER = "LOCAL_INTERPRETER"
     _default_config = {
-        "core_org_name": "seedorg",
-        "core_space_name": "seedspace",
+        "core_org_name": "trustedanalytics",
+        "core_space_name": "platform",
         "python_interpreter": "python3",
         "run_tests": "run_tests.py",
         "cwd": "project",

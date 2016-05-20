@@ -211,10 +211,10 @@ def parse_arguments():
                         default=None,
                         help="Admin user password")
     parser.add_argument("--reference-org",
-                        default="seedorg",
+                        default="trustedanalytics",
                         help="pass reference org")
     parser.add_argument("--reference-space",
-                        default="seedspace",
+                        default="platform",
                         help="pass reference space")
     parser.add_argument("--test-run-id",
                         help="used by platform-tests TAP application")

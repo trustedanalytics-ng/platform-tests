@@ -16,12 +16,12 @@
 #
 
 # usage:
-# add-test-admin <environment, e.g. daily.gotapaas.com> <cf admin pass> <org=seedorg> <space=seedspace> <password>
+# add-test-admin <environment, e.g. daily.gotapaas.com> <cf admin pass> <org=trustedanalytics> <space=platform> <password>
 
 DOMAIN=$1
 CF_ADMIN_PASS=$2
-ORG_NAME=${3:-seedorg}
-SPACE_NAME=${4:-seedspace}
+ORG_NAME=${3:-trustedanalytics}
+SPACE_NAME=${4:-platform}
 USERNAME=trusted.analytics.tester@gmail.com
 PASSWORD=$5
 

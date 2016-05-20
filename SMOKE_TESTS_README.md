@@ -29,7 +29,7 @@ cd project
 ./run_tests.sh -e gotapaas.eu -s test_smoke --admin-username admin123 --admin-password secretpass --local-appstack appstack.yml > smoketestslog
 ```
 
-If there is a different ref_org than seedorg, you need to run tests with extra two parameters:
+If there is a different ref_org than trustedanalytics, you need to run tests with extra two parameters:
 ```
 --ref_org_name <org_name>
 --ref_space_name <space_name>

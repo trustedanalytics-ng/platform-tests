@@ -54,7 +54,7 @@ If the file looks normal, secrets have been decrypted.
 ```
 This will create [pyvenv](https://docs.python.org/3/using/scripts.html) with all Python packages required in `~/virtualenvs/pyvenv_api_tests`.
 
-**7. Add config** -- only if environment has non-default configuration (e.g. no seedorg)
+**7. Add config** -- only if environment has non-default configuration (e.g. no trustedanalytics)
 
 If you plan to run tests on a new environment (i.e. not daily, sprint, demo, etc.), supply non-default config values in `platform-tests/project/configuration/config.py`, in `__CONFIG` string.
 
@@ -80,8 +80,8 @@ create_test_admin.sh <domain> <cf admin password> <reference org name> <referenc
 ```
 - domain, e.g. gotapaas.eu
 - cf admin password -- cf password of user admin
-- reference org name (defaults to seedorg)
-- reference space name (defaults to seedspace)
+- reference org name (defaults to trustedanalytics)
+- reference space name (defaults to platform)
 - password (see password for trusted.analytics.tester@gmail.com in DEFAULT section in `platform-tests/project/configuration/secrets/.secret.ini`)
 
 

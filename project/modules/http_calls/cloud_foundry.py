@@ -339,7 +339,7 @@ def cf_api_delete_route(route_guid):
 
 
 def cf_get_ref_org_and_space_guids():
-    """Return tuple or org_guid and space_guid for reference org and space (e.g. seedorg, seedspace)."""
+    """Return tuple or org_guid and space_guid for reference org and space (e.g. trustedanalytics, platform)."""
     if CONFIG.get("ref_org_guid") is None or CONFIG.get("ref_space_guid") is None:
         org_name = CONFIG["ref_org_name"]
         orgs = cf_api_get_orgs()

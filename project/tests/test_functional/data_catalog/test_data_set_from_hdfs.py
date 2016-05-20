@@ -68,11 +68,11 @@ class DataSetFromHdfs(TapTestCase):
     @pytest.mark.usefixtures("atk_virtualenv", "create_data_set")
     @pytest.mark.skip("We don't know how this should work")
     def test_create_transfer_from_atk_model_file(self):
-        self.step("Get atk app from seedspace")
+        self.step("Get atk app from core space")
         atk_app = next((app for app in Application.cf_api_get_list_by_space(self.ref_space.guid) if app.name == "atk"),
                        None)
         if atk_app is None:
-            raise AssertionError("Atk app not found in seedspace")
+            raise AssertionError("Atk app not found in core space")
 
         self.step("Install atk client package in virtualenv")
         self.atk_virtualenv.create()
