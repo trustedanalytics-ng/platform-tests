@@ -56,35 +56,14 @@ class DeleteOrganizationUser(TapTestCase):
         self._assert_user_not_in_org(user, self.test_org.guid)
 
     @priority.low
-    def test_admin_deletes_one_of_org_managers_cannot_delete_second(self):
-        self.step("Add two managers to the organization")
+    def test_admin_can_delete_last_org_manager(self):
+        self.step("Add manager to the organization")
         roles = User.ORG_ROLES["manager"]
         user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid, roles=roles)
-        deleted_user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid, roles=roles)
-        self.step("Remove one of the managers from the organization")
-        deleted_user.api_delete_from_organization(org_guid=self.test_org.guid)
-        self._assert_user_not_in_org(deleted_user, self.test_org.guid)
-        self.step("Check that removing the last org manager returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            user.api_delete_from_organization, org_guid=self.test_org.guid)
         self.assert_user_in_org_and_roles(user, self.test_org.guid, roles)
-
-    @priority.low
-    def test_admin_updates_role_of_one_org_manager_cannot_delete_second(self):
-        self.step("Add two users to the organization")
-        manager_roles = User.ORG_ROLES["manager"]
-        non_manager_roles = User.ORG_ROLES["auditor"]
-        updated_user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                                 roles=manager_roles)
-        manager = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                            roles=manager_roles)
-        self.step("Update roles of one of the managers to non-manager")
-        updated_user.api_update_org_roles(org_guid=self.test_org.guid, new_roles=non_manager_roles)
-        self.assert_user_in_org_and_roles(updated_user, self.test_org.guid, non_manager_roles)
-        self.step("Check that removing the last manger returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            manager.api_delete_from_organization, org_guid=self.test_org.guid)
-        self.assert_user_in_org_and_roles(manager, self.test_org.guid, manager_roles)
+        self.step("Check that it's possible to remove last org manager")
+        user.api_delete_from_organization(org_guid=self.test_org.guid)
+        self._assert_user_not_in_org(user, self.test_org.guid)
 
     @priority.low
     def test_admin_cannot_delete_org_user_twice(self):

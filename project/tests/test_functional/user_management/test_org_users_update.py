@@ -40,7 +40,8 @@ class UpdateOrganizationUser(TapTestCase):
         cls.step("Create test organization")
         cls.test_org = Organization.api_create(class_context)
         cls.step("Create users for tests")
-        cls.manager = User.api_create_by_adding_to_organization(class_context, org_guid=cls.test_org.guid)
+        cls.manager = User.api_create_by_adding_to_organization(class_context, org_guid=cls.test_org.guid,
+                                                                roles=User.ORG_ROLES["manager"])
         cls.manager_client = cls.manager.login()
         cls.updated_user = User.api_create_by_adding_to_organization(class_context, org_guid=cls.test_org.guid, roles=[])
 
@@ -51,6 +52,7 @@ class UpdateOrganizationUser(TapTestCase):
     def reset_updated_user(self, request):
         def fin():
             self.updated_user.api_update_org_roles(org_guid=self.test_org.guid, new_roles=[])
+            self.manager.api_update_org_roles(org_guid=self.test_org.guid, new_roles=User.ORG_ROLES["manager"])
         request.addfinalizer(fin)
 
     @priority.high
@@ -62,20 +64,11 @@ class UpdateOrganizationUser(TapTestCase):
             self.assert_user_in_org_and_roles(self.updated_user, self.test_org.guid, updated_roles)
 
     @priority.low
-    @pytest.mark.usefixtures("reset_updated_user")
-    def test_update_one_manager_cannot_update_second(self):
-        self.step("Add manager role to a test user")
-        manager_roles = User.ORG_ROLES["manager"]
-        self.updated_user.api_update_org_roles(org_guid=self.test_org.guid, new_roles=manager_roles)
-        self.step("Remove manager role from the user")
+    def test_remove_org_manager_role_from_the_only_org_manager(self):
         non_manager_roles = User.ORG_ROLES["auditor"]
-        self.updated_user.api_update_org_roles(org_guid=self.test_org.guid, new_roles=non_manager_roles)
-        self.step("Check that it's possible to remove manager role from the last manager")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                            self.manager.api_update_org_roles, org_guid=self.test_org.guid,
-                                            new_roles=non_manager_roles)
-        self.assert_user_in_org_and_roles(self.updated_user, self.test_org.guid, non_manager_roles)
-        self.assert_user_in_org_and_roles(self.manager, self.test_org.guid, manager_roles)
+        self.step("Remove manager role from the manager")
+        self.manager.api_update_org_roles(org_guid=self.test_org.guid, new_roles=non_manager_roles)
+        self.assert_user_in_org_and_roles(self.manager, self.test_org.guid, non_manager_roles)
 
     @priority.low
     def test_cannot_update_user_with_invalid_guid(self):
