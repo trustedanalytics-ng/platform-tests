@@ -48,7 +48,8 @@ class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
             log_message="Token has been retrieved."
         )
         self._set_token()
-        return HTTPTokenAuth(self._token)
+        self._http_auth = HTTPTokenAuth(self._token)
+        return self._http_auth
 
     def _is_token_expired(self):
         """Check if token has been expired."""
