@@ -32,7 +32,7 @@ class ApplicationBrokerConfigurationProvider(BaseBrokerConfigurationProvider):
     @classmethod
     def http_client_type(cls) -> HttpClientType:
         """Provide http client type."""
-        return HttpClientType.APPLICATION_BROKER
+        return HttpClientType.BROKER
 
     @classmethod
     def http_client_url(cls) -> str:

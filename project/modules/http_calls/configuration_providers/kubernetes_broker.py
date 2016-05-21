@@ -32,7 +32,7 @@ class KubernetesBrokerConfigurationProvider(BaseBrokerConfigurationProvider):
     @classmethod
     def http_client_type(cls) -> HttpClientType:
         """Provide http client type."""
-        return HttpClientType.KUBERNETES_BROKER
+        return HttpClientType.BROKER
 
     @classmethod
     def http_client_url(cls) -> str:

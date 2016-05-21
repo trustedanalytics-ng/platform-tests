@@ -44,7 +44,7 @@ class TestHttpClientFactory(MockHttpSession):
         self._assertHttpClientInstance(HttpClientType.PLATFORM, ClientAuthTokenBasic)
 
     def test_get_should_return_client_for_application_broker(self):
-        self._assertHttpClientInstance(HttpClientType.APPLICATION_BROKER, ClientAuthHttpBasic)
+        self._assertHttpClientInstance(HttpClientType.BROKER, ClientAuthHttpBasic)
 
     def test_get_should_return_client_for_console(self):
         configuration = self._get_configuration(HttpClientType.CONSOLE)
