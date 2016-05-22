@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from configuration.config import CONFIG
+import config
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
 
@@ -23,14 +23,12 @@ class ClouderaConfigurationProvider:
     """Provide configuration for Cloudera http client."""
 
     @classmethod
-    def get(cls, url, username=None, password=None) -> HttpClientConfiguration:
+    def get(cls, url) -> HttpClientConfiguration:
         """Provide http client configuration."""
-        if username is None:
-            username = CONFIG["cloudera_username"]
-            password = CONFIG["cloudera_password"]
+        cdh_auth = config.cdh_manager_credentials()
         return HttpClientConfiguration(
             client_type=HttpClientType.CLOUDERA,
             url=url,
-            username=username,
-            password=password
+            username=cdh_auth[0],
+            password=cdh_auth[1]
         )

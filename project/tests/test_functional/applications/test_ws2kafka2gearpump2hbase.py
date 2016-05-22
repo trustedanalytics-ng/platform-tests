@@ -20,7 +20,7 @@ import unittest
 
 import pytest
 
-from configuration import config
+import config
 from modules.app_sources import AppSources
 from modules.constants import TapComponent as TAP, ServiceLabels, Urls, TapGitHub, ServicePlan
 from modules.file_utils import download_file
@@ -78,32 +78,29 @@ class TestWs2kafka2gearpump2hbase:
     @pytest.fixture(scope="class", autouse=True)
     def push_apps(cls, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances, class_context):
         step("Get ws2kafka app sources")
-        github_auth = config.CONFIG["github_auth"]
         ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER,
-                                                gh_auth=github_auth)
+                                                gh_auth=config.github_credentials())
         ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
 
         step("Get hbase reader app sources")
         hbase_reader_repo = AppSources.from_github(repo_name=TapGitHub.hbase_api_example, repo_owner=cls.REPO_OWNER,
-                                                   gh_auth=github_auth)
+                                                   gh_auth=config.github_credentials())
         hbase_reader_repo.compile_gradle()
 
         step("Push apps")
         cls.app_ws2kafka = Application.push(class_context, space_guid=test_space.guid,
                                             source_directory=ws2kafka_path,
-                                            name=generate_test_object_name(short=True),
-                                            env_proxy=config.CONFIG["pushed_app_proxy"])
+                                            name=generate_test_object_name(short=True))
         app_hbase_reader = Application.push(class_context, space_guid=test_space.guid,
                                             source_directory=hbase_reader_repo.path,
-                                            name=generate_test_object_name(short=True),
-                                            env_proxy=config.CONFIG["pushed_app_proxy"])
+                                            name=generate_test_object_name(short=True))
         cls.hbase_reader = HbaseClient(app_hbase_reader)
 
     def _send_messages(self, connection_string):
         step("Send messages to {}".format(connection_string))
         cert_requirement = None
         ws_protocol = WebsocketClient.WS
-        if config.CONFIG["ssl_validation"]:
+        if config.ssl_validation:
             cert_requirement = ssl.CERT_NONE
             ws_protocol = WebsocketClient.WSS
         url = "{}://{}".format(ws_protocol, connection_string)
@@ -147,7 +144,7 @@ class TestWs2kafka2gearpump2hbase:
         step("Submit application kafka2hbase to gearpump dashboard")
         kafka2hbase_app = self.gearpump.submit_application_jar(kafka2hbase_app_path, self.KAFKA2HBASE_APP_NAME)
         step("Check that submitted application is started")
-        assert kafka2hbase_app.is_started is True, "kafka2hbase app is not started"
+        assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 
     def test_step_5_send_from_ws2kafka(self):
         connection_string = "{}/{}".format(self.app_ws2kafka.urls[0], self.TOPIC_NAME)
@@ -157,4 +154,4 @@ class TestWs2kafka2gearpump2hbase:
     def test_step_6_get_hbase_table_rows(self):
         pipeline_rows = self.hbase_reader.get_first_rows_from_table(self.db_and_table_name)
         step("Check that messages from kafka were sent to hbase")
-        assert self.MESSAGES[0][::-1] in pipeline_rows and self.MESSAGES[1][::-1] in pipeline_rows is True,"No messages in hbase"
+        assert self.MESSAGES[0][::-1] in pipeline_rows and self.MESSAGES[1][::-1] in pipeline_rows,"No messages in hbase"

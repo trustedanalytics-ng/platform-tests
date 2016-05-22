@@ -16,7 +16,7 @@
 
 import trustedanalytics as ta
 
-from common import AtkTestException, parse_arguments, check_uaa_file
+from common import parse_arguments, check_uaa_file
 
 parameters = parse_arguments()
 

@@ -27,7 +27,6 @@ from ..exceptions import UnexpectedResponseError
 from ..tap_logger import get_logger
 from ..tap_object_model import user
 
-
 logger = get_logger(__name__)
 
 

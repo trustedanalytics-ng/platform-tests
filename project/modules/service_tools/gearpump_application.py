@@ -32,7 +32,7 @@ class GearpumpApplication(object):
         """Set application id and status."""
         response = self.client.request(
             method=HttpMethod.GET,
-            path="/api/v1.0/master/applist",
+            path="api/v1.0/master/applist",
             msg="Gearpump: get list of applications"
         )
         for application in response["appMasters"]:
@@ -44,7 +44,7 @@ class GearpumpApplication(object):
         """Kill application and refresh application details."""
         self.client.request(
             method=HttpMethod.DELETE,
-            path="/api/v1.0/appmaster/{}".format(self.app_id),
+            path="api/v1.0/appmaster/{}".format(self.app_id),
             msg="Gearpump: kill application {}".format(self.app_id)
         )
         self.fill_application_details()

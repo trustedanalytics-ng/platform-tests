@@ -20,7 +20,6 @@ import sys
 import bs4
 import requests
 
-
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

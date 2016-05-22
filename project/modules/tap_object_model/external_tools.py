@@ -19,9 +19,9 @@ from urllib.parse import urlparse
 
 import requests
 
-from configuration.config import CONFIG
-from ..exceptions import UnexpectedResponseError
-from ..http_calls.platform import platform_context
+import config
+from modules.exceptions import UnexpectedResponseError
+from modules.http_calls.platform import platform_context
 
 
 @functools.total_ordering
@@ -33,7 +33,7 @@ class ExternalTools(object):
         self.available = available
         self.category = category
         self._session = requests.session()
-        self._session.verify = CONFIG["ssl_validation"]
+        self._session.verify = config.ssl_validation
 
     def __eq__(self, other):
         return self.name == other.name and self.url == other.url and self.available == other.available

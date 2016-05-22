@@ -30,7 +30,7 @@ def api_tools_service_instances(service_label, space_guid, org_guid=None, client
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/tools/service_instances",
+        path="rest/tools/service_instances",
         params=params,
         msg="PLATFORM: get tools for service instance"
     )

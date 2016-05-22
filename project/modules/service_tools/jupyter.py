@@ -21,7 +21,7 @@ import uuid
 
 from retry import retry
 
-from configuration.config import CONFIG
+import config
 from ..constants import ServiceLabels, ServicePlan
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
@@ -40,7 +40,7 @@ def _generate_uuid():
 
 
 class JupyterWSBase(metaclass=abc.ABCMeta):
-    WS_TIMEOUT = 5
+    WS_TIMEOUT = 5  # (seconds) - timeout for unresponsive socket
 
     def __init__(self, uri, origin, headers, cert_requirement):
         self.ws = WebsocketClient(uri, origin, headers, cert_requirement)
@@ -69,6 +69,7 @@ class JupyterWSBase(metaclass=abc.ABCMeta):
 
 
 class JupyterTerminal(JupyterWSBase):
+
     def __init__(self, uri, origin, headers, cert_requirement, number):
         super().__init__(uri, origin, headers, cert_requirement)
         self.number = number
@@ -81,6 +82,7 @@ class JupyterTerminal(JupyterWSBase):
 
 
 class JupyterNotebook(JupyterWSBase):
+
     def __init__(self, uri, origin, headers, cert_requirement, session_id, path):
         super().__init__(uri, origin, headers, cert_requirement)
         self._session_id = session_id
@@ -196,7 +198,7 @@ class Jupyter(object):
         """Login into jupyter instance."""
         self.get_client().request(
             method=HttpMethod.POST,
-            path="/login",
+            path="login",
             data={"password": self.password},
             params={"next": "/tree"},
             msg="Jupyter: login"
@@ -213,14 +215,14 @@ class Jupyter(object):
         python_version = "python{}".format(python_version)
         response = self.get_client().request(
             method=HttpMethod.POST,
-            path="/api/contents",
+            path="api/contents",
             body={"type": "notebook"},
             msg="Jupyter: create notebook"
         )
         notebook_path = response["path"]
         response = self.get_client().request(
             method=HttpMethod.POST,
-            path="/api/sessions",
+            path="api/sessions",
             body={
                 "kernel": {"id": None, "name": python_version},
                 "notebook": {"path": notebook_path}
@@ -239,6 +241,6 @@ class Jupyter(object):
     def _get_ws_ssl_options():
         """Get web socket ssl options."""
         options = None
-        if not CONFIG["ssl_validation"]:
+        if not config.ssl_validation:
             options = ssl.CERT_NONE
         return options

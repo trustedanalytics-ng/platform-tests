@@ -51,11 +51,11 @@ class SshConnector(object):
         if self.__ssh_tunnel is not None:
             return
         self.__ssh_tunnel = SshTunnel(
-            hostname=Config.get_elasticsearch_host(),
+            hostname=Config.ELASTIC_SEARCH_HOST,
             port=Config.ELASTIC_SEARCH_PORT,
             username=Config.ELASTIC_SSH_TUNNEL_USER,
-            path_to_key=Config.get_cdh_key_path(),
-            via_hostname=Config.get_jumpbox_host_address(),
+            path_to_key=Config.JUMPBOX_KEY_PATH,
+            via_hostname=Config.JUMPBOX_HOST,
             local_port=Config.ELASTIC_SEARCH_PORT
         )
 

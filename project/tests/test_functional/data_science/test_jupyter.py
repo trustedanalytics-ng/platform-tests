@@ -18,7 +18,7 @@ import re
 
 import pytest
 
-from configuration import config
+import config
 from modules.constants import TapComponent as TAP
 from modules.markers import components, priority
 from modules.service_tools.jupyter import Jupyter
@@ -104,9 +104,9 @@ class TestJupyterConsole:
         assert "URI of the ATK server" in notebook.get_prompt_text()
         notebook.send_input(atk_url, reply=True)
         assert "User name" in notebook.get_prompt_text()
-        notebook.send_input(config.CONFIG["admin_username"], reply=True)
+        notebook.send_input(config.admin_username, reply=True)
         assert "" in notebook.get_prompt_text()
-        notebook.send_input(config.CONFIG["admin_password"], reply=True, obscure_from_log=True)
+        notebook.send_input(config.admin_password, reply=True, obscure_from_log=True)
         assert "Connect now?" in notebook.get_prompt_text()
         notebook.send_input("y", reply=True)
         assert "Connected." in str(notebook.get_stream_result())

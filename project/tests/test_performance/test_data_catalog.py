@@ -16,7 +16,7 @@
 
 import unittest
 
-from configuration.config import CONFIG
+import config
 from modules.constants import TapComponent as Tap
 from modules.gatling_runner.gatling_runner import GatlingRunner
 from modules.gatling_runner.gatling_runner_parameters import GatlingRunnerParameters
@@ -36,11 +36,11 @@ class DataCatalogPerformanceTest(unittest.TestCase):
         """Test adding data set to data catalog."""
         parameters = GatlingRunnerParameters(
             simulation_name=SimulationName.ADD_DATA_SET,
-            platform=CONFIG["domain"],
-            organization=CONFIG["ref_org_name"],
-            space=CONFIG["ref_space_name"],
-            username=CONFIG["admin_username"],
-            password=CONFIG["admin_password"],
+            platform=config.tap_domain,
+            organization=config.core_org_name,
+            space=config.core_space_name,
+            username=config.admin_username,
+            password=config.admin_password,
             users_at_once=10,
         )
         gatling_runner = GatlingRunner(parameters)

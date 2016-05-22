@@ -17,7 +17,9 @@
 import functools
 import json
 
-from configuration.config import CONFIG
+import requests
+
+import config
 from ..exceptions import UnexpectedResponseError
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
@@ -31,6 +33,7 @@ logger = get_logger(__name__)
 
 @functools.total_ordering
 class ArcadiaDataSet(object):
+    
     COMPARABLE_ATTRIBUTES = ["ds_id", "name", "ds_type"]
 
     def __init__(self, ds_id, name, ds_type, dc_name):
@@ -50,6 +53,7 @@ class ArcadiaDataSet(object):
 
 
 class ArcadiaDataConnection(object):
+
     def __init__(self, dc_id, name, dc_type):
         self.dc_id = dc_id
         self.name = name
@@ -64,12 +68,14 @@ class Arcadia(object):
 
     TEST_DATASETS = []
 
-    def __init__(self, username=CONFIG["arcadia_username"], password=CONFIG["arcadia_password"]):
+    def __init__(self, url, credentials):
         self.client = None
+        self.username = credentials[0]
+        self.password = credentials[1]
+        self.url = url
+        self.http_session = requests.Session()
+        self.http_session.verify = config.ssl_validation
         self.csrf_token = None
-        self.username = username
-        self.password = password
-        self.url = "http://arcadia.{}/".format(CONFIG["domain"])
         self.login()
         self.data_connection = next(ds for ds in self.get_data_connection_list() if ds.name == "arcadia")
 

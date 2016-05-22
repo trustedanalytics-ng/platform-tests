@@ -17,7 +17,7 @@
 
 import pytest
 
-from configuration.config import CONFIG
+import config
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus
 from modules.hive import Hive
 from modules.markers import components, priority
@@ -129,7 +129,7 @@ class TestOrganization:
         assert escape_hive_name(test_org.guid) in user_databases, "User cannot see their database"
 
     @priority.medium
-    @pytest.mark.skipif(not CONFIG["kerberos"], reason="Only kerberos gives funcionality that blocks access to dbs for other orgs")
+    @pytest.mark.skipif(not config.kerberos, reason="Only on kerberos access to dbs for other orgs is blocked")
     def test_users_cannot_see_hive_databases_for_other_orgs(self, test_org, admin_user, add_admin_to_test_org, context):
         org1 = test_org
         user1 = admin_user

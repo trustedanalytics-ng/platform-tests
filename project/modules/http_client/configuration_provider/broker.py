@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
+import config
 from modules.constants import TapComponent
 from modules.http_calls import cloud_foundry as cf
-from ..config import Config
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
 
@@ -29,15 +29,15 @@ class BrokerConfigurationProvider(object):
 
     config = {
         TapComponent.application_broker: {
-            "url": Config.service_application_broker_url()
+            "url": config.application_broker_url,
         },
         TapComponent.demiurge: {
-            "url": Config.service_demiurge_url(),
+            "url": config.demiurge_url,
             "username_env_key": "USERNAME",
             "password_env_key": "PASSWORD",
         },
         TapComponent.kubernetes_broker: {
-            "url": Config.service_kubernetes_broker_basic_url()
+            "url": "{}/{}".format(config.kubernetes_broker_url, config.cf_api_version),
         },
     }
 

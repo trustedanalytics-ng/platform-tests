@@ -84,3 +84,7 @@ class ParametrizedService(object):
     def is_parametrized(cls, label: ServiceLabels, plan_name: ServicePlan):
         parametrized_plan = cls.parametrized_offerings.get(label)
         return parametrized_plan is True or plan_name == parametrized_plan
+
+
+class ServiceTag(object):
+    K8S = "k8s"

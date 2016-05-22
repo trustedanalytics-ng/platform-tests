@@ -16,7 +16,7 @@
 
 import os
 
-from configuration.config import CONFIG
+import config
 
 
 class Config(object):
@@ -40,7 +40,7 @@ class Config(object):
     ELASTIC_SSH_TUNNEL_USER = "ubuntu"
 
     # Elastic search host
-    ELASTIC_SEARCH_HOST = "10.0.7.10"
+    ELASTIC_SEARCH_HOST = config.logsearch_elastic_search_host
 
     # Elastic search port
     ELASTIC_SEARCH_PORT = 9200
@@ -48,31 +48,13 @@ class Config(object):
     # How long (in seconds) to wait for elastic search api to send data before giving up
     ELASTIC_SEARCH_REQUEST_TIMEOUT = 120
 
-    @staticmethod
-    def is_remote_logger_enabled():
-        """ Returns if remote logger is enabled or disabled. """
-        return CONFIG["remote_log_enabled"] if "remote_log_enabled" in CONFIG else True
+    ELASTIC_SEARCH_SSH_TUNNEL_KEY_PATH = config.jumpbox_key_path
 
-    @staticmethod
-    def get_number_of_trials():
-        """ Returns number of retries for getting elastic search response. """
-        return CONFIG["remote_logger_retry_count"] if "remote_logger_retry_count" in CONFIG else 5
+    REMOTE_LOGGER_RETRY_COUNT = config.logsearch_collect_retry_count
 
-    @staticmethod
-    def get_jumpbox_host_address():
-        """ Returns ssh tunnel remote host. """
-        if CONFIG["jumpbox_address"] is not None:
-            return CONFIG["jumpbox_address"]
-        return "jump.{}".format(CONFIG["domain"])
+    ELASTIC_SEARCH_SSH_TUNNEL_HOST = config.jumpbox_hostname
+    
+    JUMPBOX_KEY_PATH = config.jumpbox_key_path
+    
+    JUMPBOX_HOST = config.jumpbox_hostname
 
-    @staticmethod
-    def get_cdh_key_path():
-        """ Returns ssh tunnel path to ssh key. """
-        return os.path.expanduser(CONFIG["cdh_key_path"])
-
-    @classmethod
-    def get_elasticsearch_host(cls):
-        """ Returns ElasticSearch host name. """
-        if CONFIG["elasticsearch_host"] is not None:
-            return CONFIG["elasticsearch_host"]
-        return cls.ELASTIC_SEARCH_HOST

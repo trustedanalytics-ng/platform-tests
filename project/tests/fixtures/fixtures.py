@@ -21,7 +21,7 @@ import io
 import pytest
 from retry import retry
 
-from configuration.config import CONFIG
+import config
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub, Urls
 from modules.exceptions import UnexpectedResponseError
@@ -31,9 +31,10 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, Space, User
 from modules.tap_object_model.flows import data_catalog
-from modules.test_names import generate_test_object_name
 from .context import Context
 from .test_data import TestData
+
+
 
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables
@@ -97,12 +98,8 @@ def sample_python_app(request, test_org, test_space):
     context = Context()
     log_fixture("sample_python_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
-    app = Application.push(
-        context=context,
-        space_guid=test_space.guid,
-        source_directory=ApplicationPath.SAMPLE_PYTHON_APP,
-        env_proxy=CONFIG["pushed_app_proxy"]
-    )
+    app = Application.push(context=context, space_guid=test_space.guid,
+                           source_directory=ApplicationPath.SAMPLE_PYTHON_APP)
 
     def fin():
         log_fixture("sample_python_app: Delete sample app")
@@ -121,12 +118,8 @@ def sample_java_app(request, test_org, test_space):
     test_app_sources.compile_mvn()
     log_fixture("sample_java_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
-    app = Application.push(
-        context=context,
-        space_guid=test_space.guid,
-        source_directory=ApplicationPath.SAMPLE_JAVA_APP,
-        env_proxy=CONFIG["pushed_app_proxy"]
-    )
+    app = Application.push(context=context, space_guid=test_space.guid,
+                           source_directory=ApplicationPath.SAMPLE_JAVA_APP)
     app.ensure_started()
     log_fixture("Check the application is running")
 
@@ -160,7 +153,8 @@ def sample_service(request, test_org, test_space, sample_python_app):
 @pytest.fixture(scope="session")
 def admin_user():
     log_fixture("admin_user: Retrieve admin user")
-    admin_user = User.get_admin()
+    admin_user = User.cf_api_get_user(config.admin_username)
+    admin_user.password = config.admin_password
     TestData.admin_user = admin_user
     return admin_user
 
@@ -205,7 +199,7 @@ def add_admin_to_test_space(test_org, test_space, admin_user):
 @pytest.fixture(scope="session")
 def core_org():
     log_fixture("core_org: Create object for core org")
-    ref_org_name = CONFIG["ref_org_name"]
+    ref_org_name = config.core_org_name
     orgs = Organization.cf_api_get_list()
     TestData.core_org = next(o for o in orgs if o.name == ref_org_name)
     return TestData.core_org
@@ -214,7 +208,7 @@ def core_org():
 @pytest.fixture(scope="session")
 def core_space():
     log_fixture("core_space: Create object for core space")
-    ref_space_name = CONFIG["ref_space_name"]
+    ref_space_name = config.core_space_name
     spaces = Space.cf_api_get_list()
     TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
     return TestData.core_space
@@ -256,12 +250,10 @@ def psql_instance(test_org, test_space):
     log_fixture("create_postgres_instance")
     marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
     psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
-    instance_name = generate_test_object_name()
     TestData.psql_instance = ServiceInstance.api_create(
         org_guid=test_org.guid,
         space_guid=test_space.guid,
         service_label=ServiceLabels.PSQL,
-        name=instance_name,
         service_plan_guid=psql.service_plan_guids[0]
     )
     return TestData.psql_instance
@@ -271,7 +263,7 @@ def psql_instance(test_org, test_space):
 def psql_app(psql_instance):
     sql_api_sources = AppSources.from_github(repo_name=TapGitHub.sql_api_example,
                                              repo_owner=TapGitHub.intel_data,
-                                             gh_auth=CONFIG["github_auth"])
+                                             gh_auth=config.github_credentials())
     context = Context()
     TestData.psql_app = Application.push(
         context=context,

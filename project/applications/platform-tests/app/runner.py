@@ -26,7 +26,6 @@ import time
 from config import RunnerConfig, DatabaseConfig
 from model import TestSuiteModel
 
-
 logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -50,6 +49,7 @@ class Runner(object):
         self._username = None
         self._password = None
         self._start_time = 0
+        self.command = [self._config.pytest_command, self._config.suite_name]
 
     @property
     def is_busy(self):
@@ -57,19 +57,17 @@ class Runner(object):
         return self._is_busy.value
 
     @property
-    def command(self):
-        return [
-            self._config.python_interpreter,
-            self._config.run_tests,
-            "-e", self._config.tap_domain,
-            "-s", self._config.suite_name,
-            "--admin-username", self._username,
-            "--admin-password", self._password,
-            "--reference-org", self._config.core_org_name,
-            "--reference-space", self._config.core_space_name,
-            "--database-url", self._db_config.uri,
-            "--test-run-id", str(self._current_suite.id)
-        ]
+    def env(self):
+        return {
+            "PT_TAP_DOMAIN": self._config.tap_domain,
+            "PT_ADMIN_USERNAME": self._username,
+            "PT_ADMIN_PASSWORD": self._password,
+            "PT_CORE_ORG_NAME": self._config.core_org_name,
+            "PT_CORE_SPACE_NAME": self._config.core_space_name,
+            "PT_DATABASE_URL": self._db_config.uri,
+            "PT_TEST_RUN_ID": str(self._current_suite.id),
+            "PT_COLLECT_LOGSEARCH_LOGS": "False"  # environment variables must be strings
+        }
 
     def run(self, username, password):
         """
@@ -98,9 +96,12 @@ class Runner(object):
         Mark that the runner is not busy.
         """
         try:
+            logger.info("Configuration:\n{}".format("\n".join(["{}={}".format(k, v) for k, v in self.env.items()])))
             logger.info("Running command {}".format(" ".join(self.command)))
+            env = dict(os.environ).copy()
+            env.update(self.env)
             process = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                       universal_newlines=True, cwd=self._test_cwd)
+                                       universal_newlines=True, env=env)
             self._pid.value = process.pid
             while True:
                 output = process.stdout.readline().strip()
@@ -119,4 +120,3 @@ class Runner(object):
             logger.error(sys.exc_info()[0])
         finally:
             self._is_busy.value = False
-

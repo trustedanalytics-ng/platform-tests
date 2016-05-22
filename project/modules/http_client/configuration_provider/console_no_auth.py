@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
+import config
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
-from ..config import Config as ClientConfig
 from .base import BaseConfigurationProvider
 
 
@@ -28,7 +28,7 @@ class ConsoleNoAuthConfigurationProvider(BaseConfigurationProvider):
         """Provide http client configuration."""
         return HttpClientConfiguration(
             client_type=HttpClientType.CONSOLE_NO_AUTH,
-            url=ClientConfig.service_console_url(),
+            url=config.console_url,
             username=username,
             password=password
         )

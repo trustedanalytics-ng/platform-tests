@@ -16,13 +16,15 @@
 
 
 from ...http_client.client_auth.http_method import HttpMethod
-from ...http_client.http_client import HttpClient
+from ...http_client.http_client_factory import HttpClientFactory
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
 
 
-def api_get_app_development_page(client: HttpClient = None):
+def api_get_app_development_page(client=None):
     """GET /app/tools/tools.html"""
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/app/tools/tools.html",
+        path="app/tools/tools.html",
         msg="PLATFORM: get app development tools page"
     )

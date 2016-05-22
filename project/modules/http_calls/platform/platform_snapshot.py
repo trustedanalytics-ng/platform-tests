@@ -24,7 +24,7 @@ def api_get_version(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/v1/versions",
+        path="rest/v1/versions",
         msg="PLATFORM: get versions"
     )
 
@@ -34,7 +34,7 @@ def api_get_snapshots(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/v1/snapshots",
+        path="rest/v1/snapshots",
         msg="PLATFORM: get snapshots"
     )
 
@@ -44,6 +44,6 @@ def api_trigger_snapshots(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/v1/snapshots/trigger",
+        path="rest/v1/snapshots/trigger",
         msg="PLATFORM: trigger snapshots"
     )

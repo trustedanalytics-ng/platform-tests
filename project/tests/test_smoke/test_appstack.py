@@ -16,7 +16,7 @@
 
 import pytest
 
-from configuration.config import CONFIG
+import config
 from modules.constants import ServiceLabels, TapGitHub
 from modules.exceptions import UnexpectedResponseError
 from modules.http_client.client_auth.http_method import HttpMethod
@@ -58,7 +58,7 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
             elif normalized_push_if_flag == "false":
                 return False
             elif push_if_flag == "{{ kubernetes_used }}":
-                return CONFIG["kubernetes"]
+                return config.kubernetes
 
             raise Exception("unrecognized push_if flag value: {}".format(push_if_flag))
 
@@ -146,7 +146,7 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
             client = HttpClientFactory.get(ApplicationConfigurationProvider.get(url))
             app_name = url.split(".")[0]
             try:
-                client.request(method=HttpMethod.GET, path="/health")
+                client.request(method=HttpMethod.GET, path="health")
             except UnexpectedResponseError:
                 logger.info("Not checking {} service".format(app_name))
                 continue
@@ -154,7 +154,7 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
             enabled_endpoints = []
             for endpoint in SENSITIVE_ENDPOINTS:
                 try:
-                    client.request(method=HttpMethod.GET, path="/{}".format(endpoint))
+                    client.request(method=HttpMethod.GET, path="{}".format(endpoint))
                 except UnexpectedResponseError:
                     continue
                 else:

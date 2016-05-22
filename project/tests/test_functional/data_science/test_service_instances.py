@@ -18,7 +18,6 @@ import pytest
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance, ServiceType

@@ -23,6 +23,6 @@ def uaa_api_user_delete(user_id):
     """DELETE /users/{id}"""
     HttpClientFactory.get(UaaConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
-        path="Users/{}".format(user_id),
+        path="users/{}".format(user_id),
         msg="UAA: delete user"
     )

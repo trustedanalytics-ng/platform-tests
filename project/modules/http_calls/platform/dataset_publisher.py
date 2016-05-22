@@ -38,7 +38,7 @@ def api_publish_dataset(category, creation_time, data_sample, format, is_public,
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/tables",
+        path="rest/tables",
         body=body,
         msg="PLATFORM: publish dataset in hive"
     )

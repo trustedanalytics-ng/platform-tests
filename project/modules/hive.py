@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+import config
 from . import kerberos
 from .http_client.configuration_provider.uaa import UaaConfigurationProvider
 from .http_client.http_client_factory import HttpClientFactory
-from .ssh_client import CdhMasterClient, SshConfig
+from .ssh_client import CdhMasterClient
 from .tap_logger import get_logger
 from .tap_object_model import User
 
@@ -49,5 +51,6 @@ class Hive(object):
         else:
             cmds[0] = ["sudo", "-u", self.__user.guid] + cmds[0]
 
-        return CdhMasterClient(SshConfig.CDH_MASTER_2_HOSTNAME).exec_commands(cmds)[-1][0].split()
+        return CdhMasterClient(config.cdh_master_2_hostname).exec_commands(cmds)[-1][0].split()
+
 

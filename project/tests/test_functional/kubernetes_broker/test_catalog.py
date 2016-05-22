@@ -16,8 +16,8 @@
 
 import pytest
 
-from configuration import config
-from modules.constants import TapComponent as TAP
+import config
+from modules.constants import ServiceTag, TapComponent as TAP
 from modules.http_calls import kubernetes_broker as k8s_broker_client
 from modules.markers import components, priority
 from modules.tap_logger import step
@@ -27,9 +27,8 @@ logged_components = (TAP.kubernetes_broker,)
 pytestmark = [components.kubernetes_broker, priority.low]
 
 
-@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
+@pytest.mark.skipif(not config.kubernetes, reason="No point to run without kubernetes")
 class TestKubernetesCatalog:
-    KUBERNETES_TAG = "k8s"
 
     def test_all_services_have_k8s_tag(self):
         step("Get catalog.")
@@ -38,8 +37,8 @@ class TestKubernetesCatalog:
         step("Check that all services have tags.")
         services_without_tags = []
         for service in catalog["services"]:
-            if self.KUBERNETES_TAG not in service["tags"]:
+            if ServiceTag.K8S not in service["tags"]:
                 services_without_tags.append(service["name"])
 
-        assert len(services_without_tags) == 0, "Services without {} tag: {}".format(self.KUBERNETES_TAG,
+        assert len(services_without_tags) == 0, "Services without {} tag: {}".format(ServiceTag.K8S,
                                                                                      ",".join(services_without_tags))

@@ -21,7 +21,7 @@ from retry import retry
 
 from ..constants import ServiceLabels
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, application_broker as app, kubernetes_broker
+from ..http_calls import cloud_foundry as cf, application_broker as app
 from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
 from ..test_names import generate_test_object_name
 from . import ServiceKey

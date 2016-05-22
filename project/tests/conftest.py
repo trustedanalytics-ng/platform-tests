@@ -15,16 +15,18 @@
 #
 
 import pytest
+import requests
 
-from configuration import config
-from modules.constants import Path, ServiceLabels, ParametrizedService
+import config
+from modules.constants import Path, ParametrizedService
 from modules.mongo_reporter.reporter import MongoReporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceType
 import tests.fixtures.fixtures as fixtures
 
-
-pytest_plugins = ["tests.fixtures.context", "tests.fixtures.db_logging", "tests.fixtures.fixtures",
+pytest_plugins = ["tests.fixtures.context",
+                  "tests.fixtures.db_logging",
+                  "tests.fixtures.fixtures",
                   "tests.fixtures.remote_logging"]
 
 
@@ -32,6 +34,17 @@ logger = get_logger(__name__)
 
 
 INCREMENTAL_KEYWORD = "incremental"
+
+
+def pytest_sessionstart(session):
+    """ Check environment viability. If the check fails, don't start test session. """
+    try:
+        requests.get(config.console_url, verify=config.ssl_validation).raise_for_status()
+        cf_api_url = "{}/info".format(config.cf_api_url_full)
+        requests.get(cf_api_url, verify=config.ssl_validation).raise_for_status()
+    except requests.HTTPError as e:
+        logger.error("Environment {} is unavailable - status {}".format(config.console_url, e.response.status_code))
+        raise
 
 
 def pytest_collection_finish(session):
@@ -53,8 +66,8 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
 
-    if config.CONFIG["database_url"] is not None:
-        mongo_reporter = MongoReporter(mongo_uri=config.CONFIG["database_url"], run_id=config.CONFIG["test_run_id"])
+    if config.database_url is not None:
+        mongo_reporter = MongoReporter(mongo_uri=config.database_url, run_id=config.test_run_id)
         mongo_reporter.log_report(report, item)
 
     # support for incremental tests
@@ -69,6 +82,11 @@ def pytest_runtest_setup(item):
         previous_fail = getattr(item.parent, "_previous_fail", None)
         if previous_fail is not None:
             pytest.skip("previous test failed ({})".format(previous_fail.name))
+
+
+def pytest_runtest_logstart(nodeid, location):
+    """ signal the start of running a single test item. """
+    # TODO implement logging start of a test
 
 
 def pytest_generate_tests(metafunc):

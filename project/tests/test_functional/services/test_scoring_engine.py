@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import os
 import re
 
 import pytest
 import requests
 
-from modules import app_sources
-from configuration import config
+import config
+from modules.app_sources import AppSources
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus, ServiceLabels, ServicePlan, TapGitHub, \
     RelativeRepositoryPaths as RepoPath
@@ -31,7 +32,6 @@ from modules.tap_object_model.flows import data_catalog
 from tests.fixtures import assertions
 from modules.service_tools.atk import ATKtools
 
-
 logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.application_broker, TAP.das, TAP.hdfs_downloader,
                      TAP.metadata_parser)
 pytestmark = [components.scoring_engine, components.service_catalog, components.application_broker]
@@ -40,10 +40,10 @@ pytestmark = [components.scoring_engine, components.service_catalog, components.
 @pytest.fixture(scope="class")
 def space_shuttle_sources():
     step("Get space shuttle example app sources")
-    example_app_sources = app_sources.AppSources.from_github(
+    example_app_sources = AppSources.from_github(
         repo_name=TapGitHub.space_shuttle_demo,
         repo_owner=TapGitHub.intel_data,
-        gh_auth=config.CONFIG["github_auth"],
+        gh_auth=config.github_credentials()
     )
     return example_app_sources.path
 

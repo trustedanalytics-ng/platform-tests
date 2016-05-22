@@ -21,6 +21,7 @@ import requests
 from retry import retry
 import yaml
 
+import config
 from ..exceptions import UnexpectedResponseError
 from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import service_catalog
@@ -73,7 +74,7 @@ class Application(object):
         return self.instances[0] > 0
 
     @classmethod
-    def update_manifest(cls, manifest, app_name, bound_services, env, env_proxy):
+    def update_manifest(cls, manifest, app_name, bound_services, env):
         manifest["applications"][0]["name"] = app_name
         if bound_services is not None:
             manifest["applications"][0]["services"] = list(bound_services)
@@ -83,16 +84,16 @@ class Application(object):
         app_env = manifest["applications"][0].get("env", {})
         if env is not None:
             app_env.update(env)
-        if env_proxy is not None:
-            http_proxy = "http://{}:911".format(env_proxy)
-            https_proxy = "https://{}:912".format(env_proxy)
+        if config.cf_proxy is not None:
+            http_proxy = "http://{}:911".format(config.cf_proxy)
+            https_proxy = "https://{}:912".format(config.cf_proxy)
             app_env.update({"http_proxy": http_proxy, "https_proxy": https_proxy})
         if len(app_env) > 0:
             manifest["applications"][0]["env"] = app_env
         return manifest
 
     @classmethod
-    def push(cls, context, space_guid, source_directory, name=None, bound_services=None, env=None, env_proxy=None):
+    def push(cls, context, space_guid, source_directory, name=None, bound_services=None, env=None):
         """
         Application which will later be pushed to cf.
         source_directory -- where manifest.yml is located
@@ -109,13 +110,18 @@ class Application(object):
         if "path" in manifest["applications"][0]:
             jar_path = os.path.join(jar_path, manifest["applications"][0]["path"])
 
-        manifest = cls.update_manifest(manifest, app_name=name, bound_services=bound_services, env=env,
-                                       env_proxy=env_proxy)
+        manifest = cls.update_manifest(manifest, app_name=name, bound_services=bound_services, env=env)
         with open(manifest_path, "w") as f:
             f.write(yaml.dump(manifest))
 
-        # push application
-        cf.cf_push(source_directory, jar_path, name)
+        try:
+            # push application
+            cf.cf_push(source_directory, jar_path, name)
+        except:
+            application = next((app for app in Application.api_get_list(space_guid) if app.name == name), None)
+            if application is not None:
+                application.cleanup()
+            raise
 
         # retrieve the application - check that push succeeded
         application = next((app for app in Application.api_get_list(space_guid) if app.name == name), None)
@@ -176,8 +182,8 @@ class Application(object):
         response = service_catalog.api_get_app_summary(self.guid, client=client)
         return self._get_details_from_response(response)
 
-    def api_delete(self, client=None):
-        service_catalog.api_delete_app(self.guid, client=client)
+    def api_delete(self, cascade=False, client=None):
+        service_catalog.api_delete_app(self.guid, cascade=cascade, client=client)
 
     def cleanup(self):
         self.api_delete()

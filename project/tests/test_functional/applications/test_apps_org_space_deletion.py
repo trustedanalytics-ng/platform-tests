@@ -16,7 +16,6 @@
 
 import pytest
 
-from configuration.config import CONFIG
 from modules.constants import ApplicationPath, TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf
 from modules.markers import components, priority
@@ -40,8 +39,7 @@ class TestDeleteSpaceAndOrg:
         cf.cf_login(test_org.name, test_space.name)
         step("Push example app")
         example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
-        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
-                                    env_proxy=CONFIG["pushed_app_proxy"])
+        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path)
         return test_org, test_space, test_app
 
     def _delete_org_space(self, test_org, test_space):

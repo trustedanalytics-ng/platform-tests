@@ -16,12 +16,12 @@
 
 import pytest
 
+import config
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.http_client_configuration import HttpClientConfiguration
 from modules.http_client.http_client_type import HttpClientType
-from modules.http_client.config import Config
 from modules.markers import components, incremental ,priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance, ServiceKey
@@ -96,7 +96,7 @@ class TestHdfsUserDirectoryPlans(object):
         step("Check that uaa token can be retrieved using credentials from the service key")
         username = self.key.credentials["user"]
         password = self.key.credentials["password"]
-        uaa_client_configuration = HttpClientConfiguration(client_type=HttpClientType.UAA, url=Config.service_uaa_url(),
+        uaa_client_configuration = HttpClientConfiguration(client_type=HttpClientType.UAA, url=config.uaa_url,
                                                            username=username, password=password)
         HttpClientFactory.get(uaa_client_configuration).request(method=HttpMethod.GET, path="", msg="UAA: test request")
 

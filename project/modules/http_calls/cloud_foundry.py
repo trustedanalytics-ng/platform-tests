@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from configuration.config import CONFIG
+import config
 from .. import command as cmd
 from ..constants import LoggerType
 from ..exceptions import YouMustBeJokingException
@@ -30,16 +30,15 @@ cli_logger = get_logger(LoggerType.CF_CLI)
 
 def cf_login(organization_name, space_name, credentials=None):
     if credentials is None:
-        username = CONFIG["admin_username"]
-        password = CONFIG["admin_password"]
+        username = config.admin_username
+        password = config.admin_password
     else:
         username = credentials[0]
         password = credentials[1]
-    api_url = "api.{}".format(CONFIG["domain"])
-    command = ["cf", "login", "-a", api_url, "-u", username, "-p", password, "-o", organization_name, "-s", space_name]
-    if not CONFIG["ssl_validation"]:
+    command = ["cf", "login", "-a", config.cf_api_url, "-u", username, "-p", password, "-o", organization_name, "-s", space_name]
+    if not config.ssl_validation:
         command.append("--skip-ssl-validation")
-    log_command(command, replace=(password, "[SECRET]"))
+    log_command(command)
     cmd.run(command)
 
 
@@ -109,7 +108,7 @@ def cf_api_delete_org(org_guid):
     """DELETE /v2/organizations/{org_guid}"""
     ref_org_guid, _ = cf_get_ref_org_and_space_guids()
     if org_guid == ref_org_guid:
-        raise YouMustBeJokingException("You're trying to delete {}".format(CONFIG["ref_org_name"]))
+        raise YouMustBeJokingException("You're trying to delete {}".format(config.core_org_name))
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
         path="organizations/{}".format(org_guid),
@@ -152,7 +151,7 @@ def cf_api_delete_space(space_guid):
     """DELETE /v2/spaces/{space_guid}"""
     _, ref_space_guid = cf_get_ref_org_and_space_guids()
     if space_guid == ref_space_guid:
-        raise YouMustBeJokingException("You're trying to delete {}".format(CONFIG["ref_space_name"]))
+        raise YouMustBeJokingException("You're trying to delete {}".format(config.core_space_name))
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
         path="spaces/{}".format(space_guid),
@@ -346,13 +345,20 @@ def cf_api_delete_route(route_guid):
     )
 
 
+
+
+# TODO rethink how this check is done
+
+CORE_ORG_GUID = None
+CORE_SPACE_GUID = None
+
+
 def cf_get_ref_org_and_space_guids():
-    """Return tuple or org_guid and space_guid for reference org and space (e.g. trustedanalytics, platform)."""
-    if CONFIG.get("ref_org_guid") is None or CONFIG.get("ref_space_guid") is None:
-        org_name = CONFIG["ref_org_name"]
+    """Return tuple of org_guid and space_guid for core org and space (e.g. trustedanalytics, platform)."""
+    global CORE_ORG_GUID, CORE_SPACE_GUID
+    if CORE_ORG_GUID is None or CORE_SPACE_GUID is None:
         orgs = cf_api_get_orgs()
-        CONFIG["ref_org_guid"] = next(o["metadata"]["guid"] for o in orgs if o["entity"]["name"] == org_name)
-        space_name = CONFIG["ref_space_name"]
-        spaces = cf_api_get_org_spaces(CONFIG["ref_org_guid"])
-        CONFIG["ref_space_guid"] = next(s["metadata"]["guid"] for s in spaces if s["entity"]["name"] == space_name)
-    return CONFIG["ref_org_guid"], CONFIG["ref_space_guid"]
+        CORE_ORG_GUID = next(o["metadata"]["guid"] for o in orgs if o["entity"]["name"] == config.core_org_name)
+        spaces = cf_api_get_org_spaces(CORE_ORG_GUID)
+        CORE_SPACE_GUID = next(s["metadata"]["guid"] for s in spaces if s["entity"]["name"] == config.core_space_name)
+    return CORE_ORG_GUID, CORE_SPACE_GUID

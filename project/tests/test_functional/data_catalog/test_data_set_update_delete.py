@@ -24,7 +24,6 @@ from modules.tap_object_model import DataSet
 from modules.tap_object_model.flows import data_catalog
 from tests.fixtures import assertions
 
-
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
 pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
 

@@ -15,14 +15,13 @@
 #
 
 import csv
-import os
-import requests
-import zipfile
-import io
-import xml.etree.ElementTree as ElementTree
-
 from datetime import datetime
+import io
+import os
+import xml.etree.ElementTree as ElementTree
+import zipfile
 
+import requests
 
 TMP_FILE_DIR = "/tmp/test_files"
 TMP_FILE_NAME = "test_file_{}.csv"

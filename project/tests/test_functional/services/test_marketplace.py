@@ -234,20 +234,6 @@ class MarketplaceServices(TapTestCase):
         assert_no_errors(errors)
 
     @priority.low
-    def test_create_hdfs_service_instance_and_keys(self):
-        """DPNG-3273 Enable HDFS broker to use Service Keys"""
-        label = ServiceLabels.HDFS
-        hdfs = next(s for s in self.marketplace if s.label == label)
-        errors = []
-        for plan in hdfs.service_plans:
-            try:
-                self._create_and_delete_service_instance_and_keys(
-                    TestData.test_org.guid, TestData.test_space.guid, label, plan["guid"])
-            except Exception as e:
-                errors.append(e)
-        assert_no_errors(errors)
-
-    @priority.low
     @pytest.mark.bugs("DPNG-2798 Enable HBase broker to use Service Keys")
     def test_create_hbase_service_instance_and_keys(self):
         label = ServiceLabels.HBASE

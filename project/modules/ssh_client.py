@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from datetime import datetime
 import os
 import subprocess
@@ -20,26 +21,16 @@ import subprocess
 import paramiko
 import sshtunnel
 
+import config
 from modules.command import run
 from modules.exceptions import CommandExecutionException
-from modules.remote_logger.config import Config
 from modules.tap_logger import log_command, get_logger
-
 
 logger = get_logger(__name__)
 
 
 SSH_POLICY = paramiko.AutoAddPolicy()
 EXIT_STATUS_OK = 0
-
-
-class SshConfig:
-
-    JUMPBOX_USERNAME = "ubuntu"
-    CDH_MASTER_0_HOSTNAME = "cdh-master-0"
-    CDH_MASTER_2_HOSTNAME = "cdh-master-2"
-    CDH_MASTER_USERNAME = "ec2-user"
-    CLOUDERA_MANAGER_PORT = 7180
 
 
 class RemoteCommand(object):
@@ -72,6 +63,7 @@ class RemoteCommand(object):
 
 
 class DirectSshClient(object):
+
     def __init__(self, hostname, username, port=22, path_to_key=None):
         self.hostname = hostname
         self.username = username
@@ -94,6 +86,7 @@ class DirectSshClient(object):
 
 
 class NestedSshClient(object):
+
     def __init__(self, hostname, username, path_to_key=None, port=22, via_hostname=None, via_username=None,
                  via_path_to_key=None, via_port=22, local_port=1234):
         self.hostname = hostname
@@ -150,6 +143,7 @@ class NestedSshClient(object):
 
 
 class SshTunnel(object):
+
     def __init__(self, hostname, username, path_to_key=None, port=22, via_hostname=None, via_port=22, local_port=1234):
         self.hostname = hostname
         self.username = username
@@ -178,41 +172,38 @@ class SshTunnelException(Exception):
     pass
 
 
-class ClouderManagerSshTunnel(SshTunnel):
+class ClouderaManagerSshTunnel(SshTunnel):
 
     def __init__(self):
         super().__init__(
-            hostname=SshConfig.CDH_MASTER_2_HOSTNAME,
-            username=SshConfig.JUMPBOX_USERNAME,
-            path_to_key=Config.get_cdh_key_path(),
-            port=SshConfig.CLOUDERA_MANAGER_PORT,
-            via_hostname=Config.get_jumpbox_host_address()
+            hostname=config.cdh_master_2_hostname,
+            username=config.jumpbox_username,
+            path_to_key=config.jumpbox_key_path,
+            port=config.cdh_manager_port,
+            via_hostname=config.jumpbox_hostname
         )
 
 
 class CdhMasterClient:
 
     def __init__(self, cdh_host_name):
-        self.cdh_host_name = cdh_host_name
-        self.output_path = "/tmp/{}".format(datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
 
         ssh_no_host_checking = ["-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no"]
-        key_path = Config.get_cdh_key_path()
-        jumpbox_host = Config.get_jumpbox_host_address()
+        key_path = config.jumpbox_key_path
+        jumpbox_host = config.jumpbox_hostname
+        jumpbox_username = config.jumpbox_username
+        cdh_master_username = config.cdh_master_username
 
-        self._prepare_commands = [["set", "-e"], ["rm", "-rf", self.output_path], ["mkdir", self.output_path]]
-        self._ssh_command = ["ssh", "-tt"] + ssh_no_host_checking + ["-i", key_path,
-                                                                     "{}@{}".format(SshConfig.JUMPBOX_USERNAME,
-                                                                                    jumpbox_host),
-                                                                     "sudo", "ssh",
-                                                                     "-tt"] + ssh_no_host_checking + \
-                            ["{}@{}".format(SshConfig.CDH_MASTER_USERNAME, self.cdh_host_name)]
+        self._output_path = "/tmp/{}".format(datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
+        self._prepare_commands = [["set", "-e"], ["rm", "-rf", self._output_path], ["mkdir", self._output_path]]
+        self._ssh_command = ["ssh", "-tt"] + ssh_no_host_checking + \
+                            ["-i", key_path, "{}@{}".format(jumpbox_username, jumpbox_host), "sudo", "ssh", "-tt"] + \
+                            ssh_no_host_checking + ["{}@{}".format(cdh_master_username, cdh_host_name)]
         self._rsync_command = [
-            "rsync", "-avz", "--delete", "-e", "ssh {}@{} {} -i {} sudo ssh {}".format(
-                SshConfig.JUMPBOX_USERNAME, jumpbox_host,
-                " ".join(ssh_no_host_checking),
-                key_path, " ".join(ssh_no_host_checking)),
-            "{}@{}:{}/".format(SshConfig.CDH_MASTER_USERNAME, self.cdh_host_name, self.output_path), self.output_path
+            "rsync", "-avz", "--delete", "-e",
+            "ssh {}@{} {} -i {} sudo ssh {}".format(jumpbox_username, jumpbox_host, " ".join(ssh_no_host_checking),
+                                                    key_path, " ".join(ssh_no_host_checking)),
+            "{}@{}:{}/".format(cdh_master_username, cdh_host_name, self._output_path), self._output_path
         ]
 
     def exec_commands(self, commands):
@@ -260,7 +251,7 @@ class CdhMasterClient:
         for i, command in enumerate(commands):
             command = [self._ensure_quote(i) for i in command]
             string_command = " ".join(
-                command + ["1>{}/{}_1".format(self.output_path, i), "2>{}/{}_2".format(self.output_path, i), "\n"])
+                command + ["1>{}/{}_1".format(self._output_path, i), "2>{}/{}_2".format(self._output_path, i), "\n"])
             logger.info("Executing command: %s", string_command)
             process.stdin.write(string_command)
             string_commands.append(string_command)
@@ -278,7 +269,7 @@ class CdhMasterClient:
             cmd_outputs = []
             for fd_name, fd in [("stdout", 1), ("stderr", 2)]:
                 logger.info("%s:", fd_name)
-                path = "{}/{}_{}".format(self.output_path, i, fd)
+                path = "{}/{}_{}".format(self._output_path, i, fd)
                 if os.path.exists(path):
                     with open(path) as f:
                         output = f.read().strip()

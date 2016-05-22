@@ -21,18 +21,16 @@ import time
 import pytest
 from retry import retry
 
-from configuration import config
+import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub, ServicePlan
 from modules.webhdfs_tools import WebhdfsTools
-from modules.ssh_client import SshTunnel, SshConfig
+from modules.ssh_client import SshTunnel
 from modules.markers import components, incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
 from tests.fixtures import fixtures
 from modules.websocket_client import WebsocketClient
-from modules.remote_logger.config import Config
-
 
 logged_components = (TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)
 pytestmark = [components.ingestion_ws_kafka_hdfs, components.service_catalog]
@@ -88,7 +86,7 @@ class TestWs2kafka2hdfs:
     @pytest.mark.usefixtures("login_to_cf")
     def test_step_0_push_ws2kafka2hdfs(self, test_space, class_context):
         step("Clone and compile ingestion app sources")
-        github_auth = config.CONFIG["github_auth"]
+        github_auth = config.github_credentials()
         ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=self.REPO_OWNER,
                                                 gh_auth=github_auth)
         ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
@@ -102,8 +100,7 @@ class TestWs2kafka2hdfs:
         self.__class__.app_ws2kafka = Application.push(class_context, space_guid=test_space.guid,
                                                        source_directory=ws2kafka_path,
                                                        name="ws2kafka-{}".format(postfix),
-                                                       bound_services=(self.KAFKA_INSTANCE_NAME,),
-                                                       env_proxy=config.CONFIG["pushed_app_proxy"])
+                                                       bound_services=(self.KAFKA_INSTANCE_NAME,))
         step("Push application kafka2hdfs")
         self.__class__.app_kafka2hdfs = Application.push(class_context, space_guid=test_space.guid,
                                                          source_directory=kafka2hdfs_path,
@@ -113,8 +110,7 @@ class TestWs2kafka2hdfs:
                                                                          self.HDFS_INSTANCE_NAME,
                                                                          self.KERBEROS_INSTANCE_NAME),
                                                          env={"TOPICS": self.topic_name,
-                                                              "CONSUMER_GROUP": "group-{}".format(postfix)},
-                                                         env_proxy=config.CONFIG["pushed_app_proxy"])
+                                                              "CONSUMER_GROUP": "group-{}".format(postfix)})
 
         assert self.app_ws2kafka.is_started is True, "ws2kafka app is not started"
         assert self.app_kafka2hdfs.is_started is True, "kafka2hdfs app is not started"
@@ -136,7 +132,7 @@ class TestWs2kafka2hdfs:
         step("Send messages to {}".format(connection_string))
         cert_requirement = None
         ws_protocol = WebsocketClient.WS
-        if config.CONFIG["ssl_validation"]:
+        if config.ssl_validation:
             cert_requirement = ssl.CERT_NONE
             ws_protocol = WebsocketClient.WSS
         url = "{}://{}".format(ws_protocol, connection_string)
@@ -146,9 +142,9 @@ class TestWs2kafka2hdfs:
         ws.close()
 
     def _get_messages_from_hdfs(self, hdfs_path):
-        ssh_tunnel = SshTunnel(SshConfig.CDH_MASTER_2_HOSTNAME, WebhdfsTools.VIA_HOST_USERNAME,
+        ssh_tunnel = SshTunnel(config.cdh_master_2_hostname, WebhdfsTools.VIA_HOST_USERNAME,
                                path_to_key=WebhdfsTools.PATH_TO_KEY, port=WebhdfsTools.DEFAULT_PORT, via_port=22,
-                               via_hostname=Config.get_jumpbox_host_address(), local_port=WebhdfsTools.DEFAULT_PORT)
+                               via_hostname=config.jumpbox_hostname, local_port=WebhdfsTools.DEFAULT_PORT)
         ssh_tunnel.connect()
         try:
             webhdfs_client = WebhdfsTools.create_client(host="localhost")

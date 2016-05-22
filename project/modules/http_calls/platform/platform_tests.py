@@ -24,7 +24,7 @@ def api_get_test_suites(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/platform_tests/tests",
+        path="rest/platform_tests/tests",
         msg="PLATFORM: get list of test suites"
     )
 
@@ -34,7 +34,7 @@ def api_get_test_suite_results(suite_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/platform_tests/tests/{}/results".format(suite_id),
+        path="rest/platform_tests/tests/{}/results".format(suite_id),
         msg="PLATFORM: get results of test suite"
     )
 
@@ -48,7 +48,7 @@ def api_create_test_suite(username, password, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/platform_tests/tests",
+        path="rest/platform_tests/tests",
         body=body,
         msg="PLATFORM: create test suite"
     )

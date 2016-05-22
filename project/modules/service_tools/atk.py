@@ -19,8 +19,8 @@ import re
 
 import pexpect
 
+import config
 from .. import command as cmd
-from configuration import config
 from ..exceptions import AtkScriptException
 from ..hive import Hive
 from ..tap_logger import log_command, get_logger
@@ -125,8 +125,8 @@ class ATKtools(object):
             command += ["--uaa_file_name", self.CREDENTIALS_FILE_PATH]
         log_command(command)
 
-        username = config.CONFIG["admin_username"]
-        password = config.CONFIG["admin_password"]
+        username = config.admin_username
+        password = config.admin_password
 
         child = pexpect.spawn(" ".join(command))
         child.logfile_read = PexpectLoggerAdapter(logger_name="atk-client-out", obscured_secret=password)

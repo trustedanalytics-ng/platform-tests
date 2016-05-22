@@ -18,8 +18,7 @@ import os
 import re
 
 import trustedanalytics as ta
-
-from common import AtkTestException, parse_arguments, check_uaa_file, remove_test_tables_from_database
+from common import parse_arguments, check_uaa_file, remove_test_tables_from_database
 
 TEST_PATTERN = "^.+[0-9]{8}_[0-9]{6}_{0,1}[0-9]{0,6}(@gmail.com){0,1}$"
 

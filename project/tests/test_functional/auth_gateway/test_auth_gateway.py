@@ -16,11 +16,11 @@
 
 import pytest
 
+import config
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import generate_csv_file
 from modules.markers import components, incremental, priority
-from modules.remote_logger.config import Config
-from modules.ssh_client import SshTunnel, SshConfig
+from modules.ssh_client import SshTunnel
 from modules.tap_object_model import Organization, ServiceInstance, User
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_file, create_dataset_from_link
 from modules.tap_logger import step
@@ -47,9 +47,9 @@ class TestAuthGateway:
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def create_web_hdfs_client(cls, request):
-        ssh_tunel = SshTunnel(SshConfig.CDH_MASTER_0_HOSTNAME, WebhdfsTools.VIA_HOST_USERNAME,
+        ssh_tunel = SshTunnel(config.cdh_master_0_hostname, WebhdfsTools.VIA_HOST_USERNAME,
                               path_to_key=WebhdfsTools.PATH_TO_KEY, port=WebhdfsTools.DEFAULT_PORT, via_port=22,
-                              via_hostname=Config.get_jumpbox_host_address(), local_port=WebhdfsTools.DEFAULT_PORT)
+                              via_hostname=config.jumpbox_hostname, local_port=WebhdfsTools.DEFAULT_PORT)
         ssh_tunel.connect()
         cls.webhdfs_client = WebhdfsTools.create_client(host="localhost")
         cls.hdfs = WebhdfsTools()

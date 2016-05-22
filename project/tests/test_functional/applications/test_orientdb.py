@@ -18,7 +18,6 @@ import json
 
 import pytest
 
-from configuration.config import CONFIG
 from modules.constants.application_path import ApplicationPath
 from modules.tap_logger import step
 from modules.markers import priority
@@ -56,7 +55,7 @@ class TestOrientDB(object):
         """SetUp: OrientDB API application creation."""
         step("Push OrientDB Api application to cf.")
         app = Application.push(class_context, space_guid=test_space.guid, source_directory=ApplicationPath.ORIENTDB_API,
-                               bound_services=(orientdb_service.name,), env_proxy=CONFIG["pushed_app_proxy"])
+                               bound_services=(orientdb_service.name,))
         cls._API = OrientDbApi(app)
 
     @pytest.fixture(scope="function", autouse=True)

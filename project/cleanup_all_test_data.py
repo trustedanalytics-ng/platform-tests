@@ -14,9 +14,6 @@
 # limitations under the License.
 #
 
-import argparse
-
-from configuration import config
 from modules.hive import Hive
 from modules.tap_logger import get_logger
 from modules.tap_object_model import DataSet, Invitation, Organization, Transfer, User
@@ -51,16 +48,6 @@ def remove_hive_databases():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Cleanup script")
-    parser.add_argument("-e",
-                        "--environment",
-                        default=None,
-                        help="environment where tests are to be run, e.g. daily.gotapaas.com")
-    parser.add_argument("-l", "--logging-level",
-                        choices=["DEBUG", "INFO", "WARNING"],
-                        default="DEBUG")
-    args = parser.parse_args()
-    config.update_test_config(domain=args.environment, logging_level=args.logging_level)
 
     all_data_sets = DataSet.api_get_list()
     test_data_sets = [x for x in all_data_sets if is_test_object_name(x.title)]

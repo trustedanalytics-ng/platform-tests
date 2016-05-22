@@ -18,7 +18,7 @@ import time
 
 import pytest
 
-from configuration import config
+import config
 try:
     from modules.remote_logger.remote_logger import RemoteLogger, RemoteLoggerConfiguration
 
@@ -35,7 +35,7 @@ try:
         log_file_name = request.module.__name__.split(".")[-1]
 
         def fin():
-            if config.CONFIG["remote_log_enabled"] and logged_components is not None:
+            if config.collect_logsearch_logs and logged_components is not None:
                 logger_config = RemoteLoggerConfiguration(
                     from_date=from_date,
                     to_date=_current_time(),
@@ -44,7 +44,6 @@ try:
                 )
                 remote_logger = RemoteLogger(logger_config)
                 remote_logger.log_to_file()
-
         request.addfinalizer(fin)
 
 

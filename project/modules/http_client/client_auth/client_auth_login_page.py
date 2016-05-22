@@ -29,7 +29,7 @@ class ClientAuthLoginPage(ClientAuthBase):
         """Use session credentials to authenticate."""
         response = self.session.request(
             method=HttpMethod.POST,
-            url="{}login.do".format(self._url),
+            url="{}/login.do".format(self._url),
             data=self._request_data(),
             headers=self._request_headers(),
             log_message="Authenticate user",
@@ -62,7 +62,7 @@ class ClientAuthLoginPage(ClientAuthBase):
         """Prepare data with csrf token."""
         response = self.session.request(
             method=HttpMethod.GET,
-            url="{}login".format(self._url),
+            url="{}/login".format(self._url),
             log_message="Authenticate: get login form"
         )
         token = self._get_csrf_token(response)

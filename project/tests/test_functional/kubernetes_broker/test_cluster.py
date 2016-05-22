@@ -14,17 +14,18 @@
 # limitations under the License.
 #
 
-import pytest
 import time
 
-from configuration import config
-from modules.constants import TapComponent as TAP
+import pytest
+from retry import retry
+
+import config
+from modules.constants import ServiceTag, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.markers import components, incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import KubernetesCluster, Organization, ServiceInstance, ServiceType, Space
 from modules import test_names
-from retry import retry
 
 
 logged_components = (TAP.demiurge, TAP.kubernetes_broker)
@@ -32,9 +33,9 @@ pytestmark = [components.demiurge, components.kubernetes_broker, priority.high]
 
 
 @incremental
-@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
+@priority.high
+@pytest.mark.skipif(not config.kubernetes, reason="No point to run without kubernetes")
 class TestCluster:
-    CLUSTERED_TAG = "multinode"
 
     def test_0_no_clusters_for_new_organization(self, class_context):
         step("Get list of clusters")
@@ -47,11 +48,11 @@ class TestCluster:
         assert len(clusters_before) == len(clusters_after)
 
     def test_1_create_service_instance(self):
-        step("Get list of services to retrieve a {} service".format(self.CLUSTERED_TAG))
+        step("Get list of services to retrieve a {} service".format(ServiceTag.K8S))
         services = ServiceType.api_get_list_from_marketplace(space_guid=self.test_space.guid)
-        service = next((s for s in services if self.CLUSTERED_TAG in s.label), None)
+        service = next((s for s in services if ServiceTag.K8S in s.tags), None)
         if service is None:
-            raise AssertionError("No {} service available".format(self.CLUSTERED_TAG))
+            raise AssertionError("No {} service available".format(ServiceTag.K8S))
 
         step("Create instance")
         self.__class__.test_instance = ServiceInstance.api_create(

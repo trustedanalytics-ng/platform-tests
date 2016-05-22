@@ -43,7 +43,7 @@ class Password(TapTestCase):
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
 
         self.step("Logout")
-        client.request(method=HttpMethod.GET, path="/logout")
+        client.request(method=HttpMethod.GET, path="logout")
 
         self.step("Enter your email and press  'SEND RESET PASSWORD LINK'")
         pswd_api.reset_password()
@@ -52,14 +52,14 @@ class Password(TapTestCase):
         client.auth.authenticate()
 
         self.step("Logout and go to email message and press 'reset your password' link.")
-        client.request(method=HttpMethod.GET, path="/logout")
+        client.request(method=HttpMethod.GET, path="logout")
         code = gmail_api.get_reset_password_links(self.test_user.username)
 
         self.step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
         pswd_api.reset_password_set_new(code, self.NEW_PASSWORD)
 
         self.step("Logout")
-        client.request(method=HttpMethod.GET, path="/logout")
+        client.request(method=HttpMethod.GET, path="logout")
 
         self.step("Try to login with old credentials.")
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
@@ -79,7 +79,7 @@ class Password(TapTestCase):
         pswd_api.change_password(self.test_user.password, self.NEW_PASSWORD)
 
         self.step("Logout and try to login with old credentials.")
-        client.request(method=HttpMethod.GET, path="/logout")
+        client.request(method=HttpMethod.GET, path="logout")
         HttpClientFactory.remove(self.test_user.client_configuration)
         self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 

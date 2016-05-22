@@ -65,7 +65,7 @@ class Gearpump(object):
         }
         self.get_client().request(
             method=HttpMethod.POST,
-            path="/login",
+            path="login",
             data=data,
             msg="Gearpump: login"
         )
@@ -75,7 +75,7 @@ class Gearpump(object):
         files = {'jar': open(jar_file, 'rb')}
         response = self.get_client().request(
             method=HttpMethod.POST,
-            path="/api/v1.0/master/submitapp",
+            path="api/v1.0/master/submitapp",
             files=files,
             msg="Gearpump: submit application"
         )

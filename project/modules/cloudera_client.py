@@ -17,19 +17,19 @@
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.cloudera import ClouderaConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.ssh_client import ClouderManagerSshTunnel
+from modules.ssh_client import ClouderaManagerSshTunnel
 
 
 class ClouderaClient(object):
     def __init__(self):
-        self.tunnel = ClouderManagerSshTunnel()
+        self.tunnel = ClouderaManagerSshTunnel()
         self.tunnel.connect()
 
     def api_client_config(self, service_name):
         """Returns zip-compressed archive of the client configuration."""
         r = HttpClientFactory.get(ClouderaConfigurationProvider.get("http://127.0.0.1:1234")).request(
             method=HttpMethod.GET,
-            path="/api/v10/clusters/CDH-cluster/services/{}/clientConfig".format(service_name),
+            path="api/v10/clusters/CDH-cluster/services/{}/clientConfig".format(service_name),
             msg="CLOUDERA: get client config",
             raw_response=True
         )

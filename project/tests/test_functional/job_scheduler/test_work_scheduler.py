@@ -14,19 +14,16 @@
 # limitations under the License.
 #
 
-import os
 import pytest
 
-from modules.constants import TapComponent as TAP
+import config
+from modules.constants import ServiceLabels, TapComponent as TAP
+from modules.markers import components, priority, incremental
 from modules.service_tools.psql import PsqlTable, PsqlRow
 from modules.ssh_client import SshTunnel
-from modules.webhdfs_tools import WebhdfsTools
 from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
-from modules.markers import components, priority, incremental
-from modules.constants.services import ServiceLabels
-from configuration.config import CONFIG
-from modules.remote_logger.config import Config
+from modules.webhdfs_tools import WebhdfsTools
 from tests.fixtures import assertions
 
 logged_components = (TAP.workflow_scheduler,)
@@ -44,15 +41,14 @@ class Psql(object):
 
 @incremental
 @priority.medium
-@pytest.mark.skipif(CONFIG["kerberos"], reason="Kerberos environment needs kerberos ticket (kinit required)")
-@pytest.mark.usefixtures("test_org", "test_space", "add_admin_to_test_org", "psql_app", "login_to_cf")
+@pytest.mark.skipif(config.kerberos, reason="Kerberos environment needs kerberos ticket (kinit required)")
 class TestJobScheduler:
 
     TEST_HOST = "localhost"
 
-    USERNAME = "ubuntu"
-    PATH_TO_KEY = os.path.expanduser(CONFIG["cdh_key_path"])
-    VIA_HOSTNAME = Config.get_jumpbox_host_address()
+    USERNAME = config.jumpbox_username
+    PATH_TO_KEY = config.jumpbox_key_path
+    VIA_HOSTNAME = config.jumpbox_hostname
     DESTINATION_HOSTNAME = "cdh-master-0"
 
     TEST_JOB = None

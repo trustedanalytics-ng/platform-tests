@@ -56,5 +56,5 @@ class TestAppMonitoring(object):
             step("Testing app with name: {}".format(app.name))
             HttpClientFactory.get(ApplicationConfigurationProvider.get()).request(
                 method=HttpMethod.GET,
-                path="/health"
+                path="health"
             )

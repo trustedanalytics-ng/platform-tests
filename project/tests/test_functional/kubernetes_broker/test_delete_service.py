@@ -16,7 +16,7 @@
 
 import pytest
 
-from configuration import config
+import config
 from modules.constants import HttpStatus, TapComponent as TAP
 from modules.markers import priority, components
 from modules.http_calls import kubernetes_broker
@@ -29,7 +29,7 @@ logged_components = (TAP.kubernetes_broker,)
 pytestmark = [priority.low, components.kubernetes_broker]
 
 
-@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
+@pytest.mark.skipif(not config.kubernetes, reason="No point to run without kubernetes")
 class TestKubernetesDeleteService(TapTestCase):
 
     def test_delete_not_existing_dynamic_service(self):

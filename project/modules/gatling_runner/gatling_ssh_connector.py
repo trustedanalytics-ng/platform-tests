@@ -94,11 +94,11 @@ class GatlingSshConnector(object):
 
     def _prepare_package(self):
         """Upload gatling package if not exists."""
-        if self._get_file_size(Config.gatling_package_file_name()) == 0:
-            logger.info('Uploading package: "{}"'.format(Config.gatling_package_file_name()))
+        if self._get_file_size(Config.GATLING_PACKAGE_FILE_NAME) == 0:
+            logger.info('Uploading package: "{}"'.format(Config.GATLING_PACKAGE_FILE_NAME))
             sftp = self._open_sftp()
             try:
-                sftp.put(Config.gatling_package_file_path(), Config.gatling_package_file_name())
+                sftp.put(Config.GATLING_PACKAGE_FILE_PATH, Config.GATLING_PACKAGE_FILE_NAME)
             finally:
                 sftp.close()
 
@@ -125,7 +125,7 @@ class GatlingSshConnector(object):
                 '-DproxyHttpsPort={}'.format(self._parameters.proxy_https_port),
             ])
         command.extend([
-            '-jar', Config.gatling_package_file_name(),
+            '-jar', Config.GATLING_PACKAGE_FILE_NAME,
             '>', self._parameters.log_file, '2>&1', '&'
         ])
         return command
@@ -134,7 +134,7 @@ class GatlingSshConnector(object):
         """Execute remote command."""
         command = " ".join(command_items)
         logger.info('Executing command: "{}"'.format(command))
-        std_in, std_out, std_err = self._client.exec_command("cd {}; {}".format(Config.gatling_repo_name(), command))
+        std_in, std_out, std_err = self._client.exec_command("cd {}; {}".format(config.GATLING_REPO_NAME, command))
         if std_out.channel.recv_exit_status() > 0:
             raise GatlingSshConnectorExecuteCommandException(std_err.read().decode())
         return std_out.readlines()
@@ -154,26 +154,26 @@ class GatlingSshConnector(object):
     def _open_sftp(self):
         """Create SFTP client."""
         sftp = self._client.open_sftp()
-        sftp.chdir(Config.gatling_repo_name())
+        sftp.chdir(config.GATLING_REPO_NAME)
         return sftp
 
     def _connect(self):
         """Connect to gatling remote host."""
         try:
             self._client.connect(
-                Config.gatling_ssh_host(),
-                port=Config.gatling_ssh_port(),
-                username=Config.gatling_ssh_username(),
-                key_filename=Config.gatling_ssh_key_path()
+                config.GATLING_SSH_HOST,
+                port=config.GATLING_SSH_PORT,
+                username=config.GATLING_SSH_USERNAME,
+                key_filename=config.GATLING_SSH_KEY_PATH
             )
         except paramiko.SSHException:
             raise GatlingSshConnectorException
 
     def _prepare_root_directory(self):
         """Prepare gatling tests root directory."""
-        target_path = os.path.join(Config.gatling_repo_name(), "target", "test-classes")
+        target_path = os.path.join(config.GATLING_REPO_NAME, "target", "test-classes")
         self._client.exec_command("mkdir -p {}".format(target_path))
-        results_path = os.path.join(Config.gatling_repo_name(), self.PATH_TO_RESULTS)
+        results_path = os.path.join(config.GATLING_REPO_NAME, self.PATH_TO_RESULTS)
         self._client.exec_command("mkdir -p {}".format(results_path))
 
     @staticmethod

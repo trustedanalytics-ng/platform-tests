@@ -24,7 +24,6 @@ from .config import Config
 from .elastic_search import ElasticSearch
 from .log_provider_configuration import LogProviderConfiguration
 
-
 logger = get_logger(LoggerType.REMOTE_LOGGER)
 
 
@@ -49,7 +48,7 @@ class LogProvider(Process):
             trials_number = 0
             while not elastic_search.is_log_ready():
                 trials_number += 1
-                if trials_number > Config.get_number_of_trials():
+                if trials_number > Config.REMOTE_LOGGER_RETRY_COUNT:
                     raise LogProviderExceededTrialsNumberException()
                 logger.info(self.TRIALS_LOG.format(getpid(), self.__configuration.app_name, trials_number))
                 sleep(Config.TIME_BEFORE_NEXT_CALL)

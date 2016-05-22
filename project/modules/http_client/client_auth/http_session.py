@@ -18,9 +18,9 @@ import json
 
 from requests import Session, Request
 
-from configuration import config
-from ...tap_logger import log_http_request, log_http_response
-from ...exceptions import UnexpectedResponseError
+import config
+from modules.tap_logger import log_http_request, log_http_response
+from modules.exceptions import UnexpectedResponseError
 from .http_method import HttpMethod
 
 
@@ -86,5 +86,5 @@ class HttpSession(object):
     def _create_session():
         """Create http session."""
         session = Session()
-        session.verify = config.CONFIG["ssl_validation"]
+        session.verify = config.ssl_validation
         return session

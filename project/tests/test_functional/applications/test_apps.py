@@ -16,12 +16,10 @@
 
 import pytest
 
-from configuration.config import CONFIG
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
-from modules.http_calls.platform import service_catalog
 from modules.markers import priority, components
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, User, ServiceType
@@ -58,7 +56,7 @@ class TestTapApp:
         step("Push application to cf")
         application = Application.push(context, source_directory=ApplicationPath.SAMPLE_JAVA_APP,
                                        space_guid=test_space.guid,
-                                       bound_services=(instance.name,), env_proxy=CONFIG["pushed_app_proxy"])
+                                       bound_services=(instance.name,))
         step("Check the application is running")
         application.ensure_started()
         return application
@@ -66,8 +64,7 @@ class TestTapApp:
     def _check_user_can_do_app_flow(self, test_space, client, context):
         step("Push example application")
         example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
-        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
-                                    env_proxy=CONFIG["pushed_app_proxy"])
+        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path)
         step("Check the application is running")
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
         step("Stop the application and check that it is stopped")
@@ -109,8 +106,7 @@ class TestTapApp:
         step("Check that manager cannot push app")
         example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
         with pytest.raises(CommandExecutionException):
-            Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
-                             env_proxy=CONFIG["pushed_app_proxy"])
+            Application.push(context, space_guid=test_space.guid, source_directory=example_app_path)
 
     @priority.low
     def test_non_developer_cannot_manage_app(self, context, test_org, test_space, test_org_manager,
@@ -118,8 +114,7 @@ class TestTapApp:
         step("Push example app as admin")
         cf.cf_login(test_org.name, test_space.name)
         example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
-        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
-                                    env_proxy=CONFIG["pushed_app_proxy"])
+        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path)
         apps = Application.cf_api_get_list_by_space(test_space.guid)
         assert test_app in apps
 
@@ -150,10 +145,10 @@ class TestTapApp:
         assert sorted(platform_app_list) == sorted(cf_app_list)
 
     @priority.medium
-    def test_cascade_app_delete(self, test_space, test_app):
-        service_catalog.api_delete_app_cascade(test_app.guid)
+    def test_cascade_app_delete(self, test_space, instance, test_app):
+        test_app.api_delete(cascade=True)
         cf_apps_list, cf_service_instances_list = summaries.cf_api_get_space_summary(test_space.guid)
-        assert cf_service_instances_list == [] and cf_apps_list == []
+        assert instance not in cf_service_instances_list and test_app not in cf_apps_list
 
     @priority.medium
     def test_app_register_in_marketplace(self, test_org, test_space, sample_java_app):
@@ -164,6 +159,6 @@ class TestTapApp:
 
     @priority.medium
     def test_delete_app(self, test_space, sample_java_app):
-        service_catalog.api_delete_app(sample_java_app.guid)
+        sample_java_app.api_delete()
         cf_apps_list, _ = summaries.cf_api_get_space_summary(test_space.guid)
         assert sample_java_app not in cf_apps_list

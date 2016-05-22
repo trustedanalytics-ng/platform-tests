@@ -41,8 +41,7 @@ class TestAtk:
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def atk_virtualenv(cls, request, class_context, test_org):
-        cls.context = class_context  # TODO move to methods when dependency on unittest is removed
+    def atk_virtualenv(cls, request, test_org):
         cls.atk_virtualenv = ATKtools("atk_virtualenv")
         cls.atk_virtualenv.create()
 
@@ -83,9 +82,9 @@ class TestAtk:
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url)
 
     @pytest.mark.bugs("DPNG-2010 Cannot get JDBC connection when publishing dataset to Hive")
-    def test_3_create_data_set_and_publish_it_in_hive(self, test_org):
+    def test_3_create_data_set_and_publish_it_in_hive(self, class_context, test_org):
         step("Create transfer and check it's finished")
-        transfer = Transfer.api_create(self.context, source=Urls.test_transfer_link, org_guid=test_org.guid,
+        transfer = Transfer.api_create(class_context, source=Urls.test_transfer_link, org_guid=test_org.guid,
                                        title=self.transfer_title)
         transfer.ensure_finished()
         step("Publish in hive the data set created based on the submitted transfer")

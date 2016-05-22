@@ -26,7 +26,7 @@ def api_get_organizations(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/orgs",
+        path="rest/orgs",
         msg="PLATFORM: get org list"
     )
 
@@ -36,7 +36,7 @@ def api_create_organization(name, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     response = client.request(
         method=HttpMethod.POST,
-        path="/rest/orgs",
+        path="rest/orgs",
         body={"name": name},
         msg="PLATFORM: create an org"
     )
@@ -51,7 +51,7 @@ def api_delete_organization(org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="/rest/orgs/{}".format(org_guid),
+        path="rest/orgs/{}".format(org_guid),
         msg="PLATFORM: delete org"
     )
 
@@ -61,7 +61,7 @@ def api_rename_organization(org_guid, new_name, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.PUT,
-        path="/rest/orgs/{}/name".format(org_guid),
+        path="rest/orgs/{}/name".format(org_guid),
         body={"name": new_name},
         msg="PLATFORM: rename org"
     )
@@ -77,7 +77,7 @@ def api_add_organization_user(org_guid, username, roles=(), client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/orgs/{}/users".format(org_guid),
+        path="rest/orgs/{}/users".format(org_guid),
         body=body,
         msg="PLATFORM: add user to org"
     )
@@ -88,7 +88,7 @@ def api_get_organization_users(org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/orgs/{}/users".format(org_guid),
+        path="rest/orgs/{}/users".format(org_guid),
         msg="PLATFORM: get list of users in org"
     )
 
@@ -98,7 +98,7 @@ def api_delete_organization_user(org_guid, user_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="/rest/orgs/{}/users/{}".format(org_guid, user_guid),
+        path="rest/orgs/{}/users/{}".format(org_guid, user_guid),
         msg="PLATFORM: delete user from org"
     )
 
@@ -111,7 +111,7 @@ def api_update_org_user_roles(org_guid, user_guid, new_roles=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/orgs/{}/users/{}".format(org_guid, user_guid),
+        path="rest/orgs/{}/users/{}".format(org_guid, user_guid),
         body=body,
         msg="PLATFORM: update user roles in org"
     )
@@ -127,7 +127,7 @@ def api_add_space_user(org_guid, space_guid, username, roles=(), client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/spaces/{}/users".format(space_guid),
+        path="rest/spaces/{}/users".format(space_guid),
         body=body,
         msg="PLATFORM: Add user to space"
     )
@@ -138,7 +138,7 @@ def api_get_space_users(space_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/spaces/{}/users".format(space_guid),
+        path="rest/spaces/{}/users".format(space_guid),
         msg="PLATFORM: get space users"
     )
 
@@ -148,7 +148,7 @@ def api_delete_space_user(space_guid, user_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="/rest/spaces/{}/users/{}".format(space_guid, user_guid),
+        path="rest/spaces/{}/users/{}".format(space_guid, user_guid),
         msg="PLATFORM: delete user from space"
     )
 
@@ -161,7 +161,7 @@ def api_update_space_user_roles(space_guid, user_guid, new_roles=None, client=No
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/spaces/{}/users/{}".format(space_guid, user_guid),
+        path="rest/spaces/{}/users/{}".format(space_guid, user_guid),
         body=body,
         msg="PLATFORM: update user roles in space"
     )
@@ -172,7 +172,7 @@ def api_get_invitations(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/invitations",
+        path="rest/invitations",
         msg="PLATFORM: get list of all invitations"
     )
 
@@ -182,7 +182,7 @@ def api_invite_user(email, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/invitations",
+        path="rest/invitations",
         body={"email": email},
         msg="PLATFORM: invite new platform user"
     )
@@ -193,7 +193,7 @@ def api_delete_invitation(email, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="/rest/invitations/{}".format(email),
+        path="rest/invitations/{}".format(email),
         msg="PLATFORM: delete invitation"
     )
 
@@ -203,7 +203,7 @@ def api_resend_invitation(email, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/invitations/{}/resend".format(email),
+        path="rest/invitations/{}/resend".format(email),
         msg="PLATFORM: resend invitation"
     )
 
@@ -221,7 +221,7 @@ def api_register_new_user(code, password=None, org_name=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/registrations",
+        path="rest/registrations",
         params={"code": code},
         body=body,
         msg=msg
@@ -233,7 +233,7 @@ def api_get_spaces_in_org(org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/orgs/{}/spaces".format(org_guid),
+        path="rest/orgs/{}/spaces".format(org_guid),
         msg="PLATFORM: get list of spaces in org"
     )
 
@@ -243,7 +243,7 @@ def api_get_spaces(client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/spaces",
+        path="rest/spaces",
         msg="PLATFORM: get list of all spaces"
     )
 
@@ -253,12 +253,12 @@ def api_create_space(org_guid, name, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     response = client.request(
         method=HttpMethod.POST,
-        path="/rest/spaces",
+        path="rest/spaces",
         body={"name": name, "org_guid": org_guid},
         msg="PLATFORM: create a space"
     )
     if response == "":
-        raise AssertionError("Response to POST /rest/spaces did not return space guid.")
+        raise AssertionError("Response to POST rest/spaces did not return space guid.")
     return response
 
 
@@ -270,6 +270,6 @@ def api_delete_space(space_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     client.request(
         method=HttpMethod.DELETE,
-        path="/rest/spaces/{}".format(space_guid),
+        path="rest/spaces/{}".format(space_guid),
         msg="PLATFORM: delete space"
     )

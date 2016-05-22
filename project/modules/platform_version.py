@@ -18,7 +18,7 @@ import yaml
 
 from .constants import TapComponent, TapGitHub
 from .app_sources import github_get_file_content
-from configuration import config
+import config
 
 
 class VersionedComponent(object):
@@ -39,11 +39,11 @@ def get_appstack_yml(github_org_name=None):
     """
     Read local appstack file if a path is configured, otherwise download the file from github.
     """
-    if config.CONFIG.get("local_appstack") is not None:
-        with open(config.CONFIG["local_appstack"]) as f:
+    if config.appstack_file_path is not None:
+        with open(config.appstack_file_path) as f:
             appstack_file = f.read()
     else:
         appstack_file = github_get_file_content(repository=TapGitHub.apployer, file_path=TapGitHub.appstack_path,
-                                                owner=github_org_name, ref=config.CONFIG["platform_version"],
-                                                github_auth=config.CONFIG["github_auth"])
+                                                owner=github_org_name, ref=config.appstack_version,
+                                                github_auth=config.github_credentials())
     return yaml.load(appstack_file)

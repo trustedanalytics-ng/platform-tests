@@ -49,9 +49,9 @@ class GatlingRunner(object):
 
     def _prepare_package(self):
         """Download gatling package if not exists."""
-        if not os.path.isfile(Config.gatling_package_file_path()):
-            logger.info(self.LOG_DOWNLOAD.format(Config.gatling_package_file_url()))
-            urlretrieve(Config.gatling_package_file_url(), Config.gatling_package_file_path())
+        if not os.path.isfile(Config.GATLING_PACKAGE_FILE_PATH):
+            logger.info(self.LOG_DOWNLOAD.format(Config.GATLING_PACKAGE_FILE_URL))
+            urlretrieve(Config.GATLING_PACKAGE_FILE_URL, Config.GATLING_PACKAGE_FILE_PATH)
 
     def _run_package(self):
         """Execute gatling package."""
@@ -69,7 +69,7 @@ class GatlingRunner(object):
                 trials_without_log_change = 0
             else:
                 trials_without_log_change += 1
-            if trials_without_log_change > Config.number_of_trials_without_log_change():
+            if trials_without_log_change > Config.NUMBER_OF_TRIALS_WITHOUT_LOG_CHANGE:
                 raise GatlingRunnerExceededNumberOfTrialsWithoutLogChangeException(self._parameters.log_file)
             log_size = current_log_size
             logger.info(self.LOG_WAIT.format(current_log_size))

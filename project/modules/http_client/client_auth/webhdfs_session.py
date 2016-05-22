@@ -56,7 +56,7 @@ class WebhdfsSession(HttpSession):
 
     @staticmethod
     @counted
-    def redirection_handler(webhdfs_create, test_port, via_host_username, path_to_key, webhdfs_get_via_hostname,
+    def redirection_handler(webhdfs_create, test_port, via_host_username, path_to_key, webhdfs_via_hostname,
                             test_host, method, body=None, params=None, redirection_location=None, hdfs_path=""):
         ssh_tunnel = None
         target_host = redirection_location.split("://", 1)[1].split("/", 1)[0]
@@ -74,7 +74,7 @@ class WebhdfsSession(HttpSession):
         try:
             ssh_tunnel = ssh_client.SshTunnel(
                 target_host, via_host_username, path_to_key=path_to_key, port=target_port,
-                via_hostname=webhdfs_get_via_hostname(), local_port=target_port)
+                via_hostname=webhdfs_via_hostname, local_port=target_port)
             ssh_tunnel.connect()
             webhdfs = webhdfs_create(host=test_host, port=target_port)
             response = webhdfs.request(method, body=body, params=params, path=hdfs_path)

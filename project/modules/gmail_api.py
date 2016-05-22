@@ -24,12 +24,12 @@ import oauth2client
 from retry import retry
 
 from .tap_logger import get_logger
-from configuration import config
+import config
 
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
-CLIENT_SECRET_FILE = os.path.join("configuration", "secrets", "client_secret.json")
+CLIENT_SECRET_FILE = os.path.join("secrets", "client_secret.json")
 APPLICATION_NAME = 'praca-email'
-TEST_EMAIL = config.CONFIG["test_user_email"]
+TEST_EMAIL = config.test_user_email
 INVITATION_EMAIL_SUBJECT = "Invitation to join Trusted Analytics platform"
 INVITATION_LINK_PATTERN = r'"(https?://[^\s]+)"'
 
@@ -37,7 +37,7 @@ logger = get_logger(__name__)
 
 
 def _get_credentials():
-    credential_path = os.path.join("configuration", "secrets", "gmail-code.json")
+    credential_path = os.path.join("secrets", "gmail-code.json")
     store = oauth2client.file.Storage(credential_path)
     credentials = store.get()
     if not credentials or credentials.invalid:

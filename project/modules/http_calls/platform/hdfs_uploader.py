@@ -31,7 +31,7 @@ def api_create_transfer_by_file_upload(org_guid, source, category=None, is_publi
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/upload/{}".format(org_guid),
+        path="rest/upload/{}".format(org_guid),
         data=data,
         files=files,
         msg="PLATFORM: create a transfer"

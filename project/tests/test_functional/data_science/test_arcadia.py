@@ -16,7 +16,7 @@
 
 import pytest
 
-from configuration.config import CONFIG
+import config
 from modules.constants import TapComponent as TAP, Urls
 from modules.markers import components, incremental, priority
 from modules.service_tools.arcadia import Arcadia
@@ -33,8 +33,8 @@ pytestmark = [components.dataset_publisher, components.das, components.hdfs_down
 
 @incremental
 @priority.high
-@pytest.mark.skipif(CONFIG["kerberos"], reason="Not enabled on kerberos environment")
-class TestArcadia:
+@pytest.mark.skipif(config.kerberos, reason="Not enabled on kerberos environment")
+class ArcadiaTest:
     arcadia = None
 
     @classmethod
@@ -47,7 +47,7 @@ class TestArcadia:
     @pytest.fixture(scope="class")
     def arcadia(cls, request):
         step("Get arcadia dataconnection")
-        arcadia = Arcadia()
+        arcadia = Arcadia(url=config.arcadia_url, credentials=config.arcadia_credentials())
         request.addfinalizer(lambda: arcadia.teardown_test_datasets())
         return arcadia
 

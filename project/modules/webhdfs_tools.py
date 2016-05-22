@@ -14,12 +14,10 @@
 # limitations under the License.
 #
 
-import os
-
 from enum import Enum
 
+import config
 from modules.constants.http_status import HttpStatus
-from configuration.config import CONFIG
 from modules.http_client.http_client_factory import HttpClientFactory, HttpClientConfiguration, HttpClientType
 from modules.http_client.client_auth.webhdfs_session import WebhdfsSession
 from modules.http_client.client_auth.http_method import HttpMethod
@@ -39,8 +37,9 @@ class WebhdfsTools(object):
     TEST_PORT = 1234
     TEST_HOST = "localhost"
     DEFAULT_USER = "hdfs"
-    VIA_HOST_USERNAME = "ubuntu"
-    PATH_TO_KEY = os.path.expanduser(CONFIG["cdh_key_path"])
+    VIA_HOST_USERNAME = config.jumpbox_username
+    VIA_HOSTNAME = config.jumpbox_hostname
+    PATH_TO_KEY = config.jumpbox_key_path
 
     @staticmethod
     def get_params(operation):
@@ -58,7 +57,7 @@ class WebhdfsTools(object):
         if response.status_code == HttpStatus.CODE_TEMPORARY_REDIRECT:
             return WebhdfsSession.redirection_handler(
                 WebhdfsTools.create_client, WebhdfsTools.TEST_PORT, WebhdfsTools.VIA_HOST_USERNAME,
-                WebhdfsTools.PATH_TO_KEY, WebhdfsTools.get_via_hostname, WebhdfsTools.TEST_HOST, method=HttpMethod.GET,
+                WebhdfsTools.PATH_TO_KEY, WebhdfsTools.VIA_HOSTNAME, WebhdfsTools.TEST_HOST, method=HttpMethod.GET,
                 params=params, redirection_location=response.headers._store["location"][1], hdfs_path=path)
         return response
 
@@ -73,15 +72,11 @@ class WebhdfsTools(object):
         return client.request(method=HttpMethod.GET, params=params, path=path)
 
     @staticmethod
-    def get_via_hostname():
-        return "jump.{}".format(CONFIG["domain"])
-
-    @staticmethod
     def create_client(host=" ", port=DEFAULT_PORT):
         url = "{}:{}".format(host, str(port))
         client_configuration = HttpClientConfiguration(HttpClientType.WEBHDFS, url=url, username=host,
                                                        password=str(port))
         client = HttpClientFactory.get(client_configuration)
         if "webhdfs" not in client.url:
-            client.url = "http://{}/webhdfs/v1/".format(client.url)
+            client.url = "http://{}/webhdfs/v1".format(client.url)
         return client

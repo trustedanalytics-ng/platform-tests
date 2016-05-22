@@ -24,11 +24,11 @@ import traceback
 import requests
 from teamcity import is_running_under_teamcity
 
+import config
 from .constants import LoggerType
 
-
-__LOGGING_LEVEL = logging.NOTSET
-LOGGED_RESPONSE_BODY_LENGTH = 0
+__LOGGING_LEVEL = config.logging_level
+LOGGED_RESPONSE_BODY_LENGTH = 1024
 
 
 class StdAndFileHandler(object):
@@ -111,8 +111,6 @@ def log_http_request(prepared_request, username, password=None, description="", 
     body = prepared_body if not data else json.dumps(data)
     if body is None:
         body = ""
-    if password:
-        body = str(body).replace(password, "[SECRET]")
     msg = [
         description,
         "----------------Request------------------",

@@ -18,7 +18,6 @@ import json
 
 import requests
 
-from configuration import config
 from .exceptions import UnexpectedResponseError
 from .tap_logger import log_http_request, log_http_response
 from .http_calls import cloud_foundry as cf

@@ -15,8 +15,8 @@
 #
 
 import unittest
-from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 
+from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_token import ClientAuthToken
 from modules.http_client.client_auth.client_auth_no_auth import ClientAuthNoAuth

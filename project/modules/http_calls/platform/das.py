@@ -32,7 +32,7 @@ def api_get_transfers(org_guids=None, query="", filters=(), size=12, time_from=0
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/das/requests",
+        path="rest/das/requests",
         params=query_params,
         msg="PLATFORM: get filtered transfer list"
     )
@@ -46,7 +46,7 @@ def api_create_transfer(category=None, is_public=None, org_guid=None, source=Non
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/das/requests",
+        path="rest/das/requests",
         body=body,
         msg="PLATFORM: create a transfer"
     )
@@ -57,7 +57,7 @@ def api_get_transfer(request_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/das/requests/{}".format(request_id),
+        path="rest/das/requests/{}".format(request_id),
         msg="PLATFORM: get transfer"
     )
 
@@ -67,6 +67,6 @@ def api_delete_transfer(request_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="/rest/das/requests/{}".format(request_id),
+        path="rest/das/requests/{}".format(request_id),
         msg="PLATFORM: delete transfer"
     )

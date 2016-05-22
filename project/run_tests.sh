@@ -16,12 +16,16 @@
 #
 
 
+#################################################################################
+# run tests
+#################################################################################
+
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo $PROJECT_DIR
 
 source ~/virtualenvs/pyvenv_api_tests/bin/activate
 cd $PROJECT_DIR
-python3 run_tests.py "$@"
+py.test "$@"
 ret_code=$?
 deactivate
 exit $ret_code

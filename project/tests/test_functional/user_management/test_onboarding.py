@@ -17,8 +17,8 @@
 import re
 import time
 
+import config
 from modules import gmail_api
-from configuration import config
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls.platform import user_management
 from modules.tap_logger import step
@@ -42,19 +42,19 @@ class TestOnboarding:
         step("Check that the e-mail invitation message is correct")
         code = gmail_api.extract_code_from_message(message_content)
 
-        expected_link_pattern = '"https?://console.{}/new-account\?code={}"'.format(config.CONFIG["domain"], code)
+        expected_link_pattern = '"https?://console.{}/new-account\?code={}"'.format(config.tap_domain, code)
         message_link = gmail_api.get_link_from_message(message_content)
         correct_link = (re.match(expected_link_pattern, message_link),
                         "Link to create account: {}, expected pattern: {}".format(message_link, expected_link_pattern))
 
-        expected_inviting_user = config.CONFIG["admin_username"]
+        expected_inviting_user = config.admin_username
         correct_inviting_user = (expected_inviting_user in message_content,
                                  "Inviting user {} was not found in message content.".format(expected_inviting_user))
 
         correct_subject = (self.EXPECTED_EMAIL_SUBJECT in message_subject,
                            "Message subject {}. Expected: {}".format(message_subject, self.EXPECTED_EMAIL_SUBJECT))
 
-        expected_sender = self.SENDER_PATTERN.format(config.CONFIG["domain"])
+        expected_sender = self.SENDER_PATTERN.format(config.tap_domain)
         correct_sender = (expected_sender in message_sender,
                           "Message sender {}. Expected: {}".format(message_sender, expected_sender))
 

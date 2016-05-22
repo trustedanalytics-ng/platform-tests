@@ -26,7 +26,6 @@ from .log_provider_configuration import LogProviderConfiguration
 from .remote_logger_configuration import RemoteLoggerConfiguration
 from .ssh_connector import SshConnector
 
-
 logger = get_logger(LoggerType.REMOTE_LOGGER)
 
 

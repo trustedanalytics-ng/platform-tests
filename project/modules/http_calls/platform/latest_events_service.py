@@ -29,7 +29,7 @@ def api_get_latest_events(org_guid=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/les/events",
+        path="rest/les/events",
         params=params,
         msg="PLATFORM: get latest events"
     )

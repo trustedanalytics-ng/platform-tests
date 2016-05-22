@@ -19,7 +19,7 @@ from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpSt
     KubernetesBrokerHttpStatus
 from .logger_type import LoggerType
 from .project_paths import Path
-from .services import ParametrizedService, ServiceLabels, ServicePlan
+from .services import ParametrizedService, ServiceLabels, ServicePlan, ServiceTag
 from .sources import TapGitHub, RelativeRepositoryPaths
 from .tap_components import TapComponent
 from .urls import Urls

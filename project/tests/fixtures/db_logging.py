@@ -16,16 +16,16 @@
 
 import pytest
 
-from configuration import config
+import config
 from modules.mongo_reporter.reporter import MongoReporter
 
 
 @pytest.fixture(scope="session", autouse=True)
 def log_test_run_in_database(request):
-    if config.CONFIG["database_url"] is not None:
-        mongo_reporter = MongoReporter(mongo_uri=config.CONFIG["database_url"], run_id=config.CONFIG["test_run_id"])
-        mongo_reporter.on_run_start(environment=config.CONFIG["domain"],
-                                    environment_version=None,
+    if config.database_url is not None:
+        mongo_reporter = MongoReporter(mongo_uri=config.database_url, run_id=config.test_run_id)
+        mongo_reporter.on_run_start(environment=config.tap_domain,
+                                    environment_version=config.appstack_version,
                                     platform_components=[],
                                     tests_to_run_count=len(request.session.items))
 

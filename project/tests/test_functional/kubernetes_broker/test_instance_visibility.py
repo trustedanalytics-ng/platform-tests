@@ -16,7 +16,7 @@
 
 import pytest
 
-from configuration import config
+import config
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.markers import incremental, priority, components
 from modules.tap_object_model import KubernetesInstance, ServiceInstance, ServiceType
@@ -28,7 +28,7 @@ pytestmark = [priority.medium, components.kubernetes_broker]
 
 
 @incremental
-@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
+@pytest.mark.skipif(not config.kubernetes, reason="No point to run without kubernetes")
 class TestExposeKubernetesService:
     service_label = ServiceLabels.MONGO_DB_30_MULTINODE
     plan_name = ServicePlan.CLUSTERED

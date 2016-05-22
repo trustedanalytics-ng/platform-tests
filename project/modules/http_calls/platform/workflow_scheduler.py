@@ -29,7 +29,7 @@ def api_get_jobs_list(org_guid, amount, unit, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/v1/oozie/jobs/workflow",
+        path="rest/v1/oozie/jobs/workflow",
         params=params
     )
 
@@ -51,7 +51,7 @@ def api_create_job(org_guid, name, start=None, end=None, amount=None, unit=None,
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/v1/oozie/schedule_job/coordinated",
+        path="rest/v1/oozie/schedule_job/coordinated",
         params=params,
         body=body
     )
@@ -63,6 +63,6 @@ def api_get_job_details(org_guid, job_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/v1/oozie/jobs/workflow/{}".format(job_id),
+        path="rest/v1/oozie/jobs/workflow/{}".format(job_id),
         params=params
     )

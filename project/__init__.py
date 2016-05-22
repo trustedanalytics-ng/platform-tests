@@ -15,8 +15,6 @@
 #
 
 
-
-
 # add 'project' directory to PYTHONPATH - this is root directory for the whole project
 
 import os

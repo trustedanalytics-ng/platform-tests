@@ -47,9 +47,10 @@ class Context(object):
         self._cleanup_test_objects(self.users)
         self._cleanup_test_objects(self.invitations)
         transfer_titles = [t.title for t in self.transfers]
-        data_sets = DataSet.api_get_matching_to_transfer_list(transfer_titles)
-        self._cleanup_test_objects(data_sets)
-        self._cleanup_test_objects(self.transfers)
+        if len(transfer_titles) > 0:
+            data_sets = DataSet.api_get_matching_to_transfer_list(transfer_titles)
+            self._cleanup_test_objects(data_sets)
+            self._cleanup_test_objects(self.transfers)
         self._cleanup_test_objects(self.service_instances)
         self._cleanup_test_objects(self.apps)
         self._cleanup_test_objects(self.orgs)

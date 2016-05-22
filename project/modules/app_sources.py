@@ -24,7 +24,6 @@ import requests
 
 from .tap_logger import log_command, get_logger, log_http_request, log_http_response
 
-
 logger = get_logger(__name__)
 
 

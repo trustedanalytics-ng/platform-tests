@@ -24,6 +24,6 @@ def api_get_atk_instances(org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/orgs/{}/atkinstances".format(org_guid),
+        path="rest/orgs/{}/atkinstances".format(org_guid),
         msg="PLATFORM: get list of atk instances"
     )

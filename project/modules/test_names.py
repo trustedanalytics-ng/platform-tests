@@ -18,7 +18,7 @@ from datetime import datetime
 import re
 import socket
 
-from configuration.config import CONFIG
+import config
 
 
 def is_test_object_name(name):
@@ -34,7 +34,7 @@ def generate_test_object_name(email=False, short=False, prefix=None):
     # TODO add global counter
     str_format = "%Y%m%d_%H%M%S" if short else "%Y%m%d_%H%M%S_%f"
     now = datetime.now().strftime(str_format)
-    name_format = CONFIG["test_user_email"].replace('@', '+{}_{}@') if email else "{}_{}"
+    name_format = config.test_user_email.replace('@', '+{}_{}@') if email else "{}_{}"
     if prefix is None:
         prefix = socket.gethostname().replace("-", "_").lower()
     return name_format.format(prefix, now)

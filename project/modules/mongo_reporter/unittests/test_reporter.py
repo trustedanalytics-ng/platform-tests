@@ -17,7 +17,6 @@
 import socket
 from unittest import TestCase, mock
 
-from bson import ObjectId
 import mongomock
 
 from modules.mongo_reporter import reporter

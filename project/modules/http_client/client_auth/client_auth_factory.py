@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
-from ..config import Config
+import sys
+
+import config
 from .http_session import HttpSession
 from .client_auth_base import ClientAuthBase
 from .client_auth_http_basic import ClientAuthHttpBasic
@@ -36,16 +38,16 @@ class ClientAuthFactory(object):
         session = HttpSession(username, password)
 
         if auth_type == ClientAuthType.TOKEN_CF:
-            return ClientAuthToken(Config.auth_basic_token_url(), session)
+            return ClientAuthToken(config.cf_oauth_token_url, session)
 
         if auth_type == ClientAuthType.TOKEN_UAA:
-            return ClientAuthToken(Config.auth_uaa_token_url(), session)
+            return ClientAuthToken(config.uaa_oauth_token_url, session)
 
         elif auth_type == ClientAuthType.HTTP_BASIC:
             return ClientAuthHttpBasic(ClientAuthFactory.EMPTY_URL, session)
 
         elif auth_type == ClientAuthType.LOGIN_PAGE:
-            return ClientAuthLoginPage(Config.auth_login_url(), session)
+            return ClientAuthLoginPage(config.console_login_url, session)
 
         elif auth_type == ClientAuthType.WEBHDFS:
             return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, WebhdfsSession(username, password))

@@ -17,7 +17,6 @@
 from datetime import datetime
 
 from .config import Config
-
 from .simulation.simulation_name import SimulationName
 
 
@@ -88,12 +87,12 @@ class GatlingRunnerParameters(object):
     @property
     def proxy_http_port(self):
         """Connection proxy http port number."""
-        return self.__proxy_http_port if self.__proxy_http_port is not None else Config.gatling_proxy_http_port()
+        return self.__proxy_http_port if self.__proxy_http_port is not None else Config.GATLING_PROXY_HTTP_PORT
 
     @property
     def proxy_https_port(self):
         """Connection proxy https port number."""
-        return self.__proxy_https_port if self.__proxy_https_port is not None else Config.gatling_proxy_https_port()
+        return self.__proxy_https_port if self.__proxy_https_port is not None else Config.GATLING_PROXY_HTTPS_PORT
 
     @property
     def users(self):

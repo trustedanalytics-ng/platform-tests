@@ -18,11 +18,11 @@ import json
 
 from bs4 import BeautifulSoup
 
+import config
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.http_client.config import Config as ClientConfig
 
 
 class PasswordAPI(object):
@@ -30,7 +30,7 @@ class PasswordAPI(object):
         self.username = username
         self.password = password
         self.client = HttpClientFactory.get(ApplicationConfigurationProvider.get(
-            url=ClientConfig.auth_login_url(),
+            url=config.console_login_url,
             username=self.username,
             password=self.password
         ))
@@ -93,7 +93,7 @@ class PasswordAPI(object):
             self._username, old_password
         )).request(
             method=HttpMethod.PUT,
-            path="/rest/users/current/password",
+            path="rest/users/current/password",
             data=json.dumps(data),
             headers={"Accept": "application/json", "Content-Type": "application/json;charset=UTF-8"},
             msg="Change password"

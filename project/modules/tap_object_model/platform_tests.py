@@ -16,7 +16,7 @@
 
 import time
 
-from configuration import config
+import config
 from modules.http_calls.platform import platform_tests
 
 
@@ -63,9 +63,9 @@ class TestSuite(object):
     @classmethod
     def api_create(cls, username=None, password=None, client=None):
         if username is None:
-            username = config.CONFIG["admin_username"]
+            username = config.admin_username
         if password is None:
-            password = config.CONFIG["admin_password"]
+            password = config.admin_password
         response = platform_tests.api_create_test_suite(username, password, client=client)
         suite_id = response["suiteId"]
         time.sleep(3)
