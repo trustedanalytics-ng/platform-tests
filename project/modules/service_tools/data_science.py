@@ -51,7 +51,7 @@ class DataScience(object):
         )
         request = self.session.prepare_request(request)
         log_http_request(request, username=username, password=self.password)
-        response = self.session.send(request)
+        response = self.session.send(request, timeout=90)
         log_http_response(response)
         if not response.ok:
             raise UnexpectedResponseError(status=response.status_code, error_message=message_on_error)
