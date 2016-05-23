@@ -35,12 +35,12 @@ class TestResultModel(object):
     def __init__(self, mongo_document: dict):
         """Initialize based on mongo_document dict representation."""
         self.__id = mongo_document["_id"]
-        self.__name = mongo_document["name"]
+        self.__name = mongo_document.get("name")
         self.__order = mongo_document.get("order")
         self.__result = mongo_document.get("status")
         if self.__result is not None:
             self.__result = self.__result.upper()
-        self.__components = mongo_document["components"]
+        self.__components = mongo_document.get("components")
         self.__stacktrace = mongo_document.get("stacktrace")
 
     @classmethod
