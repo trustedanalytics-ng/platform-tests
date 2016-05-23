@@ -4,3 +4,6 @@ applications:
   name: platform-tests
   services:
   - platform-tests-mongodb
+  env:
+    # DO NOT TOUCH - version is changed automatically by Bumpversion
+    VERSION: "0.6.6"
