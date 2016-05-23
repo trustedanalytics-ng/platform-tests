@@ -24,7 +24,7 @@ import flask_restful
 import pymongo
 
 from config import AppConfig
-from credentials_validator import CredentialsValidator
+from console_authenticator import AuthenticationException, ConsoleAuthenticator
 from model import TestSuiteModel
 from runner import Runner
 
@@ -49,7 +49,7 @@ class ExceptionHandlingApi(flask_restful.Api):
 
 class TestSuite(flask_restful.Resource):
     runner = Runner()
-    credentials_validator = CredentialsValidator(tap_domain=app_config.tap_domain)
+    console_authenticator = ConsoleAuthenticator(tap_domain=app_config.tap_domain)
 
     def get(self):
         """Return a list of test suites."""
@@ -73,7 +73,9 @@ class TestSuite(flask_restful.Resource):
             password = request_body["password"]
         except (ValueError, KeyError):
             flask_restful.abort(400, message="Bad request")
-        if not self.credentials_validator.validate(username, password):
+        try:
+            self.console_authenticator.authenticate(username, password)
+        except AuthenticationException:
             flask_restful.abort(401, message="Incorrect credentials")
 
         new_suite = self.runner.run(username=username, password=password)

@@ -26,7 +26,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class CredentialsValidator(object):
+class AuthenticationException(Exception):
+    pass
+
+
+class ConsoleAuthenticator(object):
     csrf_data_key = "X-Uaa-Csrf"
 
     def __init__(self, tap_domain):
@@ -74,7 +78,7 @@ class CredentialsValidator(object):
         ]
         logger.info("\n".join(msg))
 
-    def validate(self, username, password):
+    def authenticate(self, username, password):
         session = requests.session()
         session.verify = False
         data = {"username": username, "password": password}
@@ -86,5 +90,4 @@ class CredentialsValidator(object):
         response = session.send(request)
         self._log_response(response)
         if not response.ok or "forgot_password" in response.text:
-            return False
-        return True
+            raise AuthenticationException("Authentication failed with credentials: {} {}".format(username, password))
