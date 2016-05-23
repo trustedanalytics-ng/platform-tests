@@ -175,8 +175,7 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, m
     instance = ServiceInstance.api_create(org_guid=core_org.guid, space_guid=core_space.guid,
                                           service_label=service_type.label, service_plan_guid=plan["guid"])
     step("Check that the instance was created")
-    instances = ServiceInstance.api_get_list(space_guid=core_space.guid, service_type_guid=service_type.guid)
-    assert instance in instances
+    instance.ensure_created()
     step("Delete the instance")
     instance.api_delete()
     step("Check that the instance was deleted")

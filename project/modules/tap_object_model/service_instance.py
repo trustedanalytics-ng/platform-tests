@@ -31,13 +31,14 @@ from . import ServiceKey
 class ServiceInstance(object):
     COMPARABLE_ATTRS = ["guid", "name", "space_guid", "service_label"]
 
-    def __init__(self, guid, name, space_guid, service_label, bound_apps=None, credentials=None):
+    def __init__(self, guid, name, space_guid, service_label, bound_apps=None, credentials=None, last_operation=None):
         self.guid = guid
         self.name = name
         self.space_guid = space_guid
         self.service_label = service_label
         self.bound_apps = bound_apps or []
         self.credentials = credentials
+        self.last_operation = last_operation
 
     def __eq__(self, other):
         return all((getattr(self, a) == getattr(other, a) for a in self.COMPARABLE_ATTRS))
@@ -85,7 +86,8 @@ class ServiceInstance(object):
             response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
                                                                    org_guid=org_guid, space_guid=space_guid,
                                                                    params=params, client=client)
-            return cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid, service_label=service_label)
+            return cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid, service_label=service_label,
+                       last_operation=response["entity"].get("last_operation"))
         except UnexpectedResponseError as e:
             if e.status == 504 and "Gateway Timeout" in e.error_message:
                 return cls._get_instance_with_retry(name, space_guid, service_label)
@@ -101,7 +103,7 @@ class ServiceInstance(object):
                           for binding_data in data["bound_apps"]]
             service_label = data["service_plan"]["service"]["label"] if data.get("service_plan") is not None else None
             instance = cls(guid=data["guid"], name=data["name"], space_guid=space_guid, service_label=service_label,
-                           bound_apps=bound_apps)
+                           bound_apps=bound_apps, last_operation=data.get("last_operation"))
             instances.append(instance)
         return instances
 
@@ -142,6 +144,17 @@ class ServiceInstance(object):
     @classmethod
     def api_get_data_science_service_instances(cls, space_guid, org_guid, service_label):
         return service_exposer.api_tools_service_instances(service_label, space_guid, org_guid)
+
+    @retry(AssertionError, tries=20, delay=3)
+    def ensure_created(self):
+        instances = ServiceInstance.api_get_list(space_guid=self.space_guid)
+        updated_instance = next((i for i in instances if i.guid == self.guid), None)
+        assert updated_instance is not None, "Instance of {} not found on the list".format(self.name)
+        self.last_operation = updated_instance.last_operation
+        assert self.last_operation["type"] == "create",\
+            "Instance of {} not created - last operation: {}".format(self.name, self.last_operation)
+        assert self.last_operation["state"] == "succeeded",\
+            "Instance of {} not created - last operation: {}".format(self.name, self.last_operation)
 
     # ----------------------------------------- CF API ----------------------------------------- #
 
@@ -197,7 +210,7 @@ class ServiceInstance(object):
         instance_name = generate_test_object_name()
         instance_guid = uuid.uuid4()
         app.app_broker_new_service_instance(instance_guid, organization_guid, plan_id, service_id, space_guid,
-                                                      instance_name)
+                                            instance_name)
         return cls(guid=instance_guid, name=instance_name, service_label=None, space_guid=space_guid)
 
 

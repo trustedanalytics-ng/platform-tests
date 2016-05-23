@@ -69,8 +69,7 @@ class MarketplaceServices(TapTestCase):
             service_plan_guid=plan_guid
         )
         self.step("Check that the instance was created")
-        instances = ServiceInstance.api_get_list(space_guid=space_guid)
-        self.assertIn(instance, instances)
+        instance.ensure_created()
         service_key_exception = None
         try:
             self.step("Check that the instance exists in summary and has no service keys")
