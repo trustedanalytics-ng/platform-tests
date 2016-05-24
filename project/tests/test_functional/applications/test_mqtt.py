@@ -44,7 +44,6 @@ class Mqtt(TapTestCase):
     INFLUX_INSTANCE_NAME = "mqtt-demo-db"
     MQTT_INSTANCE_NAME = "mqtt-demo-messages"
     TEST_DATA_FILE = os.path.join("fixtures", "shuttle_scale_cut_val.csv")
-    MQTT_SERVER = "{}.{}".format(REPO_NAME, config.CONFIG["domain"])
     SERVER_CERTIFICATE = os.path.join("fixtures", "mosquitto_demo_cert.pem")
     MQTT_TOPIC_NAME = "space-shuttle/test-data"
 
@@ -76,8 +75,8 @@ class Mqtt(TapTestCase):
         )
 
         self.step("Push mqtt app to cf")
-        mqtt_demo_app = Application.push(source_directory=app_repo_path, name=self.REPO_NAME,
-                                         space_guid=TestData.test_space.guid)
+        mqtt_demo_app = Application.push(source_directory=app_repo_path, space_guid=TestData.test_space.guid,
+                                         env_proxy=config.CONFIG["pushed_app_proxy"])
 
         self.step("Retrieve credentials for mqtt service instance")
         self.credentials = mqtt_demo_app.get_credentials(service_name=ServiceLabels.MOSQUITTO)
@@ -89,11 +88,12 @@ class Mqtt(TapTestCase):
         mqtt_pwd = self.credentials.get("password")
         self.assertIsNotNone(mqtt_pwd)
 
-        self.step("Connect to {} with mqtt client".format(self.MQTT_SERVER))
+        self.step("Connect to mqtt app with mqtt client")
         mqtt_client = mqtt.Client()
         mqtt_client.username_pw_set(mqtt_username, mqtt_pwd)
         mqtt_client.tls_set(self.SERVER_CERTIFICATE, tls_version=ssl.PROTOCOL_TLSv1_2)
-        mqtt_client.connect(self.MQTT_SERVER, int(mqtt_port), 20)
+        mqtt_server_address = mqtt_demo_app.urls[0]
+        mqtt_client.connect(mqtt_server_address, int(mqtt_port), 20)
         with open(self.TEST_DATA_FILE) as f:
             expected_data = f.read().split("\n")
 
@@ -101,7 +101,7 @@ class Mqtt(TapTestCase):
         logs = subprocess.Popen(["cf", "logs", "mqtt-demo"], stdout=subprocess.PIPE)
         time.sleep(5)
 
-        self.step("Send {0} data vectors to {1}:{2} on topic {3}".format(len(expected_data), self.MQTT_SERVER,
+        self.step("Send {0} data vectors to {1}:{2} on topic {3}".format(len(expected_data), mqtt_server_address,
                                                                          mqtt_port, self.MQTT_TOPIC_NAME))
         for line in expected_data:
             mqtt_client.publish(self.MQTT_TOPIC_NAME, line)

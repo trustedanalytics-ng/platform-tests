@@ -16,6 +16,7 @@
 
 import pytest
 
+from configuration.config import CONFIG
 from modules.constants import ApplicationPath, TapComponent as TAP, HttpStatus
 from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
@@ -40,7 +41,8 @@ class TestTapApp:
     def _check_user_can_do_app_flow(self, test_org, test_space, client):
         step("Push example application")
         example_app_path = ApplicationPath.SAMPLE_APP
-        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
+        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+                                    env_proxy=CONFIG["pushed_app_proxy"])
         step("Check the application is running")
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
         step("Stop the application and check that it is stopped")
@@ -81,7 +83,8 @@ class TestTapApp:
         step("Check that manager cannot push app")
         example_app_path = ApplicationPath.SAMPLE_APP
         with pytest.raises(CommandExecutionException):
-            Application.push(space_guid=test_space.guid, source_directory=example_app_path)
+            Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+                             env_proxy=CONFIG["pushed_app_proxy"])
 
     @priority.low
     def test_non_developer_cannot_manage_app(self, test_org, test_space, test_org_manager, test_org_manager_client,
@@ -89,7 +92,8 @@ class TestTapApp:
         step("Push example app as admin")
         cf.cf_login(test_org.name, test_space.name)
         example_app_path = ApplicationPath.SAMPLE_APP
-        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path)
+        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+                                    env_proxy=CONFIG["pushed_app_proxy"])
         apps = Application.cf_api_get_list_by_space(test_space.guid)
         assert test_app in apps
 

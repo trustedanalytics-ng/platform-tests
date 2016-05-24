@@ -66,13 +66,13 @@ class Postgres(TapTestCase):
     @pytest.fixture(scope="class", autouse=True)
     def setup_psql_api_app(cls, request, test_space, login_to_cf, postgres_instance):
         cls.step("Get sql api app sources")
-        sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example,
-                                                 repo_owner=TapGitHub.intel_data,
+        sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data,
                                                  gh_auth=config.CONFIG["github_auth"])
         psql_app_path = sql_api_sources.clone_or_pull()
         cls.step("Push psql api app to cf")
         cls.psql_app = Application.push(space_guid=test_space.guid, source_directory=psql_app_path,
-                                        bound_services=(postgres_instance.name,))
+                                        bound_services=(postgres_instance.name,),
+                                        env_proxy=config.CONFIG["pushed_app_proxy"])
 
         def fin():
             cls.psql_app.cleanup()

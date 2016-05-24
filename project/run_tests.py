@@ -69,7 +69,8 @@ if __name__ == "__main__":
                               disable_remote_logger=args.disable_remote_logger,
                               remote_logger_retry_count=args.remote_logger_retry_count,
                               kerberos=args.kerberos,
-                              jumpbox_address=args.jumpbox_address)
+                              jumpbox_address=args.jumpbox_address,
+                              pushed_app_proxy=args.pushed_app_proxy)
 
     for key in config.LOGGED_CONFIG_KEYS:
         logger.info("{}={}".format(key, config.CONFIG.get(key)))

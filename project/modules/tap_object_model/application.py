@@ -73,7 +73,7 @@ class Application(object):
         return self.instances[0] > 0
 
     @classmethod
-    def push(cls, space_guid, source_directory, name=None, bound_services=None, env=None):
+    def push(cls, space_guid, source_directory, name=None, bound_services=None, env=None, env_proxy=None):
         """
         Application which will later be pushed to cf.
         source_directory -- where manifest.yml is located
@@ -94,9 +94,14 @@ class Application(object):
         manifest["applications"][0]["name"] = name
         if bound_services is not None:
             manifest["applications"][0]["services"] = list(bound_services)
+        app_env = {}
         if env is not None:
-            for env_name, env_val in env.items():
-                manifest["applications"][0]["env"][env_name] = env_val
+            app_env.update(env)
+        if env_proxy is not None:
+            http_proxy = "http://{}:911".format(env_proxy)
+            https_proxy = "https://{}:912".format(env_proxy)
+            app_env.update({"http_proxy": http_proxy, "https_proxy": https_proxy})
+        manifest["applications"][0]["env"] = app_env
         with open(manifest_path, "w") as f:
             f.write(yaml.dump(manifest))
 

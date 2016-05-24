@@ -108,20 +108,21 @@ class Ws2kafka2hdfs(TapTestCase):
         self.__class__.topic_name = "topic-{}".format(postfix)
 
         self.step("Push application ws2kafka")
-        self.__class__.app_ws2kafka = Application.push(
-            space_guid=test_data.TestData.test_space.guid,
-            source_directory=ws2kafka_path,
-            name="ws2kafka-{}".format(postfix)
-        )
+        self.__class__.app_ws2kafka = Application.push(space_guid=test_data.TestData.test_space.guid,
+                                                       source_directory=ws2kafka_path,
+                                                       name="ws2kafka-{}".format(postfix),
+                                                       env_proxy=config.CONFIG["pushed_app_proxy"])
         self.step("Push application kafka2hdfs")
-        self.__class__.app_kafka2hdfs = Application.push(
-            space_guid=test_data.TestData.test_space.guid,
-            source_directory=kafka2hdfs_path,
-            name="kafka2hdfs-{}".format(postfix),
-            bound_services=(self.KAFKA_INSTANCE_NAME, self.ZOOKEEPER_INSTANCE_NAME, self.HDFS_INSTANCE_NAME,
-                            self.KERBEROS_SERVICE),
-            env={"TOPICS": self.topic_name, "CONSUMER_GROUP": "group-{}".format(postfix)}
-        )
+        self.__class__.app_kafka2hdfs = Application.push(space_guid=test_data.TestData.test_space.guid,
+                                                         source_directory=kafka2hdfs_path,
+                                                         name="kafka2hdfs-{}".format(postfix),
+                                                         bound_services=(self.KAFKA_INSTANCE_NAME,
+                                                                         self.ZOOKEEPER_INSTANCE_NAME,
+                                                                         self.HDFS_INSTANCE_NAME,
+                                                                         self.KERBEROS_SERVICE),
+                                                         env={"TOPICS": self.topic_name,
+                                                              "CONSUMER_GROUP": "group-{}".format(postfix)},
+                                                         env_proxy=config.CONFIG["pushed_app_proxy"])
 
         self.assertTrue(self.app_ws2kafka.is_started, "ws2kafka app is not started")
         self.assertTrue(self.app_kafka2hdfs.is_started, "kafka2hdfs app is not started")

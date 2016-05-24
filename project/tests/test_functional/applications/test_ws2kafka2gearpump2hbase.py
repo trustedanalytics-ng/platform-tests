@@ -88,9 +88,11 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
 
         cls.step("Push apps")
         cls.app_ws2kafka = Application.push(space_guid= test_space.guid, source_directory=ws2kafka_path,
-                                            name=generate_test_object_name(short=True))
+                                            name=generate_test_object_name(short=True),
+                                            env_proxy=config.CONFIG["pushed_app_proxy"])
         app_hbase_reader = Application.push(space_guid=test_space.guid, source_directory=hbase_reader_path,
-                                            name=generate_test_object_name(short=True))
+                                            name=generate_test_object_name(short=True),
+                                            env_proxy=config.CONFIG["pushed_app_proxy"])
         cls.hbase_reader = HbaseClient(app_hbase_reader)
         pushed_apps = [cls.app_ws2kafka, app_hbase_reader]
 

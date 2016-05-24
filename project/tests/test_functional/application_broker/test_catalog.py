@@ -18,6 +18,7 @@ import uuid
 
 import pytest
 
+from configuration.config import CONFIG
 from modules.constants import ApplicationPath, HttpStatus, TapComponent as TAP
 from modules.http_calls import application_broker as broker_client
 from modules.runner.tap_test_case import TapTestCase
@@ -57,10 +58,9 @@ class ApplicationBrokerFlow(TapTestCase):
     cf_service = None
 
     def test_0_push_example_app(self):
-        self.__class__.test_app = Application.push(
-            space_guid=TestData.test_space.guid,
-            source_directory=ApplicationPath.SAMPLE_APP
-        )
+        self.__class__.test_app = Application.push(space_guid=TestData.test_space.guid,
+                                                   source_directory=ApplicationPath.SAMPLE_APP,
+                                                   env_proxy=CONFIG["pushed_app_proxy"])
 
     def test_1_register_service(self):
         self.step("Registering new service.")

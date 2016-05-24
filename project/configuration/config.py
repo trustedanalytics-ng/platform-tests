@@ -55,7 +55,8 @@ CONFIG = {
     "remote_log_enabled": True,
     "remote_logger_retry_count": 5,
     "cf_auth": ("cf", ""),
-    "kerberos": False
+    "kerberos": False,
+    "pushed_app_proxy": None,
 }
 
 LOGGED_CONFIG_KEYS = ["domain", "admin_username", "client_type", "ssl_validation", "platfom_version", "database_url",
@@ -66,7 +67,8 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
                        logging_level=None, repository=None, platform_version="master", database_url=None,
                        test_suite=None, local_appstack=None, admin_username=None, admin_password=None,
                        ref_org_name=None, ref_space_name=None, test_run_id=None, disable_remote_logger=None,
-                       remote_logger_retry_count=None, kerberos=None, jumpbox_address=None):
+                       remote_logger_retry_count=None, kerberos=None, jumpbox_address=None,
+                       pushed_app_proxy=None):
     defaults = __CONFIG.defaults()
     defaults.update(__SECRETS.defaults())
     CONFIG["platform_version"] = platform_version
@@ -87,13 +89,13 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
         CONFIG["arcadia_password"] = __SECRETS.get(domain, "arcadia_password",
                                                    fallback=defaults.get("arcadia_password", None))
         CONFIG["cloudera_username"] = __SECRETS.get(domain, "cloudera_username",
-                                                   fallback=defaults.get("cloudera_username", None))
+                                                    fallback=defaults.get("cloudera_username", None))
         CONFIG["cloudera_password"] = __SECRETS.get(domain, "cloudera_password",
-                                                   fallback=defaults.get("cloudera_password", None))
+                                                    fallback=defaults.get("cloudera_password", None))
         CONFIG["kerberos_username"] = __SECRETS.get(domain, "kerberos_username",
-                                                   fallback=defaults.get("kerberos_username", None))
+                                                    fallback=defaults.get("kerberos_username", None))
         CONFIG["kerberos_password"] = __SECRETS.get(domain, "kerberos_password",
-                                                   fallback=defaults.get("kerberos_password", None))
+                                                    fallback=defaults.get("kerberos_password", None))
         CONFIG["cf_api_version"] = __CONFIG.get(domain, "cf_api_version", fallback=defaults.get("cf_api_version", None))
     CONFIG["test_suite"] = test_suite
     if logged_response_body_length is not None:
@@ -112,6 +114,8 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
         CONFIG["remote_log_enabled"] = not disable_remote_logger
     if remote_logger_retry_count is not None:
         CONFIG["remote_logger_retry_count"] = remote_logger_retry_count
+    if pushed_app_proxy is not None:
+        CONFIG["pushed_app_proxy"] = pushed_app_proxy
     CONFIG["ref_org_name"] = ref_org_name if ref_org_name is not None else "trustedanalytics"
     CONFIG["ref_space_name"] = ref_space_name if ref_space_name is not None else "platform"
     CONFIG["test_run_id"] = test_run_id
@@ -230,4 +234,7 @@ def parse_arguments():
     parser.add_argument("--jumpbox-address",
                         action='store_true',
                         help="Address of the jumpbox machine (jump.<domain> of empty)")
+    parser.add_argument("--pushed-app-proxy",
+                        default=None,
+                        help="Proxy to be set in pushed app manifest, e.g. proxy-mu.intel.com (no port)")
     return parser.parse_args()
