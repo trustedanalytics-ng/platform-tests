@@ -15,6 +15,7 @@
 #
 
 import pytest
+from retry import retry
 
 from configuration import config
 from modules.api_client import ConsoleClient
@@ -34,6 +35,7 @@ from .test_data import TestData
 
 
 @pytest.fixture(scope="session")
+@retry(UnexpectedResponseError, tries=3, delay=15)
 def test_org(request):
     context = Context()
     log_fixture("test_org: Create test organization")
