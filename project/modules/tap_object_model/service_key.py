@@ -53,6 +53,5 @@ class ServiceKey(object):
     def api_create(cls, service_instance_guid, name=None, client=None):
         service_key_name = name or generate_test_object_name()
         response = service_catalog.api_create_service_key(service_instance_guid, service_key_name, client)
-        return cls(guid=response["guid"], name=response["name"],
-                   service_instance_guid=response["service_instance_guid"], credentials=response["credentials"])
-    
+        return cls(guid=response["guid"], name=response["name"], credentials=response["credentials"],
+                   service_instance_guid=response["service_instance_guid"])

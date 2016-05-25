@@ -52,4 +52,19 @@ class ServiceLabels(object):
     ZOOKEEPER = "zookeeper"
     ZOOKEEPER_WSSB = "zookeeper-wssb"
 
-    parametrized = [SCORING_ENGINE, GEARPUMP_DASHBOARD]
+    parametrized = [SCORING_ENGINE, GEARPUMP_DASHBOARD, HDFS]
+
+
+class ServicePlan(object):
+    BARE = "bare"
+    CREATE_USER_DIRECTORY = "create-user-directory"
+    ENCRYPTED = "encrypted"
+    FREE = "free"
+    GET_USER_DIRECTORY = "get-user-directory"
+    MULTITENANT = "multitenant"
+    SHARED = "shared"
+    SIMPLE = "simple"
+    SIMPLE_ATK = "Simple"
+    WORKER_1 = "1 worker"
+    WORKER_2 = "2 workers"
+    WORKER_3 = "3 workers"
