@@ -18,7 +18,8 @@ import itertools
 
 import pytest
 
-from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, TapComponent as TAP
+from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ParametrizedService, ServiceLabels,\
+    TapComponent as TAP
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.service_tools.jupyter import Jupyter
@@ -28,10 +29,10 @@ from tests.fixtures.test_data import TestData
 
 
 logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
-                     TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
+                     TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                      TAP.zookeeper_wssb_broker)
 pytestmark = [components.service_catalog, components.application_broker, components.gearpump_broker,
-              components.hbase_broker, components.hdfs_broker, components.kafka_broker, components.smtp_broker,
+              components.hbase_broker, components.kafka_broker, components.smtp_broker,
               components.yarn_broker, components.zookeeper_broker, components.zookeeper_wssb_broker]
 
 
@@ -124,10 +125,14 @@ class MarketplaceServices(TapTestCase):
     @long
     @priority.high
     def test_create_and_delete_service_instance_and_keys(self):
-        tested_service_types = [st for st in self.marketplace if st.label not in ServiceLabels.parametrized +
-                                self.SERVICES_TESTED_SEPARATELY]
-        for service_type in tested_service_types:
+        for service_type in self.marketplace:
+            if service_type.label in self.SERVICES_TESTED_SEPARATELY:
+                continue
+
             for plan in service_type.service_plans:
+                if ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
+                    continue
+
                 with self.subTest(service=service_type.label, plan=plan["name"]):
                     self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
                                                                       service_type.label, plan["guid"])
@@ -209,16 +214,6 @@ class MarketplaceServices(TapTestCase):
         label = ServiceLabels.YARN
         yarn = next(s for s in self.marketplace if s.label == label)
         for plan in yarn.service_plans:
-            with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
-                                                                  label, plan["guid"])
-
-    @priority.low
-    def test_create_hdfs_service_instance_and_keys(self):
-        """DPNG-3273 Enable HDFS broker to use Service Keys"""
-        label = ServiceLabels.HDFS
-        hdfs = next(s for s in self.marketplace if s.label == label)
-        for plan in hdfs.service_plans:
             with self.subTest(service=label, plan=plan["name"]):
                 self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
                                                                   label, plan["guid"])

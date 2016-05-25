@@ -52,4 +52,31 @@ class ServiceLabels(object):
     ZOOKEEPER = "zookeeper"
     ZOOKEEPER_WSSB = "zookeeper-wssb"
 
-    parametrized = [SCORING_ENGINE, GEARPUMP_DASHBOARD]
+
+class ServicePlan(object):
+    BARE = "bare"
+    CREATE_USER_DIRECTORY = "create-user-directory"
+    ENCRYPTED = "encrypted"
+    FREE = "free"
+    GET_USER_DIRECTORY = "get-user-directory"
+    MULTITENANT = "multitenant"
+    SHARED = "shared"
+    SIMPLE = "simple"
+    SIMPLE_ATK = "Simple"
+    WORKER_1 = "1 worker"
+    WORKER_2 = "2 workers"
+    WORKER_3 = "3 workers"
+
+
+class ParametrizedService(object):
+
+    parametrized_offerings = {
+        ServiceLabels.SCORING_ENGINE: True,                  # all plans
+        ServiceLabels.GEARPUMP_DASHBOARD: True,              # all plans
+        ServiceLabels.HDFS: ServicePlan.GET_USER_DIRECTORY,  # only one plan
+    }
+
+    @classmethod
+    def is_parametrized(cls, label: ServiceLabels, plan_name: ServicePlan):
+        parametrized_plan = cls.parametrized_offerings.get(label)
+        return parametrized_plan is True or plan_name == parametrized_plan

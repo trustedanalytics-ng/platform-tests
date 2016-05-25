@@ -18,7 +18,7 @@ from .application_path import ApplicationPath
 from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus
 from .logger_type import LoggerType
 from .project_paths import Path
-from .services import ServiceLabels
+from .services import ParametrizedService, ServiceLabels, ServicePlan
 from .sources import TapGitHub
 from .tap_components import TapComponent
 from .urls import Urls

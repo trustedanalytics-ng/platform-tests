@@ -23,7 +23,7 @@ from modules.constants import HttpStatus
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import DataSet, Invitation, Organization, Space, Transfer, User
+from modules.tap_object_model import DataSet, Invitation, Organization, ServiceType, Space, Transfer, User
 from modules.test_names import is_test_object_name
 from .context import Context
 from .test_data import TestData
@@ -122,52 +122,10 @@ def core_space():
     return TestData.core_space
 
 
-def log_objects(object_list, object_type_name):
-    # TODO delete - this is temporary, for validation purposes
-    if len(object_list) == 0:
-        log_finalizer("No {}s to delete".format(object_type_name))
-    else:
-        log_finalizer("Remaining {} {}{}:\n{}".format(len(object_list), object_type_name,
-                                                      "s" if len(object_list) != 1 else "",
-                                                      "\n".join([str(x) for x in object_list])))
-
-
-def get_objects_and_log():
-    # TODO delete - this is temporary, for validation purposes
-    log_finalizer("logging remaining objects")
-    all_data_sets = DataSet.api_get_list()
-    test_data_sets = [x for x in all_data_sets if is_test_object_name(x.title)]
-    log_objects(test_data_sets, "data set")
-    all_transfers = Transfer.api_get_list()
-    test_transfers = [x for x in all_transfers if is_test_object_name(x.title)]
-    log_objects(test_transfers, "transfer")
-    all_users = User.cf_api_get_all_users()
-    test_users = [x for x in all_users if is_test_object_name(x.username)]
-    log_objects(test_users, "user")
-    all_pending_invitations = Invitation.api_get_list()
-    test_invitations = [x for x in all_pending_invitations if is_test_object_name(x.username)]
-    log_objects(test_invitations, "invitation")
-    all_orgs = Organization.cf_api_get_list()
-    test_orgs = [x for x in all_orgs if is_test_object_name(x.name)]
-    log_objects(test_orgs, "org")
-
-
-@pytest.fixture(scope="class", autouse=True)
-def log_remaining_objects_class(request):
-    # TODO delete - this is temporary, for validation purposes
-    try:
-        request.addfinalizer(lambda: get_objects_and_log())
-    except:
-        pass
-
-
-@pytest.fixture(scope="session", autouse=True)
-def log_remaining_objects_session(request):
-    # TODO delete - this is temporary, for validation purposes
-    try:
-        request.addfinalizer(lambda: get_objects_and_log())
-    except:
-        pass
+@pytest.fixture(scope="session")
+def test_marketplace(test_space):
+    log_finalizer("test_marketplace: Get list of marketplace services in test space")
+    return ServiceType.api_get_list_from_marketplace(space_guid=test_space.guid)
 
 
 def delete_or_not_found(delete_method, *args, **kwargs):

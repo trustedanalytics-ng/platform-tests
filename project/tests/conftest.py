@@ -17,7 +17,7 @@
 import pytest
 
 from configuration import config
-from modules.constants import Path, ServiceLabels
+from modules.constants import Path, ServiceLabels, ParametrizedService
 from modules.mongo_reporter.reporter import MongoReporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceType
@@ -73,15 +73,15 @@ def pytest_runtest_setup(item):
 
 def pytest_generate_tests(metafunc):
     """Parametrize marketplace fixture with tuples of ServiceType and plan dict."""
-    if "marketplace" in metafunc.funcargnames:
+    if "non_parametrized_marketplace_services" in metafunc.funcargnames:
         core_space = fixtures.core_space()
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
-        marketplace = [s for s in marketplace if s.label not in ServiceLabels.parametrized]
         test_cases = []
         ids = []
         for service_type in marketplace:
             for plan in service_type.service_plans:
-                test_cases.append((service_type, plan))
-                ids.append("{}_{}".format(service_type.label, plan["name"]))
-        metafunc.parametrize("marketplace", test_cases, ids=ids)
+                if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
+                    test_cases.append((service_type, plan))
+                    ids.append("{}_{}".format(service_type.label, plan["name"]))
+        metafunc.parametrize("non_parametrized_marketplace_services", test_cases, ids=ids)
 
