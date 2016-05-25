@@ -101,8 +101,7 @@ class Application(object):
             http_proxy = "http://{}:911".format(env_proxy)
             https_proxy = "https://{}:912".format(env_proxy)
             app_env.update({"http_proxy": http_proxy, "https_proxy": https_proxy})
-        if len(app_env) > 0:
-            manifest["applications"][0]["env"] = app_env
+        manifest["applications"][0]["env"] = app_env
         with open(manifest_path, "w") as f:
             f.write(yaml.dump(manifest))
 

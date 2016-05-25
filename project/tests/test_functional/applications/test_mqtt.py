@@ -48,7 +48,8 @@ class Mqtt(TapTestCase):
     MQTT_TOPIC_NAME = "space-shuttle/test-data"
 
     @priority.medium
-    @pytest.mark.skip("DPNG-7402 Push mqtt app to cf failed due to SSL error")
+    @pytest.mark.bugs("DPNG-3929 Mosquitto crendentials suppor",
+                      "DPNG-6067 Mosquitto ports are not accessible externally")
     def test_mqtt_demo(self):
         self.step("Clone repository")
         mqtt_demo_sources = app_sources.AppSources(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER,

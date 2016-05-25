@@ -23,7 +23,7 @@ from modules.constants import HttpStatus
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import DataSet, Invitation, Organization, ServiceType, Space, Transfer, User
+from modules.tap_object_model import DataSet, Invitation, Organization, Space, Transfer, User
 from modules.test_names import is_test_object_name
 from .context import Context
 from .test_data import TestData
@@ -121,10 +121,6 @@ def core_space():
     TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
     return TestData.core_space
 
-@pytest.fixture(scope="session")
-def core_marketplace(core_space):
-    log_finalizer("core_marketplace: Get list of marketplace services in core space")
-    return ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
 
 def log_objects(object_list, object_type_name):
     # TODO delete - this is temporary, for validation purposes
