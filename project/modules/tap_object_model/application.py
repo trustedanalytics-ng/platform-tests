@@ -73,28 +73,11 @@ class Application(object):
         return self.instances[0] > 0
 
     @classmethod
-    def push(cls, space_guid, source_directory, name=None, bound_services=None, env=None, env_proxy=None):
-        """
-        Application which will later be pushed to cf.
-        source_directory -- where manifest.yml is located
-        name -- name of pushed app (will be changed in manifest)
-        bound_services -- iterable with bound service names to be included in manifest
-        env -- dict with app's env values to be added to manifest
-        """
-        # read manifest
-        manifest_path = os.path.normpath(os.path.join(source_directory, cls.MANIFEST_NAME))
-        jar_path = source_directory
-        with open(manifest_path) as f:
-            manifest = yaml.load(f.read())
-        if "path" in manifest["applications"][0]:
-            jar_path = os.path.join(jar_path, manifest["applications"][0]["path"])
-
-        # change manifest values
-        name = generate_test_object_name(short=True) if name is None else name
-        manifest["applications"][0]["name"] = name
+    def update_manifest(cls, manifest, app_name, bound_services, env, env_proxy):
+        manifest["applications"][0]["name"] = app_name
         if bound_services is not None:
             manifest["applications"][0]["services"] = list(bound_services)
-        app_env = {}
+        app_env = manifest["applications"][0].get("env", {})
         if env is not None:
             app_env.update(env)
         if env_proxy is not None:
@@ -103,6 +86,28 @@ class Application(object):
             app_env.update({"http_proxy": http_proxy, "https_proxy": https_proxy})
         if len(app_env) > 0:
             manifest["applications"][0]["env"] = app_env
+        return manifest
+
+    @classmethod
+    def push(cls, space_guid, source_directory, name=None, bound_services=None, env=None, env_proxy=None):
+        """
+        Application which will later be pushed to cf.
+        source_directory -- where manifest.yml is located
+        name -- name of pushed app (will be changed in manifest)
+        bound_services -- iterable with bound service names to be included in manifest
+        env -- dict with app's env values to be added to manifest
+        """
+        name = generate_test_object_name(short=True) if name is None else name
+        # read manifest
+        manifest_path = os.path.normpath(os.path.join(source_directory, cls.MANIFEST_NAME))
+        jar_path = source_directory
+        with open(manifest_path) as f:
+            manifest = yaml.load(f.read())
+        if "path" in manifest["applications"][0]:
+            jar_path = os.path.join(jar_path, manifest["applications"][0]["path"])
+
+        manifest = cls.update_manifest(manifest, app_name=name, bound_services=bound_services, env=env,
+                                       env_proxy=env_proxy)
         with open(manifest_path, "w") as f:
             f.write(yaml.dump(manifest))
 
