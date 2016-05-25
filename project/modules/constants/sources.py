@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 class TapGitHub:
 
     intel_data = "intel-data"
@@ -21,6 +22,7 @@ class TapGitHub:
 
     apployer = "apployer"
     appstack_path = "appstack.yml"
+    dataset_reader_sample = "dataset-reader-sample"
     hbase_api_example = "hbase-java-api-example"
     kafka2hdfs = "kafka2hdfs"
     mqtt_demo = "mqtt-demo"

@@ -62,6 +62,7 @@ class TapComponent(Enum):
     ingestion_ws_kafka_hdfs = "ingestion-ws-kafka-hdfs"
     ingestion_ws_kafka_gearpump_hbase = "ingestion-ws-kafka-gearpump-hbase"
     mqtt_demo = "mqtt-demo"
+    dataset_reader = "dataset-reader"
 
     atk = "atk"
     gateway = "gateway"
