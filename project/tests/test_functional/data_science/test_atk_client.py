@@ -51,7 +51,10 @@ class Atk(TapTestCase):
         cls.atk_virtualenv.create()
 
         def fin():
-            cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=TestData.test_org)
+            try:
+                cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=TestData.test_org)
+            except:
+                pass
         request.addfinalizer(fin)
 
     @pytest.mark.skip("DPNG-5582, DPNG-6751")
@@ -109,19 +112,19 @@ class Atk(TapTestCase):
         self.step("Run atk connection test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_simple_query_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--organization": TestData.test_org.name,
-                                                      "--transfer": self.transfer_title})
+                                           arguments={"--database-name": DataSet.escape_string(TestData.test_org.guid),
+                                                      "--table-name": self.transfer_title})
 
     def test_7_export_to_hive(self):
         self.step("Run atk export to hive test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_export_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--organization": TestData.test_org.name,
-                                                      "--transfer": self.transfer_title})
+                                           arguments={"--database-name": DataSet.escape_string(TestData.test_org.guid),
+                                                      "--table-name": self.transfer_title})
 
     def test_8_hive_table_manipulation(self):
         self.step("Run atk table manipulation test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_table_manipulation_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--organization": TestData.test_org.name,
-                                                      "--transfer": self.transfer_title})
+                                           arguments={"--database-name": DataSet.escape_string(TestData.test_org.guid),
+                                                      "--table-name": self.transfer_title})

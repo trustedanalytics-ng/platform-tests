@@ -27,10 +27,10 @@ class AtkTestException(AssertionError):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="ATK Python Client Test")
-    parser.add_argument("--organization",
-                        help="organization where transfer was uploaded")
-    parser.add_argument("--transfer",
-                        help="transfer name of submitted document")
+    parser.add_argument("--database-name",
+                        help="Hive database name (org guid)")
+    parser.add_argument("--table-name",
+                        help="Hive table name (transfer title)")
     parser.add_argument("--uaa_file_name",
                         help="uaa file name that will be created by script")
     parser.add_argument("--target_uri",

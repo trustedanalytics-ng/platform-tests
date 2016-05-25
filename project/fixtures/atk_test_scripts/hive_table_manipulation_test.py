@@ -24,7 +24,7 @@ ta.create_credentials_file(parameters.uaa_file_name)
 
 check_uaa_file(parameters.uaa_file_name)
 
-query_select = "SELECT * FROM " + parameters.organization + "." + parameters.transfer
+query_select = "SELECT * FROM " + parameters.database_name + "." + parameters.table_name
 print("Query: {}".format(query_select))
 hq = ta.HiveQuery(query_select)
 frame_select = ta.Frame(hq)
@@ -42,10 +42,10 @@ frame_group_columns_len = len(frame_group_columns_list)
 
 if frame_group_columns_len == 2 and frame_group_columns_list[0] == column_names_list[0] and \
                 frame_group_columns_list[1] == 'count':
-    print("Table {} grouped correctly".format(parameters.organization + "." + parameters.transfer))
+    print("Table {} grouped correctly".format(parameters.database_name + "." + parameters.table_name))
 else:
-    raise AtkTestException("Table {} was NOT grouped correctly".format(parameters.organization + "." +
-                                                                       parameters.transfer))
+    raise AtkTestException("Table {} was NOT grouped correctly".format(parameters.database_name + "." +
+                                                                       parameters.table_name))
 
 print("\n------------ Test: add_column method ------------")
 frame_select.add_columns(lambda row: "", ("test_column", str))
@@ -54,10 +54,10 @@ frame_add_columns_list = frame_select.column_names
 frame_add_columns_len = len(frame_add_columns_list)
 
 if frame_add_columns_len == (column_names_len+1) and frame_add_columns_list[column_names_len] == "test_column":
-    print("Column was added to table {}".format(parameters.organization + "." + parameters.transfer))
+    print("Column was added to table {}".format(parameters.database_name + "." + parameters.table_name))
 else:
-    raise AtkTestException("Column was NOT added to table {}".format(parameters.organization + "." +
-                                                                       parameters.transfer))
+    raise AtkTestException("Column was NOT added to table {}".format(parameters.database_name + "." +
+                                                                     parameters.table_name))
 
 print("\n------------ Test: drop_column method ------------")
 frame_select.drop_columns('test_column')
@@ -66,10 +66,10 @@ frame_drop_columns_list = frame_select.column_names
 frame_drop_columns_len = len(frame_drop_columns_list)
 
 if frame_drop_columns_len == column_names_len and 'test_column' not in frame_drop_columns_list:
-    print("Column 'test_column' was dropped in table {}".format(parameters.organization + "." + parameters.transfer))
+    print("Column 'test_column' was dropped in table {}".format(parameters.database_name + "." + parameters.table_name))
 else:
-    raise AtkTestException("Column was NOT dropped in table {}".format(parameters.organization + "." +
-                                                                       parameters.transfer))
+    raise AtkTestException("Column was NOT dropped in table {}".format(parameters.database_name + "." +
+                                                                       parameters.table_name))
 
 print("\n------------ Test: drop_frames method ----------------")
 ta.drop_frames([frame_select, frame_group])

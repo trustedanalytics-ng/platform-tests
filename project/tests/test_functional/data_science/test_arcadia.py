@@ -54,11 +54,11 @@ class ArcadiaTest(TapTestCase):
         self.step("Publish created dataset")
         self.dataset.api_publish()
         self.step("Check that organization guid is visible on the database list in arcadia")
-        expected_db_name = Arcadia.escape_string(self.test_org.guid)
+        expected_db_name = DataSet.escape_string(self.test_org.guid)
         db_list = self.arcadia.get_database_list()
         assert expected_db_name in db_list, "{} was not found in db list".format(expected_db_name)
         self.step("Check that dataset name is visible on the table list in arcadia")
-        assertions.assert_in_with_retry(Arcadia.escape_string(self.dataset.title),
+        assertions.assert_in_with_retry(DataSet.escape_string(self.dataset.title),
                                         self.arcadia.get_table_list, expected_db_name)
         self.step("Create new dataset in arcadia")
         arcadia_dataset = self.arcadia.create_dataset(self.test_org.name, self.dataset.title)

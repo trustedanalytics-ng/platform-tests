@@ -52,6 +52,11 @@ class DataSet(object):
     def __repr__(self):
         return "{0} (title={1}, id={2})".format(self.__class__.__name__, self.title, self.id)
 
+    @staticmethod
+    def escape_string(string):
+        escaped_chars = ",./<>?;':\"\|}{[]~`!@#$%^&*()_+-="
+        return "".join([c if c not in escaped_chars else "_" for c in string])
+
     @classmethod
     def api_get_list(cls, org_list=None, query="", filters=(), size=100, time_from=0, only_private=False,
                      only_public=False, client=None):

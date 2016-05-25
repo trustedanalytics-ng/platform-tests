@@ -26,7 +26,7 @@ ta.create_credentials_file(parameters.uaa_file_name)
 
 check_uaa_file(parameters.uaa_file_name)
 
-query_source = "select * from " + parameters.organization + "." + parameters.transfer
+query_source = "select * from " + parameters.database_name + "." + parameters.table_name
 print("Query: {}".format(query_source))
 hq = ta.HiveQuery(query_source)
 original_frame = ta.Frame(hq)
@@ -57,7 +57,7 @@ original_table_inspect_list = original_table_content.rows
 exported_table_inspect_list = exported_table_content.rows
 
 if original_table_rows == exported_table_rows and original_table_inspect_list == exported_table_inspect_list:
-    print("Table {} exported correctly".format(parameters.organization + "." + parameters.transfer))
+    print("Table {} exported correctly".format(parameters.database_name + "." + parameters.table_name))
 else:
     raise AtkTestException("Exported data is not same to original one")
 
