@@ -53,3 +53,12 @@ def assert_raises_http_exception(status, error_message_phrase, callableObj, *arg
                                                             status, error_message_phrase)
 
 
+def assert_returns_http_error(callable_obj, *args, **kwargs):
+    with pytest.raises(UnexpectedResponseError) as e:
+        callable_obj(*args, **kwargs)
+    status_first_digit = e.exception.status // 100
+    assert status_first_digit in (4, 5), "Status code: {}. Expected: 4XX or 5XX".format(e.exception.status)
+
+
+def assert_no_errors(errors: list):
+    assert len(errors) == 0, "\n".join(errors)

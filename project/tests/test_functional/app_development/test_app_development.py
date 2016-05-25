@@ -14,30 +14,26 @@
 # limitations under the License.
 #
 
-import pytest
-
 from modules.constants import TapComponent as TAP
 from modules.http_calls.platform import platform_pages as api
-from modules.markers import priority, components
-from modules.runner.tap_test_case import TapTestCase
-from tests.fixtures.test_data import TestData
-
+from modules.markers import components
+from modules.tap_logger import step
 
 logged_components = (TAP.console,)
 
 
-@pytest.mark.usefixtures("test_org", "test_org_manager_client", "admin_client")
-class AppDevelopmentPage(TapTestCase):
+class TestAppDevelopmentPage(object):
     pytestmark = [components.console]
 
-    @priority.medium
-    def test_get_app_development_page(self):
-        clients = {"non_admin": TestData.test_org_manager_client, "admin": TestData.admin_client}
-        for name, client in clients.items():
-            with self.subTest(client=name):
-                self.step("Get 'App development' page")
-                page = api.api_get_app_development_page(client)
-                self.step("Check that header is present")
-                self.assertIn("<h3>Tools</h3>", page)
-                self.step("Check that url to cloudfoundry documentation is present")
-                self.assertIn('<a href="http://docs.cloudfoundry.org/devguide/#cf" target="_blank">', page)
+    def test_get_app_development_page(self, admin_client, test_org_manager_client):
+        self._assert_app_development_page(admin_client)
+        self._assert_app_development_page(test_org_manager_client)
+
+    @staticmethod
+    def _assert_app_development_page(client):
+        step("Get 'App development' page")
+        page = api.api_get_app_development_page(client)
+        step("Check that header is present")
+        assert "<h3>Tools</h3>" in page
+        step("Check that url to cloudfoundry documentation is present")
+        assert '<a href="http://docs.cloudfoundry.org/devguide/#cf" target="_blank">' in page

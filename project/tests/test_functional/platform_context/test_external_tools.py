@@ -17,42 +17,64 @@
 import pytest
 
 from modules.constants import TapComponent as TAP
-from modules.runner.tap_test_case import TapTestCase
+from modules.exceptions import UnexpectedResponseError
 from modules.markers import components, priority
+from modules.tap_logger import step
 from modules.tap_object_model import ExternalTools
-
+from tests.fixtures.assertions import assert_no_errors
 
 logged_components = (TAP.platform_context,)
 pytestmark = [components.platform_context]
 
 
-class ExternalToolsStatus(TapTestCase):
+class TestExternalToolsStatus(object):
+
+    tools_list = None
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def external_tools_list(cls):
-        cls.step("Get list of external tools")
+        step("Get list of external tools")
         cls.tools_list = ExternalTools.api_get_external_tools()
 
     @priority.medium
-    def test_check_status_code_of_external_tools(self):
-        for tool in self.tools_list:
-            if tool.should_have_url:
-                with self.subTest(tool=tool.name, available=tool.available):
-                    if tool.available and tool.url:
-                        self.step("Check that request to {} returns OK status".format(tool.name))
-                        tool.send_request()
-                    elif tool.url:
-                        self.step("Check that request to {} returns fails with 4XX or 5XX".format(tool.name))
-                        self.assertReturnsError(tool.send_request)
+    def test_external_tools_should_be_available(self):
+        tools = [t for t in self.tools_list if t.should_have_url and t.url and t.available]
+        errors = []
+        for tool in tools:
+            try:
+                tool.send_request()
+            except UnexpectedResponseError:
+                errors.append("Tool '{}' failed to respond with OK status.".format(tool.name))
+        assert_no_errors(errors)
 
     @priority.medium
-    def test_check_tools_urls(self):
-        for tool in self.tools_list:
-            with self.subTest(tool=tool.name, url_present=tool.should_have_url):
-                if tool.should_have_url:
-                    self.step("Check that URL is specified")
-                    self.assertIsNotNone(tool.url)
-                else:
-                    self.step("Check that URL is not specified (null)")
-                    self.assertIsNone(tool.url)
+    def test_external_tools_should_be_not_available_but_should_have_url(self):
+        tools = [t for t in self.tools_list if t.should_have_url and t.url and not t.available]
+        errors = []
+        for tool in tools:
+            try:
+                tool.send_request()
+            except UnexpectedResponseError:
+                pass
+            else:
+                errors.append("Tool '{}' failed to respond with error status.".format(tool.name))
+        assert_no_errors(errors)
+
+    @priority.medium
+    def test_external_tools_should_have_url(self):
+        tools = [t for t in self.tools_list if t.should_have_url]
+        errors = []
+        for tool in tools:
+            if tool.url is None:
+                errors.append("Tool '{}' has no URL specified.".format(tool.name))
+        assert_no_errors(errors)
+
+    @priority.medium
+    def test_external_tools_should_have_no_url(self):
+        tools = [t for t in self.tools_list if not t.should_have_url]
+        errors = []
+        for tool in tools:
+            if tool.url is not None:
+                errors.append("Tool '{}' has URL specified.".format(tool.name))
+        assert_no_errors(errors)

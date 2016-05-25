@@ -17,13 +17,18 @@
 import pytest
 
 from modules.api_client import PlatformApiClient
-from modules.runner.tap_test_case import TapTestCase
+from modules.tap_logger import step
 from modules.tap_object_model import Application
 
 
-class AppMonitoring(TapTestCase):
+class TestAppMonitoring(object):
 
-    TESTED_APP_NAMES = {"das", "metrics-provider", "router-metrics-provider", "user-management"}
+    TESTED_APP_NAMES = {
+        "das",
+        "metrics-provider",
+        "router-metrics-provider",
+        "user-management",
+    }
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -31,21 +36,21 @@ class AppMonitoring(TapTestCase):
         cls.platform_apps = Application.api_get_list(core_space.guid)
 
     def test_all_required_apps_are_present_on_platform(self):
-        self.step("Check that all expected apps are present on the Platform")
+        step("Check that all expected apps are present on the Platform")
         app_names = {a.name for a in self.platform_apps}
         missing_apps = self.TESTED_APP_NAMES - app_names
-        self.assertEqual(missing_apps, set(), "Apps missing on the Platform")
+        assert missing_apps == set(), "Apps missing on the Platform"
 
     def test_all_required_apps_are_running_on_platform(self):
-        self.step("Check that all expected apps have running instances on the Platform")
+        step("Check that all expected apps have running instances on the Platform")
         apps_not_running = {a.name for a in self.platform_apps if a.name in self.TESTED_APP_NAMES and not a.is_running}
-        self.assertEqual(apps_not_running, set(), "Apps with no running instances on the Platform")
+        assert apps_not_running == set(), "Apps with no running instances on the Platform"
 
     def test_app_endpoints(self):
-        self.step("Retrieve apps, and services on the Platform")
+        step("Retrieve apps, and services on the Platform")
         tested_apps = {a for a in self.platform_apps if a.name in self.TESTED_APP_NAMES}
-        self.step("Send GET /health request to apps: {}".format(self.TESTED_APP_NAMES))
+        step("Send GET /health request to apps: {}".format(self.TESTED_APP_NAMES))
         client = PlatformApiClient.get_admin_client("app")
         for app in tested_apps:
-            with self.subTest(app=app.name):
-                client.request(method="GET", app_name=app.urls[0].split(".")[0], endpoint="health")
+            step("Testing app with name: {}".format(app.name))
+            client.request(method="GET", app_name=app.urls[0].split(".")[0], endpoint="health")
