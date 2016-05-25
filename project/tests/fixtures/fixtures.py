@@ -155,13 +155,19 @@ def get_objects_and_log():
 @pytest.fixture(scope="class", autouse=True)
 def log_remaining_objects_class(request):
     # TODO delete - this is temporary, for validation purposes
-    request.addfinalizer(lambda: get_objects_and_log())
+    try:
+        request.addfinalizer(lambda: get_objects_and_log())
+    except:
+        pass
 
 
 @pytest.fixture(scope="session", autouse=True)
 def log_remaining_objects_session(request):
     # TODO delete - this is temporary, for validation purposes
-    request.addfinalizer(lambda: get_objects_and_log())
+    try:
+        request.addfinalizer(lambda: get_objects_and_log())
+    except:
+        pass
 
 
 def delete_or_not_found(delete_method, *args, **kwargs):
