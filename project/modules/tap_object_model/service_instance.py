@@ -145,7 +145,7 @@ class ServiceInstance(object):
     def api_get_data_science_service_instances(cls, space_guid, org_guid, service_label):
         return service_exposer.api_tools_service_instances(service_label, space_guid, org_guid)
 
-    @retry(AssertionError, tries=20, delay=3)
+    @retry(AssertionError, tries=180, delay=5)
     def ensure_created(self):
         instances = ServiceInstance.api_get_list(space_guid=self.space_guid)
         updated_instance = next((i for i in instances if i.guid == self.guid), None)
