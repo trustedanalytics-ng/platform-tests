@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 from .configuration_providers.kubernetes_broker import KubernetesBrokerBasicConfigurationProvider
 from .configuration_providers.kubernetes_broker import KubernetesBrokerTokenConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
@@ -129,4 +128,57 @@ def k8s_broker_delete_instance(instance_guid):
         method=HttpMethod.DELETE,
         path="service_instances/{}".format(instance_guid),
         msg="K8S BROKER: delete instance"
+    )
+
+
+def k8s_broker_create_secret(org_guid, key_id, username_b64, password_b64):
+    """POST /rest/kubernetes/{org_id}/secret/{key}"""
+    body = {
+        "apiVersion": "v1",
+        "data": {"username": username_b64, "password": password_b64},
+        "kind": "Secret",
+        "metadata": {"name": key_id, "labels": {"managed_by": "TAP"}}
+    }
+    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+        method=HttpMethod.POST,
+        body=body,
+        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        msg="K8S BROKER: create secret"
+    )
+
+
+def k8s_broker_get_secret(org_guid, key_id):
+    """GET /rest/kubernetes/{org_id}/secret/{key}"""
+    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+        method=HttpMethod.GET,
+        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        msg="K8S BROKER: get secret"
+    )
+
+
+def k8s_broker_update_secret(org_guid, key_id, username_b64=None, password_b64=None):
+    """PUT /rest/kubernetes/{org_id}/secret/{key}"""
+    body = {
+        "data": {},
+        "metadata": {"name": key_id, "labels": {"managed_by": "TAP"}}
+    }
+    if username_b64 is not None:
+        body["data"]["username"] = username_b64
+    if password_b64 is not None:
+        body["data"]["password"] = password_b64
+
+    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+        method=HttpMethod.PUT,
+        body=body,
+        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        msg="K8S BROKER: update secret"
+    )
+
+
+def k8s_broker_delete_secret(org_guid, key_id):
+    """DELETE /rest/kubernetes/{org_id}/secret/{key}"""
+    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+        method=HttpMethod.DELETE,
+        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        msg="K8S BROKER: delete secret"
     )

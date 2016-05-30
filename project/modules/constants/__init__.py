@@ -15,7 +15,8 @@
 #
 
 from .application_path import ApplicationPath
-from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus
+from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus, \
+    KubernetesBrokerHttpStatus
 from .logger_type import LoggerType
 from .project_paths import Path
 from .services import ParametrizedService, ServiceLabels, ServicePlan

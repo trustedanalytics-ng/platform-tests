@@ -166,3 +166,9 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_APP_NOT_FOUND = "The app could not be found: {}"
     MSG_SERVICE_INST_NOT_FOUND = "The service instance could not be found: {}"
     MSG_SERVICE_BINDING_NOT_FOUND = "The service binding could not be found: {}"
+
+
+class KubernetesBrokerHttpStatus(HttpStatus):
+    MSG_SECRET_NOT_FOUND = "secrets \"{}\" not found"
+    MSG_SECRET_ALREADY_EXISTS = "secrets \"{}\" already exists"
+    MSG_INVALID_SECRET = "Secret \"{}\" is invalid"

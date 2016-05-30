@@ -142,4 +142,3 @@ class ServiceType(object):
         if plan is None:
             plan = self.service_plans[0]
         cf.cf_api_update_service_access(plan["guid"], enable_service=False)
-
