@@ -18,7 +18,7 @@ import functools
 
 from retry import retry
 
-from ..constants import HttpStatus
+from ..constants import UserManagementHttpStatus
 from ..exceptions import UnexpectedResponseError
 from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import metrics_provider, user_management
@@ -45,14 +45,14 @@ class Organization(object):
         return self.guid < other.guid
 
     @classmethod
-    def api_create(cls, context, name=None, client=None):
+    def api_create(cls, context, name=None, client=None, delete_on_fail=True):
         if name is None:
             name = generate_test_object_name()
         try:
             response = user_management.api_create_organization(name, client=client)
         except UnexpectedResponseError as e:
-            # If exception occurred (other than conflict), check whether org is on the list and if so, delete it.
-            if e.status != HttpStatus.CODE_CONFLICT:
+            # If exception occurred, check whether org is on the list and if so, delete it.
+            if delete_on_fail:
                 org = next((o for o in cls.api_get_list() if o.name == name), None)
                 if org is not None:
                     org.cleanup()

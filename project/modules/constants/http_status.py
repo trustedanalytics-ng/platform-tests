@@ -146,7 +146,7 @@ class UserManagementHttpStatus(HttpStatus):
     MSG_ACCESS_DENIED = "Access is denied"
     MSG_PASSWORD_CANNOT_BE_EMPTY = "Password cannot be empty"
     MSG_ORGANIZATION_ALREADY_EXISTS = "Organization \\\"{}\\\" already exists"
-    MSG_ORGANIZATION_ALREADY_TAKEN = "Organization name already taken"
+    MSG_ORGANIZATION_ALREADY_TAKEN = "The organization name is taken: {}"
     MSG_NO_PENDING_INVITATION_FOR = "No pending invitation for {}"
     MSG_ORGANIZATION_CANNOT_CONTAIN_ONLY_WHITESPACES = "Organization cannot contain only whitespace characters"
 

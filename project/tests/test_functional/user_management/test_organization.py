@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus
@@ -93,9 +94,10 @@ class TestOrganization:
     @priority.medium
     def test_cannot_create_two_orgs_with_the_same_name(self, test_org, context):
         step("Attempt to create organization with the same name")
-        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_CONFLICT,
-                                                UserManagementHttpStatus.MSG_ORGANIZATION_ALREADY_TAKEN,
-                                                Organization.api_create, context=context, name=test_org.name)
+        error_message = UserManagementHttpStatus.MSG_ORGANIZATION_ALREADY_TAKEN.format(test_org.name)
+        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_CONFLICT, error_message,
+                                                Organization.api_create, context=context, name=test_org.name,
+                                                delete_on_fail=False)
 
     @priority.low
     @pytest.mark.parametrize("org_name", ("a" * 100, "simple name"), ids=("long_name", "space_in_name"))
