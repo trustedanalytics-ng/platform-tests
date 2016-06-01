@@ -17,7 +17,7 @@
 import re
 
 from .exceptions import HdfsException
-from .ssh_client import CdhMasterSshClient
+from .ssh_client import CdhMaster2Client, SshConfig
 from .tap_logger import get_logger
 
 
@@ -27,13 +27,12 @@ logger = get_logger(__name__)
 class Hdfs(object):
 
     def __init__(self):
-        self.ssh_client = CdhMasterSshClient()
-        self.ssh_client.connect()
-        logger.info("Accessing HDFS on {} via {}".format(self.ssh_client.hostname, self.ssh_client.via_hostname))
+        self.ssh_client = CdhMaster2Client()
+        logger.info("Accessing HDFS on {}".format(SshConfig.CDH_MASTER_2_HOSTNAME))
         self.hadoop_fs = ["hadoop", "fs"]
 
     def _execute(self, command):
-        _, stdout, stderr = self.ssh_client.exec_command_non_interactive(command)
+        stdout, stderr = self.ssh_client.exec_command([command])
         if stderr != "":
             raise HdfsException(stderr)
         return stdout

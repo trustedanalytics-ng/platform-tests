@@ -24,8 +24,7 @@ from modules.markers import components, incremental, long, priority
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceType, Transfer
 from modules.tap_logger import step
-from modules.test_names import generate_test_object_name
-
+from modules.test_names import generate_test_object_name, escape_hive_name
 
 logged_components = (TAP.atk, TAP.application_broker, TAP.service_catalog)
 pytestmark = [components.service_catalog, components.application_broker, components.service_exposer]
@@ -106,19 +105,19 @@ class TestAtk:
         step("Run atk connection test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_simple_query_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--database-name": DataSet.escape_string(test_org.guid),
+                                           arguments={"--database-name": escape_hive_name(test_org.guid),
                                                       "--table-name": self.transfer_title})
 
     def test_6_export_to_hive(self, test_org):
         step("Run atk export to hive test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_export_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--database-name": DataSet.escape_string(test_org.guid),
+                                           arguments={"--database-name": escape_hive_name(test_org.guid),
                                                       "--table-name": self.transfer_title})
 
     def test_7_hive_table_manipulation(self, test_org):
         step("Run atk table manipulation test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_table_manipulation_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--database-name": DataSet.escape_string(test_org.guid),
+                                           arguments={"--database-name": escape_hive_name(test_org.guid),
                                                       "--table-name": self.transfer_title})

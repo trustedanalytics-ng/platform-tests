@@ -29,13 +29,18 @@ class ClientAuthToken(ClientAuthBase):
     request_headers = {"Accept": "application/json"}
     token_life_time = 298
     token_name = "access_token"
-    token_format = "Bearer {}"
+    token_header_format = "Bearer {}"
 
     def __init__(self, url: str, session: HttpSession):
         self._token = None
+        self._token_header = None
         self._token_timestamp = None
         self._response = None
         super().__init__(url, session)
+
+    @property
+    def token(self) -> str:
+        return self._token
 
     @property
     def authenticated(self) -> bool:
@@ -52,7 +57,7 @@ class ClientAuthToken(ClientAuthBase):
             log_message="Retrieve token."
         )
         self._set_token()
-        self._http_auth = HTTPTokenAuth(self._token)
+        self._http_auth = HTTPTokenAuth(self._token_header)
         return self._http_auth
 
     def _is_token_expired(self):
@@ -64,7 +69,8 @@ class ClientAuthToken(ClientAuthBase):
         if self.token_name not in self._response:
             raise ClientAuthTokenMissingResponseTokenKeyException()
         self._token_timestamp = time.time()
-        self._token = self.token_format.format(self._response[self.token_name])
+        self._token = self._response[self.token_name]
+        self._token_header = self.token_header_format.format(self._token)
 
     @property
     def request_data(self) -> dict:

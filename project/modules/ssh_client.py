@@ -15,13 +15,16 @@
 #
 
 import os
+import subprocess
 
 import paramiko
 import sshtunnel
 
 from configuration.config import CONFIG
-from .exceptions import CommandExecutionException
-from .tap_logger import log_command, get_logger
+from modules.command import run
+from modules.exceptions import CommandExecutionException
+from modules.remote_logger.config import Config
+from modules.tap_logger import log_command, get_logger
 
 
 logger = get_logger(__name__)
@@ -29,6 +32,14 @@ logger = get_logger(__name__)
 
 SSH_POLICY = paramiko.AutoAddPolicy()
 EXIT_STATUS_OK = 0
+
+
+class SshConfig:
+
+    JUMPBOX_USERNAME = "ubuntu"
+    CDH_MASTER_2_HOSTNAME = "cdh-master-2"
+    CDH_MASTER_2_USERNAME = "ec2-user"
+    CLOUDERA_MANAGER_PORT = 7180
 
 
 class RemoteCommand(object):
@@ -167,41 +178,108 @@ class SshTunnelException(Exception):
     pass
 
 
-class CdhManagerSshTunnel(SshTunnel):
-
-    CDH_MANAGER_HOSTNAME = "cdh-manager-0"
-    CDH_LAUNCHER_USERNAME = "ec2-user"
-    CDH_SERVER_PORT = 7180
+class ClouderManagerSshTunnel(SshTunnel):
 
     def __init__(self):
         super().__init__(
-            hostname=CdhManagerSshTunnel.CDH_MANAGER_HOSTNAME,
-            username=CdhManagerSshTunnel.CDH_LAUNCHER_USERNAME,
-            path_to_key=CdhManagerSshTunnel.get_cdh_key_path(),
-            port=CdhManagerSshTunnel.CDH_SERVER_PORT,
-            via_hostname=CdhManagerSshTunnel.get_cdh_launcher_hostname()
+            hostname=SshConfig.CDH_MASTER_2_HOSTNAME,
+            username=SshConfig.JUMPBOX_USERNAME,
+            path_to_key=Config.get_cdh_key_path(),
+            port=SshConfig.CLOUDERA_MANAGER_PORT,
+            via_hostname=Config.get_jumpbox_host_address()
         )
 
-    @staticmethod
-    def get_cdh_launcher_hostname():
-        return "cdh.{}".format(CONFIG["domain"])
 
-    @staticmethod
-    def get_cdh_key_path():
-        return os.path.expanduser(CONFIG["cdh_key_path"])
+class CdhMaster2Client:
 
+    _PATH = "/tmp/remote_cmds"
+    _PREPARE_COMMANDS = [["set", "-e"], ["rm", "-rf", _PATH], ["mkdir", _PATH]]
 
-class CdhMasterSshClient(NestedSshClient):
+    _SSH_NO_HOST_CHECKING = ["-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no"]
 
-    CDH_MASTER_HOSTNAME = "cdh-master-0"
-    CDH_MASTER_USERNAME = "ec2-user"
+    @classmethod
+    def _get_ssh_command(cls):
+        return ["ssh", "-tt"] + cls._SSH_NO_HOST_CHECKING + ["-i", Config.get_cdh_key_path(),
+                                                             "{}@{}".format(SshConfig.JUMPBOX_USERNAME,
+                                                                            Config.get_jumpbox_host_address()),
+                                                             "sudo", "ssh", "-tt"] + cls._SSH_NO_HOST_CHECKING + \
+               ["{}@{}".format(SshConfig.CDH_MASTER_2_USERNAME, SshConfig.CDH_MASTER_2_HOSTNAME)]
 
-    def __init__(self):
-        super().__init__(
-            hostname=CdhMasterSshClient.CDH_MASTER_HOSTNAME,
-            username=CdhMasterSshClient.CDH_MASTER_USERNAME,
-            path_to_key=CdhManagerSshTunnel.get_cdh_key_path(),
-            via_hostname=CdhManagerSshTunnel.get_cdh_launcher_hostname(),
-            via_username=CdhManagerSshTunnel.CDH_LAUNCHER_USERNAME,
-            via_path_to_key=CdhManagerSshTunnel.get_cdh_key_path()
-        )
+    @classmethod
+    def _get_rsync_command(cls):
+        return [
+            "rsync", "-avz", "--delete", "-e", "ssh {}@{} {} -i {} sudo ssh {}".format(
+                SshConfig.JUMPBOX_USERNAME, Config.get_jumpbox_host_address(), " ".join(cls._SSH_NO_HOST_CHECKING),
+                Config.get_cdh_key_path(), " ".join(cls._SSH_NO_HOST_CHECKING)),
+            "{}@{}:{}/".format(SshConfig.CDH_MASTER_2_USERNAME, SshConfig.CDH_MASTER_2_HOSTNAME, cls._PATH), cls._PATH
+        ]
+
+    @classmethod
+    def _ensure_quote(cls, query):
+        query = query.strip()
+        if query[0] not in "'\"":
+            query = "'{}'".format(query)
+        return query
+
+    @classmethod
+    def _send_commands_to_process(cls, process, commands):
+        for command in cls._PREPARE_COMMANDS:
+            process.stdin.write(" ".join(command + ["\n"]))
+
+        string_commands = []
+
+        for i, command in enumerate(commands):
+            command = [cls._ensure_quote(i) for i in command]
+            string_command = " ".join(command + ["1>{}/{}_1".format(cls._PATH, i), "2>{}/{}_2".format(cls._PATH, i),
+                                                 "\n"])
+            logger.info("Executing command: %s", string_command)
+            process.stdin.write(string_command)
+            string_commands.append(string_command)
+        process.stdin.write("exit 0\n")
+        process.stdin.close()
+
+        return string_commands
+
+    @classmethod
+    def _get_commands_outputs(cls, string_commands):
+        run(cls._get_rsync_command())
+
+        cmds_outputs = []
+        for i, command in enumerate(string_commands):
+            logger.info("Outputs from command: %s", command)
+            cmd_outputs = []
+            for fd_name, fd in [("stdout", 1), ("stderr", 2)]:
+                logger.info("%s:", fd_name)
+                path = "{}/{}_{}".format(cls._PATH, i, fd)
+                if os.path.exists(path):
+                    with open(path) as f:
+                        output = f.read().strip()
+                else:
+                    raise CommandExecutionException("No {} output of command {}".format(fd_name, command))
+                cmd_outputs.append(output)
+                logger.info(output)
+            cmds_outputs.append(cmd_outputs)
+
+        return cmds_outputs
+
+    @classmethod
+    def exec_command(cls, commands):
+        process = subprocess.Popen(cls._get_ssh_command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, universal_newlines=True)
+
+        string_commands = cls._send_commands_to_process(process, commands)
+
+        while True:
+            output = process.stdout.readline().strip()
+            if output == '' and process.poll() is not None:
+                break
+            if output != '':
+                logger.info(output)
+
+        outputs = cls._get_commands_outputs(string_commands)
+
+        return_code = process.poll()
+        if return_code != 0:
+            raise CommandExecutionException(return_code, " ".join(cls._get_ssh_command()))
+
+        return outputs

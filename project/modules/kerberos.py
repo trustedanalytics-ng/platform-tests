@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-from configuration.config import CONFIG
 from .tap_logger import get_logger
 from .file_utils import get_file_as_str_from_zip_archive, get_value_from_core_site_xml
 from .cloudera_client import ClouderaClient
@@ -35,9 +34,3 @@ def is_kerberos_environment():
         value = get_value_from_core_site_xml(xml, HADOOP_SECURITY_AUTHENTICATION)
         logger.info("%s=%s", HADOOP_SECURITY_AUTHENTICATION, value)
         return KERBEROS == value
-
-
-def authenticate(ssh_client):
-    ssh_cmd = ssh_client.exec_command_interactive(["kinit", CONFIG["kerberos_username"]])
-    ssh_cmd.stdin.write(CONFIG["kerberos_password"] + "\n")
-    ssh_cmd.assert_return_code_ok()

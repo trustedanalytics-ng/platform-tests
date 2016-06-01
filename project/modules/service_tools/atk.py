@@ -78,8 +78,8 @@ class ATKtools(object):
     def teardown(self, atk_url=None, org=None):
         # Cleanup hive
         if org is not None:
-            with Hive() as hive:
-                hive.exec_query("DROP DATABASE IF EXISTS {} CASCADE;".format(org.name))
+            hive = Hive()
+            hive.exec_query("DROP DATABASE IF EXISTS {} CASCADE;".format(org.name))
 
         if atk_url is not None and self.get_atk_client_url(atk_url) in self.installed_packages:
             try:

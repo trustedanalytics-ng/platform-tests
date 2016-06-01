@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from .ssh_client import CdhMasterSshClient
-from .tap_logger import get_logger
 from . import kerberos
-
+from .http_client.configuration_provider.uaa import UaaConfigurationProvider
+from .http_client.http_client_factory import HttpClientFactory
+from .ssh_client import CdhMaster2Client
+from .tap_logger import get_logger
+from .tap_object_model import User
 
 logger = get_logger(__name__)
 
@@ -26,14 +27,12 @@ class Hive(object):
     __JDBC_URL = "jdbc:hive2://cdh-master-0:10000/default"
     __JDBC_KERBEROS_PARAMS = ";principal=hive/cdh-master-0@CLOUDERA;auth=kerberos"
 
-    def __init__(self):
-        self.__ssh_client = CdhMasterSshClient()
-        self.__ssh_client.connect()
-
+    def __init__(self, user=None):
         self.__is_kerberos = kerberos.is_kerberos_environment()
         self.__url = self.__get_url()
-        if self.__is_kerberos:
-            kerberos.authenticate(self.__ssh_client)
+        if user is None:
+            user = User.get_admin()
+        self.__user = user
 
     def __get_url(self):
         url = self.__JDBC_URL
@@ -41,25 +40,14 @@ class Hive(object):
             url += self.__JDBC_KERBEROS_PARAMS
         return url
 
-    def __ensure_quote(self, query):
-        query = query.strip()
-        if query[0] not in "'\"":
-            query = "'{}'".format(query)
-        return query
-
-    def __get_cmd(self, *params):
-        return ("beeline", "-u", "'{}'".format(self.__url), "--showHeader=false", "--outputformat=csv2") + params
-
     def exec_query(self, query):
-        ssh_cmd = self.__ssh_client.exec_command_interactive(self.__get_cmd("-e", self.__ensure_quote(query)))
-        ssh_cmd.assert_return_code_ok()
-        return ssh_cmd.get_stdout_as_str()
+        cmds = [["beeline", "-u", "'{}'".format(self.__url), "--showHeader=false", "--outputformat=csv2", "-e", query]]
 
-    def close(self):
-        self.__ssh_client.disconnect()
+        if self.__is_kerberos:
+            client = HttpClientFactory.get(UaaConfigurationProvider.get(self.__user.username, self.__user.password))
+            cmds.insert(0, ["ktinit", "-t", client.auth.token])
+        else:
+            cmds[0] = ["sudo", "-u", self.__user.guid] + cmds[0]
 
-    def __enter__(self):
-        return self
+        return CdhMaster2Client.exec_command(cmds)[-1][0].split()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()

@@ -38,3 +38,8 @@ def generate_test_object_name(email=False, short=False, prefix=None):
     if prefix is None:
         prefix = socket.gethostname().replace("-", "_").lower()
     return name_format.format(prefix, now)
+
+
+def escape_hive_name(string):
+    escaped_chars = ",./<>?;':\"\|}{[]~`!@#$%^&*()_+-="
+    return "".join([c if c not in escaped_chars else "_" for c in string])

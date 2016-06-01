@@ -59,16 +59,16 @@ class Config(object):
         return CONFIG["remote_logger_retry_count"] if "remote_logger_retry_count" in CONFIG else 5
 
     @staticmethod
-    def get_elastic_ssh_tunnel_host():
+    def get_jumpbox_host_address():
         """ Returns ssh tunnel remote host. """
         if CONFIG["jumpbox_address"] is not None:
             return CONFIG["jumpbox_address"]
         return "jump.{}".format(CONFIG["domain"])
 
     @staticmethod
-    def get_elastic_ssh_tunnel_key_path():
+    def get_cdh_key_path():
         """ Returns ssh tunnel path to ssh key. """
-        return CONFIG["cdh_key_path"]
+        return os.path.expanduser(CONFIG["cdh_key_path"])
 
     @classmethod
     def get_elasticsearch_host(cls):

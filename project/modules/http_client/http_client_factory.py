@@ -55,6 +55,9 @@ class HttpClientFactory(object):
         elif client_type == HttpClientType.SERVICE_TOOL:
             return cls._get_instance(configuration, ClientAuthType.NO_AUTH)
 
+        elif client_type == HttpClientType.CLOUDERA:
+            return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)
+
         else:
             raise HttpClientFactoryInvalidClientTypeException(client_type)
 

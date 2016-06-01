@@ -23,6 +23,7 @@ from modules.service_tools.arcadia import Arcadia
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet
 from modules.tap_object_model.flows import data_catalog
+from modules.test_names import escape_hive_name
 from tests.fixtures import assertions
 
 
@@ -55,11 +56,11 @@ class TestArcadia:
         step("Publish created dataset")
         dataset.api_publish()
         step("Check that organization guid is visible on the database list in arcadia")
-        expected_db_name = DataSet.escape_string(test_org.guid)
+        expected_db_name = escape_hive_name(test_org.guid)
         db_list = arcadia.get_database_list()
         assert expected_db_name in db_list, "{} was not found in db list".format(expected_db_name)
         step("Check that dataset name is visible on the table list in arcadia")
-        assertions.assert_in_with_retry(DataSet.escape_string(dataset.title), arcadia.get_table_list, expected_db_name)
+        assertions.assert_in_with_retry(escape_hive_name(dataset.title), arcadia.get_table_list, expected_db_name)
         step("Create new dataset in arcadia")
         arcadia_dataset = arcadia.create_dataset(test_org.name, dataset.title)
         assertions.assert_in_with_retry(arcadia_dataset, arcadia.get_dataset_list)

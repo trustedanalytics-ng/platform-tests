@@ -52,7 +52,7 @@ class TestJobScheduler:
 
     USERNAME = "ubuntu"
     PATH_TO_KEY = os.path.expanduser(CONFIG["cdh_key_path"])
-    VIA_HOSTNAME = Config.get_elastic_ssh_tunnel_host()
+    VIA_HOSTNAME = Config.get_jumpbox_host_address()
     DESTINATION_HOSTNAME = "cdh-master-0"
 
     TEST_JOB = None

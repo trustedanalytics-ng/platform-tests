@@ -36,18 +36,18 @@ def log_deleted_objects(object_list, object_type_name):
 
 
 def remove_hive_databases():
-    with Hive() as hive:
-        dbs = hive.exec_query("show databases;").split("\n")
-        dbs = filter(lambda name: is_test_object_name(name), dbs)
-        dbs = list(dbs)
+    hive = Hive()
+    dbs = hive.exec_query("show databases;")
+    dbs = filter(lambda name: is_test_object_name(name), dbs)
+    dbs = list(dbs)
 
-        if dbs:
-            logger.info("Removing databases:\n{}".format("\n".join(dbs)))
-            dbs = map(lambda name: "DROP DATABASE {} CASCADE;".format(name), dbs)
-            dbs = "".join(dbs)
-            hive.exec_query(dbs)
-        else:
-            logger.info("No database to remove.")
+    if dbs:
+        logger.info("Removing databases:\n{}".format("\n".join(dbs)))
+        dbs = map(lambda name: "DROP DATABASE {} CASCADE;".format(name), dbs)
+        dbs = "".join(dbs)
+        hive.exec_query(dbs)
+    else:
+        logger.info("No database to remove.")
 
 
 if __name__ == "__main__":

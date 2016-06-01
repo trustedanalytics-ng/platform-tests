@@ -28,3 +28,4 @@ class HttpClientType(Enum):
     BROKER = "Broker"
     WEBHDFS = "Webhdfs"
     SERVICE_TOOL = "ServiceTool"
+    CLOUDERA = "Cloudera"

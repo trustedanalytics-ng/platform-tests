@@ -54,8 +54,8 @@ class SshConnector(object):
             hostname=Config.get_elasticsearch_host(),
             port=Config.ELASTIC_SEARCH_PORT,
             username=Config.ELASTIC_SSH_TUNNEL_USER,
-            path_to_key=Config.get_elastic_ssh_tunnel_key_path(),
-            via_hostname=Config.get_elastic_ssh_tunnel_host(),
+            path_to_key=Config.get_cdh_key_path(),
+            via_hostname=Config.get_jumpbox_host_address(),
             local_port=Config.ELASTIC_SEARCH_PORT
         )
 
