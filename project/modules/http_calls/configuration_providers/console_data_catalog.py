@@ -14,6 +14,15 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.29'
+from ...http_client.config import Config as ClientConfig
+from ...http_calls.configuration_providers.base_console import BaseConsoleConfigurationProvider
 
+
+# noinspection PyAbstractClass
+class ConsoleDataCatalogConfigurationProvider(BaseConsoleConfigurationProvider):
+    """Provide configuration for console data catalog http client."""
+
+    @staticmethod
+    def application_url() -> str:
+        """Data catalog console url."""
+        return ClientConfig.service_console_data_catalog_url()

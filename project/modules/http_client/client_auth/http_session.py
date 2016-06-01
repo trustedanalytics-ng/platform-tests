@@ -43,10 +43,10 @@ class HttpSession(object):
         return self._password
 
     def request(self, method: HttpMethod, url, headers=None, files=None, data=None, params=None, auth=None, body=None,
-                log_message=""):
+                log_message="", raw_response=False):
         """Perform request and return response."""
         request = self._request_prepare(method, url, headers, files, data, params, auth, body, log_message)
-        return self._request_perform(request)
+        return self._request_perform(request, raw_response)
 
     def _request_prepare(self, method, url, headers, files, data, params, auth, body, log_message):
         """Prepare request to perform."""
@@ -64,10 +64,12 @@ class HttpSession(object):
         log_http_request(prepared_request, self._username, self._password, description=log_message, data=data)
         return prepared_request
 
-    def _request_perform(self, request: Request):
+    def _request_perform(self, request: Request, raw_response: bool):
         """Perform request and return response."""
         response = self._session.send(request)
         log_http_response(response)
+        if raw_response is True:
+            return response
         if not response.ok:
             raise UnexpectedResponseError(response.status_code, response.text)
         try:

@@ -17,11 +17,12 @@
 from .base_broker import BaseBrokerConfigurationProvider
 from ...constants import TapComponent
 from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config
+from ...http_client.config import Config as ClientConfig
 
 
+# noinspection PyAbstractClass
 class DemiurgeConfigurationProvider(BaseBrokerConfigurationProvider):
-    """ Provide configuration for demiurge http client. """
+    """Provide configuration for demiurge http client."""
 
     @classmethod
     def tap_component(cls) -> TapComponent:
@@ -36,4 +37,4 @@ class DemiurgeConfigurationProvider(BaseBrokerConfigurationProvider):
     @classmethod
     def http_client_url(cls) -> str:
         """Provide http client url."""
-        return Config.service_demiurge_url()
+        return ClientConfig.service_demiurge_url()

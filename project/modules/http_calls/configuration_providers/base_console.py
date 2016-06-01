@@ -14,37 +14,18 @@
 # limitations under the License.
 #
 
+from abc import ABCMeta, abstractstaticmethod
+
 from configuration.config import CONFIG
+
 from ...http_client.http_client_configuration import HttpClientConfiguration
 from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config as ClientConfig
-from ...constants import TapComponent
-from .base_broker import BaseBrokerConfigurationProvider
 from .base import BaseConfigurationProvider
 
 
-# noinspection PyAbstractClass
-class KubernetesBrokerBasicConfigurationProvider(BaseBrokerConfigurationProvider):
-    """Provide configuration for kubernetes broker http client."""
-
-    @classmethod
-    def tap_component(cls) -> TapComponent:
-        """Provide tap component."""
-        return TapComponent.kubernetes_broker
-
-    @classmethod
-    def http_client_type(cls) -> HttpClientType:
-        """Provide http client type."""
-        return HttpClientType.BROKER
-
-    @classmethod
-    def http_client_url(cls) -> str:
-        """Provide http client url."""
-        return ClientConfig.service_kubernetes_broker_basic_url()
-
-
-class KubernetesBrokerTokenConfigurationProvider(BaseConfigurationProvider):
-    """Provide configuration for cloud foundry http client."""
+# noinspection PyMethodParameters
+class BaseConsoleConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMeta):
+    """Base class that all console configuration provider implementations derive from."""
 
     @classmethod
     def provide_configuration(cls, username=None, password=None) -> HttpClientConfiguration:
@@ -53,8 +34,12 @@ class KubernetesBrokerTokenConfigurationProvider(BaseConfigurationProvider):
             username = CONFIG["admin_username"]
             password = CONFIG["admin_password"]
         return HttpClientConfiguration(
-            HttpClientType.CLOUD_FOUNDRY,
-            ClientConfig.service_kubernetes_broker_token_url(),
-            username,
-            password
+            client_type=HttpClientType.CONSOLE,
+            url=cls.application_url(),
+            username=username,
+            password=password
         )
+
+    @abstractstaticmethod
+    def application_url() -> str:
+        """Application console url."""

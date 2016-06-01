@@ -17,7 +17,7 @@
 from configuration.config import CONFIG
 from ...http_client.http_client_configuration import HttpClientConfiguration
 from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config
+from ...http_client.config import Config as ClientConfig
 from .base import BaseConfigurationProvider
 
 
@@ -25,11 +25,14 @@ class CloudFoundryConfigurationProvider(BaseConfigurationProvider):
     """Provide configuration for cloud foundry http client."""
 
     @classmethod
-    def provide_configuration(cls) -> HttpClientConfiguration:
+    def provide_configuration(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
+        if username is None:
+            username = CONFIG["admin_username"]
+            password = CONFIG["admin_password"]
         return HttpClientConfiguration(
-            HttpClientType.CLOUD_FOUNDRY,
-            Config.service_cloud_foundry_url(),
-            CONFIG["admin_username"],
-            CONFIG["admin_password"]
+            client_type=HttpClientType.CLOUD_FOUNDRY,
+            url=ClientConfig.service_cloud_foundry_url(),
+            username=username,
+            password=password
         )

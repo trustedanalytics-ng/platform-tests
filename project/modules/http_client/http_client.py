@@ -36,7 +36,7 @@ class HttpClient(object):
             self._auth.authenticate()
         return self._auth.session.request(
             method=method,
-            url=self._url + path,
+            url="{}{}".format(self._url, path),
             headers=headers,
             files=files,
             params=params,
