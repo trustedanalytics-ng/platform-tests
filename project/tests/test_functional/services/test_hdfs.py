@@ -60,7 +60,8 @@ class TestHdfsService(object):
         assert len(failures) == 0, "The following items failed:\n{}".format("\n".join(failures))
 
     @priority.medium
-    def test_create_and_delete_hdfs_service_user_directory_plans(self, test_org, test_space, hdfs_service_offering):
+    def test_create_and_delete_hdfs_service_user_directory_plans(self, test_org, test_space, add_admin_to_test_org,
+                                                                 add_admin_to_test_space, hdfs_service_offering):
         step("Create {} instance with {} plan".format(self.label, ServicePlan.CREATE_USER_DIRECTORY))
         create_directory_plan_guid = next((p["guid"] for p in hdfs_service_offering.service_plans
                                            if p["name"] == ServicePlan.CREATE_USER_DIRECTORY), None)

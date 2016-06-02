@@ -105,6 +105,12 @@ def add_admin_to_test_org(test_org, admin_user):
 
 
 @pytest.fixture(scope="session")
+def add_admin_to_test_space(test_org, test_space, admin_user):
+    log_fixture("add_admin_to_test_space")
+    admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid, roles=User.SPACE_ROLES["developer"])
+
+
+@pytest.fixture(scope="session")
 def core_org():
     log_fixture("core_org: Create object for core org")
     ref_org_name = config.CONFIG["ref_org_name"]
