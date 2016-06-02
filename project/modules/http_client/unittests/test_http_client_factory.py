@@ -19,8 +19,7 @@ import unittest
 from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
 from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_base import ClientAuthBase
-from modules.http_client.client_auth.client_auth_token_uaa import ClientAuthTokenUaa
-from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
+from modules.http_client.client_auth.client_auth_token import ClientAuthToken
 from modules.http_client.http_client import HttpClient
 from modules.http_client.http_client_configuration import HttpClientConfiguration
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -35,13 +34,13 @@ class TestHttpClientFactory(MockHttpSession):
         super().setUp()
 
     def test_get_should_return_client_for_uaa(self):
-        self._assertHttpClientInstance(HttpClientType.UAA, ClientAuthTokenUaa)
+        self._assertHttpClientInstance(HttpClientType.UAA, ClientAuthToken)
 
     def test_get_should_return_client_for_cf(self):
-        self._assertHttpClientInstance(HttpClientType.CLOUD_FOUNDRY, ClientAuthTokenBasic)
+        self._assertHttpClientInstance(HttpClientType.CLOUD_FOUNDRY, ClientAuthToken)
 
     def test_get_should_return_client_for_platform(self):
-        self._assertHttpClientInstance(HttpClientType.PLATFORM, ClientAuthTokenBasic)
+        self._assertHttpClientInstance(HttpClientType.PLATFORM, ClientAuthToken)
 
     def test_get_should_return_client_for_application_broker(self):
         self._assertHttpClientInstance(HttpClientType.BROKER, ClientAuthHttpBasic)

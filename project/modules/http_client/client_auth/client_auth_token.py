@@ -15,18 +15,21 @@
 #
 
 import time
-from abc import ABCMeta, abstractproperty
 
 from requests.auth import AuthBase
 
 from .client_auth_base import ClientAuthBase
 from .http_method import HttpMethod
-from .http_token_auth import HTTPTokenAuth
 from .http_session import HttpSession
+from .http_token_auth import HTTPTokenAuth
 
 
-class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
+class ClientAuthToken(ClientAuthBase):
     """Base class that all token based http client authentication implementations derive from."""
+    request_headers = {"Accept": "application/json"}
+    token_life_time = 298
+    token_name = "access_token"
+    token_format = "Bearer {}"
 
     def __init__(self, url: str, session: HttpSession):
         self._token = None
@@ -63,25 +66,14 @@ class ClientAuthTokenBase(ClientAuthBase, metaclass=ABCMeta):
         self._token_timestamp = time.time()
         self._token = self.token_format.format(self._response[self.token_name])
 
-    @abstractproperty
+    @property
     def request_data(self) -> dict:
         """Token request data."""
-
-    @abstractproperty
-    def request_headers(self) -> dict:
-        """Token request headers."""
-
-    @abstractproperty
-    def token_life_time(self) -> int:
-        """Token life time in seconds."""
-
-    @abstractproperty
-    def token_name(self) -> str:
-        """Token name."""
-
-    @abstractproperty
-    def token_format(self) -> str:
-        """Token format."""
+        return {
+            "username": self.session.username,
+            "password": self.session.password,
+            "grant_type": "password",
+        }
 
 
 class ClientAuthTokenMissingResponseTokenKeyException(Exception):

@@ -17,7 +17,7 @@
 import unittest
 
 from modules.http_client.unittests.mock_http_session import MockHttpSession
-from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
+from modules.http_client.client_auth.client_auth_token import ClientAuthToken
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.client_auth.http_session import HttpSession
 from modules.http_client.http_client import HttpClient
@@ -35,7 +35,7 @@ class TestHttpClient(MockHttpSession):
 
     def test_init(self):
         self.assertEqual(self.URL, self.http_client.url)
-        self.assertIsInstance(self.http_client._auth, ClientAuthTokenBasic, "Invalid auth class.")
+        self.assertIsInstance(self.http_client._auth, ClientAuthToken, "Invalid auth class.")
 
     def test_request(self):
         response = self.http_client.request(HttpMethod.GET, "/some/path")
@@ -44,7 +44,7 @@ class TestHttpClient(MockHttpSession):
     def _create_http_client(self):
         self.http_client = HttpClient(
             self.URL,
-            ClientAuthTokenBasic(
+            ClientAuthToken(
                 "http://auth.url",
                 HttpSession(
                     "username",

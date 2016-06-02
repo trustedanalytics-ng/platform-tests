@@ -19,8 +19,7 @@ from .http_session import HttpSession
 from .client_auth_base import ClientAuthBase
 from .client_auth_http_basic import ClientAuthHttpBasic
 from .client_auth_login_page import ClientAuthLoginPage
-from .client_auth_token_uaa import ClientAuthTokenUaa
-from .client_auth_token_basic import ClientAuthTokenBasic
+from .client_auth_token import ClientAuthToken
 from .client_auth_type import ClientAuthType
 
 
@@ -32,11 +31,11 @@ class ClientAuthFactory(object):
         """Create client authentication for given type."""
         session = HttpSession(username, password)
 
-        if auth_type == ClientAuthType.TOKEN_BASIC:
-            return ClientAuthTokenBasic(Config.auth_basic_token_url(), session)
+        if auth_type == ClientAuthType.TOKEN_CF:
+            return ClientAuthToken(Config.auth_basic_token_url(), session)
 
         if auth_type == ClientAuthType.TOKEN_UAA:
-            return ClientAuthTokenUaa(Config.auth_uaa_token_url(), session)
+            return ClientAuthToken(Config.auth_uaa_token_url(), session)
 
         elif auth_type == ClientAuthType.HTTP_BASIC:
             return ClientAuthHttpBasic("", session)

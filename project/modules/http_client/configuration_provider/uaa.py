@@ -14,11 +14,10 @@
 # limitations under the License.
 #
 
-from ...constants import TapComponent
-from ...tap_object_model import Application
 from ...http_client.http_client_configuration import HttpClientConfiguration
 from ...http_client.http_client_type import HttpClientType
 from ...http_client.config import Config
+from configuration.config import CONFIG
 from .base import BaseConfigurationProvider
 
 
@@ -28,14 +27,9 @@ class UaaConfigurationProvider(BaseConfigurationProvider):
     @classmethod
     def provide_configuration(cls) -> HttpClientConfiguration:
         """Provide http client configuration."""
-        apps = Application.cf_api_get_list()
-        user_management = next(a for a in apps if a.name == TapComponent.user_management.value)
-        user_management_env = user_management.cf_api_env()
-        upsi = user_management_env["VCAP_SERVICES"]["user-provided"]
-        sso = next(x for x in upsi if x["name"] == "sso")
         return HttpClientConfiguration(
-            HttpClientType.UAA,
-            Config.service_uaa_url(),
-            sso["credentials"]["clientId"],
-            sso["credentials"]["clientSecret"]
+            client_type=HttpClientType.UAA,
+            url=Config.service_uaa_url(),
+            username=CONFIG["admin_username"],
+            password=CONFIG["admin_password"]
         )

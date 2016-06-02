@@ -21,6 +21,6 @@ class ClientAuthType(Enum):
     """Client authentication types."""
 
     LOGIN_PAGE = "LoginPage"
-    TOKEN_BASIC = "BasicToken"
+    TOKEN_CF = "CFToken"
     TOKEN_UAA = "UaaToken"
     HTTP_BASIC = "HttpBasic"

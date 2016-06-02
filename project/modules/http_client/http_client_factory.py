@@ -38,10 +38,10 @@ class HttpClientFactory(object):
             return cls._get_instance(configuration, ClientAuthType.LOGIN_PAGE)
 
         elif client_type == HttpClientType.PLATFORM:
-            return cls._get_instance(configuration, ClientAuthType.TOKEN_BASIC)
+            return cls._get_instance(configuration, ClientAuthType.TOKEN_CF)
 
         elif client_type == HttpClientType.CLOUD_FOUNDRY:
-            return cls._get_instance(configuration, ClientAuthType.TOKEN_BASIC)
+            return cls._get_instance(configuration, ClientAuthType.TOKEN_CF)
 
         elif client_type == HttpClientType.BROKER:
             return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)

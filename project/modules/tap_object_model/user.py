@@ -189,4 +189,4 @@ class User(object):
 
     def cleanup(self):
         cf.cf_api_delete_user(self.guid)
-        # uaa.uaa_api_user_delete(self.guid)
+        uaa.uaa_api_user_delete(self.guid)
