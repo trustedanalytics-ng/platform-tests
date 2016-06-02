@@ -56,8 +56,7 @@ class BaseBrokerConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMe
     def _get_environment(cls):
         """Provide environment variables."""
         response = cf.cf_api_get_apps()
-        app_guid = None
-        for app in response:
-            if app["entity"]["name"] == cls.tap_component().value:
-                app_guid = app["metadata"]["guid"]
+        app_guid = next((app["metadata"]["guid"] for app in response
+                         if app["entity"]["name"] == cls.tap_component().value), None)
+        assert app_guid is not None, "No such app {}".format(cls.tap_component())
         return cf.cf_api_get_app_env(app_guid)
