@@ -14,18 +14,15 @@
 # limitations under the License.
 #
 
-from abc import ABCMeta, abstractstaticmethod
-
 from configuration.config import CONFIG
-
-from ...http_client.http_client_configuration import HttpClientConfiguration
-from ...http_client.http_client_type import HttpClientType
+from ..http_client_configuration import HttpClientConfiguration
+from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 from .base import BaseConfigurationProvider
 
 
-# noinspection PyMethodParameters
-class BaseConsoleConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMeta):
-    """Base class that all console configuration provider implementations derive from."""
+class CloudFoundryConfigurationProvider(BaseConfigurationProvider):
+    """Provide configuration for cloud foundry http client."""
 
     @classmethod
     def provide_configuration(cls, username=None, password=None) -> HttpClientConfiguration:
@@ -34,12 +31,8 @@ class BaseConsoleConfigurationProvider(BaseConfigurationProvider, metaclass=ABCM
             username = CONFIG["admin_username"]
             password = CONFIG["admin_password"]
         return HttpClientConfiguration(
-            client_type=HttpClientType.CONSOLE,
-            url=cls.application_url(),
+            client_type=HttpClientType.CLOUD_FOUNDRY,
+            url=ClientConfig.service_cloud_foundry_url(),
             username=username,
             password=password
         )
-
-    @abstractstaticmethod
-    def application_url() -> str:
-        """Application console url."""

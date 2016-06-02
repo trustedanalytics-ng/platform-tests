@@ -16,8 +16,8 @@
 
 from .base_broker import BaseBrokerConfigurationProvider
 from ...constants import TapComponent
-from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config as ClientConfig
+from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 
 
 # noinspection PyAbstractClass

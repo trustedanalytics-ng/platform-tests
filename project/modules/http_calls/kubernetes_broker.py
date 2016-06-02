@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 
-from .configuration_providers.kubernetes_broker import KubernetesBrokerBasicConfigurationProvider
-from .configuration_providers.kubernetes_broker import KubernetesBrokerTokenConfigurationProvider
+from ..http_client.configuration_provider.kubernetes_broker import KubernetesBrokerBasicConfigurationProvider, \
+    KubernetesBrokerTokenConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 
@@ -75,6 +75,7 @@ def k8s_broker_create_service_offering(org_guid, space_guid, service_name=None):
         msg="K8S BROKER: create service offering"
     )
 
+
 def k8s_broker_get_service_status(org_guid, service_id):
     """GET /v$/:org_id/service/:instance_id/status"""
     return HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
@@ -82,6 +83,7 @@ def k8s_broker_get_service_status(org_guid, service_id):
         path="{}/service/{}/status".format(org_guid, service_id),
         msg="K8S BROKER: get instance status"
     )
+
 
 def k8s_broker_change_instance_visibility(org_guid, space_guid, plan_id, service_id, visibility=None):
     """POST /rest/kubernetes/service/visibility"""

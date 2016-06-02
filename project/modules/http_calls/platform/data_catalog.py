@@ -16,10 +16,10 @@
 
 import json
 
-from modules.http_client.http_client import HttpClient
-from modules.http_client.client_auth.http_method import HttpMethod
-from modules.http_client.http_client_factory import HttpClientFactory
-from modules.http_calls.configuration_providers.console_data_catalog import ConsoleDataCatalogConfigurationProvider
+from ...http_client.http_client import HttpClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.http_client_factory import HttpClientFactory
+from ...http_client.configuration_provider.console_data_catalog import ConsoleDataCatalogConfigurationProvider
 
 
 def api_get_datasets(org_guid_list=None, query="", filters=(), size=12, time_from=0, only_private=False,

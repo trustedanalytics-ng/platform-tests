@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 
-from ...http_client.config import Config as ClientConfig
-from ...http_calls.configuration_providers.base_console import BaseConsoleConfigurationProvider
+from ..config import Config as ClientConfig
+from .base_console import BaseConsoleConfigurationProvider
 
 
 # noinspection PyAbstractClass

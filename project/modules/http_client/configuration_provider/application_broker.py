@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 
-from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config
+from ..http_client_type import HttpClientType
+from ..config import Config
 from ...constants import TapComponent
 from .base_broker import BaseBrokerConfigurationProvider
 

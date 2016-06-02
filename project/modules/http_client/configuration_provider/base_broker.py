@@ -16,9 +16,9 @@
 
 from abc import ABCMeta, abstractclassmethod
 
-from .. import cloud_foundry as cf
-from ...http_client.http_client_configuration import HttpClientConfiguration
-from ...http_client.http_client_type import HttpClientType
+from ...http_calls import cloud_foundry as cf
+from ..http_client_configuration import HttpClientConfiguration
+from ..http_client_type import HttpClientType
 from ...constants import TapComponent
 from .base import BaseConfigurationProvider
 

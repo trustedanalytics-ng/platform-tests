@@ -16,9 +16,9 @@
 
 from ...constants import TapComponent
 from ...tap_object_model import Application
-from ...http_client.http_client_configuration import HttpClientConfiguration
-from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config as ClientConfig
+from ..http_client_configuration import HttpClientConfiguration
+from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 from .base import BaseConfigurationProvider
 
 

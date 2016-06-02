@@ -16,7 +16,7 @@
 
 from abc import ABCMeta, abstractclassmethod
 
-from ...http_client.http_client_configuration import HttpClientConfiguration
+from ..http_client_configuration import HttpClientConfiguration
 
 
 class BaseConfigurationProvider(object, metaclass=ABCMeta):

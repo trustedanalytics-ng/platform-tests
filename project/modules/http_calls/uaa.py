@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from .configuration_providers.uaa import UaaConfigurationProvider
+from ..http_client.configuration_provider.uaa import UaaConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 

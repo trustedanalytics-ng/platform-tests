@@ -19,7 +19,7 @@ from .. import command as cmd
 from ..constants import LoggerType
 from ..exceptions import YouMustBeJokingException
 from ..tap_logger import get_logger, log_command
-from .configuration_providers.cloud_foundry import CloudFoundryConfigurationProvider
+from ..http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 

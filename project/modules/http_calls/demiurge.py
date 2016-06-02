@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from ..http_calls.configuration_providers.demiurge import DemiurgeConfigurationProvider
+from ..http_client.configuration_provider.demiurge import DemiurgeConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 

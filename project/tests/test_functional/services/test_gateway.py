@@ -19,7 +19,7 @@ import websocket
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
-from modules.http_calls.configuration_providers.cloud_foundry import CloudFoundryConfigurationProvider
+from modules.http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, priority

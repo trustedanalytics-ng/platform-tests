@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from .configuration_providers.application_broker import ApplicationBrokerConfigurationProvider
+from ..http_client.configuration_provider.application_broker import ApplicationBrokerConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
 from ..http_client.http_client_factory import HttpClientFactory
 

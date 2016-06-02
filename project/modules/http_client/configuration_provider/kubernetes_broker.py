@@ -15,10 +15,10 @@
 #
 
 from configuration.config import CONFIG
-from ...http_client.http_client_configuration import HttpClientConfiguration
-from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config as ClientConfig
 from ...constants import TapComponent
+from ..http_client_configuration import HttpClientConfiguration
+from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 from .base_broker import BaseBrokerConfigurationProvider
 from .base import BaseConfigurationProvider
 
