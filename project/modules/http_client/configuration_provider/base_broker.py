@@ -27,17 +27,19 @@ class BaseBrokerConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMe
     """Base class that all broker configuration provider implementations derive from."""
 
     @classmethod
-    def provide_configuration(cls, username=None, password=None) -> HttpClientConfiguration:
+    def provide_configuration(cls) -> HttpClientConfiguration:
         """Provide http client configuration."""
-        if username is None:
-            env = cls._get_environment()
-            username = env["environment_json"]["AUTH_USER"]
-            password = env["environment_json"]["AUTH_PASS"]
+        response = cf.cf_api_get_apps()
+        app_guid = None
+        for app in response:
+            if app["entity"]["name"] == cls.tap_component().value:
+                app_guid = app["metadata"]["guid"]
+        app_broker_env = cf.cf_api_get_app_env(app_guid)
         return HttpClientConfiguration(
-            client_type=cls.http_client_type(),
-            url=cls.http_client_url(),
-            username=username,
-            password=password
+            cls.http_client_type(),
+            cls.http_client_url(),
+            app_broker_env["environment_json"]["AUTH_USER"],
+            app_broker_env["environment_json"]["AUTH_PASS"]
         )
 
     @abstractclassmethod
@@ -60,3 +62,4 @@ class BaseBrokerConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMe
                          if app["entity"]["name"] == cls.tap_component().value), None)
         assert app_guid is not None, "No such app {}".format(cls.tap_component())
         return cf.cf_api_get_app_env(app_guid)
+

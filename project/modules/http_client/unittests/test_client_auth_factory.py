@@ -16,7 +16,6 @@
 
 import unittest
 from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
-from modules.http_client.client_auth.client_auth_login_page import ClientAuthLoginPage
 
 from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_token_basic import ClientAuthTokenBasic
@@ -44,6 +43,15 @@ class TestClientAuthFactory(MockHttpSession):
 
     def test_get_should_return_auth_http_basic(self):
         self._assertClientAuthInstance(ClientAuthType.HTTP_BASIC, ClientAuthHttpBasic)
+
+    def test_get_should_return_auth_login_page(self):
+        self.assertRaises(
+            NotImplementedError,
+            ClientAuthFactory.get,
+            self.USERNAME,
+            self.PASSWORD,
+            ClientAuthType.LOGIN_PAGE
+        )
 
     def test_get_should_return_exception_for_undefined_type(self):
         self.assertRaises(

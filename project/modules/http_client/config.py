@@ -39,7 +39,7 @@ class Config(object):
         """Url address to auth login service."""
         return CONFIG["auth_login_url"] \
             if "auth_login_url" in CONFIG \
-            else "{}://login.{}/".format(CONFIG["login.do_scheme"], CONFIG["domain"])
+            else "{}://login.{}/{}".format(CONFIG["login.do_scheme"], CONFIG["domain"], "login.do")
 
     @staticmethod
     def service_uaa_url():
@@ -47,6 +47,13 @@ class Config(object):
         return CONFIG["service_uaa_url"] \
             if "service_uaa_url" in CONFIG \
             else "http://uaa.{}/".format(CONFIG["domain"])
+
+    @staticmethod
+    def service_console_url():
+        """Console service url."""
+        return CONFIG["service_console_url"] \
+            if "service_console_url" in CONFIG \
+            else "https://console.{}/".format(CONFIG["domain"])
 
     @staticmethod
     def service_platform_url():
@@ -88,17 +95,3 @@ class Config(object):
         return CONFIG["service_demiurge_url"] \
             if "service_demiurge_url" in CONFIG \
             else "http://demiurge.{}/".format(CONFIG["domain"])
-
-    @staticmethod
-    def service_console_url():
-        """Console service url."""
-        return CONFIG["service_console_url"] \
-            if "service_console_url" in CONFIG \
-            else "https://console.{}/".format(CONFIG["domain"])
-
-    @staticmethod
-    def service_console_data_catalog_url():
-        """Platform service url."""
-        return CONFIG["service_data_catalog_url"] \
-            if "service_data_catalog_url" in CONFIG \
-            else "http://console.{}/rest/datasets".format(CONFIG["domain"])
