@@ -99,7 +99,7 @@ class Atk(TapTestCase):
         self.step("Publish in hive the data set created based on the submitted transfer")
         data_set = DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=self.transfer_title)
         data_set.api_publish()
-        self.__class__.data_set_hdfs_path = data_set.target_uri
+        self.__class__.data_set_hdfs_path = ATKtools.dataset_uri_to_atk_uri(data_set.target_uri)
 
     @long
     @pytest.mark.bugs("kerberos: DPNG-4525", "non-kerberos: DPNG-5171")

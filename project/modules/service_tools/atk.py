@@ -15,6 +15,7 @@
 #
 
 import os
+import re
 
 import pexpect
 import requests
@@ -58,6 +59,14 @@ class ATKtools(object):
         self.interpreter = os.path.join(self.path, "bin", interpreter_version)
         self.pip = os.path.join(self.path, "bin/pip")
         self.installed_packages = []
+
+    @staticmethod
+    def dataset_uri_to_atk_uri(dataset_uri):
+        pattern = r"userspace.*$"
+        match = re.search(pattern, dataset_uri)
+        if match is None:
+            raise AssertionError("Pattern not found in dataset uri")
+        return "../../../{}".format(match.group())
 
     @staticmethod
     def get_atk_client_url(atk_url):

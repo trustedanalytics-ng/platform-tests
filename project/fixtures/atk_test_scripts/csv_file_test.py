@@ -29,9 +29,9 @@ ta.create_credentials_file(parameters.uaa_file_name)
 
 check_uaa_file(parameters.uaa_file_name)
 
-hdfs_path = parameters.target_uri.split("/", 3)[3]
-print("calling CsvFile...")
-hcsv = ta.CsvFile("../../../" + hdfs_path, schema=[('line' + str(i), str) for i in xrange(8)], delimiter=",")
+hdfs_path = parameters.target_uri
+print("Create CsvFile from hdfs data set")
+hcsv = ta.CsvFile(hdfs_path, schema=[('line' + str(i), str) for i in xrange(8)], delimiter=",")
 frame = ta.Frame(hcsv)
 
 frame_content = frame.inspect(20)
