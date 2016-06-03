@@ -50,6 +50,7 @@ class ArcadiaTest(TapTestCase):
         cls.arcadia = Arcadia()
         request.addfinalizer(lambda: cls.arcadia.teardown_test_datasets())
 
+    @pytest.mark.bugs("DPNG-7434 Published dataset appears in Arcadia with considerable delay")
     def test_0_create_new_dataset_and_import_it_to_arcadia(self):
         self.step("Publish created dataset")
         self.dataset.api_publish()
@@ -65,6 +66,7 @@ class ArcadiaTest(TapTestCase):
         assertions.assert_in_with_retry(arcadia_dataset, self.arcadia.get_dataset_list)
 
     @pytest.mark.public_dataset
+    @pytest.mark.bugs("DPNG-7434 Published dataset appears in Arcadia with considerable delay")
     def test_1_change_dataset_to_public_and_import_it_to_arcadia(self):
         self.step("Change dataset to public")
         self.dataset.api_update(is_public=True)
