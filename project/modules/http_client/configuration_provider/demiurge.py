@@ -22,6 +22,8 @@ from ...http_client.config import Config
 
 class DemiurgeConfigurationProvider(BaseBrokerConfigurationProvider):
     """ Provide configuration for demiurge http client. """
+    username_env_key = "USERNAME"
+    password_env_key = "PASSWORD"
 
     @classmethod
     def tap_component(cls) -> TapComponent:

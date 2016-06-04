@@ -32,7 +32,7 @@ pytestmark = [components.demiurge, components.kubernetes_broker]
 
 @incremental
 @priority.high
-@pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
+# @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestCluster:
     CLUSTERED_TAG = "clustered"
 
