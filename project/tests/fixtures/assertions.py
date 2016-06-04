@@ -18,6 +18,7 @@ import pytest
 from retry import retry
 
 from modules.exceptions import UnexpectedResponseError
+from modules.tap_object_model.flows import data_catalog
 
 
 @retry(AssertionError, tries=20, delay=3)
@@ -66,3 +67,14 @@ def assert_no_errors(errors: list):
 
 def assert_unordered_list_equal(list1, list2):
     assert sorted(list1) == sorted(list2)
+
+
+@retry(AssertionError, tries=2, delay=360)
+def assert_dataset_greater_with_retry(value_to_compare, *args, **kwargs):
+    _, dataset = data_catalog.create_dataset_from_link(*args, **kwargs)
+    assert dataset.size > value_to_compare
+
+
+def assert_datasets_not_empty(dataset_list):
+    for dataset in dataset_list:
+        assert dataset.size > 0

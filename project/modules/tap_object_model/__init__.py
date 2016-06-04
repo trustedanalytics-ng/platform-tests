@@ -20,7 +20,7 @@ from .dataset import DataSet, DatasetAccess
 from .external_tools import ExternalTools
 from .user import User
 from .invitation import Invitation
-from .job import Job
+from .hdfs_job import HdfsJob
 from .kubernetes_cluster import KubernetesCluster
 from .kubernetes_instance import KubernetesInstance
 from .kubernetes_secret import KubernetesSecret

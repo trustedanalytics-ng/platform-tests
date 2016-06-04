@@ -22,14 +22,16 @@ import pytest
 
 from retry import retry
 
-from configuration import config
-from modules.constants import HttpStatus, ApplicationPath
+from configuration.config import CONFIG
+from modules import app_sources
+from modules.constants import HttpStatus, ServiceLabels, TapGitHub, ApplicationPath
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Organization, ServiceType, Space, User, Application
+from modules.tap_object_model import Organization, ServiceType, ServiceInstance, Space, Transfer, User, Application
+from modules.test_names import generate_test_object_name
 from .context import Context
 from .test_data import TestData
 
@@ -174,7 +176,7 @@ def add_admin_to_test_space(test_org, test_space, admin_user):
 @pytest.fixture(scope="session")
 def core_org():
     log_fixture("core_org: Create object for core org")
-    ref_org_name = config.CONFIG["ref_org_name"]
+    ref_org_name = CONFIG["ref_org_name"]
     orgs = Organization.cf_api_get_list()
     TestData.core_org = next(o for o in orgs if o.name == ref_org_name)
     return TestData.core_org
@@ -183,7 +185,7 @@ def core_org():
 @pytest.fixture(scope="session")
 def core_space():
     log_fixture("core_space: Create object for core space")
-    ref_space_name = config.CONFIG["ref_space_name"]
+    ref_space_name = CONFIG["ref_space_name"]
     spaces = Space.cf_api_get_list()
     TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
     return TestData.core_space
@@ -218,3 +220,34 @@ def example_image():
     content64.write(bytes("data:image/png;base64,", "utf8"))
     base64.encode(open(file_path, "rb"), content64)
     return content64.getvalue()
+
+
+@pytest.fixture(scope="session")
+def psql_instance(test_org, test_space):
+    log_fixture("create_postgres_instance")
+    marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+    psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
+    instance_name = generate_test_object_name()
+    TestData.psql_instance = ServiceInstance.api_create(
+        org_guid=test_org.guid,
+        space_guid=test_space.guid,
+        service_label=ServiceLabels.PSQL,
+        name=instance_name,
+        service_plan_guid=psql.service_plan_guids[0]
+    )
+    return TestData.psql_instance
+
+
+@pytest.fixture(scope="session")
+def psql_app(psql_instance):
+    sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example,
+                                             repo_owner=TapGitHub.intel_data,
+                                             gh_auth=CONFIG["github_auth"])
+    psql_app_dir = sql_api_sources.clone_or_pull()
+    TestData.psql_app = Application.push(
+        space_guid=TestData.test_space.guid,
+        source_directory=psql_app_dir,
+        bound_services=(psql_instance.name,)
+    )
+    return TestData.psql_app
+
