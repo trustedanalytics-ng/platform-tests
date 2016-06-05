@@ -23,7 +23,7 @@ import time
 import paho.mqtt.client as mqtt
 import pytest
 
-from modules import app_sources
+from modules.app_sources import AppSources
 from configuration import config
 from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, TapGitHub
 from modules.markers import priority, components
@@ -48,10 +48,10 @@ class Mqtt:
 
     @priority.medium
     @pytest.mark.skip("DPNG-7402 Push mqtt app to cf failed due to SSL error")
-    def test_mqtt_demo(self, test_org, test_space, login_to_cf):
+    def test_mqtt_demo(self, test_org, test_space, login_to_cf, class_context):
         step("Clone repository")
-        mqtt_demo_sources = app_sources.AppSources(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER,
-                                                   gh_auth=config.CONFIG["github_auth"])
+        mqtt_demo_sources = AppSources(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER,
+                                       gh_auth=config.CONFIG["github_auth"])
         app_repo_path = mqtt_demo_sources.clone_or_pull()
         step("Compile the sources")
         mqtt_demo_sources.compile_mvn()
@@ -73,7 +73,7 @@ class Mqtt:
         )
 
         step("Push mqtt app to cf")
-        mqtt_demo_app = Application.push(source_directory=app_repo_path, space_guid=test_space.guid,
+        mqtt_demo_app = Application.push(class_context, source_directory=app_repo_path, space_guid=test_space.guid,
                                          env_proxy=config.CONFIG["pushed_app_proxy"])
 
         step("Retrieve credentials for mqtt service instance")

@@ -77,6 +77,9 @@ class Application(object):
         manifest["applications"][0]["name"] = app_name
         if bound_services is not None:
             manifest["applications"][0]["services"] = list(bound_services)
+        else:
+            if "services" in manifest["applications"][0]:
+                del manifest["applications"][0]["services"]
         app_env = manifest["applications"][0].get("env", {})
         if env is not None:
             app_env.update(env)
@@ -89,7 +92,7 @@ class Application(object):
         return manifest
 
     @classmethod
-    def push(cls, space_guid, source_directory, name=None, bound_services=None, env=None, env_proxy=None):
+    def push(cls, context, space_guid, source_directory, name=None, bound_services=None, env=None, env_proxy=None):
         """
         Application which will later be pushed to cf.
         source_directory -- where manifest.yml is located
@@ -118,6 +121,7 @@ class Application(object):
         application = next((app for app in Application.api_get_list(space_guid) if app.name == name), None)
         if application is None:
             raise AssertionError("App {} has not been created on the Platform".format(name))
+        context.apps.append(application)
         return application
 
     def api_request(self, path, method="GET", scheme="http", hostname=None, data=None, params=None, body=None):

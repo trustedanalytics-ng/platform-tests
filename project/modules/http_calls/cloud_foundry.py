@@ -314,6 +314,14 @@ def cf_api_delete_app(app_guid):
     )
 
 
+def cf_api_get_apps_bindings(app_guid):
+    """GET /v2/apps/{app_guid}/service_bindings"""
+    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
+        method=HttpMethod.GET,
+        path="apps/{}/service_bindings".format(app_guid),
+        msg="CF: get service bindings",
+    )
+
 # ------------------------------------------------- service brokers -------------------------------------------------- #
 
 def cf_api_get_service_brokers(space_guid=None):

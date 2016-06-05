@@ -74,7 +74,7 @@ def api_create_service(name, description, org_guid, app_name, app_guid, image=No
 
 
 def api_delete_service(service_guid, client=None):
-    """GET /rest/marketplace/application/{service_guid}"""
+    """DELETE /rest/marketplace/application/{service_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
@@ -215,6 +215,16 @@ def api_delete_app(app_guid, client=None):
     )
 
 
+def api_delete_app_cascade(app_guid, client=None):
+    """DELETE /rest/apps/{app_guid}/?cascade=true"""
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.DELETE,
+        path="/rest/apps/{}/?cascade=true".format(app_guid),
+        msg="PLATFORM: cascade delete application"
+    )
+
+
 def api_change_app_status(app_guid, status, client=None):
     """POST /rest/apps/{app_guid}/status"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
@@ -256,3 +266,5 @@ def api_delete_service_binding(binding_guid, client=None):
         path="/rest/service_bindings/{}".format(binding_guid),
         msg="PLATFORM: delete binding"
     )
+
+

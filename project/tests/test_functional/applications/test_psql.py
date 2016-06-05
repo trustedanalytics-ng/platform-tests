@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules import app_sources
+from modules.app_sources import AppSources
 from configuration import config
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
 from modules.markers import priority, components
@@ -67,22 +67,21 @@ class TestPsql(object):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def setup_psql_api_app(cls, request, test_space, login_to_cf, postgres_instance):
+    def setup_psql_api_app(cls, test_space, login_to_cf, postgres_instance, class_context):
         step("Get sql api app sources")
-        sql_api_sources = app_sources.AppSources(
+        sql_api_sources = AppSources.from_github(
             repo_name=TapGitHub.sql_api_example,
             repo_owner=TapGitHub.intel_data,
             gh_auth=config.CONFIG["github_auth"],
         )
-        psql_app_path = sql_api_sources.clone_or_pull()
         step("Push psql api app to cf")
         cls.psql_app = Application.push(
+            class_context,
             space_guid=test_space.guid, 
-            source_directory=psql_app_path,
+            source_directory=sql_api_sources.path,
             bound_services=(postgres_instance.name,),
             env_proxy=config.CONFIG["pushed_app_proxy"],
         )
-        request.addfinalizer(lambda: cls.psql_app.cleanup())
 
     @pytest.fixture(scope="function", autouse=True)
     def cleanup_psql_tables(self, request):

@@ -22,4 +22,6 @@ class ApplicationPath(object):
 
     BASE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "applications")
     ORIENTDB_API = os.path.join(BASE_PATH, "orientdb-api")
-    SAMPLE_APP = os.path.join(BASE_PATH, "sample-app")
+    SAMPLE_APPS_PATH = os.path.join(BASE_PATH, "sample-apps")
+    SAMPLE_PYTHON_APP = os.path.join(SAMPLE_APPS_PATH, "sample-python-app")
+    SAMPLE_JAVA_APP = os.path.join(SAMPLE_APPS_PATH, "sample-java-application")

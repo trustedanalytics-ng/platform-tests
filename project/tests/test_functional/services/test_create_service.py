@@ -29,29 +29,29 @@ pytestmark = [components.service_catalog]
 
 @pytest.mark.bugs("DPNG-7436 Internal Server Error (500) when trying to create a service at marketplace without a name or description")
 @priority.low
-def test_cannot_create_service_with_no_name(test_org, test_space, test_sample_app):
+def test_cannot_create_service_with_no_name(test_org, test_space, sample_python_app):
     step("Attempt to create service with empty name")
     assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                 ServiceType.register_app_in_marketplace, app_name=test_sample_app.name,
-                                 app_guid=test_sample_app.guid, org_guid=test_org.guid, space_guid=test_space.guid,
+                                 ServiceType.register_app_in_marketplace, app_name=sample_python_app.name,
+                                 app_guid=sample_python_app.guid, org_guid=test_org.guid, space_guid=test_space.guid,
                                  service_name="")
 
 
 @pytest.mark.bugs("DPNG-7436 Internal Server Error (500) "
                   "when trying to create a service at marketplace without a name or description")
 @priority.low
-def test_cannot_create_service_with_no_description(test_org, test_space, test_sample_app):
+def test_cannot_create_service_with_no_description(test_org, test_space, sample_python_app):
     step("Attempt to create service with empty description")
     assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                 ServiceType.register_app_in_marketplace, app_name=test_sample_app.name,
-                                 app_guid=test_sample_app.guid, org_guid=test_org.guid, space_guid=test_space.guid,
+                                 ServiceType.register_app_in_marketplace, app_name=sample_python_app.name,
+                                 app_guid=sample_python_app.guid, org_guid=test_org.guid, space_guid=test_space.guid,
                                  service_description="")
 
 
 @priority.high
-def test_create_and_delete_service(test_org, test_space, test_sample_app):
+def test_create_and_delete_service(test_org, test_space, sample_python_app):
     step("Register in marketplace")
-    service = ServiceType.register_app_in_marketplace(app_name=test_sample_app.name, app_guid=test_sample_app.guid,
+    service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name, app_guid=sample_python_app.guid,
                                                       org_guid=test_org.guid, space_guid=test_space.guid)
     step("Check that service is in marketplace")
     assert_in_with_retry(service, ServiceType.api_get_list_from_marketplace, test_space.guid)
@@ -62,9 +62,9 @@ def test_create_and_delete_service(test_org, test_space, test_sample_app):
 
 
 @priority.medium
-def test_create_service_with_icon(test_org, test_space, test_sample_app, example_image):
+def test_create_service_with_icon(test_org, test_space, sample_python_app, example_image):
     step("Register in marketplace")
-    service = ServiceType.register_app_in_marketplace(app_name=test_sample_app.name, app_guid=test_sample_app.guid,
+    service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name, app_guid=sample_python_app.guid,
                                                       org_guid=test_org.guid, space_guid=test_space.guid,
                                                       image=example_image)
     step("Check that service is in marketplace")
@@ -76,10 +76,10 @@ def test_create_service_with_icon(test_org, test_space, test_sample_app, example
 
 
 @priority.medium
-def test_create_service_with_display_name(test_org, test_space, test_sample_app):
+def test_create_service_with_display_name(test_org, test_space, sample_python_app):
     display_name = generate_test_object_name()
     step("Register in marketplace")
-    service = ServiceType.register_app_in_marketplace(app_name=test_sample_app.name, app_guid=test_sample_app.guid,
+    service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name, app_guid=sample_python_app.guid,
                                                       org_guid=test_org.guid, space_guid=test_space.guid,
                                                       display_name=display_name)
     step("Check that service is in marketplace")
@@ -91,10 +91,10 @@ def test_create_service_with_display_name(test_org, test_space, test_sample_app)
 
 
 @priority.medium
-def test_create_service_with_tag(test_org, test_space, test_sample_app):
+def test_create_service_with_tag(test_org, test_space, sample_python_app):
     tags = [generate_test_object_name(short=True)]
     step("Register in marketplace")
-    service = ServiceType.register_app_in_marketplace(app_name=test_sample_app.name, app_guid=test_sample_app.guid,
+    service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name, app_guid=sample_python_app.guid,
                                                       org_guid=test_org.guid, space_guid=test_space.guid, tags=tags)
     step("Check that service is in marketplace")
     assert_in_with_retry(service, ServiceType.api_get_list_from_marketplace, test_space.guid)

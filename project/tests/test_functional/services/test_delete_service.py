@@ -31,12 +31,12 @@ pytestmark = [components.service_catalog]
 class TestDeleteService:
 
     @pytest.fixture(autouse=True)
-    def create_service_and_instance(self, request, test_org, test_space, test_sample_service):
+    def create_service_and_instance(self, request, test_org, test_space, sample_service):
         step("Create an instance")
-        instance = ServiceInstance.api_create(test_org.guid, test_space.guid, test_sample_service.label,
-                                              service_plan_guid=test_sample_service.service_plans[0]["guid"])
+        instance = ServiceInstance.api_create(test_org.guid, test_space.guid, sample_service.label,
+                                              service_plan_guid=sample_service.service_plans[0]["guid"])
         step("Check that service instance is present")
-        assert_in_with_retry(instance, ServiceInstance.api_get_list, test_space.guid, test_sample_service.guid)
+        assert_in_with_retry(instance, ServiceInstance.api_get_list, test_space.guid, sample_service.guid)
 
         def fin():
             step("Delete instance")
@@ -44,15 +44,15 @@ class TestDeleteService:
         request.addfinalizer(fin)
 
     @pytest.mark.parametrize("role", ["auditor", "manager"])
-    def test_cannot_delete_service_as_non_space_manager(self, space_users_clients, role, test_sample_service):
+    def test_cannot_delete_service_as_non_space_manager(self, space_users_clients, role, sample_service):
         client = space_users_clients[role]
         step("Attempt to delete service")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_NOT_AUTHORIZED,
-                                     test_sample_service.api_delete, client=client)
+                                     sample_service.api_delete, client=client)
 
     @pytest.mark.parametrize("role", ["developer", "admin"])
-    def test_cannot_remove_service_with_instance(self, space_users_clients, role, test_sample_service):
+    def test_cannot_remove_service_with_instance(self, space_users_clients, role, sample_service):
         client = space_users_clients[role]
         step("Attempt to delete service")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE,
-                                     test_sample_service.api_delete, client=client)
+                                     sample_service.api_delete, client=client)

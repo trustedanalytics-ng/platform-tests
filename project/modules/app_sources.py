@@ -22,7 +22,6 @@ import subprocess
 from git import Repo
 import requests
 
-from configuration import config
 from .tap_logger import log_command, get_logger, log_http_request, log_http_response
 
 
@@ -31,40 +30,42 @@ logger = get_logger(__name__)
 
 class AppSources(object):
 
-    def __init__(self, repo_name: str, repo_owner: str, target_directory: str=None, gh_auth: tuple=None):
-        self.repo_name = repo_name
-        self.repo_owner = repo_owner
-        if target_directory is None:
-            target_directory = os.path.join("/tmp", repo_owner, repo_name)
-        self.path = target_directory
-        self.gh_auth = gh_auth
+    def __init__(self, sources_directory):
+        self.path = sources_directory
 
-    def __get_repo_url(self) -> str:
-        if self.gh_auth is not None:
-            clone_url = "https://{}:{}@github.com/{}/{}.git".format(self.gh_auth[0], self.gh_auth[1],
-                                                                    self.repo_owner, self.repo_name)
+    @staticmethod
+    def __get_repo_url(repo_name, repo_owner, gh_auth=None) -> str:
+        if gh_auth is not None:
+            clone_url = "https://{}:{}@github.com/{}/{}.git".format(gh_auth[0], gh_auth[1], repo_owner, repo_name)
         else:
-            clone_url = "https://github.com/{}/{}.git".format(self.repo_owner, self.repo_name)
+            clone_url = "https://github.com/{}/{}.git".format(repo_owner, repo_name)
         return clone_url
 
-    def __clone(self):
-        repo_url = self.__get_repo_url()
-        logger.info("Clone from {} to {}".format(repo_url, self.path))
-        os.makedirs(self.path, exist_ok=True)
-        Repo.clone_from(repo_url, self.path)
+    @classmethod
+    def from_local_path(cls, sources_directory):
+        return cls(sources_directory=sources_directory)
 
-    def clone_or_pull(self) -> str:
+    @classmethod
+    def from_github(cls, repo_name, repo_owner, target_directory=None, gh_auth=None):
+        if target_directory is None:
+            target_directory = os.path.join("/tmp", repo_owner, repo_name)
+        cls._clone_or_pull(repo_name, repo_owner, target_directory, gh_auth)
+        return cls(sources_directory=target_directory)
+
+    @classmethod
+    def _clone_or_pull(cls, repo_name, repo_owner, target_directory, gh_auth=None) -> str:
         """Pull changes into repository if repository exists, otherwise clone it"""
-        if os.path.exists(self.path):
-            repo_url = self.__get_repo_url()
+        repo_url = cls.__get_repo_url(repo_name, repo_owner, gh_auth)
+        if os.path.exists(target_directory):
             logger.info("Pull from {}".format(repo_url))
-            repo = Repo(self.path)
+            repo = Repo(target_directory)
             repo.head.reset("--hard")
             origin = repo.remotes.origin
             origin.pull()
         else:
-            self.__clone()
-        return self.path
+            logger.info("Clone from {} to {}".format(repo_url, target_directory))
+            os.makedirs(target_directory, exist_ok=True)
+            Repo.clone_from(repo_url, target_directory)
 
     def compile_mvn(self, working_directory: str=None):
         logger.info("Compile with maven")

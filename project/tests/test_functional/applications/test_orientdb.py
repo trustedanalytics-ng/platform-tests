@@ -52,10 +52,10 @@ class TestOrientDB(object):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def orientdb_app(cls, test_space, login_to_cf, orientdb_service):
+    def orientdb_app(cls, test_space, login_to_cf, orientdb_service, class_context):
         """SetUp: OrientDB API application creation."""
         step("Push OrientDB Api application to cf.")
-        app = Application.push(space_guid=test_space.guid, source_directory=ApplicationPath.ORIENTDB_API,
+        app = Application.push(class_context, space_guid=test_space.guid, source_directory=ApplicationPath.ORIENTDB_API,
                                bound_services=(orientdb_service.name,), env_proxy=CONFIG["pushed_app_proxy"])
         cls._API = OrientDbApi(app)
 

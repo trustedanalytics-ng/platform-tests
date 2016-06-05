@@ -1,0 +1,3 @@
+applications:
+- {host: sample-java-app, instances: 1, memory: 256M, name: sample-java-app,
+  path: target/sample-java-application-1.0-SNAPSHOT.jar}

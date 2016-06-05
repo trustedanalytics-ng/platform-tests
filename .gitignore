@@ -1,5 +1,6 @@
 /logs/*
 .idea
+*~
 *.pyc
 *.pyo
 *.log
@@ -9,5 +10,6 @@
 *key.dat
 *appstack.yml
 /project/modules/gatling_runner/download/*
+/project/applications/sample-apps/sample-java-application/target/*
 .cache
 *.iml

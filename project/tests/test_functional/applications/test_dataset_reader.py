@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import json
 
 import pytest
 import requests
 
-from modules import app_sources
+from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub, Urls
 from modules.markers import priority, components, incremental
 from modules.tap_logger import step
@@ -79,7 +80,6 @@ class TestDatasetReader:
             if self.hdfs_reader_app is not None:
                 for binding in ServiceBinding.api_get_list(self.hdfs_reader_app.guid):
                     binding.api_delete()
-                self.hdfs_reader_app.api_delete()
         request.addfinalizer(fin)
 
     def _get_link_content(self, link):
@@ -89,15 +89,14 @@ class TestDatasetReader:
         return r.content.decode()
 
     def test_0_push_dataset_reader_app(self, test_space, dataset_target_uri, hdfs_instance, kerberos_instance,
-                                       login_to_cf):
+                                       login_to_cf, class_context):
         step("Get app sources")
-        repo = app_sources.AppSources(repo_name=TapGitHub.dataset_reader_sample,
-                                      repo_owner=TapGitHub.trustedanalytics)
-        repo_path = repo.clone_or_pull()
+        repo = AppSources.from_github(repo_name=TapGitHub.dataset_reader_sample, repo_owner=TapGitHub.trustedanalytics)
         repo.compile_mvn()
 
         step("Push dataset-reader app to cf")
-        self.__class__.hdfs_reader_app = Application.push(space_guid=test_space.guid, source_directory=repo_path,
+        self.__class__.hdfs_reader_app = Application.push(class_context, space_guid=test_space.guid,
+                                                          source_directory=repo.path,
                                                           bound_services=(hdfs_instance.name, kerberos_instance.name),
                                                           env={"FILE": dataset_target_uri})
         step("Check dataset reader app has url")

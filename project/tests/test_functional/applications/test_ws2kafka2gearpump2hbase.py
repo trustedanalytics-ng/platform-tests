@@ -78,30 +78,28 @@ class TestWs2kafka2gearpump2hbase:
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def push_apps(cls, request, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances):
+    def push_apps(cls, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances, class_context):
         step("Get ws2kafka app sources")
         github_auth = config.CONFIG["github_auth"]
-        ingestion_repo = AppSources(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER, gh_auth=github_auth)
-        ingestion_path = ingestion_repo.clone_or_pull()
-        ws2kafka_path = os.path.join(ingestion_path, TapGitHub.ws2kafka)
+        ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER,
+                                                gh_auth=github_auth)
+        ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
 
         step("Get hbase reader app sources")
-        hbase_reader_repo = AppSources(repo_name=TapGitHub.hbase_api_example, repo_owner=cls.REPO_OWNER,
-                                       gh_auth=github_auth)
-        hbase_reader_path = hbase_reader_repo.clone_or_pull()
+        hbase_reader_repo = AppSources.from_github(repo_name=TapGitHub.hbase_api_example, repo_owner=cls.REPO_OWNER,
+                                                   gh_auth=github_auth)
         hbase_reader_repo.compile_gradle()
 
         step("Push apps")
-        cls.app_ws2kafka = Application.push(space_guid= test_space.guid, source_directory=ws2kafka_path,
+        cls.app_ws2kafka = Application.push(class_context, space_guid=test_space.guid,
+                                            source_directory=ws2kafka_path,
                                             name=generate_test_object_name(short=True),
                                             env_proxy=config.CONFIG["pushed_app_proxy"])
-        app_hbase_reader = Application.push(space_guid=test_space.guid, source_directory=hbase_reader_path,
+        app_hbase_reader = Application.push(class_context, space_guid=test_space.guid,
+                                            source_directory=hbase_reader_repo.path,
                                             name=generate_test_object_name(short=True),
                                             env_proxy=config.CONFIG["pushed_app_proxy"])
         cls.hbase_reader = HbaseClient(app_hbase_reader)
-        pushed_apps = [cls.app_ws2kafka, app_hbase_reader]
-
-        request.addfinalizer(lambda: fixtures.tear_down_test_objects(pushed_apps))
 
     def _send_messages(self, connection_string):
         step("Send messages to {}".format(connection_string))

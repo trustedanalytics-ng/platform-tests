@@ -19,18 +19,17 @@ import os
 import io
 
 import pytest
-
 from retry import retry
 
 from configuration.config import CONFIG
-from modules import app_sources
+from modules.app_sources import AppSources
 from modules.constants import HttpStatus, ServiceLabels, TapGitHub, ApplicationPath
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Organization, ServiceType, Space, User, Application, ServiceInstance
+from modules.tap_object_model import Organization, ServiceType, ServiceInstance, Space, User, Application
 from modules.test_names import generate_test_object_name
 from .context import Context
 from .test_data import TestData
@@ -93,15 +92,20 @@ def login_to_cf(test_org, test_space):
 
 
 @pytest.fixture(scope="session")
-def test_sample_app(request, test_org, test_space):
-    log_fixture("test_sample_app: Login to cf targeting test org and test space")
+def sample_python_app(request, test_org, test_space):
+    context = Context()
+    log_fixture("sample_python_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
-    log_fixture("test_sample_app: Push app to cf")
-    app = Application.push(space_guid=test_space.guid, source_directory=ApplicationPath.SAMPLE_APP)
+    app = Application.push(
+        context=context,
+        space_guid=test_space.guid,
+        source_directory=ApplicationPath.SAMPLE_PYTHON_APP,
+        env_proxy=CONFIG["pushed_app_proxy"]
+    )
 
     def fin():
-        log_fixture("test_sample_app: Delete sample app")
-        app.api_delete()
+        log_fixture("sample_python_app: Delete sample app")
+        context.cleanup()
 
     request.addfinalizer(fin)
 
@@ -109,15 +113,42 @@ def test_sample_app(request, test_org, test_space):
 
 
 @pytest.fixture(scope="session")
-def test_sample_service(request, test_org, test_space, test_sample_app):
-    log_fixture("test_sample_service: Register sample app in marketplace")
-    service = ServiceType.register_app_in_marketplace(app_name=test_sample_app.name, app_guid=test_sample_app.guid,
-                                                      org_guid=test_org.guid, space_guid=test_space.guid)
-    log_fixture("test_sample_service: Get service plans")
+def sample_java_app(request, test_org, test_space):
+    context = Context()
+    test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
+    log_fixture("sample_java_app: Compile the sources")
+    test_app_sources.compile_mvn()
+    log_fixture("sample_java_app: Push app to cf")
+    cf.cf_login(test_org.name, test_space.name)
+    app = Application.push(
+        context=context,
+        space_guid=test_space.guid,
+        source_directory=ApplicationPath.SAMPLE_JAVA_APP,
+        env_proxy=CONFIG["pushed_app_proxy"]
+    )
+    app.ensure_started()
+    log_fixture("Check the application is running")
+
+    def fin():
+        log_fixture("sample_java_app: Delete sample app")
+        context.cleanup()
+    request.addfinalizer(fin)
+
+    return app
+
+
+@pytest.fixture(scope="session")
+def sample_service(request, test_org, test_space, sample_python_app):
+    log_fixture("sample_service: Register sample app in marketplace")
+    service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name,
+                                                      app_guid=sample_python_app.guid,
+                                                      org_guid=test_org.guid,
+                                                      space_guid=test_space.guid)
+    log_fixture("sample_service: Get service plans")
     service.api_get_service_plans()
 
     def fin():
-        log_fixture("test_sample_service: Delete service")
+        log_fixture("sample_service: Delete service")
         service.api_delete()
 
     request.addfinalizer(fin)
@@ -237,13 +268,14 @@ def psql_instance(test_org, test_space):
 
 @pytest.fixture(scope="session")
 def psql_app(psql_instance):
-    sql_api_sources = app_sources.AppSources(repo_name=TapGitHub.sql_api_example,
+    sql_api_sources = AppSources.from_github(repo_name=TapGitHub.sql_api_example,
                                              repo_owner=TapGitHub.intel_data,
                                              gh_auth=CONFIG["github_auth"])
-    psql_app_dir = sql_api_sources.clone_or_pull()
+    context = Context()
     TestData.psql_app = Application.push(
+        context=context,
         space_guid=TestData.test_space.guid,
-        source_directory=psql_app_dir,
+        source_directory=sql_api_sources.path,
         bound_services=(psql_instance.name,)
     )
     return TestData.psql_app

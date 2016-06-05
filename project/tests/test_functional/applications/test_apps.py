@@ -17,13 +17,16 @@
 import pytest
 
 from configuration.config import CONFIG
-from modules.constants import ApplicationPath, TapComponent as TAP, HttpStatus
+from modules.app_sources import  AppSources
+from modules.constants import ApplicationPath, ServiceLabels, ServicePlan, TapComponent as TAP, HttpStatus
 from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
+from modules.http_calls.platform import service_catalog
 from modules.markers import priority, components
 from modules.tap_logger import step
-from modules.tap_object_model import Application, User
-from tests.fixtures import assertions
+from modules.tap_object_model import Application, ServiceInstance, User, ServiceType
+from modules.tap_object_model.flows import summaries
+from tests.fixtures import assertions, fixtures
 
 
 logged_components = (TAP.service_catalog, TAP.user_management)
@@ -32,16 +35,38 @@ pytestmark = [components.service_catalog]
 
 class TestTapApp:
 
+    SAMPLE_APPLICATION = "sample-java-application"
+
+    @pytest.fixture(scope="function")
+    def instance(self, request, test_org, test_space):
+        instance = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                             service_label=ServiceLabels.KAFKA, service_plan_name=ServicePlan.SHARED)
+        request.addfinalizer(lambda: fixtures.delete_or_not_found(instance.cleanup))
+        return instance
+
     @pytest.fixture(scope="function")
     def remove_from_space(self, request, test_space, test_org_manager):
         def fin():
             test_org_manager.api_delete_from_space(space_guid=test_space.guid)
         request.addfinalizer(fin)
 
-    def _check_user_can_do_app_flow(self, test_org, test_space, client):
+    @pytest.fixture(scope="function")
+    @pytest.mark.usefixtures("login_to_cf")
+    def test_app(self, context, test_space, instance):
+        test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
+        step("Compile the sources")
+        test_app_sources.compile_mvn()
+        step("Push application to cf")
+        application = Application.push(context, source_directory=ApplicationPath.SAMPLE_JAVA_APP, space_guid=test_space.guid,
+                                       bound_services=(instance.name,), env_proxy=CONFIG["pushed_app_proxy"])
+        step("Check the application is running")
+        application.ensure_started()
+        return application
+
+    def _check_user_can_do_app_flow(self, test_space, client, context):
         step("Push example application")
-        example_app_path = ApplicationPath.SAMPLE_APP
-        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+        example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
+        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
                                     env_proxy=CONFIG["pushed_app_proxy"])
         step("Check the application is running")
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
@@ -57,22 +82,23 @@ class TestTapApp:
         assert test_app not in apps
 
     @priority.high
-    def test_admin_can_manage_app(self, test_org, test_space, admin_client):
+    def test_admin_can_manage_app(self, test_org, test_space, admin_client, context):
         cf.cf_login(test_org.name, test_space.name)
-        self._check_user_can_do_app_flow(test_org, test_space, client=admin_client)
+        self._check_user_can_do_app_flow(test_space, client=admin_client, context=context)
 
     @priority.high
-    def test_developer_can_manage_app(self, test_org, test_space, test_org_manager, test_org_manager_client,
-                                      remove_from_space):
+    @pytest.mark.usefixtures("remove_from_space")
+    def test_developer_can_manage_app(self, test_org, test_space, test_org_manager, test_org_manager_client, context):
         space_developer = test_org_manager
         space_developer.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                          roles=User.SPACE_ROLES["developer"])
         cf.cf_login(test_org.name, test_space.name, credentials=(space_developer.username, space_developer.password))
         space_developer_client = test_org_manager_client
-        self._check_user_can_do_app_flow(test_org, test_space, client=space_developer_client)
+        self._check_user_can_do_app_flow(test_space, client=space_developer_client, context=context)
 
     @priority.low
-    def test_non_developer_cannot_push_app(self, test_org, test_space, test_org_manager, remove_from_space):
+    @pytest.mark.usefixtures("remove_from_space")
+    def test_non_developer_cannot_push_app(self, context, test_org, test_space, test_org_manager):
         step("Add user to space as manager")
         space_manager = test_org_manager
         space_manager.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
@@ -81,18 +107,18 @@ class TestTapApp:
         cf.cf_login(test_org.name, test_space.name, credentials=(space_manager.username, space_manager.password))
 
         step("Check that manager cannot push app")
-        example_app_path = ApplicationPath.SAMPLE_APP
+        example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
         with pytest.raises(CommandExecutionException):
-            Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+            Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
                              env_proxy=CONFIG["pushed_app_proxy"])
 
     @priority.low
-    def test_non_developer_cannot_manage_app(self, test_org, test_space, test_org_manager, test_org_manager_client,
-                                             remove_from_space):
+    def test_non_developer_cannot_manage_app(self, context, test_org, test_space, test_org_manager,
+                                             test_org_manager_client):
         step("Push example app as admin")
         cf.cf_login(test_org.name, test_space.name)
-        example_app_path = ApplicationPath.SAMPLE_APP
-        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+        example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
+        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
                                     env_proxy=CONFIG["pushed_app_proxy"])
         apps = Application.cf_api_get_list_by_space(test_space.guid)
         assert test_app in apps
@@ -122,3 +148,22 @@ class TestTapApp:
         cf_app_list = Application.cf_api_get_list_by_space(core_space.guid)
         step("Compare app lists from platform and cf")
         assert sorted(platform_app_list) == sorted(cf_app_list)
+
+    @priority.medium
+    def test_cascade_app_delete(self, test_space, test_app):
+        service_catalog.api_delete_app_cascade(test_app.guid)
+        cf_apps_list, cf_service_instances_list = summaries.cf_api_get_space_summary(test_space.guid)
+        assert cf_service_instances_list == [] and cf_apps_list == []
+
+    @priority.medium
+    def test_app_register_in_marketplace(self, test_org, test_space, sample_java_app):
+        register_service = ServiceType.register_app_in_marketplace(sample_java_app.name, sample_java_app.guid,
+                                                                   test_org.guid, test_space.guid)
+        services = ServiceType.cf_api_get_list_from_marketplace_by_space(test_space.guid)
+        assert register_service in services
+
+    @priority.medium
+    def test_delete_app(self, test_space, sample_java_app):
+        service_catalog.api_delete_app(sample_java_app.guid)
+        cf_apps_list, _ = summaries.cf_api_get_space_summary(test_space.guid)
+        assert cf_apps_list == []

@@ -99,25 +99,26 @@ class TestWs2kafka2hdfs:
 
     @pytest.mark.usefixtures("login_to_cf")
     @pytest.mark.bugs("DPNG-5225 [hadoop-utils] remove the need for kerberos-service in non-kerberos envs")
-    def test_step_0_push_ws2kafka2hdfs(self, test_space):
+    def test_step_0_push_ws2kafka2hdfs(self, test_space, class_context):
         step("Clone and compile ingestion app sources")
         github_auth = config.CONFIG["github_auth"]
-        ingestion_repo = AppSources(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=self.REPO_OWNER, gh_auth=github_auth)
-        ingestion_path = ingestion_repo.clone_or_pull()
-        ws2kafka_path = os.path.join(ingestion_path, TapGitHub.ws2kafka)
-        kafka2hdfs_path = os.path.join(ingestion_path, TapGitHub.kafka2hdfs)
+        ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=self.REPO_OWNER,
+                                                gh_auth=github_auth)
+        ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
+        kafka2hdfs_path = os.path.join(ingestion_repo.path, TapGitHub.kafka2hdfs)
         ingestion_repo.compile_gradle(working_directory=kafka2hdfs_path)
 
         postfix = str(int(time.time()))
         self.__class__.topic_name = "topic-{}".format(postfix)
 
         step("Push application ws2kafka")
-        self.__class__.app_ws2kafka = Application.push(space_guid=test_space.guid,
+        self.__class__.app_ws2kafka = Application.push(class_context, space_guid=test_space.guid,
                                                        source_directory=ws2kafka_path,
                                                        name="ws2kafka-{}".format(postfix),
+                                                       bound_services=(self.KAFKA_INSTANCE_NAME,),
                                                        env_proxy=config.CONFIG["pushed_app_proxy"])
         step("Push application kafka2hdfs")
-        self.__class__.app_kafka2hdfs = Application.push(space_guid=test_space.guid,
+        self.__class__.app_kafka2hdfs = Application.push(class_context, space_guid=test_space.guid,
                                                          source_directory=kafka2hdfs_path,
                                                          name="kafka2hdfs-{}".format(postfix),
                                                          bound_services=(self.KAFKA_INSTANCE_NAME,

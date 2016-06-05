@@ -39,8 +39,8 @@ class TestDeleteSpaceAndOrg:
         step("Login to cf targeting test org and test space")
         cf.cf_login(test_org.name, test_space.name)
         step("Push example app")
-        example_app_path = ApplicationPath.SAMPLE_APP
-        test_app = Application.push(space_guid=test_space.guid, source_directory=example_app_path,
+        example_app_path = ApplicationPath.SAMPLE_PYTHON_APP
+        test_app = Application.push(context, space_guid=test_space.guid, source_directory=example_app_path,
                                     env_proxy=CONFIG["pushed_app_proxy"])
         return test_org, test_space, test_app
 

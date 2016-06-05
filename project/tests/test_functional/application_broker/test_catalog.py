@@ -52,11 +52,11 @@ class TestApplicationBrokerFlow:
     service_name = generate_test_object_name(short=True)
     cf_service = None
 
-    def test_1_register_service(self, test_sample_app):
+    def test_1_register_service(self, sample_python_app):
         step("Registering new service.")
         self.__class__.cf_service = ServiceType.app_broker_create_service_in_catalog(self.service_name,
                                                                                      "Example description",
-                                                                                     test_sample_app.guid)
+                                                                                     sample_python_app.guid)
         assert self.cf_service is not None
         assert self.cf_service.label == self.service_name
         response = broker_client.app_broker_get_catalog()
@@ -72,13 +72,13 @@ class TestApplicationBrokerFlow:
             test_space.guid
         )
 
-    def test_3_bind_service_instance_to_app(self, test_sample_app):
+    def test_3_bind_service_instance_to_app(self, sample_python_app):
         step("Binding service instance to app.")
-        response = broker_client.app_broker_bind_service_instance(self.instance.guid, test_sample_app.guid)
+        response = broker_client.app_broker_bind_service_instance(self.instance.guid, sample_python_app.guid)
         assert response["credentials"]["url"] is not None
 
     def test_4_cannot_delete_service_with_instance(self):
-        step("Deleting service who have existing instance.")
+        step("Deleting service which has existing instance.")
         assertions.assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR, "",
                                                 broker_client.app_broker_delete_service,
                                                 service_id=self.cf_service.guid)
