@@ -18,24 +18,17 @@ Unfortunately, tests currently use a hardcoded path.
 
 **2. Install required packages**
 ```
-sudo apt-get install python3 python3-dev git
+sudo -E add-apt-repository ppa:avacariu/git-crypt
+sudo -E apt update
+sudo -E apt install python3 python3-dev git git-crypt
 ```
 
-**3. Download and install git crypt**
-```
-wget https://github.com/AGWA/git-crypt/archive/0.5.0.zip
-unzip 0.5.0.zip
-cd git-crypt-0.5.0
-make git-crypt
-sudo make install git-crypt
-```
-
-**4. Clone repository**
+**3. Clone repository**
 ```
 git clone git@github.com:intel-data/platform-tests.git
 ```
 
-**5. Decrypt repository secrets**
+**4. Decrypt repository secrets**
 
 Place `key.dat` in api-tests directory.
 ```
@@ -48,17 +41,17 @@ cat platform-tests/project/configuration/secrets/.secret.ini
 ```
 If the file looks normal, secrets have been decrypted.
 
-**6. Set up virtualenv**
+**5. Set up virtualenv**
 ```
 ./deploy/create_virtualenv.sh
 ```
 This will create [pyvenv](https://docs.python.org/3/using/scripts.html) with all Python packages required in `~/virtualenvs/pyvenv_api_tests`.
 
-**7. Add config** -- only if environment has non-default configuration (e.g. no trustedanalytics)
+**6. Add config** -- only if environment has non-default configuration (e.g. no trustedanalytics)
 
 If you plan to run tests on a new environment (i.e. not daily, sprint, demo, etc.), supply non-default config values in `platform-tests/project/configuration/config.py`, in `__CONFIG` string.
 
-**8. Configure test admin user** -- only if it's not already present on an environment
+**7. Configure test admin user** -- only if it's not already present on an environment
 
 To run tests, we need a user trusted.analytics.tester@gmail.com with appropriate roles and authorizations. To create such user, use script `platform-tests/deploy/create_test_admin.sh`. The script requires cf client and uaac.
 
