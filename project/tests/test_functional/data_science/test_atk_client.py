@@ -77,7 +77,7 @@ class Atk(TapTestCase):
             service_plan_name=ServicePlan.SIMPLE_ATK
         )
 
-        validator = ApplicationStackValidator(self, atk_instance)
+        validator = ApplicationStackValidator(atk_instance)
         validator.validate()
         self.__class__.atk_url = validator.application.urls[0]
 

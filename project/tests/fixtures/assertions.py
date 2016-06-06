@@ -62,3 +62,7 @@ def assert_returns_http_error(callable_obj, *args, **kwargs):
 
 def assert_no_errors(errors: list):
     assert len(errors) == 0, "\n".join(errors)
+
+
+def assert_unordered_list_equal(list1, list2):
+    assert sorted(list1) == sorted(list2)

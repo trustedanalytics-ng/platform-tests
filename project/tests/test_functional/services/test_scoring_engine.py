@@ -135,7 +135,7 @@ class TestScoringEngineInstance(TapTestCase):
 
         self.assertIn(instance, summary, "Instance not found in summary")
         self.assertEqual(summary[instance], [], "There are keys for the instance")
-        validator = ApplicationStackValidator(self, instance)
+        validator = ApplicationStackValidator(instance)
         validator.validate(expected_bindings=[ServiceLabels.KERBEROS, ServiceLabels.HDFS])
         return validator.application
 

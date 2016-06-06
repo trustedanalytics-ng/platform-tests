@@ -14,17 +14,17 @@
 # limitations under the License.
 #
 
-from .runner.tap_test_case import TapTestCase
 from .tap_object_model import Application, ServiceBinding, ServiceInstance
+from .tap_logger import step
+from tests.fixtures.assertions import assert_in_with_retry
 
 
 class ApplicationStackValidator(object):
-    def __init__(self, api_test: TapTestCase, service: ServiceInstance):
+    def __init__(self, service: ServiceInstance):
         self.__validate_property("name", service.name)
         self.__validate_property("guid", service.guid)
         self.__validate_property("space_guid", service.space_guid)
         self.__service = service
-        self.__api_test = api_test
         self.__application = None
         self.__application_bindings = {}
 
@@ -54,45 +54,44 @@ class ApplicationStackValidator(object):
 
     def _validate_instance_created(self):
         """Check if service instance has been properly created."""
-        self.__api_test.step("Check that service instance has been created")
-        self.__api_test.assertInWithRetry(self.__service, ServiceInstance.api_get_list, self.__service.space_guid)
+        step("Check that service instance has been created")
+        assert_in_with_retry(self.__service, ServiceInstance.api_get_list, self.__service.space_guid)
 
     def _validate_application_created(self):
         """Check if application for service instance has been properly created and started."""
-        self.__api_test.step("Check that application has been created and started")
+        step("Check that application has been created and started")
         app_list = Application.api_get_list(self.__service.space_guid)
         self.__application = next((app for app in app_list if app.name.startswith(self.__service.name)), None)
-        self.__api_test.assertIsNotNone(self.__application, "Application for {} not found".format(self.__service.name))
+        assert self.__application is not None, "Application for {} not found".format(self.__service.name)
         self.__application.ensure_started()
 
     def _validate_application_bound(self, expected_bindings):
         """Check if application has been properly bound."""
-        self.__api_test.step("Check that application has been properly bound")
+        step("Check that application has been properly bound")
         self.__validate_bound_services(expected_bindings)
         self.__validate_requested_bound(expected_bindings)
 
     def _validate_instance_has_been_removed(self):
         """Validate that service instance has been properly removed."""
-        self.__api_test.step("Check that service instance was deleted from services list")
+        step("Check that service instance was deleted from services list")
         service_list = ServiceInstance.api_get_list(self.__service.space_guid)
-        self.__api_test.assertNotIn(
-            self.__service.name, [i.name for i in service_list], "Service found on services list")
+        assert self.__service.name not in [i.name for i in service_list], "Service found on services list"
 
     def _validate_application_has_been_removed(self):
         """Validate that application has been properly removed."""
         if self.application:
-            self.__api_test.step("Check that application was deleted from application list")
+            step("Check that application was deleted from application list")
             app_name = self.__service.name + "-{}".format(self.__service.guid[:8])
             app = next((a for a in Application.api_get_list(self.__service.space_guid) if a.name == app_name), None)
-            self.__api_test.assertIsNone(app, "Application was found")
+            assert app is None, "Application was found"
 
     def _validate_bindings_have_been_removed(self):
         """Validate that all bindings have been properly removed."""
         if self.application_bindings:
-            self.__api_test.step("Check that all bound service instances were deleted")
+            step("Check that all bound service instances were deleted")
             service_instances = [s.name for s in ServiceInstance.api_get_list(self.__service.space_guid)]
             for service in self.application_bindings.keys():
-                self.__api_test.assertNotIn(service, service_instances)
+                assert service not in service_instances
 
     def __validate_bound_services(self, expected_bindings):
         """Check if all bound services are in requested application bindings."""
@@ -100,16 +99,16 @@ class ApplicationStackValidator(object):
         bound_services = ServiceBinding.api_get_list(self.__application.guid)
         for bound_service in bound_services:
             instance = next((si for si in service_list if si.guid == bound_service.service_instance_guid), None)
-            self.__api_test.assertIsNotNone(instance, "Bound service instance not found")
-            self.__api_test.assertIn(instance.service_label, expected_bindings,
-                                     "Invalid bound to {} instance".format(instance.service_label))
+            assert instance is not None, "Bound service instance not found"
+            assert instance.service_label in expected_bindings, \
+                "Invalid bound to {} instance".format(instance.service_label)
             self.__application_bindings[instance.service_label] = instance
 
     def __validate_requested_bound(self, expected_bindings):
         """Check if all requested services have been bound."""
         for binding in expected_bindings:
-            self.__api_test.assertIn(binding, self.__application_bindings.keys(),
-                                     "Application bound to {} instance not found".format(binding))
+            assert binding in self.__application_bindings.keys(), \
+                 "Application bound to {} instance not found".format(binding)
 
     @staticmethod
     def __validate_property(property_name, property_value):

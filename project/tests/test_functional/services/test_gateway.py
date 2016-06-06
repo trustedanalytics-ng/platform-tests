@@ -54,7 +54,7 @@ class Gateway(TapTestCase):
             service_plan_name=ServicePlan.SIMPLE_ATK,
             client=self.space_developer_client
         )
-        validator = ApplicationStackValidator(self, gateway_instance)
+        validator = ApplicationStackValidator(gateway_instance)
         validator.validate(expected_bindings=[ServiceLabels.KAFKA])
         self.__class__.gateway_instance = gateway_instance
         self.__class__.gateway_app = validator.application

@@ -49,7 +49,7 @@ class TestDataScienceInstances(object):
             service_label=service_type.label,
             service_plan_guid=plan["guid"]
         )
-        validator = ApplicationStackValidator(TapTestCase(), instance)
+        validator = ApplicationStackValidator(instance)
         validator.validate(validate_application=False)
         instance.api_delete()
         validator.validate_removed()
