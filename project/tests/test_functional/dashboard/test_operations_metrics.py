@@ -17,34 +17,33 @@
 import pytest
 
 from modules.constants import HttpStatus, TapComponent as TAP
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components
 from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceType, \
     Space, User
-from tests.fixtures.test_data import TestData
+from modules.tap_logger import step
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.platform_operations, )
 pytestmark = [components.platform_operations]
 
 
-@pytest.mark.usefixtures("test_org_manager_client")
-class NonAdminOperationsMetrics(TapTestCase):
+class TestNonAdminOperationsMetrics:
 
     @pytest.mark.skip("DPNG-5904")
-    def test_non_admin_cannot_access_platform_operations(self):
-        self.step("Checking if non-admin user cannot retrieve data")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                            Platform().retrieve_metrics, TestData.test_org_manager_client)
+    def test_non_admin_cannot_access_platform_operations(self, test_org_manager_client):
+        step("Checking if non-admin user cannot retrieve data")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
+                                                Platform().retrieve_metrics, test_org_manager_client)
 
     @pytest.mark.skip("DPNG-5904")
-    def test_non_admin_user_cannot_access_refresh(self):
-        self.step("Checking if non-admin user cannot refresh data")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                            Platform.refresh_data, TestData.test_org_manager_client)
+    def test_non_admin_user_cannot_access_refresh(self, test_org_manager_client):
+        step("Checking if non-admin user cannot refresh data")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
+                                                Platform.refresh_data, test_org_manager_client)
 
 
-class OperationsMetrics(TapTestCase):
+class TestOperationsMetrics:
     """
     Operations Metrics test can be unstable when run parallel
     with other tests since it check for resources count
@@ -55,32 +54,32 @@ class OperationsMetrics(TapTestCase):
     platform_data = []
 
     def test_applications_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: applications count")
-        self.assertTrue(*self.assert_values("apps"))
+        step("Testing if CF values equals platform data. Data to check: applications count")
+        assert self.assert_values("apps")
 
     def test_services_instances_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: services and user provided services count")
-        self.assertTrue(*self.assert_values("service_instances"))
+        step("Testing if CF values equals platform data. Data to check: services and user provided services count")
+        assert self.assert_values("service_instances")
 
     def test_services_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: services and user provided services count")
-        self.assertTrue(*self.assert_values("services"))
+        step("Testing if CF values equals platform data. Data to check: services and user provided services count")
+        assert self.assert_values("services")
 
     def test_buildpacks_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: buildpack count")
-        self.assertTrue(*self.assert_values("buildpacks"))
+        step("Testing if CF values equals platform data. Data to check: buildpack count")
+        assert self.assert_values("buildpacks")
 
     def test_organizations_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: organizations count")
-        self.assertTrue(*self.assert_values("orgs"))
+        step("Testing if CF values equals platform data. Data to check: organizations count")
+        assert self.assert_values("orgs")
 
     def test_spaces_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: spaces count")
-        self.assertTrue(*self.assert_values("spaces"))
+        step("Testing if CF values equals platform data. Data to check: spaces count")
+        assert self.assert_values("spaces")
 
     def test_user_metrics(self):
-        self.step("Testing if CF values equals platform data. Data to check: users count")
-        self.assertTrue(*self.assert_values("users"))
+        step("Testing if CF values equals platform data. Data to check: users count")
+        assert self.assert_values("users")
 
     def assert_values(self, checked_metric):
         """
