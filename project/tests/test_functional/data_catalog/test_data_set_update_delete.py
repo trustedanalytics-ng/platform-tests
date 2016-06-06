@@ -18,68 +18,68 @@ import pytest
 from retry import retry
 
 from modules.constants import HttpStatus, TapComponent as TAP, Urls
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, priority
+from modules.tap_logger import step
 from modules.tap_object_model import DataSet
 from modules.tap_object_model.flows import data_catalog
-from tests.fixtures.test_data import TestData
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
 pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
 
 
-class UpdateDeleteDataSet(TapTestCase):
+class TestUpdateDeleteDataSet:
 
     @retry(AssertionError, tries=10, delay=3)
     def _assert_updated(self, data_set_id, updated_attribute_name, expected_value):
         updated_dataset = DataSet.api_get(data_set_id)
         updated_value = getattr(updated_dataset, updated_attribute_name)
-        self.assertEqual(updated_value, expected_value, "Data set was not updated")
+        assert updated_value == expected_value, "Data set was not updated"
 
-    @pytest.fixture(scope="function", autouse=True)
-    def create_dataset(self, request, test_org, add_admin_to_test_org, context):
-        self.step("Create data set")
-        transfer, self.dataset = data_catalog.create_dataset_from_link(context, org=test_org,
-                                                                       source=Urls.test_transfer_link)
+    @pytest.fixture(scope="function")
+    def dataset(self, test_org, add_admin_to_test_org, context):
+        step("Create data set")
+        _, dataset = data_catalog.create_dataset_from_link(context, org=test_org, source=Urls.test_transfer_link)
+        return dataset
 
     @priority.high
-    def test_delete_dataset(self):
-        self.step("Delete the data set")
-        self.dataset.api_delete()
-        self.step("Get data set list and check the deleted one is not on it")
-        datasets = DataSet.api_get_list(org_list=[TestData.test_org])
-        self.assertNotIn(self.dataset, datasets)
+    def test_delete_dataset(self, test_org, dataset):
+        step("Delete the data set")
+        dataset.api_delete()
+        step("Get data set list and check the deleted one is not on it")
+        datasets = DataSet.api_get_list(org_list=[test_org])
+        assert dataset not in datasets
 
     @priority.low
-    def test_cannot_delete_data_set_twice(self):
-        self.step("Delete data set")
-        self.dataset.api_delete()
-        self.step("Try to delete the dataset again")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY, self.dataset.api_delete)
+    def test_cannot_delete_data_set_twice(self, dataset):
+        step("Delete data set")
+        dataset.api_delete()
+        step("Try to delete the dataset again")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY, dataset.api_delete)
 
     @priority.medium
     @pytest.mark.public_dataset
-    def test_change_private_to_public_to_private(self):
-        self.step("Update data set from private to public")
-        self.dataset.api_update(is_public=True)
-        self.step("Check that private data set was changed to public")
-        self._assert_updated(self.dataset.id, "is_public", True)
-        self.step("Update data set from public to private")
-        self.dataset.api_update(is_public=False)
-        self.step("Check that public data set was changed to private")
-        self._assert_updated(self.dataset.id, "is_public", False)
+    def test_change_private_to_public_to_private(self, dataset):
+        step("Update data set from private to public")
+        dataset.api_update(is_public=True)
+        step("Check that private data set was changed to public")
+        self._assert_updated(dataset.id, "is_public", True)
+        step("Update data set from public to private")
+        dataset.api_update(is_public=False)
+        step("Check that public data set was changed to private")
+        self._assert_updated(dataset.id, "is_public", False)
 
     @priority.low
-    def test_update_data_set_category(self):
-        new_category = next(c for c in DataSet.CATEGORIES if c != self.dataset.category)
-        self.step("Update data set, change category")
-        self.dataset.api_update(category=new_category)
-        self._assert_updated(self.dataset.id, "category", new_category)
+    def test_update_data_set_category(self, dataset):
+        new_category = next(c for c in DataSet.CATEGORIES if c != dataset.category)
+        step("Update data set, change category")
+        dataset.api_update(category=new_category)
+        self._assert_updated(dataset.id, "category", new_category)
 
     @priority.low
-    def test_update_dataset_to_non_existing_category(self):
+    def test_update_dataset_to_non_existing_category(self, dataset):
         new_category = "user_category"
-        self.step("Update data set with new category")
-        self.dataset.api_update(category=new_category)
-        self._assert_updated(self.dataset.id, "category", new_category)
+        step("Update data set with new category")
+        dataset.api_update(category=new_category)
+        self._assert_updated(dataset.id, "category", new_category)
