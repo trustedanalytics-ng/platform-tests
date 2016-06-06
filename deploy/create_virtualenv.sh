@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-REQUIREMENTS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )/requirements.txt"
+REQUIREMENTS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )/requirements_full.txt"
 PYVENV=~/virtualenvs/pyvenv_api_tests
 
 python3 -m venv --without-pip $PYVENV &&
