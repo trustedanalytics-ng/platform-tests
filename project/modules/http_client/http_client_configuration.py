@@ -24,7 +24,6 @@ class HttpClientConfiguration(object):
         self._validate("client_type", HttpClientType, client_type)
         self._validate("url", str, url)
         self._validate("username", str, username)
-        self._validate("password", str, password)
         self._client_type = client_type
         self._url = url
         self._username = username
@@ -53,7 +52,7 @@ class HttpClientConfiguration(object):
     @property
     def uid(self):
         """Client configuration unique id."""
-        return "{}_{}_{}_{}".format(self.client_type, self.url, self.username, self.password)
+        return "{}_{}_{}".format(self.client_type, self.username, self.password)
 
     @staticmethod
     def _validate(property_name, property_type, property_value):

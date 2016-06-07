@@ -18,8 +18,10 @@ import pytest
 
 from configuration.config import CONFIG
 from modules.constants import ServiceLabels, TapGitHub
-from modules.api_client import AppClient
 from modules.exceptions import UnexpectedResponseError
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.platform_version import get_appstack_yml
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import long, priority
@@ -133,12 +135,12 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
     def test_spring_services_dont_expose_sensitive_endpoints(self):
         SENSITIVE_ENDPOINTS = ["actuator", "autoconfig", "beans", "configprops", "docs", "dump", "env", "flyway",
                                "info", "liquidbase", "logfile", "metrics", "mappings", "shutdown", "trace"]
-        client = AppClient.get_admin_client()
         for url in [a.urls[0] for a in self.platform_apps
                     if a.name in self.expected_app_names - self.SENSITIVE_ENDPOINTS_EXCLUDED_APPS]:
+            client = HttpClientFactory.get(ApplicationConfigurationProvider.get())
             app_name = url.split(".")[0]
             try:
-                client.request(method="GET", endpoint="health", app_name=app_name)
+                client.request(method=HttpMethod.GET, path="/health")
             except UnexpectedResponseError:
                 logger.info("Not checking {} service".format(app_name))
                 continue
@@ -147,7 +149,7 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
                 enabled_endpoints = []
                 for endpoint in SENSITIVE_ENDPOINTS:
                     try:
-                        client.request(method="GET", endpoint=endpoint, app_name=app_name)
+                        client.request(method=HttpMethod.GET, path="/{}".format(endpoint))
                     except UnexpectedResponseError:
                         continue
                     else:

@@ -19,18 +19,10 @@ from abc import ABCMeta, abstractclassmethod
 from ..http_client_configuration import HttpClientConfiguration
 
 
+# noinspection PyMethodParameters
 class BaseConfigurationProvider(object, metaclass=ABCMeta):
     """Base class that all configuration provider implementations derive from."""
 
-    _configuration = None
-
-    @classmethod
-    def get(cls) -> HttpClientConfiguration:
-        """Return http client configuration."""
-        if cls._configuration is None:
-            cls._configuration = cls.provide_configuration()
-        return cls._configuration
-
     @abstractclassmethod
-    def provide_configuration(self) -> HttpClientConfiguration:
-        """Provide http client configuration."""
+    def get(cls, username=None, password=None) -> HttpClientConfiguration:
+        """Return http client configuration."""

@@ -35,7 +35,7 @@ class TestHttpClientConfiguration(unittest.TestCase):
         self.assertEqual(self.URL, configuration.url)
         self.assertEqual(self.USERNAME, configuration.username)
         self.assertEqual(self.PASSWORD, configuration.password)
-        self.assertEqual("HttpClientType.UAA_api.test.platform.eu_username_password", configuration.uid)
+        self.assertEqual("HttpClientType.UAA_username_password", configuration.uid)
         self.assertIsInstance(configuration, HttpClientConfiguration, "Invalid credentials class.")
 
     def test_init_should_return_exception_when_invalid_property_type(self):

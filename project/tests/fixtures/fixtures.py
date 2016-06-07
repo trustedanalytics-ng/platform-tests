@@ -13,24 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import base64
 import os
 import io
 
 import pytest
+
 from retry import retry
 
 from configuration import config
-from modules.api_client import ConsoleClient
 from modules.constants import HttpStatus, ApplicationPath
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import DataSet, Invitation, Organization, ServiceType, Space, Transfer, User, Application
-from modules.test_names import is_test_object_name
+from modules.tap_object_model import Organization, ServiceType, Space, User, Application
 from .context import Context
 from .test_data import TestData
-
 
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables
@@ -48,6 +49,7 @@ def test_org(request):
     def fin():
         log_finalizer("test_org: Delete test organization")
         context.cleanup()
+
     request.addfinalizer(fin)
 
     return test_org
@@ -66,9 +68,11 @@ def test_org_manager(request, test_org):
     log_fixture("test_org_manager: Add org manager to test org")
     test_org_manager = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
     TestData.test_org_manager = test_org_manager
+
     def fin():
         log_finalizer("test_org_manager: Delete test org manager")
         context.cleanup()
+
     request.addfinalizer(fin)
     return test_org_manager
 
@@ -99,6 +103,7 @@ def test_sample_app(request, test_org, test_space):
     def fin():
         log_fixture("test_sample_app: Delete sample app")
         app.api_delete()
+
     request.addfinalizer(fin)
 
     return app
@@ -115,6 +120,7 @@ def test_sample_service(request, test_org, test_space, test_sample_app):
     def fin():
         log_fixture("test_sample_service: Delete service")
         service.api_delete()
+
     request.addfinalizer(fin)
 
     return service
@@ -131,7 +137,7 @@ def admin_user():
 @pytest.fixture(scope="session")
 def admin_client():
     log_fixture("admin_client: Get http client for admin")
-    TestData.admin_client = ConsoleClient.get_admin_client()
+    TestData.admin_client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return TestData.admin_client
 
 
@@ -148,6 +154,7 @@ def space_users_clients(request, test_org, test_space, admin_client):
     def fin():
         log_finalizer("clients: Delete test users")
         context.cleanup()
+
     request.addfinalizer(fin)
     return _clients
 

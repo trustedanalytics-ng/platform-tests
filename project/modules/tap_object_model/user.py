@@ -20,10 +20,12 @@ import string
 
 from configuration import config
 from .. import gmail_api
-from ..api_client import PlatformApiClient
 from ..exceptions import NoSuchUserException
-from ..http_calls import cloud_foundry as cf, uaa
+from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import user_management
+from ..http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
+from ..http_client.http_client_factory import HttpClientFactory
+from ..http_client.configuration_provider.console import ConsoleConfigurationProvider
 from ..test_names import generate_test_object_name
 
 
@@ -31,6 +33,7 @@ from ..test_names import generate_test_object_name
 class User(object):
 
     __ADMIN = None
+
     ORG_ROLES = {
         "manager": {"managers"},
         "auditor": {"auditors"},
@@ -48,6 +51,8 @@ class User(object):
         self.password = password
         self.org_roles = org_roles or {}
         self.space_roles = space_roles or {}
+        self.client = None
+        self.client_configuration = None
 
     def __repr__(self):
         return "{} (username={}, guid={})".format(self.__class__.__name__, self.username, self.guid)
@@ -73,7 +78,7 @@ class User(object):
         password = cls.generate_password() if password is None else password
         user_management.api_add_organization_user(org_guid, username, roles, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
-        client = PlatformApiClient.get_client(username)
+        client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
         user_management.api_register_new_user(code, password, client=client)
         org_users = cls.api_get_list_via_organization(org_guid=org_guid)
         new_user = next((user for user in org_users if user.username == username), None)
@@ -90,7 +95,7 @@ class User(object):
         password = cls.generate_password() if password is None else password
         user_management.api_add_space_user(org_guid, space_guid, username, roles, inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
-        client = PlatformApiClient.get_client(username)
+        client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
         user_management.api_register_new_user(code, password, client=client)
         space_users = cls.api_get_list_via_space(space_guid)
         new_user = next((user for user in space_users if user.username == username), None)
@@ -120,14 +125,15 @@ class User(object):
 
     def login(self):
         """Return a logged-in API client for this user."""
-        client = PlatformApiClient.get_client(self.username)
-        client.authenticate(self.password)
-        return client
+        self.client_configuration = ConsoleConfigurationProvider.get(self.username, self.password)
+        self.client = HttpClientFactory.get(self.client_configuration)
+        return self.client
 
     def get_client(self):
         """Return API client for this user."""
-        client = PlatformApiClient.get_client(self.username)
-        return client
+        if self.client is not None:
+            return self.client
+        return HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(self.username))
 
     def api_add_to_organization(self, org_guid, roles=ORG_ROLES["manager"], client=None):
         user_management.api_add_organization_user(org_guid, self.username, roles, client=client)
@@ -189,4 +195,3 @@ class User(object):
 
     def cleanup(self):
         cf.cf_api_delete_user(self.guid)
-        uaa.uaa_api_user_delete(self.guid)

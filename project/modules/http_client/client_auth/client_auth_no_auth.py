@@ -14,15 +14,17 @@
 # limitations under the License.
 #
 
-from ..config import Config as ClientConfig
-from .base_console import BaseConsoleConfigurationProvider
+from requests.auth import AuthBase
+
+from .client_auth_base import ClientAuthBase
 
 
-# noinspection PyAbstractClass
-class ConsoleDataCatalogConfigurationProvider(BaseConsoleConfigurationProvider):
-    """Provide configuration for console data catalog http client."""
+class ClientAuthNoAuth(ClientAuthBase):
+    """No authentication."""
 
-    @staticmethod
-    def application_url() -> str:
-        """Data catalog console url."""
-        return ClientConfig.service_console_data_catalog_url()
+    def authenticate(self) -> AuthBase:
+        pass
+
+    @property
+    def authenticated(self) -> bool:
+        return True

@@ -15,10 +15,10 @@
 #
 
 from configuration.config import CONFIG
-from ...http_client.config import Config
 from ...constants import TapComponent
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 from .base_broker import BaseBrokerConfigurationProvider
 from .base import BaseConfigurationProvider
 
@@ -40,18 +40,21 @@ class KubernetesBrokerBasicConfigurationProvider(BaseBrokerConfigurationProvider
     @classmethod
     def http_client_url(cls) -> str:
         """Provide http client url."""
-        return Config.service_kubernetes_broker_basic_url()
+        return ClientConfig.service_kubernetes_broker_basic_url()
 
 
 class KubernetesBrokerTokenConfigurationProvider(BaseConfigurationProvider):
     """Provide configuration for cloud foundry http client."""
 
     @classmethod
-    def provide_configuration(cls) -> HttpClientConfiguration:
+    def get(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
+        if username is None:
+            username = CONFIG["admin_username"]
+            password = CONFIG["admin_password"]
         return HttpClientConfiguration(
             HttpClientType.CLOUD_FOUNDRY,
-            Config.service_kubernetes_broker_token_url(),
-            CONFIG["admin_username"],
-            CONFIG["admin_password"]
+            ClientConfig.service_kubernetes_broker_token_url(),
+            username,
+            password
         )

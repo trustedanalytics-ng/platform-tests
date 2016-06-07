@@ -30,13 +30,18 @@ class HttpClient(object):
         """Client api base url address."""
         return self._url
 
+    @property
+    def auth(self):
+        """Client auth."""
+        return self._auth
+
     def request(self, method: HttpMethod, path, headers=None, files=None, params=None, data=None, body=None, msg=""):
         """Perform request and return response."""
         if not self._auth.authenticated:
             self._auth.authenticate()
         return self._auth.session.request(
             method=method,
-            url=self._url + path,
+            url="{}{}".format(self._url, path),
             headers=headers,
             files=files,
             params=params,

@@ -15,6 +15,14 @@
 #
 
 
-def api_get_app_development_page(client=None):
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.http_client import HttpClient
+
+
+def api_get_app_development_page(client: HttpClient = None):
     """GET /app/tools/tools.html"""
-    return client.request("GET", "app/tools/tools.html", log_msg="PLATFORM: get app development tools page")
+    return client.request(
+        method=HttpMethod.GET,
+        path="/app/tools/tools.html",
+        msg="PLATFORM: get app development tools page"
+    )

@@ -16,10 +16,11 @@
 
 from .. import Invitation, Organization, User
 from ... import gmail_api
-from ...api_client import PlatformApiClient
 from ...constants import HttpStatus
 from ...exceptions import UnexpectedResponseError
 from ...http_calls.platform import user_management as api
+from ...http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 from ...test_names import generate_test_object_name
 
 
@@ -44,7 +45,7 @@ def register(context, code, username, password=None, org_name=None):
     """
     password = User.generate_password() if password is None else password
     org_name = generate_test_object_name() if org_name is None else org_name
-    client = PlatformApiClient.get_client(username)
+    client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
     try:
         response = api.api_register_new_user(code, password, org_name, client=client)
     except UnexpectedResponseError as e:

@@ -34,7 +34,7 @@ class TestClientAuthFactory(MockHttpSession):
         self.mock_http_session()
         super().setUp()
 
-    def test_get_should_return_auth_token_basic(self):
+    def test_get_should_return_auth_token_cf(self):
         self._assertClientAuthInstance(ClientAuthType.TOKEN_CF, ClientAuthToken)
 
     def test_get_should_return_auth_token_uaa(self):
@@ -42,15 +42,6 @@ class TestClientAuthFactory(MockHttpSession):
 
     def test_get_should_return_auth_http_basic(self):
         self._assertClientAuthInstance(ClientAuthType.HTTP_BASIC, ClientAuthHttpBasic)
-
-    def test_get_should_return_auth_login_page(self):
-        self.assertRaises(
-            NotImplementedError,
-            ClientAuthFactory.get,
-            self.USERNAME,
-            self.PASSWORD,
-            ClientAuthType.LOGIN_PAGE
-        )
 
     def test_get_should_return_exception_for_undefined_type(self):
         self.assertRaises(

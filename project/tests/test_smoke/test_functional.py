@@ -14,9 +14,10 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
 from modules.file_utils import generate_csv_file
 from modules.constants import TapComponent as TAP, Urls
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import components, long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Organization, ServiceInstance, Space, Transfer, User
@@ -32,7 +33,7 @@ pytestmark = [priority.high]
 
 
 def test_test_admin_can_login_to_platform():
-    PlatformApiClient.get_admin_client()
+    HttpClientFactory.get(ConsoleConfigurationProvider.get())
 
 
 @components.user_management

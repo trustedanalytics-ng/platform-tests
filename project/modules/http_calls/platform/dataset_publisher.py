@@ -14,14 +14,31 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_publish_dataset(category, creation_time, data_sample, format, is_public, org_guid, record_count, size,
                         source_uri, target_uri, title, client=None):
     """POST /rest/tables"""
-    client = client or PlatformApiClient.get_admin_client()
-    body = {"category": category, "creationTime": creation_time, "dataSample": data_sample, "format": format,
-            "isPublic": is_public, "orgUUID": org_guid, "recordCount": record_count, "size": size,
-            "sourceUri": source_uri, "targetUri": target_uri, "title": title}
-    return client.request("POST", "rest/tables", body=body, log_msg="PLATFORM: publish dataset in hive")
+    body = {
+        "category": category,
+        "creationTime": creation_time,
+        "dataSample": data_sample,
+        "format": format,
+        "isPublic": is_public,
+        "orgUUID": org_guid,
+        "recordCount": record_count,
+        "size": size,
+        "sourceUri": source_uri,
+        "targetUri": target_uri,
+        "title": title,
+    }
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.POST,
+        path="/rest/tables",
+        body=body,
+        msg="PLATFORM: publish dataset in hive"
+    )

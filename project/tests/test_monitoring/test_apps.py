@@ -16,7 +16,9 @@
 
 import pytest
 
-from modules.api_client import PlatformApiClient
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import step
 from modules.tap_object_model import Application
 
@@ -50,7 +52,9 @@ class TestAppMonitoring(object):
         step("Retrieve apps, and services on the Platform")
         tested_apps = {a for a in self.platform_apps if a.name in self.TESTED_APP_NAMES}
         step("Send GET /health request to apps: {}".format(self.TESTED_APP_NAMES))
-        client = PlatformApiClient.get_admin_client("app")
         for app in tested_apps:
             step("Testing app with name: {}".format(app.name))
-            client.request(method="GET", app_name=app.urls[0].split(".")[0], endpoint="health")
+            HttpClientFactory.get(ApplicationConfigurationProvider.get()).request(
+                method=HttpMethod.GET,
+                path="/health"
+            )

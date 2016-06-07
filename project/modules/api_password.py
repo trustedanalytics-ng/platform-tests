@@ -15,52 +15,86 @@
 #
 
 import json
+
 from bs4 import BeautifulSoup
-from configuration import config
+
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
+from modules.http_client.config import Config as ClientConfig
 
 
 class PasswordAPI(object):
-
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+        self.client = HttpClientFactory.get(ApplicationConfigurationProvider.get(
+            url=ClientConfig.auth_login_url(),
+            username=self.username,
+            password=self.password
+        ))
 
     @property
     def _username(self):
-        return self.client.get_username()
+        return self.username
 
     def reset_password(self):
-        url = self.client.create_login_url("forgot_password.do")
-        data = {"email": self._username}
-        self.client.post(url, data, "reset password")
+        self.client.request(
+            method=HttpMethod.POST,
+            path="forgot_password.do",
+            data={"email": self._username},
+            headers={"Accept": "text/html", "Content-Type": "application/x-www-form-urlencoded"},
+            msg="Reset password"
+        )
 
     def reset_password_set_new(self, code, new_password):
         new_code, csrf_code = self._get_codes(code)
-
-        url = self.client.create_login_url("reset_password.do")
-        data = {"email": self._username, "code": new_code, "password": new_password,
-              "password_confirmation": new_password, "_csrf": csrf_code}
-        self.client.post(url, data, "reset password: set new")
+        data = {
+            "email": self._username,
+            "code": new_code,
+            "password": new_password,
+            "password_confirmation": new_password,
+            "_csrf": csrf_code,
+        }
+        self.client.request(
+            method=HttpMethod.POST,
+            path="reset_password.do",
+            data=data,
+            headers={"Accept": "text/html", "Content-Type": "application/x-www-form-urlencoded"},
+            msg="Reset password: set new"
+        )
 
     def _get_codes(self, code):
-        url = self.client.create_login_url("reset_password?code={}&email={}".format(code, self._username))
-        data = self.client.get(url, "reset password: get reset form")
-        return self._parse_codes(data)
+        response = self.client.request(
+            method=HttpMethod.GET,
+            path="reset_password?code={}&email={}".format(code, self._username),
+            msg="Reset password: get reset form"
+        )
+        return self._parse_codes(response)
 
     @staticmethod
     def _parse_codes(message):
         soup = BeautifulSoup(message, 'html.parser')
-
-        csrf_input = soup.find("input", attrs={"name":"_csrf"})
+        csrf_input = soup.find("input", attrs={"name": "_csrf"})
         if csrf_input is None:
             raise AssertionError("Can't find csrf code in given message: {}".format(message))
-
-        code_input = soup.find("input", attrs={"name":"code"})
+        code_input = soup.find("input", attrs={"name": "code"})
         if code_input is None:
             raise AssertionError("Can't find one-time code in given message: {}".format(message))
-
         return code_input['value'], csrf_input['value']
 
     def change_password(self, old_password, new_password):
-        url = "https://console.{}/{}".format(config.CONFIG["domain"], "rest/users/current/password")
-        data = {"oldPassword": old_password, "password": new_password}
-        self.client.put(url, json.dumps(data), "change password")
+        data = {
+            "oldPassword": old_password,
+            "password": new_password,
+        }
+        HttpClientFactory.get(ConsoleConfigurationProvider.get(
+            self._username, old_password
+        )).request(
+            method=HttpMethod.PUT,
+            path="/rest/users/current/password",
+            data=json.dumps(data),
+            headers={"Accept": "application/json", "Content-Type": "application/json;charset=UTF-8"},
+            msg="Change password"
+        )

@@ -16,7 +16,9 @@
 
 import os
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_create_transfer_by_file_upload(org_guid, source, category=None, is_public=None, title=None, client=None):
@@ -26,6 +28,11 @@ def api_create_transfer_by_file_upload(org_guid, source, category=None, is_publi
     data = {key: val for key, val in zip(body_keys, values) if val is not None}
     _, file_name = os.path.split(source)
     files = {"file": (file_name, open(source, "rb"), "application/vnd.ms-excel")}
-    client = client or PlatformApiClient.get_admin_client()
-    return client.request("POST", "rest/upload/{}".format(org_guid), data=data, log_msg="PLATFORM: create a transfer",
-                          files=files)
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.POST,
+        path="/rest/upload/{}".format(org_guid),
+        data=data,
+        files=files,
+        msg="PLATFORM: create a transfer"
+    )

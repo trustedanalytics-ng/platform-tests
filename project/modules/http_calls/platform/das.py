@@ -14,12 +14,13 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_transfers(org_guids=None, query="", filters=(), size=12, time_from=0, client=None):
     """GET /rest/das/requests"""
-    client = client or PlatformApiClient.get_admin_client()
     query_params = {
         "query": query,
         "filters": list(filters),
@@ -28,8 +29,13 @@ def api_get_transfers(org_guids=None, query="", filters=(), size=12, time_from=0
     }
     if org_guids is not None:
         query_params["orgs"] = ",".join(org_guids)
-    return client.request("GET", "rest/das/requests", params=query_params,
-                          log_msg="PLATFORM: get filtered transfer list")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/das/requests",
+        params=query_params,
+        msg="PLATFORM: get filtered transfer list"
+    )
 
 
 def api_create_transfer(category=None, is_public=None, org_guid=None, source=None, title=None, client=None):
@@ -37,17 +43,30 @@ def api_create_transfer(category=None, is_public=None, org_guid=None, source=Non
     body_keys = ["category", "publicRequest", "orgUUID", "source", "title"]
     values = [category, is_public, org_guid, source, title]
     body = {key: val for key, val in zip(body_keys, values) if val is not None}
-    client = client or PlatformApiClient.get_admin_client()
-    return client.request("POST", "rest/das/requests", body=body, log_msg="PLATFORM: create a transfer")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.POST,
+        path="/rest/das/requests",
+        body=body,
+        msg="PLATFORM: create a transfer"
+    )
 
 
 def api_get_transfer(request_id, client=None):
     """GET /rest/das/requests/{request_id}"""
-    client = client or PlatformApiClient.get_admin_client()
-    return client.request("GET", "rest/das/requests/{}".format(request_id), log_msg="PLATFORM: get transfer")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/das/requests/{}".format(request_id),
+        msg="PLATFORM: get transfer"
+    )
 
 
 def api_delete_transfer(request_id, client=None):
     """DELETE /rest/das/requests/{request_id}"""
-    client = client or PlatformApiClient.get_admin_client()
-    client.request("DELETE", "rest/das/requests/{}".format(request_id), log_msg="PLATFORM: delete transfer")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.DELETE,
+        path="/rest/das/requests/{}".format(request_id),
+        msg="PLATFORM: delete transfer"
+    )

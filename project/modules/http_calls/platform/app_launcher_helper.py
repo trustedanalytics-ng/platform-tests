@@ -14,11 +14,16 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_atk_instances(org_guid, client=None):
     """GET /rest/orgs/{organization_guid}/atkinstances"""
-    client = client or PlatformApiClient.get_admin_client()
-    return client.request("GET", "rest/orgs/{}/atkinstances".format(org_guid),
-                          log_msg="PLATFORM: get list of atk instances")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/orgs/{}/atkinstances".format(org_guid),
+        msg="PLATFORM: get list of atk instances"
+    )

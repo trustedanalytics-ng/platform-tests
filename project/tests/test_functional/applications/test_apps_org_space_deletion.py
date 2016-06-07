@@ -29,7 +29,6 @@ logged_components = (TAP.user_management, TAP.service_catalog)
 pytestmark = [components.user_management, components.service_catalog]
 
 
-
 class TestDeleteSpaceAndOrg:
 
     @pytest.fixture(scope="function")

@@ -14,17 +14,23 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.http_client_factory import HttpClientFactory
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
 
 
 def api_tools_service_instances(service_label, space_guid, org_guid=None, client=None):
     """GET /rest/tools/service_instances"""
-    client = client or PlatformApiClient.get_admin_client()
     params = {
         "service": service_label,
         "space": space_guid
     }
     if org_guid is not None:
         params.update({"org": org_guid})
-    return client.request("GET", "rest/tools/service_instances", params=params,
-                          log_msg="PLATFORM: get tools for service instance")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/tools/service_instances",
+        params=params,
+        msg="PLATFORM: get tools for service instance"
+    )

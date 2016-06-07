@@ -14,10 +14,10 @@
 # limitations under the License.
 #
 
-from ...http_client.http_client_configuration import HttpClientConfiguration
-from ...http_client.http_client_type import HttpClientType
-from ...http_client.config import Config
 from configuration.config import CONFIG
+from ..http_client_configuration import HttpClientConfiguration
+from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 from .base import BaseConfigurationProvider
 
 
@@ -25,11 +25,14 @@ class UaaConfigurationProvider(BaseConfigurationProvider):
     """Provide configuration for UAA http client."""
 
     @classmethod
-    def provide_configuration(cls) -> HttpClientConfiguration:
+    def get(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
-        return HttpClientConfiguration(
-            client_type=HttpClientType.UAA,
-            url=Config.service_uaa_url(),
+        if username is None:
             username=CONFIG["admin_username"],
             password=CONFIG["admin_password"]
+        return HttpClientConfiguration(
+            client_type=HttpClientType.UAA,
+            url=ClientConfig.service_uaa_url(),
+            username=username,
+            password=password
         )

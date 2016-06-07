@@ -21,10 +21,13 @@ from .client_auth_http_basic import ClientAuthHttpBasic
 from .client_auth_login_page import ClientAuthLoginPage
 from .client_auth_token import ClientAuthToken
 from .client_auth_type import ClientAuthType
+from .client_auth_no_auth import ClientAuthNoAuth
 
 
 class ClientAuthFactory(object):
     """Client authentication factory."""
+
+    EMPTY_URL = ""
 
     @staticmethod
     def get(username: str, password: str, auth_type: ClientAuthType) -> ClientAuthBase:
@@ -38,10 +41,13 @@ class ClientAuthFactory(object):
             return ClientAuthToken(Config.auth_uaa_token_url(), session)
 
         elif auth_type == ClientAuthType.HTTP_BASIC:
-            return ClientAuthHttpBasic("", session)
+            return ClientAuthHttpBasic(ClientAuthFactory.EMPTY_URL, session)
 
         elif auth_type == ClientAuthType.LOGIN_PAGE:
             return ClientAuthLoginPage(Config.auth_login_url(), session)
+
+        elif auth_type == ClientAuthType.NO_AUTH:
+            return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, session)
 
         else:
             raise ClientAuthFactoryInvalidAuthTypeException(auth_type)

@@ -14,13 +14,22 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_latest_events(org_guid=None, client=None):
     """GET /rest/les/events"""
-    client = client or PlatformApiClient.get_admin_client()
     params = {}
     if org_guid is not None:
-        params = {"org": org_guid}
-    return client.request("GET", "rest/les/events", params=params, log_msg="PLATFORM: get latest events")
+        params = {
+            "org": org_guid,
+        }
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/les/events",
+        params=params,
+        msg="PLATFORM: get latest events"
+    )

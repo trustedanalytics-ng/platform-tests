@@ -14,10 +14,16 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_external_tools(client=None):
     """GET /rest/platform_context"""
-    client = client or PlatformApiClient.get_admin_client()
-    return client.request("GET", "rest/platform_context", log_msg="PLATFORM: get external tool info")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/platform_context",
+        msg="PLATFORM: get external tool info"
+    )

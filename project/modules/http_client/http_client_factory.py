@@ -37,7 +37,10 @@ class HttpClientFactory(object):
         elif client_type == HttpClientType.CONSOLE:
             return cls._get_instance(configuration, ClientAuthType.LOGIN_PAGE)
 
-        elif client_type == HttpClientType.PLATFORM:
+        elif client_type == HttpClientType.CONSOLE_NO_AUTH:
+            return cls._get_instance(configuration, ClientAuthType.NO_AUTH)
+
+        elif client_type == HttpClientType.APPLICATION:
             return cls._get_instance(configuration, ClientAuthType.TOKEN_CF)
 
         elif client_type == HttpClientType.CLOUD_FOUNDRY:
@@ -48,6 +51,12 @@ class HttpClientFactory(object):
 
         else:
             raise HttpClientFactoryInvalidClientTypeException(client_type)
+
+    @classmethod
+    def remove(cls, configuration: HttpClientConfiguration):
+        """Remove client instance from cached instances."""
+        if configuration.uid in cls._INSTANCES:
+            del cls._INSTANCES[configuration.uid]
 
     @classmethod
     def _get_instance(cls, configuration, auth_type):

@@ -14,39 +14,55 @@
 # limitations under the License.
 #
 
-from modules.api_client import PlatformApiClient
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.http_client_factory import HttpClientFactory
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
 
 
 def api_get_jobs_list(org_guid, amount, unit, client=None):
     """GET /rest/v1/oozie/jobs/workflow"""
-    client = client or PlatformApiClient.get_admin_client()
     params = {
         "amount": amount,
         "org": org_guid,
         "unit": unit
     }
-    return client.request("GET", "rest/v1/oozie/jobs/workflow", params=params)
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/v1/oozie/jobs/workflow",
+        params=params
+    )
 
 
 def api_create_job(org_guid, name, start=None, end=None, amount=None, unit=None, zone_id=None, check_column=None,
                    import_mode=None, jdbc_uri=None, last_value=None, password=None, table=None, target_dir=None,
                    username=None, client=None):
     """POST /rest/v1/oozie/schedule_job/coordinated"""
-    client = client or PlatformApiClient.get_admin_client()
     params = {"org": org_guid}
     frequency = {"amount": amount, "unit": unit}
     body_schedule_keys = ["start", "end", "frequency", "zoneId"]
     body_schedule_values = [start, end, frequency, zone_id]
     body_schedule = {key: val for key, val in zip(body_schedule_keys, body_schedule_values) if val is not None}
-    body_sqoop_keys = ["checkColumn", "importMode", "jdbcUri", "lastValue", "password", "table", "targetDir", "username"]
+    body_sqoop_keys = ["checkColumn", "importMode", "jdbcUri", "lastValue", "password", "table", "targetDir",
+                       "username"]
     body_sqoop_values = [check_column, import_mode, jdbc_uri, last_value, password, table, target_dir, username]
     body_sqoop = {key: val for key, val in zip(body_sqoop_keys, body_sqoop_values) if val is not None}
     body = {"name": name, "schedule": body_schedule, "sqoopImport": body_sqoop}
-    return client.request("POST", "rest/v1/oozie/schedule_job/coordinated", params=params, body=body)
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.POST,
+        path="/rest/v1/oozie/schedule_job/coordinated",
+        params=params,
+        body=body
+    )
 
 
 def api_get_job_details(org_guid, job_id, client=None):
     """GET /rest/v1/oozie/jobs/workflow/{id}"""
-    client = client or PlatformApiClient.get_admin_client()
     params = {"org": org_guid}
-    return client.request("GET", "rest/v1/oozie/jobs/workflow/{}".format(job_id), params=params)
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="/rest/v1/oozie/jobs/workflow/{}".format(job_id),
+        params=params
+    )

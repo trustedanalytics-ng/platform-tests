@@ -22,6 +22,7 @@ class HttpClientType(Enum):
 
     UAA = "UserAccountAndAuthentication"
     CONSOLE = "Console"
-    PLATFORM = "Platform"
+    CONSOLE_NO_AUTH = "ConsoleNoAuth"
+    APPLICATION = "Application"
     CLOUD_FOUNDRY = "CloudFoundry"
     BROKER = "Broker"

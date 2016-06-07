@@ -16,8 +16,9 @@
 
 import pytest
 
-from modules.api_client import PlatformApiClient
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import components, priority
 from modules.runner.tap_test_case import TapTestCase
 from modules.tap_object_model import Organization, Space, User
@@ -50,7 +51,7 @@ class SpaceUserPermissions(TapTestCase):
         other_org_manager = User.api_create_by_adding_to_organization(class_context, second_test_org.guid)
         other_user = User.api_create_by_adding_to_organization(class_context, second_test_org.guid, roles=[])
         cls.user_clients = {
-            "admin": PlatformApiClient.get_admin_client(),
+            "admin": HttpClientFactory.get(ConsoleConfigurationProvider.get()),
             "org_manager": org_manager.login(),
             "space_manager_in_org": space_manager_in_org.login(),
             "org_user": org_user.login(),

@@ -14,31 +14,25 @@
 # limitations under the License.
 #
 
-from abc import ABCMeta, abstractstaticmethod
-
 from configuration.config import CONFIG
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
+from ..config import Config as ClientConfig
 from .base import BaseConfigurationProvider
 
 
-# noinspection PyMethodParameters
-class BaseConsoleConfigurationProvider(BaseConfigurationProvider, metaclass=ABCMeta):
-    """Base class that all console configuration provider implementations derive from."""
+class ConsoleConfigurationProvider(BaseConfigurationProvider):
+    """Provide configuration for console http client."""
 
     @classmethod
-    def provide_configuration(cls, username=None, password=None) -> HttpClientConfiguration:
+    def get(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
         if username is None:
             username = CONFIG["admin_username"]
             password = CONFIG["admin_password"]
         return HttpClientConfiguration(
             client_type=HttpClientType.CONSOLE,
-            url=cls.application_url(),
+            url=ClientConfig.service_console_url(),
             username=username,
             password=password
         )
-
-    @abstractstaticmethod
-    def application_url() -> str:
-        """Application console url."""
