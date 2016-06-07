@@ -21,6 +21,8 @@ set -e
 VENDOR=vendor/
 SECRETS_PATH=./project/configuration/secrets/
 REQUIREMENTS_PATH=./requirements.txt
+ZIPPED_ITEMS="deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt"
+DELETED_ITEMS="project/modules/remote_logger project/modules/cloudera_client.py project/modules/hdfs.py project/modules/hive.py project/modules/kerberos.py project/modules/ssh_client.py"
 
 # prepare dependencies
 if [ -d $VENDOR ]; then
@@ -37,4 +39,5 @@ echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
 
 # assemble the artifact
 VERSION=$(grep current_version .bumpversion.cfg | cut -d " " -f 3)
-zip -r platform-tests-${VERSION}.zip $VENDOR deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt
+rm -rf DELETED_ITEMS
+zip -r platform-tests-${VERSION}.zip $VENDOR $ZIPPED_ITEMS

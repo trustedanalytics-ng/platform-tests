@@ -19,29 +19,34 @@ import time
 import pytest
 
 from configuration import config
-from modules.remote_logger.remote_logger import RemoteLogger, RemoteLoggerConfiguration
+try:
+    from modules.remote_logger.remote_logger import RemoteLogger, RemoteLoggerConfiguration
 
 
-def _current_time():
-    """Return timestamp in microseconds, rounded to a second."""
-    return int(round(time.time() * 1000, -3))
+    def _current_time():
+        """Return timestamp in microseconds, rounded to a second."""
+        return int(round(time.time() * 1000, -3))
 
 
-@pytest.fixture(scope="module", autouse=True)
-def log_components(request):
-    logged_components = getattr(request.module, "logged_components", None)
-    from_date = _current_time()
-    log_file_name = request.module.__name__.split(".")[-1]
+    @pytest.fixture(scope="module", autouse=True)
+    def log_components(request):
+        logged_components = getattr(request.module, "logged_components", None)
+        from_date = _current_time()
+        log_file_name = request.module.__name__.split(".")[-1]
 
-    def fin():
-        if config.CONFIG["remote_log_enabled"] and logged_components is not None:
-            logger_config = RemoteLoggerConfiguration(
-                from_date=from_date,
-                to_date=_current_time(),
-                app_names=logged_components,
-                destination_directory=log_file_name
-            )
-            remote_logger = RemoteLogger(logger_config)
-            remote_logger.log_to_file()
+        def fin():
+            if config.CONFIG["remote_log_enabled"] and logged_components is not None:
+                logger_config = RemoteLoggerConfiguration(
+                    from_date=from_date,
+                    to_date=_current_time(),
+                    app_names=logged_components,
+                    destination_directory=log_file_name
+                )
+                remote_logger = RemoteLogger(logger_config)
+                remote_logger.log_to_file()
 
-    request.addfinalizer(fin)
+        request.addfinalizer(fin)
+
+
+except ImportError:
+    pass
