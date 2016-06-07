@@ -77,9 +77,7 @@ class DataSetFromHdfs(TapTestCase):
         self.step("Install atk client package in virtualenv")
         self.atk_virtualenv.create()
         self.atk_virtualenv.pip_install(ATKtools.get_atk_client_url(atk_app.urls[0]))
-
         self.step("Run atk create model script")
-        ATKtools.check_uaac_token()
         atk_test_script_path = os.path.join("fixtures", "atk_test_scripts", "atk_create_model.py")
         response = self.atk_virtualenv.run_atk_script(atk_test_script_path, atk_app.urls[0],
                                                       arguments={"--target_uri": self.initial_dataset.target_uri})

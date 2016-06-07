@@ -145,23 +145,3 @@ class ATKtools(object):
             raise AtkScriptException("Python client failed to connect to ATK instance")
         
         return response
-
-    @classmethod
-    def check_uaac_token(cls):
-        uaa_endpoint = config.CONFIG["domain"]
-        path = "http://{}/oauth/token".format("uaa." + uaa_endpoint)
-        headers = {
-            "Authorization": config.CONFIG["uaa_token"],
-            "Accept": "application/json"
-        }
-        data = {"grant_type": "client_credentials"}
-        request = requests.Request("POST", path, data=data, headers=headers)
-        session = requests.Session()
-        request = session.prepare_request(request)
-        log_http_request(request, username="ATK client", password=None)
-        response = session.send(request)
-        log_http_response(response)
-        if not response.ok:
-            raise UnexpectedResponseError(response.status_code, response.text)
-        if "access_token" not in response.text:
-            raise AtkScriptException("UAA response doesn't contain token: {}".format(response.text))

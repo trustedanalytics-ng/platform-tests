@@ -20,12 +20,11 @@ import pytest
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, Urls
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, long, priority
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceType, Transfer
+from modules.tap_logger import step
 from modules.test_names import generate_test_object_name
-from tests.fixtures.test_data import TestData
 
 
 logged_components = (TAP.atk, TAP.application_broker, TAP.service_catalog)
@@ -34,8 +33,7 @@ pytestmark = [components.service_catalog, components.application_broker, compone
 
 @incremental
 @priority.high
-@pytest.mark.usefixtures("test_org", "test_space", "add_admin_to_test_org")
-class Atk(TapTestCase):
+class TestAtk:
 
     atk_virtualenv = None
     atk_url = None
@@ -44,34 +42,29 @@ class Atk(TapTestCase):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def atk_virtualenv(cls, request, class_context):
+    def atk_virtualenv(cls, request, class_context, test_org):
         cls.context = class_context  # TODO move to methods when dependency on unittest is removed
         cls.atk_virtualenv = ATKtools("atk_virtualenv")
         cls.atk_virtualenv.create()
 
         def fin():
             try:
-                cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=TestData.test_org)
+                cls.atk_virtualenv.teardown(atk_url=cls.atk_url, org=test_org)
             except:
                 pass
         request.addfinalizer(fin)
 
-    @pytest.mark.skip("DPNG-5582, DPNG-6751")
-    def test_0_check_atk_uaac_credentials(self):
-        self.step("Check if atk has correct credentials and is able to download uaac token")
-        ATKtools.check_uaac_token()
-
-    def test_1_create_atk_instance(self):
-        self.step("Check that atk service is available in Marketplace")
-        marketplace = ServiceType.api_get_list_from_marketplace(TestData.test_space.guid)
+    def test_0_create_atk_instance(self, test_org, test_space, add_admin_to_test_org):
+        step("Check that atk service is available in Marketplace")
+        marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         atk_service = next((s for s in marketplace if s.label == ServiceLabels.ATK), None)
-        self.assertIsNotNone(atk_service, msg="No atk service found in marketplace.")
-        self.step("Create atk service instance")
+        assert atk_service is not None, "No atk service found in marketplace."
+        step("Create atk service instance")
 
         atk_instance_name = generate_test_object_name()
         atk_instance = ServiceInstance.api_create_with_plan_name(
-            org_guid=TestData.test_org.guid,
-            space_guid=TestData.test_space.guid,
+            org_guid=test_org.guid,
+            space_guid=test_space.guid,
             service_label=ServiceLabels.ATK,
             name=atk_instance_name,
             service_plan_name=ServicePlan.SIMPLE_ATK
@@ -81,51 +74,52 @@ class Atk(TapTestCase):
         validator.validate()
         self.__class__.atk_url = validator.application.urls[0]
 
-    def test_2_install_atk_client(self):
-        self.step("Install atk client package")
+    def test_1_install_atk_client(self):
+        step("Install atk client package")
         self.atk_virtualenv.pip_install(ATKtools.get_atk_client_url(self.atk_url))
 
-    def test_3_check_atk_client_connection(self):
-        self.step("Run atk connection test")
+    def test_2_check_atk_client_connection(self):
+        step("Run atk connection test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "atk_client_connection_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url)
 
     @pytest.mark.bugs("DPNG-2010 Cannot get JDBC connection when publishing dataset to Hive")
-    def test_4_create_data_set_and_publish_it_in_hive(self):
-        self.step("Create transfer and check it's finished")
-        transfer = Transfer.api_create(self.context, source=Urls.test_transfer_link, org_guid=TestData.test_org.guid,
+    def test_3_create_data_set_and_publish_it_in_hive(self, test_org):
+        step("Create transfer and check it's finished")
+        transfer = Transfer.api_create(self.context, source=Urls.test_transfer_link, org_guid=test_org.guid,
                                        title=self.transfer_title)
         transfer.ensure_finished()
-        self.step("Publish in hive the data set created based on the submitted transfer")
-        data_set = DataSet.api_get_matching_to_transfer(org=TestData.test_org, transfer_title=self.transfer_title)
+        step("Publish in hive the data set created based on the submitted transfer")
+        data_set = DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=self.transfer_title)
         data_set.api_publish()
         self.__class__.data_set_hdfs_path = ATKtools.dataset_uri_to_atk_uri(data_set.target_uri)
 
     @long
     @pytest.mark.bugs("kerberos: DPNG-4525", "non-kerberos: DPNG-5171")
-    def test_5_frame_csv_file(self):
-        self.step("Run atk csv file test")
+    def test_4_frame_csv_file(self):
+        step("Run atk csv file test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "csv_file_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
                                            arguments={"--target_uri": self.data_set_hdfs_path})
 
-    def test_6_simple_hive_query(self):
-        self.step("Run atk connection test")
+    def test_5_simple_hive_query(self, test_org):
+        step("Run atk connection test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_simple_query_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--database-name": DataSet.escape_string(TestData.test_org.guid),
+                                           arguments={"--database-name": DataSet.escape_string(test_org.guid),
                                                       "--table-name": self.transfer_title})
 
-    def test_7_export_to_hive(self):
-        self.step("Run atk export to hive test")
+    @pytest.mark.bugs("DPNG-7994 ATK - export_to_hive method doesn't work")
+    def test_6_export_to_hive(self, test_org):
+        step("Run atk export to hive test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_export_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--database-name": DataSet.escape_string(TestData.test_org.guid),
+                                           arguments={"--database-name": DataSet.escape_string(test_org.guid),
                                                       "--table-name": self.transfer_title})
 
-    def test_8_hive_table_manipulation(self):
-        self.step("Run atk table manipulation test")
+    def test_7_hive_table_manipulation(self, test_org):
+        step("Run atk table manipulation test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_table_manipulation_test.py")
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url,
-                                           arguments={"--database-name": DataSet.escape_string(TestData.test_org.guid),
+                                           arguments={"--database-name": DataSet.escape_string(test_org.guid),
                                                       "--table-name": self.transfer_title})
