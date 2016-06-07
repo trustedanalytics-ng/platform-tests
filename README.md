@@ -20,7 +20,7 @@ Unfortunately, tests currently use a hardcoded path.
 ```
 sudo -E add-apt-repository ppa:avacariu/git-crypt
 sudo -E apt update
-sudo -E apt install python3 python3-dev git git-crypt
+sudo -E apt install python3 python3-dev git git-crypt build=essential g++ libssl-dev
 ```
 
 **3. Clone repository**
@@ -30,7 +30,7 @@ git clone git@github.com:intel-data/platform-tests.git
 
 **4. Decrypt repository secrets**
 
-Place `key.dat` in api-tests directory.
+Place `key.dat` in /platform-tests directory.
 ```
 cd platform-tests
 ./deploy/unlock.sh
@@ -53,7 +53,7 @@ If you plan to run tests on a new environment (i.e. not daily, sprint, demo, etc
 
 **7. Configure test admin user** -- only if it's not already present on an environment
 
-To run tests, we need a user trusted.analytics.tester@gmail.com with appropriate roles and authorizations. To create such user, use script `platform-tests/deploy/create_test_admin.sh`. The script requires cf client and uaac.
+To run tests, we need a user trusted.analytics.tester@gmail.com with appropriate roles and authorizations. To create such user, use script `platform-tests/deploy/add_test_admin.sh`. The script requires cf client and uaac.
 
 install cf client
 ```
@@ -69,7 +69,7 @@ sudo gem install cf-uaac
 
 run the script
 ```
-create_test_admin.sh <domain> <cf admin password> <reference org name> <reference space name> <password>
+add_test_admin.sh <domain> <cf admin password> <reference org name> <reference space name> <password>
 ```
 - domain, e.g. gotapaas.eu
 - cf admin password -- cf password of user admin
