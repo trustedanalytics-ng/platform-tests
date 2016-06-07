@@ -29,11 +29,13 @@ class Context(object):
         self.users = []
         self.invitations = []
         self.transfers = []
+        self.service_instances = []
 
     def _cleanup_test_objects(self, object_list: list):
         while len(object_list) > 0:
             item = object_list.pop()
             try:
+                self.logger.info("cleaning: {}".format(item))
                 item.cleanup()
             except UnexpectedResponseError as e:
                 self.logger.warning("Error while deleting {}: {}".format(item, e))
@@ -45,6 +47,7 @@ class Context(object):
         data_sets = DataSet.api_get_matching_to_transfer_list(transfer_titles)
         self._cleanup_test_objects(data_sets)
         self._cleanup_test_objects(self.transfers)
+        self._cleanup_test_objects(self.service_instances)
         self._cleanup_test_objects(self.orgs)
 
 

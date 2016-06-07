@@ -168,13 +168,15 @@ def test_add_and_delete_transfer_from_file(core_org, context):
 @components.yarn_broker
 @components.zookeeper_broker
 @components.zookeeper_wssb_broker
-def test_create_and_delete_marketplace_service_instances(core_org, core_space, non_parametrized_marketplace_services):
+def test_create_and_delete_marketplace_service_instances(core_org, core_space, context,
+                                                         non_parametrized_marketplace_services):
     service_type = non_parametrized_marketplace_services[0]
     plan = non_parametrized_marketplace_services[1]
 
     step("Create instance {} {}".format(service_type.label, plan["name"]))
     instance = ServiceInstance.api_create(org_guid=core_org.guid, space_guid=core_space.guid,
-                                          service_label=service_type.label, service_plan_guid=plan["guid"])
+                                          service_label=service_type.label, service_plan_guid=plan["guid"],
+                                          context=context)
     step("Check that the instance was created")
     instance.ensure_created()
     step("Delete the instance")

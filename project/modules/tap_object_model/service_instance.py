@@ -66,32 +66,37 @@ class ServiceInstance(object):
 
     @classmethod
     def api_create_with_plan_name(cls, org_guid, space_guid, service_label, name=None, service_plan_name=None,
-                                  params=None, client=None):
+                                  params=None, client=None, context=None):
         """
         Create service instance using using plan name - first make call to retrieve plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
         service_plan_guid = cls._retrieve_service_plan_guid(service_label, service_plan_name, client)
-        return cls.api_create(org_guid, space_guid, service_label, name, service_plan_guid, params, client)
+        return cls.api_create(org_guid, space_guid, service_label, name, service_plan_guid, params, client, context)
 
     @classmethod
     def api_create(cls, org_guid, space_guid, service_label, name=None, service_plan_guid=None,
-                   params=None, client=None):
+                   params=None, client=None, context=None):
         """
         Create service instance using using plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
         name = generate_test_object_name() if name is None else name
+        instance = None
         try:
             response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
                                                                    org_guid=org_guid, space_guid=space_guid,
                                                                    params=params, client=client)
-            return cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid, service_label=service_label,
-                       last_operation=response["entity"].get("last_operation"))
+            instance = cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid,
+                           service_label=service_label, last_operation=response["entity"].get("last_operation"))
         except UnexpectedResponseError as e:
             if e.status == 504 and "Gateway Timeout" in e.error_message:
-                return cls._get_instance_with_retry(name, space_guid, service_label)
-            raise
+                instance = cls._get_instance_with_retry(name, space_guid, service_label)
+            else:
+                raise
+        if context:
+            context.service_instances.append(instance)
+        return instance
 
     @classmethod
     def _retrieve_service_plan_guid(cls, service_label, service_plan_name, client=None):
