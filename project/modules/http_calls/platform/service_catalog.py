@@ -43,7 +43,6 @@ def api_get_service(service_guid, client=None):
 def api_create_service(name, description, org_guid, app_name, app_guid, image=None, display_name=None, tags=None,
                        client=None):
     """GET /rest/marketplace/application"""
-    client = client or PlatformApiClient.get_admin_client()
     metadata = {}
     if image is not None:
         metadata["imageUrl"] = image
@@ -65,14 +64,23 @@ def api_create_service(name, description, org_guid, app_name, app_guid, image=No
         "org_guid": org_guid,
         "tags": [] if tags is None else tags
     }
-    return client.request("POST", "rest/marketplace/application", body=body, log_msg="PLATFORM: create service")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.POST,
+        path="/rest/marketplace/application",
+        body=body,
+        msg="PLATFORM: create service"
+    )
 
 
 def api_delete_service(service_guid, client=None):
     """GET /rest/marketplace/application/{service_guid}"""
-    client = client or PlatformApiClient.get_admin_client()
-    return client.request("DELETE", "rest/marketplace/application/{}".format(service_guid),
-                          log_msg="PLATFORM: create service")
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.DELETE,
+        path="rest/marketplace/application/{}".format(service_guid),
+        msg="PLATFORM: create service"
+    )
 
 
 def api_get_service_instances(space_guid=None, service_guid=None, client=None):
