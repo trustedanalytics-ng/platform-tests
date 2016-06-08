@@ -65,8 +65,6 @@ class TestHdfsRegularPlans(object):
                 failures.append("{}\n{}".format(plan["guid"], e))
         assertions.assert_no_errors(failures)
 
-        assert len(failures) == 0, "The following items failed:\n{}".format("\n".join(failures))
-
 
 @incremental
 @priority.medium

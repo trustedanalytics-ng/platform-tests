@@ -18,12 +18,14 @@ import pytest
 import requests
 
 from modules.application_stack_validator import ApplicationStackValidator
+from modules.exceptions import UnexpectedResponseError
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, ServicePlan,\
     Urls
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceKey, Transfer, User
 from modules.test_names import generate_test_object_name
+from tests.fixtures.assertions import assert_no_errors
 from tests.fixtures.test_data import TestData
 
 
@@ -62,19 +64,26 @@ class TestScoringEngineInstance(TapTestCase):
     @long
     @priority.high
     def test_create_delete_for_different_users(self):
+        errors = []
         for user in self.authorised_users:
-            with self.subTest(user=user):
+            try:
                 self._check_create_delete_for_user(user)
+            except Exception as e:
+                errors.append(e)
+        assert_no_errors(errors)
 
     @priority.medium
     def test_users_lacking_privileges_cannot_create_scoring_engine(self):
         self.step("Checking that users with not enough privileges cannot create scoring engine")
+        errors = []
         for user in self.unauthorised_users:
-            with self.subTest(user=user):
+            with self.assertRaises(UnexpectedResponseError) as e:
                 client = user.login()
                 name = generate_test_object_name()
-                self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                    self._create_scoring_engine, client, name)
+                self._create_scoring_engine(client, name)
+            if e is None or e.exception.status != HttpStatus.CODE_FORBIDDEN:
+                errors.append("Service '{}' failed to respond with given error status.".format(name))
+        assert_no_errors(errors)
 
     def _check_create_delete_for_user(self, user):
         client = user.login()

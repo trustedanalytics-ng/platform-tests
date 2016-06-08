@@ -20,11 +20,13 @@ import pytest
 
 from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ParametrizedService, ServiceLabels, ServicePlan, \
     TapComponent as TAP
+from modules.exceptions import UnexpectedResponseError
 from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_object_model import ServiceInstance, ServiceKey, ServiceType, Space, User
 from modules.test_names import generate_test_object_name
+from tests.fixtures.assertions import assert_no_errors
 from tests.fixtures.test_data import TestData
 
 
@@ -125,17 +127,19 @@ class MarketplaceServices(TapTestCase):
     @long
     @priority.high
     def test_create_and_delete_service_instance_and_keys(self):
+        errors = []
         for service_type in self.marketplace:
             if service_type.label in self.SERVICES_TESTED_SEPARATELY:
                 continue
-
             for plan in service_type.service_plans:
                 if ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
                     continue
-
-                with self.subTest(service=service_type.label, plan=plan["name"]):
-                    self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
-                                                                      service_type.label, plan["guid"])
+                try:
+                    self._create_and_delete_service_instance_and_keys(
+                        TestData.test_org.guid, TestData.test_space.guid, service_type.label, plan["guid"])
+                except Exception as e:
+                    errors.append(e)
+        assert_no_errors(errors)
 
     @priority.low
     def test_create_instance_with_non_required_parameter(self):
@@ -160,14 +164,16 @@ class MarketplaceServices(TapTestCase):
         service_list = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
         self.step("Check that the instance was created")
         self.assertIn(instance, service_list, "Instance was not created")
+        errors = []
         for service_type in self.marketplace:
             plan_guid = next(iter(service_type.service_plan_guids))
-            with self.subTest(service_type=service_type):
-                self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT,
-                                                    HttpStatus.MSG_SERVICE_NAME_TAKEN.format(existing_name),
-                                                    ServiceInstance.api_create, TestData.test_org.guid,
-                                                    TestData.test_space.guid, service_type.label, existing_name,
-                                                    service_plan_guid=plan_guid)
+            self.step("Try to create {} service instance".format(service_type.label))
+            with self.assertRaises(UnexpectedResponseError) as e:
+                ServiceInstance.api_create(TestData.test_org.guid, TestData.test_space.guid, service_type.label,
+                                           existing_name, service_plan_guid=plan_guid)
+            if e is None or e.exception.status != HttpStatus.CODE_CONFLICT:
+                errors.append("Service '{}' failed to respond with given error status.".format(service_type.label))
+        assert_no_errors(errors)
         self.assertUnorderedListEqual(service_list, ServiceInstance.api_get_list(space_guid=TestData.test_space.guid),
                                       "Some new services were created")
 
@@ -187,14 +193,15 @@ class MarketplaceServices(TapTestCase):
     @pytest.mark.usefixtures("non_space_developer_users")
     def test_cannot_create_instance_as_non_space_developer(self):
         test_clients = {"space_auditor": self.space_auditor_client, "space_manager": self.space_manager_client}
+        errors = []
         for service_type, (name, client) in itertools.product(self.marketplace, test_clients.items()):
             for plan in service_type.service_plans:
-                with self.subTest(service=service_type.label, plan=plan["name"]):
-                    self.step("Try to create new instance")
-                    self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                        ServiceInstance.api_create, TestData.test_org.guid,
-                                                        TestData.test_space.guid, service_type.label,
-                                                        service_plan_guid=plan["guid"], client=client)
+                with self.assertRaises(UnexpectedResponseError) as e:
+                    ServiceInstance.api_create(TestData.test_org.guid, TestData.test_space.guid, service_type.label,
+                                               service_plan_guid=plan["guid"], client=client)
+                if e is None or e.exception.status != HttpStatus.CODE_FORBIDDEN:
+                    errors.append("Service '{}' failed to respond with given error status.".format(service_type.label))
+        assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-6086 Adding service key to H2O instance fails")
@@ -203,40 +210,70 @@ class MarketplaceServices(TapTestCase):
         h2o = next((s for s in self.marketplace if s.label == label), None)
         if h2o is None:
             self.skipTest("h2o is not available in Marketplace")
+        errors = []
         for plan in h2o.service_plans:
-            with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
-                                                                  label, plan["guid"])
+            try:
+                self._create_and_delete_service_instance_and_keys(
+                    TestData.test_org.guid, TestData.test_space.guid, label, plan["guid"])
+            except Exception as e:
+                errors.append(e)
+        assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-3474 Command cf create-service-key does not work for yarn broker")
     def test_create_yarn_service_instance_and_keys(self):
         label = ServiceLabels.YARN
         yarn = next(s for s in self.marketplace if s.label == label)
+        errors = []
         for plan in yarn.service_plans:
-            with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
-                                                                  label, plan["guid"])
+            try:
+                self._create_and_delete_service_instance_and_keys(
+                    TestData.test_org.guid, TestData.test_space.guid, label, plan["guid"])
+            except Exception as e:
+                errors.append(e)
+        assert_no_errors(errors)
+
+    @priority.low
+    def test_create_hdfs_service_instance_and_keys(self):
+        """DPNG-3273 Enable HDFS broker to use Service Keys"""
+        label = ServiceLabels.HDFS
+        hdfs = next(s for s in self.marketplace if s.label == label)
+        errors = []
+        for plan in hdfs.service_plans:
+            try:
+                self._create_and_delete_service_instance_and_keys(
+                    TestData.test_org.guid, TestData.test_space.guid, label, plan["guid"])
+            except Exception as e:
+                errors.append(e)
+        assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-2798 Enable HBase broker to use Service Keys")
     def test_create_hbase_service_instance_and_keys(self):
         label = ServiceLabels.HBASE
         hbase = next(s for s in self.marketplace if s.label == label)
+        errors = []
         for plan in hbase.service_plans:
-            with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
-                                                                  label, plan["guid"])
+            try:
+                self._create_and_delete_service_instance_and_keys(
+                    TestData.test_org.guid, TestData.test_space.guid, label, plan["guid"])
+            except Exception as e:
+                errors.append(e)
+        assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-6087 Connection to service catalog timedout - cannot create gearpump instance")
     def test_create_gearpump_service_instance_and_keys(self):
         label = ServiceLabels.GEARPUMP
         gearpump = next(s for s in self.marketplace if s.label == label)
+        errors = []
         for plan in gearpump.service_plans:
-            with self.subTest(service=label, plan=plan["name"]):
-                self._create_and_delete_service_instance_and_keys(TestData.test_org.guid, TestData.test_space.guid,
-                                                                  label, plan["guid"])
+            try:
+                self._create_and_delete_service_instance_and_keys(
+                    TestData.test_org.guid, TestData.test_space.guid, label, plan["guid"])
+            except Exception as e:
+                errors.append(e)
+        assert_no_errors(errors)
 
     @priority.low
     def test_get_service_instance_summary_from_empty_space(self):

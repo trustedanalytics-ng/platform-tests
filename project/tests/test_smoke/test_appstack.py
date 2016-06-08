@@ -27,6 +27,7 @@ from modules.runner.tap_test_case import TapTestCase
 from modules.markers import long, priority
 from modules.tap_logger import get_logger
 from modules.tap_object_model import Application, ServiceBroker, ServiceInstance, Upsi
+from tests.fixtures.assertions import assert_no_errors
 
 
 logger = get_logger(__name__)
@@ -106,12 +107,14 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
 
     def test_apps_have_the_same_details_in_cf_and_on_platform(self):
         only_expected_platform_apps = {app for app in self.platform_apps if app.name in self.expected_app_names}
+        errors = []
         for app in only_expected_platform_apps:
-            with self.subTest(app=app.name):
-                self.step("Check that details of app {} are the same in cf and on the Platform".format(app.name))
-                cf_details = app.cf_api_get_summary()
-                platform_details = app.api_get_summary()
-                self.assertEqual(cf_details, platform_details, "Different details for {}".format(app.name))
+            self.step("Check that details of app {} are the same in cf and on the Platform".format(app.name))
+            cf_details = app.cf_api_get_summary()
+            platform_details = app.api_get_summary()
+            if cf_details != platform_details:
+                errors.append("Different details for {}".format(app.name))
+        assert_no_errors(errors)
 
     def test_all_required_service_instances_are_present_in_cf(self):
         self.step("Check that all expected services are present in cf")
@@ -133,25 +136,29 @@ class TrustedAnalyticsSmokeTest(TapTestCase):
 
     @long
     def test_spring_services_dont_expose_sensitive_endpoints(self):
-        SENSITIVE_ENDPOINTS = ["actuator", "autoconfig", "beans", "configprops", "docs", "dump", "env", "flyway",
-                               "info", "liquidbase", "logfile", "metrics", "mappings", "shutdown", "trace"]
+        SENSITIVE_ENDPOINTS = [
+            "actuator", "autoconfig", "beans", "configprops", "docs", "dump", "env", "flyway",
+            "info", "liquidbase", "logfile", "metrics", "mappings", "shutdown", "trace",
+        ]
+        errors = []
         for url in [a.urls[0] for a in self.platform_apps
                     if a.name in self.expected_app_names - self.SENSITIVE_ENDPOINTS_EXCLUDED_APPS]:
-            client = HttpClientFactory.get(ApplicationConfigurationProvider.get())
+            client = HttpClientFactory.get(ApplicationConfigurationProvider.get(url))
             app_name = url.split(".")[0]
             try:
                 client.request(method=HttpMethod.GET, path="/health")
             except UnexpectedResponseError:
                 logger.info("Not checking {} service".format(app_name))
                 continue
-            with self.subTest(app_name=app_name):
-                self.step("Check that the sensitive endpoints are not enabled.")
-                enabled_endpoints = []
-                for endpoint in SENSITIVE_ENDPOINTS:
-                    try:
-                        client.request(method=HttpMethod.GET, path="/{}".format(endpoint))
-                    except UnexpectedResponseError:
-                        continue
-                    else:
-                        enabled_endpoints.append(endpoint)
-                self.assertEqual(enabled_endpoints, [], "{} exposes {}".format(app_name, enabled_endpoints))
+            self.step("Check that the sensitive endpoints are not enabled.")
+            enabled_endpoints = []
+            for endpoint in SENSITIVE_ENDPOINTS:
+                try:
+                    client.request(method=HttpMethod.GET, path="/{}".format(endpoint))
+                except UnexpectedResponseError:
+                    continue
+                else:
+                    enabled_endpoints.append(endpoint)
+            if enabled_endpoints:
+                errors.append("{} exposes {}".format(app_name, enabled_endpoints))
+        assert_no_errors(errors)
