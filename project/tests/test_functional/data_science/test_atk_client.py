@@ -109,7 +109,6 @@ class TestAtk:
                                            arguments={"--database-name": DataSet.escape_string(test_org.guid),
                                                       "--table-name": self.transfer_title})
 
-    @pytest.mark.bugs("DPNG-7994 ATK - export_to_hive method doesn't work")
     def test_6_export_to_hive(self, test_org):
         step("Run atk export to hive test")
         atk_test_script_path = os.path.join(ATKtools.TEST_SCRIPTS_DIRECTORY, "hive_export_test.py")

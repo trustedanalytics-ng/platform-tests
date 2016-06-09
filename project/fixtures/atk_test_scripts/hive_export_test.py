@@ -36,7 +36,7 @@ destination_table = "test_tab_{}".format(datetime.datetime.now().strftime('%Y%m%
 print("exporting...")
 original_frame.export_to_hive(destination_table)
 
-query_destination = "select * from default." + destination_table
+query_destination = "select * from " + destination_table
 print("Query: {}".format(query_destination))
 hq_default = ta.HiveQuery(query_destination)
 exported_frame = ta.Frame(hq_default)
