@@ -18,11 +18,9 @@ import abc
 import json
 import ssl
 import uuid
-import time
 
 import requests
 from retry import retry
-import websocket
 
 from ..constants import ServiceLabels, ServicePlan
 from ..exceptions import UnexpectedResponseError
@@ -30,6 +28,7 @@ from ..tap_logger import get_logger, log_http_request, log_http_response
 from configuration import config
 from ..tap_object_model import ServiceInstance
 from ..test_names import generate_test_object_name
+from ..websocket_client import WebsocketClient
 
 logger = get_logger(__name__)
 
@@ -39,9 +38,10 @@ def _generate_uuid():
 
 
 class JupyterWSBase(metaclass=abc.ABCMeta):
+    WS_TIMEOUT = 5  # (seconds) - timeout for unresponsive socket
 
-    def __init__(self, ws_connection):
-        self.ws_connection = ws_connection
+    def __init__(self, uri, origin, headers, cert_requirement):
+        self.ws = WebsocketClient(uri, origin, headers, cert_requirement)
 
     @abc.abstractmethod
     def _get_command_payload(self, content):
@@ -59,28 +59,17 @@ class JupyterWSBase(metaclass=abc.ABCMeta):
             logger.info(msg.replace(content, "[SECRET]"))
         else:
             logger.info(msg)
-        self.ws_connection.send(msg)
+        self.ws.send(msg)
 
     def get_output(self):
         """Retrieve all messages"""
-        output = []
-        for _ in range(5):
-            try:
-                while True:
-                    msg = self.ws_connection.recv()
-                    output.append(msg)
-                    logger.info(msg)
-            except websocket.WebSocketTimeoutException:
-                # Timeout means there are no more messages
-                break
-            time.sleep(5)
-        return output
+        return self.ws.recieve()
 
 
 class JupyterTerminal(JupyterWSBase):
 
-    def __init__(self, ws_connection, number):
-        super().__init__(ws_connection)
+    def __init__(self, uri, origin, headers, cert_requirement, number):
+        super().__init__(uri, origin, headers, cert_requirement)
         self.number = number
 
     def __repr__(self):
@@ -92,8 +81,8 @@ class JupyterTerminal(JupyterWSBase):
 
 class JupyterNotebook(JupyterWSBase):
 
-    def __init__(self, ws_connection, session_id, path):
-        super().__init__(ws_connection)
+    def __init__(self, uri, origin, headers, cert_requirement, session_id, path):
+        super().__init__(uri, origin, headers, cert_requirement)
         self._session_id = session_id
         self._path = path
         self._last_msg_id = None
@@ -164,8 +153,6 @@ class JupyterNotebook(JupyterWSBase):
 
 
 class Jupyter(object):
-    WS_TIMEOUT = 5  # (seconds) - timeout for unresponsive socket
-
     def __init__(self, org_guid, space_guid, instance_name=None, params=None):
         """Create Jupyter service instance"""
         if instance_name is None:
@@ -174,10 +161,10 @@ class Jupyter(object):
         self.password = None
         self.instance_url = None
         self.http_session = requests.Session()
-        self.ws_sslopt = {}
+        self.ws_sslopt = None
         if not config.CONFIG["ssl_validation"]:
             self.http_session.verify = False
-            self.ws_sslopt = {"cert_reqs": ssl.CERT_NONE}
+            self.ws_sslopt = ssl.CERT_NONE
         self.instance = ServiceInstance.api_create_with_plan_name(org_guid=org_guid, space_guid=space_guid,
                                                                   name=instance_name,
                                                                   service_label=ServiceLabels.JUPYTER,
@@ -222,15 +209,10 @@ class Jupyter(object):
         )
 
     def connect_to_terminal(self, terminal_no):
-        ws_connection = websocket.create_connection(
-            url="wss://{}/terminals/websocket/{}".format(self.instance_url, terminal_no),
-            cookie=self.cookie,
-            origin="https://{}".format(self.instance_url),
-            host=self.instance_url,
-            timeout=self.WS_TIMEOUT,
-            sslopt=self.ws_sslopt
-        )
-        return JupyterTerminal(ws_connection, terminal_no)
+        uri = "{}://{}/terminals/websocket/{}".format(WebsocketClient.WSS, self.instance_url, terminal_no)
+        origin = "https://{}".format(self.instance_url)
+        headers = {"Cookie": self.cookie}
+        return JupyterTerminal(uri, origin, headers, self.ws_sslopt, terminal_no)
 
     def create_notebook(self, python_version=2):
         python_version = "python{}".format(python_version)
@@ -252,12 +234,8 @@ class Jupyter(object):
         )
         kernel_id = response["kernel"]["id"]
         session_id = _generate_uuid()  # see Jupyter JavaScript static/services/kernels/kernel.js, line 42
-        ws_connection = websocket.create_connection(
-            url="wss://{}/api/kernels/{}/channels?session_id={}".format(self.instance_url, kernel_id, session_id),
-            cookie=self.cookie,
-            origin="https://{}".format(self.instance_url),
-            host=self.instance_url,
-            timeout=self.WS_TIMEOUT,
-            sslopt=self.ws_sslopt
-        )
-        return JupyterNotebook(ws_connection, session_id, notebook_path)
+        uri = "{}://{}/api/kernels/{}/channels?session_id={}".format(WebsocketClient.WSS, self.instance_url, kernel_id,
+                                                                     session_id)
+        origin = "https://{}".format(self.instance_url)
+        headers = {"Cookie": self.cookie}
+        return JupyterNotebook(uri, origin, headers, self.ws_sslopt, session_id, notebook_path)

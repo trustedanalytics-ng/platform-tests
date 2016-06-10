@@ -20,7 +20,6 @@ import time
 
 import pytest
 from retry import retry
-import websocket
 
 from configuration import config
 from modules.app_sources import AppSources
@@ -30,6 +29,7 @@ from modules.markers import components, incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, Upsi
 from tests.fixtures import fixtures
+from modules.websocket_client import WebsocketClient
 
 
 logged_components = (TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)
@@ -147,14 +147,16 @@ class TestWs2kafka2hdfs:
 
     def _send_ws_messages(self, connection_string):
         step("Send messages to {}".format(connection_string))
-        ws_opts = {"cert_reqs": ssl.CERT_NONE}
-        ws_protocol = "ws://"
+        cert_requirement = None
+        ws_protocol = WebsocketClient.WS
         if config.CONFIG["ssl_validation"]:
-            ws_opts = {}
-            ws_protocol = "wss://"
-        ws = websocket.create_connection("{}{}".format(ws_protocol, connection_string), sslopt=ws_opts)
+            cert_requirement = ssl.CERT_NONE
+            ws_protocol = WebsocketClient.WSS
+        url = "{}://{}".format(ws_protocol, connection_string)
+        ws = WebsocketClient(url, certificate_requirement=cert_requirement)
         for message in self.messages:
             ws.send(message)
+        ws.close()
 
     def _get_messages_from_hdfs(self, hdfs_path):
         hdfs = Hdfs()

@@ -69,6 +69,7 @@ class TestJupyterConsole:
         step("Check that Python interpreter runs OK in Jupyter terminal")
         terminal.send_input("python\r")
         self._assert_pattern_in_output(terminal, "Python")
+        terminal.ws.close()
 
     @priority.high
     def test_jupyter_interactive_mode_hello_world(self):
@@ -78,6 +79,7 @@ class TestJupyterConsole:
         notebook.send_input("print('Hello, world!')")
         output = notebook.get_stream_result()
         assert output[-1] == "Hello, world!\n"
+        notebook.ws.close()
 
     @priority.medium
     def test_jupyter_connect_to_atk_client(self, terminal_index, core_space):
@@ -108,3 +110,4 @@ class TestJupyterConsole:
         assert "Connect now?" in notebook.get_prompt_text()
         notebook.send_input("y", reply=True)
         assert "Connected." in str(notebook.get_stream_result())
+        notebook.ws.close()

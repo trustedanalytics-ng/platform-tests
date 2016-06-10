@@ -15,7 +15,6 @@
 #
 
 import pytest
-import websocket
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
@@ -25,6 +24,7 @@ from modules.runner.tap_test_case import TapTestCase
 from modules.markers import components, incremental, priority
 from modules.tap_object_model import ServiceInstance, User
 from tests.fixtures.test_data import TestData
+from modules.websocket_client import WebsocketClient
 
 logged_components = (TAP.gateway, TAP.application_broker, TAP.service_catalog)
 pytestmark = [components.gateway, components.application_broker, components.service_catalog]
@@ -65,14 +65,13 @@ class Gateway(TapTestCase):
         http_client = HttpClientFactory.get(CloudFoundryConfigurationProvider.get())
         token = http_client._auth._token
         self.step("Check communication with gateway app")
-        header = ["Authorization: Bearer{}".format(token)]
+        header = {"Authorization": "Bearer{}".format(token)}
+        ws_url = "{}://{}/ws".format(WebsocketClient.WS, self.gateway_app.urls[0])
         try:
-            websocket.enableTrace(True)
-            ws = websocket.WebSocket()
-            ws.connect("ws://{}/ws".format(self.gateway_app.urls[0]), header=header)
+            ws = WebsocketClient(ws_url, headers=header)
             ws.send("test")
             ws.close()
-        except websocket.WebSocketException as e:
+        except Exception as e:
             raise AssertionError(str(e))
 
     def test_2_delete_gateway_instance(self):

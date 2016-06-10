@@ -19,7 +19,6 @@ import ssl
 import unittest
 
 import pytest
-import websocket
 
 from configuration import config
 from modules.app_sources import AppSources
@@ -31,6 +30,8 @@ from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
 from modules.test_names import generate_test_object_name
+from tests.fixtures import fixtures
+from modules.websocket_client import WebsocketClient
 from tests.fixtures import fixtures
 
 
@@ -102,18 +103,19 @@ class TestWs2kafka2gearpump2hbase:
 
         request.addfinalizer(lambda: fixtures.tear_down_test_objects(pushed_apps))
 
-    def _send_ws_messages(self, connection_string):
+    def _send_messages(self, connection_string):
         step("Send messages to {}".format(connection_string))
-        ws_opts = {"cert_reqs": ssl.CERT_NONE}
-        ws_protocol = "ws://"
+        cert_requirement = None
+        ws_protocol = WebsocketClient.WS
         if config.CONFIG["ssl_validation"]:
-            ws_opts = {}
-            ws_protocol = "wss://"
-        ws = websocket.create_connection("{}{}".format(ws_protocol, connection_string), sslopt=ws_opts)
+            cert_requirement = ssl.CERT_NONE
+            ws_protocol = WebsocketClient.WSS
+        url = "{}://{}".format(ws_protocol, connection_string)
         messages = ["Test-{}".format(n) for n in range(2)]
+        ws = WebsocketClient(url, certificate_requirement=cert_requirement)
         for message in messages:
             ws.send(message)
-        return ws.status
+        ws.close()
 
     def test_0_create_gearpump_instance(self, test_org, test_space):
         step("Create gearpump instance")
@@ -153,9 +155,7 @@ class TestWs2kafka2gearpump2hbase:
 
     def test_step_5_send_from_ws2kafka(self):
         connection_string = "{}/{}".format(self.app_ws2kafka.urls[0], self.TOPIC_NAME)
-        status_code = self._send_ws_messages(connection_string)
-        step("Check that status code is 101")
-        assert status_code == 101, "problem with websocket connection"
+        self._send_messages(connection_string)
 
     @unittest.skip("DPNG-6031")
     def test_step_6_get_hbase_table_rows(self):

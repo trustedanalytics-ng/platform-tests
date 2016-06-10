@@ -38,5 +38,5 @@ smmap==0.8.5
 sshtunnel==0.0.8.1
 teamcity-messages==1.17
 uritemplate==0.6
-websocket-client==0.35.0
+websockets==3.1
 Werkzeug==0.11.5
