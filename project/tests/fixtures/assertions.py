@@ -65,8 +65,8 @@ def assert_no_errors(errors: list):
     assert len(errors) == 0, "\n".join([str(e) for e in errors])
 
 
-def assert_unordered_list_equal(list1, list2):
-    assert sorted(list1) == sorted(list2)
+def assert_unordered_list_equal(list1, list2, msg="Lists are not equal"):
+    assert sorted(list1) == sorted(list2), msg
 
 
 @retry(AssertionError, tries=2, delay=360)

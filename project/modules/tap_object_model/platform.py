@@ -78,3 +78,4 @@ class PlatformMetrics(object):
         self.orgs = platform["controllerSummary"]["orgCount"]
         self.spaces = platform["controllerSummary"]["spaceCount"]
         self.users = platform["controllerSummary"]["userCount"]
+        self.buildpacks_data = platform["controllerSummary"]["buildpacks"]

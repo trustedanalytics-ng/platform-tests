@@ -14,10 +14,15 @@
 # limitations under the License.
 #
 
+import functools
+
 from ..http_calls import cloud_foundry as cf
 
 
+@functools.total_ordering
 class Buildpack(object):
+
+    COMPARABLE_ATTRIBUTES = ["guid", "name", "filename", "enabled", "position", "locked"]
 
     def __init__(self, name, guid, url, filename, position, enabled, locked):
         self.name = name
@@ -27,6 +32,15 @@ class Buildpack(object):
         self.enabled = enabled
         self.position = position
         self.locked = locked
+
+    def __repr__(self):
+        return "{} (name={})".format(self.__class__.__name__, self.name)
+
+    def __eq__(self, other):
+        return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
+
+    def __lt__(self, other):
+        return self.guid < other.guid
 
     # -------------------------------- cf api -------------------------------- #
 
@@ -44,3 +58,4 @@ class Buildpack(object):
                             enabled=data["entity"]["enabled"], locked=data["entity"]["locked"])
             buildpacks.append(buildpack)
         return buildpacks
+
