@@ -25,7 +25,8 @@ import pytest
 
 from modules.app_sources import AppSources
 from configuration import config
-from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, TapGitHub
+from modules.constants import Path, ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub
+from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
@@ -42,8 +43,8 @@ class Mqtt:
     REPO_NAME = TapGitHub.mqtt_demo
     INFLUX_INSTANCE_NAME = "mqtt-demo-db"
     MQTT_INSTANCE_NAME = "mqtt-demo-messages"
-    TEST_DATA_FILE = os.path.join("fixtures", "shuttle_scale_cut_val.csv")
-    SERVER_CERTIFICATE = os.path.join("fixtures", "mosquitto_demo_cert.pem")
+    TEST_DATA_FILE = Path.shuttle_csv_file_truncated
+    SERVER_CERTIFICATE = Path.mqtt_demo_certificate
     MQTT_TOPIC_NAME = "space-shuttle/test-data"
 
     @priority.medium

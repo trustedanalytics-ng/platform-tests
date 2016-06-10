@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import os
+
 
 class TapGitHub:
 
@@ -29,3 +31,10 @@ class TapGitHub:
     sql_api_example = "sql-api-example"
     ws_kafka_hdfs = "ingestion-ws-kafka-hdfs"
     ws2kafka = "ws2kafka"
+    space_shuttle_demo = "space-shuttle-demo"
+
+
+class RelativeRepositoryPaths:
+
+    space_shuttle_model_input_data = os.path.join("src", "main", "client", "shuttle_scale_cut_val.csv")
+    space_shuttle_model_generator = os.path.join("src", "main", "atkmodelgenerator", "atk_model_generator.py")

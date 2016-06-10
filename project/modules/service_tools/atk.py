@@ -18,13 +18,12 @@ import os
 import re
 
 import pexpect
-import requests
 
 from .. import command as cmd
 from configuration import config
-from ..exceptions import UnexpectedResponseError, AtkScriptException
+from ..exceptions import AtkScriptException
 from ..hive import Hive
-from ..tap_logger import log_command, get_logger, log_http_request, log_http_response
+from ..tap_logger import log_command, get_logger
 
 
 logger = get_logger(__name__)
@@ -114,12 +113,16 @@ class ATKtools(object):
         log_command(command)
         cmd.run(command)
 
-    def run_atk_script(self, script_path, atk_url, arguments=None, timeout=480):
+    def run_atk_script(self, script_path, atk_url, positional_arguments=None, arguments=None, use_uaa=True,
+                       timeout=480):
         command = [self.interpreter, script_path]
+        if positional_arguments is not None:
+            command += positional_arguments
         if arguments is not None:
             for k, v in arguments.items():
                 command += [k, v]
-        command += ["--uaa_file_name", self.CREDENTIALS_FILE_PATH]
+        if use_uaa:
+            command += ["--uaa_file_name", self.CREDENTIALS_FILE_PATH]
         log_command(command)
 
         username = config.CONFIG["admin_username"]

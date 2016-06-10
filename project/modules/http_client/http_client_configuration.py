@@ -19,7 +19,6 @@ from .http_client_type import HttpClientType
 
 class HttpClientConfiguration(object):
     """Http client configuration."""
-
     identity_attribtues = ("client_type", "url", "username", "password")
 
     def __init__(self, client_type: HttpClientType, url: str, username: str, password: str):

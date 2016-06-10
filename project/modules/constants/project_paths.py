@@ -25,3 +25,9 @@ class Path:
         "test_monitoring": os.path.join(test_root_directory, "test_monitoring"),
         "test_performance": os.path.join(test_root_directory, "test_performance"),
     }
+
+    fixture_root_dir = os.path.join("fixtures")
+    mqtt_demo_certificate = os.path.join(fixture_root_dir, "mosquitto_demo_cret.pem")
+    data_set_dir = os.path.join(fixture_root_dir, "data_sets")
+    shuttle_csv_file = os.path.join(data_set_dir, "shuttle_scale_cut_val.csv")
+    shuttle_csv_file_truncated = os.path.join(data_set_dir, "shuttle_scale_cut_val-truncated.csv")

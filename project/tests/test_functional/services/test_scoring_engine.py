@@ -13,20 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
+import re
 
 import pytest
 import requests
 
+from modules import app_sources
+from configuration import config
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.exceptions import UnexpectedResponseError
-from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, ServicePlan,\
-    Urls
-from modules.runner.tap_test_case import TapTestCase
-from modules.markers import components, long, priority
-from modules.tap_object_model import DataSet, ServiceInstance, ServiceKey, Transfer, User
-from modules.test_names import generate_test_object_name
-from tests.fixtures.assertions import assert_no_errors
-from tests.fixtures.test_data import TestData
+from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus, ServiceLabels, ServicePlan, TapGitHub, \
+    RelativeRepositoryPaths as RepoPath
+from modules.markers import components, incremental, long, priority
+from modules.tap_logger import step
+from modules.tap_object_model import ServiceInstance, ServiceKey, Application, DataSet
+from modules.tap_object_model.flows import data_catalog
+from tests.fixtures import assertions
+from modules.service_tools.atk import ATKtools
 
 
 logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.application_broker, TAP.das, TAP.hdfs_downloader,
@@ -34,128 +37,139 @@ logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.application_br
 pytestmark = [components.scoring_engine, components.service_catalog, components.application_broker]
 
 
-class TestScoringEngineInstance(TapTestCase):
+@pytest.fixture(scope="class")
+def space_shuttle_sources():
+    step("Get space shuttle example app sources")
+    example_app_sources = app_sources.AppSources.from_github(
+        repo_name=TapGitHub.space_shuttle_demo,
+        repo_owner=TapGitHub.intel_data,
+        gh_auth=config.CONFIG["github_auth"],
+    )
+    return example_app_sources.path
 
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def model_transfer(cls, request, test_org, test_space, add_admin_to_test_org, class_context):
-        # TODO change to a session-scoped fixture
-        cls.step("Create a transfer and get hdfs path")
-        transfer = Transfer.api_create(class_context, category="other", org_guid=test_org.guid, source=Urls.model_url)
-        transfer.ensure_finished()
-        ds = DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=transfer.title)
-        cls.hdfs_path = ds.target_uri
 
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def create_test_users(cls, test_org, test_space, admin_user, class_context):
-        space_manager = User.api_create_by_adding_to_space(class_context, org_guid=test_org.guid,
-                                                           space_guid=test_space.guid,
-                                                           roles=User.SPACE_ROLES["manager"])
-        space_auditor = User.api_create_by_adding_to_space(class_context, org_guid=test_org.guid,
-                                                           space_guid=test_space.guid,
-                                                           roles=User.SPACE_ROLES["auditor"])
-        space_developer = User.api_create_by_adding_to_space(class_context, org_guid=test_org.guid,
-                                                             space_guid=test_space.guid,
-                                                             roles=User.SPACE_ROLES["developer"])
-        cls.authorised_users = [admin_user, space_developer]
-        cls.unauthorised_users = [space_manager, space_auditor]
+@pytest.fixture(scope="class")
+def space_shuttle_model_input(request, test_org, test_space, add_admin_to_test_org, class_context,
+                              space_shuttle_sources):
+    model_path = os.path.join(space_shuttle_sources, RepoPath.space_shuttle_model_input_data)
+    step("Submit model as a transfer")
+    _, data_set = data_catalog.create_dataset_from_file(class_context, org=test_org, file_path=model_path)
+    return data_set.target_uri
 
-    @long
-    @priority.high
-    def test_create_delete_for_different_users(self):
-        errors = []
-        for user in self.authorised_users:
-            try:
-                self._check_create_delete_for_user(user)
-            except Exception as e:
-                errors.append(e)
-        assert_no_errors(errors)
 
-    @priority.medium
-    def test_users_lacking_privileges_cannot_create_scoring_engine(self):
-        self.step("Checking that users with not enough privileges cannot create scoring engine")
-        errors = []
-        for user in self.unauthorised_users:
-            with self.assertRaises(UnexpectedResponseError) as e:
-                client = user.login()
-                name = generate_test_object_name()
-                self._create_scoring_engine(client, name)
-            if e is None or e.exception.status != HttpStatus.CODE_FORBIDDEN:
-                errors.append("Service '{}' failed to respond with given error status.".format(name))
-        assert_no_errors(errors)
+@pytest.fixture(scope="class")
+def atk_virtualenv(request):
+    virtualenv = ATKtools("space_shuttle_virtualenv")
+    virtualenv.create()
 
-    def _check_create_delete_for_user(self, user):
-        client = user.login()
-        name = generate_test_object_name()
-
-        self.step("Try to create scoring engine instance")
-        instance, application = self._create_scoring_engine(client, name)
-
-        self.step("Try to create scoring engine instance with the same name and the same user")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_CONFLICT, HttpStatus.MSG_CONFLICT,
-                                            self._create_scoring_engine, client, name)
+    def fin():
         try:
-            self._check_request_to_scoring_engine(application)
+            virtualenv.teardown()
+        except:
+            pass
+    request.addfinalizer(fin)
+    return virtualenv
 
-            self._create_service_key(instance, client)
 
-            self.step("Delete scoring engine instance using space manager account")
-            self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                self._delete_scoring_engine, instance,
-                                                self.unauthorised_users[0].login())
+@pytest.fixture(scope="class")
+def core_atk_app(core_space):
+    app_list = Application.api_get_list(core_space.guid)
+    atk_app = next((app for app in app_list if app.name == ServiceLabels.ATK), None)
+    assert atk_app is not None, "Atk not found in core space"
+    return atk_app
 
-            instances = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
-            self.assertIn(instance, instances, "Scoring engine instance was deleted")
-        except AssertionError:
-            self.step("Delete scoring engine instance and check it does not show on the list")
-            self._delete_scoring_engine(instance, client)
 
-    def _create_service_key(self, instance, client):
-        self.step("Create a key for the scoring engine instance and check it")
-        instance_key = ServiceKey.api_create(instance.guid)
-        summary = ServiceInstance.api_get_keys(TestData.test_space.guid)
-        self.assertIn(instance_key, summary[instance], "Key not found")
+@long
+@priority.high
+@incremental
+class TestScoringEngineInstance:
+    expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
+    ATK_MODEL_NAME = "model_name"  # name is hardcoded in atk_model_generator.py - task for changing the name DPNG-8390
 
-        self.step("Delete service key")
-        instance_key.api_delete(client)
+    def test_0_get_atk_model(self, atk_virtualenv, core_atk_app, core_org, space_shuttle_sources,
+                             space_shuttle_model_input):
+        step("Check if there already is an atk model generated")
+        data_sets = DataSet.api_get_list(org_list=[core_org])
+        atk_model_dataset = next((ds for ds in data_sets if ds.title == self.ATK_MODEL_NAME), None)
+        if atk_model_dataset is not None:
+            self.__class__.atk_model_uri = atk_model_dataset.target_uri
+        else:
+            step("Install atk client package")
+            atk_url = core_atk_app.urls[0]
+            atk_virtualenv.pip_install(ATKtools.get_atk_client_url(atk_url))
+            step("Generate new atk model")
+            atk_model_generator_path = os.path.join(space_shuttle_sources, RepoPath.space_shuttle_model_generator)
+            atk_generator_output = atk_virtualenv.run_atk_script(atk_model_generator_path, atk_url,
+                                                                 positional_arguments=[space_shuttle_model_input],
+                                                                 use_uaa=False)
+            pattern = r"(hdfs://[a-zA-Z0-9/\-_]*\.tar)"
+            self.__class__.atk_model_uri = re.search(pattern, atk_generator_output).group()
+        assert self.atk_model_uri is not None, "Model hdfs path not found"
 
-    def _create_scoring_engine(self, client, name):
-        self.step("Create test service instance")
-        instance = ServiceInstance.api_create_with_plan_name(
-            org_guid=TestData.test_org.guid,
-            space_guid=TestData.test_space.guid,
+    def test_1_create_instance(self, test_org, test_space, space_users_clients, class_context):
+        self.__class__.client = space_users_clients["developer"]
+        step("Create scoring engine instance")
+        self.__class__.instance = ServiceInstance.api_create_with_plan_name(
+            org_guid=test_org.guid,
+            space_guid=test_space.guid,
             service_label=ServiceLabels.SCORING_ENGINE,
             service_plan_name=ServicePlan.SIMPLE_ATK,
-            name=name,
-            params={"TAR_ARCHIVE": self.hdfs_path},
-            client=client
+            params={"uri": self.atk_model_uri},
+            client=self.client,
+            context=class_context
         )
-        application = self._validate_scoring_engine(instance)
-        return instance, application
+        step("Check instance is on the instance list")
+        instances_list = ServiceInstance.api_get_list(test_space.guid, client=self.client)
+        assert self.instance in instances_list, "Scoring Engine was not found on the instance list"
 
-    def _validate_scoring_engine(self, instance):
-        instances_list = ServiceInstance.api_get_list(TestData.test_space.guid)
+    def test_2_check_service_bindings(self):
+        step("Check scoring engine has correct bindings")
+        validator = ApplicationStackValidator(self.instance)
+        validator.validate(expected_bindings=self.expected_se_bindings)
+        self.__class__.se_app = validator.application
 
-        self.assertIn(instance, instances_list, "Scoring-engine was not created")
+    def test_3_check_request_to_se_application(self):
+        step("Check that Scoring Engine app responds to an HTTP request")
+        url = "http://{}/v1/score?data=10.0,1.5,200.0".format(self.se_app.urls[0])
+        headers = {"Accept": "text/plain", "Content-Types": "text/plain; charset=UTF-8"}
+        response = requests.post(url, data="", headers=headers)
+        assert response.text == "-1.0", "Scoring engine response was wrong"
 
-        self.step("Check that the instance exists in summary and has no keys")
-        summary = ServiceInstance.api_get_keys(TestData.test_space.guid)
+    def test_4_create_service_key(self, test_space):
+        step("Check that the instance exists in summary and has no keys")
+        summary = ServiceInstance.api_get_keys(test_space.guid, client=self.client)
+        assert self.instance in summary, "Instance not found in summary"
+        assert summary[self.instance] == [], "There are keys for the instance"
+        step("Create a key for the scoring engine instance and check it")
+        self.__class__.instance_key = ServiceKey.api_create(self.instance.guid, client=self.client)
+        summary = ServiceInstance.api_get_keys(test_space.guid)
+        assert self.instance_key in summary[self.instance], "Key not found"
 
-        self.assertIn(instance, summary, "Instance not found in summary")
-        self.assertEqual(summary[instance], [], "There are keys for the instance")
-        validator = ApplicationStackValidator(instance)
-        validator.validate(expected_bindings=[ServiceLabels.KERBEROS, ServiceLabels.HDFS])
-        return validator.application
+    def test_5_delete_service_key(self, test_space):
+        step("Delete service key")
+        self.instance_key.api_delete(client=self.client)
+        step("Check the key is no longer in summary")
+        summary = ServiceInstance.api_get_keys(test_space.guid, client=self.client)
+        assert summary[self.instance] == [], "There are keys for the instance"
 
-    def _delete_scoring_engine(self, instance, client):
-        instance.api_delete(client)
-        instances = ServiceInstance.api_get_list(space_guid=TestData.test_space.guid)
-        self.assertNotIn(instance, instances, "Scoring engine instance was not deleted")
+    def test_6_delete_instance(self, test_space):
+        self.instance.api_delete(client=self.client)
+        instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
+        assert self.instance not in instances, "Scoring engine instance was not deleted"
 
-    def _check_request_to_scoring_engine(self, application):
-        self.step("try to POST data to scoring engine")
-        url = "http://" + application.urls[0] + "/v1/score?data=10.0,1.5,200.0"
-        res = requests.post(url, data="", headers={"Accept": "text/plain",
-                                                   "Content-Types": "text/plain; charset=UTF-8"})
-        self.assertEquals(res.text, "List(-1.0)", "Scoring engine response was wrong")
+
+@priority.low
+class TestScoringEngineUnauthorizedUsers:
+    unauthorized_roles = ("manager", "auditor")
+
+    @pytest.mark.parametrize("user_role", unauthorized_roles)
+    def test_cannot_create_scoring_engine(self, test_org, test_space, space_users_clients, model_hdfs_path, user_role):
+        step("Check that unauthorized user cannot create scoring engine")
+        client = space_users_clients[user_role]
+        assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_FORBIDDEN,
+                                                ServiceCatalogHttpStatus.MSG_FORBIDDEN,
+                                                ServiceInstance.api_create_with_plan_name,
+                                                org_guid=test_org.guid, space_guid=test_space.guid,
+                                                service_label=ServiceLabels.SCORING_ENGINE,
+                                                service_plan_name=ServicePlan.SIMPLE_ATK,
+                                                params={"uri": model_hdfs_path}, client=client)

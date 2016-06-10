@@ -23,13 +23,14 @@ from retry import retry
 
 from configuration.config import CONFIG
 from modules.app_sources import AppSources
-from modules.constants import HttpStatus, ServiceLabels, TapGitHub, ApplicationPath
+from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub, Urls
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls import cloud_foundry as cf
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Organization, ServiceType, ServiceInstance, Space, User, Application
+from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, Space, User
+from modules.tap_object_model.flows import data_catalog
 from modules.test_names import generate_test_object_name
 from .context import Context
 from .test_data import TestData
@@ -175,18 +176,18 @@ def admin_client():
 def space_users_clients(request, test_org, test_space, admin_client):
     context = Context()
     log_fixture("clients: Create clients")
-    _clients = {}
+    clients = {}
     for role, value in User.SPACE_ROLES.items():
-        _clients[role] = User.api_create_by_adding_to_space(context, org_guid=test_org.guid, space_guid=test_space.guid,
-                                                            roles=value).login()
-    _clients["admin"] = admin_client
+        clients[role] = User.api_create_by_adding_to_space(context, org_guid=test_org.guid, space_guid=test_space.guid,
+                                                           roles=value).login()
+    clients["admin"] = admin_client
 
     def fin():
         log_finalizer("clients: Delete test users")
         context.cleanup()
 
     request.addfinalizer(fin)
-    return _clients
+    return clients
 
 
 @pytest.fixture(scope="session")
@@ -279,4 +280,15 @@ def psql_app(psql_instance):
         bound_services=(psql_instance.name,)
     )
     return TestData.psql_app
+
+
+@pytest.fixture(scope="session")
+def model_hdfs_path(request, test_org, add_admin_to_test_org):
+    log_fixture("Create a transfer and get hdfs path")
+    context = Context()
+    _, data_set = data_catalog.create_dataset_from_link(context, org=test_org, source=Urls.model_url)
+    request.addfinalizer(lambda: context.cleanup())
+    return data_set.target_uri
+
+
 
