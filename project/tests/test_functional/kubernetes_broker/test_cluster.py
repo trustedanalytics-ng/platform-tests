@@ -15,7 +15,7 @@
 #
 
 import pytest
-from retry import retry
+import time
 
 from configuration import config
 from modules.constants import TapComponent as TAP
@@ -24,6 +24,7 @@ from modules.markers import components, incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import KubernetesCluster, Organization, ServiceInstance, ServiceType, Space
 from modules import test_names
+from retry import retry
 
 
 logged_components = (TAP.demiurge, TAP.kubernetes_broker)
@@ -33,7 +34,7 @@ pytestmark = [components.demiurge, components.kubernetes_broker, priority.high]
 @incremental
 @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
 class TestCluster:
-    CLUSTERED_TAG = "clustered"
+    CLUSTERED_TAG = "multinode"
 
     def test_0_no_clusters_for_new_organization(self, class_context):
         step("Get list of clusters")
@@ -77,6 +78,13 @@ class TestCluster:
         step("Delete the instance and check it's no longer on the list")
         delete_instance_with_retry()
 
-        step("Check that the cluster is gone")
-        clusters = KubernetesCluster.demiurge_api_get_list()
-        assert self.cluster not in clusters
+        step("Check the time after which the cluster should be removed")
+        wait_before_remove_cluster_sec = KubernetesCluster.wait_before_removing_cluster()
+
+        if wait_before_remove_cluster_sec <= 60:
+            step("Wait until the cluster is deleted.")
+            time.sleep(wait_before_remove_cluster_sec + 10)
+            step("Check that the cluster is gone")
+            clusters = KubernetesCluster.demiurge_api_get_list()
+            cluster = next((c for c in clusters if self.cluster.name == c.name), None)
+            assert cluster is None, "Cluster is still on the list"

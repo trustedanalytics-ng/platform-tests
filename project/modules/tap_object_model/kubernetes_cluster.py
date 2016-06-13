@@ -16,10 +16,12 @@
 
 from retry import retry
 
-from modules.http_calls import demiurge
+from modules.constants import TapComponent as TAP
+from modules.http_calls import cloud_foundry as cf, demiurge
 
 
 class KubernetesCluster(object):
+    wait_before_remove_cluster_sec = 0
 
     def __init__(self, name, api_server, consul_http_api, username, password):
         """Cluster name is it's org guid"""
@@ -56,3 +58,17 @@ class KubernetesCluster(object):
     def demiurge_api_create(cls, name):
         demiurge.demiurge_create_cluster(cluster_name=name)
         return cls.demiurge_api_get(name=name)
+
+    @classmethod
+    def wait_before_removing_cluster(self):
+        try:
+            if self.wait_before_remove_cluster_sec is None:
+                response = cf.cf_api_get_apps()
+                app_guid = next((app["metadata"]["guid"] for app in response
+                                 if app["entity"]["name"] == TAP.kubernetes_broker.value), None)
+                assert app_guid is not None, "No such app {}".format(TAP.kubernetes_broker)
+                app_env = cf.cf_api_get_app_env(app_guid)
+                self.wait_before_remove_cluster_sec = app_env["environment_json"]["WAIT_BEFORE_REMOVE_CLUSTER_SEC"]
+            return self.wait_before_remove_cluster_sec
+        except KeyError:
+            return 0
