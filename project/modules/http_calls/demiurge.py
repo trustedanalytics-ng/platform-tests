@@ -35,3 +35,11 @@ def demiurge_get_cluster(cluster_name):
         path="clusters/{}".format(cluster_name),
         msg="DEMIURGE: get cluster"
     )
+
+def demiurge_create_cluster(cluster_name):
+    """PUT /clusters/{cluster_name}"""
+    return HttpClientFactory.get(DemiurgeConfigurationProvider.get()).request(
+        method=HttpMethod.PUT,
+        path="clusters/{}".format(cluster_name),
+        msg="DEMIURGE: create cluster"
+    )

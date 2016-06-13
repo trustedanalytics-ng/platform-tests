@@ -20,21 +20,31 @@ from configuration import config
 from modules.constants import KubernetesBrokerHttpStatus, TapComponent as TAP
 from modules.markers import components, incremental
 from modules.tap_logger import step
-from modules.tap_object_model import KubernetesSecret
+from modules.tap_object_model import KubernetesCluster, KubernetesSecret
 from tests.fixtures import assertions
+
 
 logged_components = (TAP.kubernetes_broker,)
 pytestmark = [components.kubernetes_broker]
 
 
+@pytest.fixture(scope="module")
+def cluster(core_org):
+    step("Check if cluster exists")
+    clusters = KubernetesCluster.demiurge_api_get_list()
+    cluster = next((c for c in clusters if c.name == core_org.guid), None)
+    if cluster is None:
+        step("Cluster does not exists for core org. Create new cluster")
+        KubernetesCluster.demiurge_api_create(core_org.guid)
+
+
 @incremental
 @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
-@pytest.mark.bugs("DPNG-7739 Scope 'console.admin' not present for client_id 'cf'")
+@pytest.mark.usefixtures("cluster")
 class TestSecrets:
 
     def test_1_create_secret(self, core_org):
         step("Create new secret")
-        # self.__class__.key_id = self.create_secret(core_org.guid, self.__class__.username, self.__class__.password)
         self.__class__.secret = KubernetesSecret.create(org_guid=core_org.guid)
         step("Get secret and check both are the same")
         secret = KubernetesSecret.get(org_guid=core_org.guid, key_id=self.secret.key_id)
@@ -55,7 +65,7 @@ class TestSecrets:
         new_secret = KubernetesSecret.get(org_guid=core_org.guid, key_id=self.secret.key_id)
         assert new_secret.username == new_username
 
-    def test_4_delete_secret(self, core_org):
+    def test_3_delete_secret(self, core_org):
         step("Delete secret")
         self.secret.delete()
         step("Check the secret no longer exists")
@@ -64,8 +74,8 @@ class TestSecrets:
                                                 KubernetesSecret.get, org_guid=core_org.guid, key_id=self.secret.key_id)
 
 
+@pytest.mark.usefixtures("cluster")
 @pytest.mark.skipif(not config.CONFIG["kubernetes"], reason="No point to run without kuberentes")
-@pytest.mark.bugs("DPNG-7739 Scope 'console.admin' not present for client_id 'cf'")
 class TestSecretsNegativeCases:
 
     def test_cannot_create_secret_with_existing_id(self, core_org):

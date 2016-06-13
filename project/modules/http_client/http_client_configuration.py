@@ -52,7 +52,7 @@ class HttpClientConfiguration(object):
     @property
     def uid(self):
         """Client configuration unique id."""
-        return "{}_{}_{}".format(self.client_type, self.username, self.password)
+        return "{}_{}_{}_{}".format(self.client_type, self.url, self.username, self.password)
 
     @staticmethod
     def _validate(property_name, property_type, property_value):

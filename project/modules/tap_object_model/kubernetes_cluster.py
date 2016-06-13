@@ -45,9 +45,14 @@ class KubernetesCluster(object):
         return clusters
 
     @classmethod
-    @retry(AssertionError, tries=20, delay=30)
+    @retry(AssertionError, tries=180, delay=5)
     def demiurge_api_get(cls, name):
         response = demiurge.demiurge_get_cluster(cluster_name=name)
         if response == "":
-            raise AssertionError("No cluster {} found".format(name))
+            raise AssertionError("Cluster {} not found".format(name))
         return cls._from_demiurge_response(cluster_info=response)
+
+    @classmethod
+    def demiurge_api_create(cls, name):
+        demiurge.demiurge_create_cluster(cluster_name=name)
+        return cls.demiurge_api_get(name=name)
