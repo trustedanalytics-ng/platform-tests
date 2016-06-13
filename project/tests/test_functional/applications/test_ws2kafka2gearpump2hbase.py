@@ -23,7 +23,7 @@ import websocket
 
 from configuration import config
 from modules.app_sources import AppSources
-from modules.constants import TapComponent as TAP, ServiceLabels, Urls, TapGitHub
+from modules.constants import TapComponent as TAP, ServiceLabels, Urls, TapGitHub, ServicePlan
 from modules.file_utils import download_file
 from modules.hbase_client import HbaseClient
 from modules.runner.tap_test_case import TapTestCase
@@ -41,15 +41,16 @@ pytestmark = [components.ingestion_ws_kafka_gearpump_hbase, components.service_c
 @incremental
 @priority.medium
 class Ws2kafka2gearpump2hbase(TapTestCase):
+
     REPO_OWNER = TapGitHub.intel_data
     TOPIC_NAME = "myFavouriteKafkaTopic"
     WS2KAFKA_APP_NAME = "ws2kafka"
     HBASE_API_APP_NAME = "hbase-reader"
     KAFKA2HBASE_APP_NAME = "kafka2hbase"
     HBASE_TABLE_NAME = "pipeline"
-    ONE_WORKER_PLAN_NAME = "1 worker"
-    SHARED_PLAN_NAME = "shared"
-    BARE_PLAN_NAME = "bare"
+    ONE_WORKER_PLAN_NAME = ServicePlan.WORKER_1
+    SHARED_PLAN_NAME = ServicePlan.SHARED
+    BARE_PLAN_NAME = ServicePlan.BARE
     hbase_namespace = None
     db_and_table_name = None
 
@@ -120,9 +121,9 @@ class Ws2kafka2gearpump2hbase(TapTestCase):
                                            service_plan_name=self.ONE_WORKER_PLAN_NAME)
         self.step("Check that gearpump instance has been created")
         instances = ServiceInstance.api_get_list(space_guid=test_data.TestData.test_space.guid)
-        if self.gearpump.data_science.instance not in instances:
+        if self.gearpump.instance not in instances:
             raise AssertionError("gearpump instance is not on list of instances")
-        self.gearpump.data_science.get_credentials()
+        self.gearpump.get_credentials()
 
     def test_1_login_to_gearpump_ui(self):
         self.step("Log into gearpump UI")

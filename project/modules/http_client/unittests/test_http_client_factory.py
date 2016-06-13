@@ -17,6 +17,7 @@
 import unittest
 
 from modules.http_client.client_auth.client_auth_http_basic import ClientAuthHttpBasic
+from modules.http_client.client_auth.client_auth_no_auth import ClientAuthNoAuth
 from modules.http_client.unittests.mock_http_session import MockHttpSession
 from modules.http_client.client_auth.client_auth_base import ClientAuthBase
 from modules.http_client.client_auth.client_auth_token import ClientAuthToken
@@ -48,6 +49,9 @@ class TestHttpClientFactory(MockHttpSession):
 
     def test_get_should_return_client_for_application_broker(self):
         self._assertHttpClientInstance(HttpClientType.BROKER, ClientAuthHttpBasic)
+
+    def test_get_should_return_client_for_service_tool(self):
+        self._assertHttpClientInstance(HttpClientType.SERVICE_TOOL, ClientAuthNoAuth)
 
     def test_get_should_create_only_one_instance(self):
         # given
