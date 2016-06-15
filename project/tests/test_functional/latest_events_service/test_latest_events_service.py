@@ -44,9 +44,9 @@ class TestLatestEventsService:
 
     @staticmethod
     def _assert_event_is_correct(tested_event, category, message, org_guid):
-        assert tested_event.category.strip() == category
-        assert tested_event.message.strip() == message
-        assert tested_event.org_id == org_guid
+        assert category == tested_event.category.strip()
+        assert message == tested_event.message.strip()
+        assert org_guid == tested_event.org_id
 
     @priority.medium
     def test_data_catalog_events(self, org, admin_user, events_before, context):

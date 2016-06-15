@@ -28,8 +28,7 @@ class EventMessage:
     dataset_added = "{} - Dataset added"
     dataset_deleted = "{} - Dataset deleted"
     create_service_started = "CreateService operation started"
-    create_service_failed = "Service spawning failed with error: Application flapping: " \
-                            "Error occurred while getting app instances"
+    create_service_failed = "Service spawning failed with error: Error occurred while getting app instances"
     create_service_succeded = "Service spawning succeded"
 
 
