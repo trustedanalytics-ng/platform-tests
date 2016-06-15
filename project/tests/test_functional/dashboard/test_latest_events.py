@@ -20,7 +20,6 @@ from modules.constants import TapComponent as TAP, Urls
 from modules.markers import components, priority
 from modules.tap_logger import step
 from modules.tap_object_model import LatestEvent, Organization, Transfer, User
-from tests.fixtures import test_data
 from tests.fixtures.assertions import assert_unordered_list_equal
 
 logged_components = (TAP.latest_events_service,)
@@ -42,11 +41,11 @@ class TestDashboardLatestEvents:
         transfer.ensure_finished()
 
     @priority.high
-    def test_10_latest_events_on_dashboard_the_same_as_in_LES(self):
+    def test_10_latest_events_on_dashboard_the_same_as_in_LES(self, test_org):
         step("Retrieve latest events from dashboard")
-        dashboard_latest_events = LatestEvent.api_get_latest_events_from_org_metrics(test_data.TestData.test_org.guid)
+        dashboard_latest_events = LatestEvent.api_get_latest_events_from_org_metrics(test_org.guid)
         step("Retrieve latest events from the LES, filtering with tested organization")
-        latest_events_response = LatestEvent.api_get_latest_events(org_guid=test_data.TestData.test_org.guid)
+        latest_events_response = LatestEvent.api_get_latest_events(org_guid=test_org.guid)
         step("Check that dashboard contains 10 latest events from LES")
         ten_latest_events = sorted(latest_events_response, reverse=True)[:10]
         assert_unordered_list_equal(ten_latest_events, dashboard_latest_events)
