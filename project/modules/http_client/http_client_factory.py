@@ -58,14 +58,14 @@ class HttpClientFactory(object):
     @classmethod
     def remove(cls, configuration: HttpClientConfiguration):
         """Remove client instance from cached instances."""
-        if configuration.uid in cls._INSTANCES:
-            del cls._INSTANCES[configuration.uid]
+        if configuration in cls._INSTANCES:
+            del cls._INSTANCES[configuration]
 
     @classmethod
     def _get_instance(cls, configuration, auth_type):
         """Check if there is already created requested client type and return it otherwise create new instance."""
-        if configuration.uid in cls._INSTANCES:
-            return cls._INSTANCES[configuration.uid]
+        if configuration in cls._INSTANCES:
+            return cls._INSTANCES[configuration]
         return cls._create_instance(configuration, auth_type)
 
     @classmethod
@@ -77,7 +77,7 @@ class HttpClientFactory(object):
             auth_type=auth_type
         )
         instance = HttpClient(configuration.url, auth)
-        cls._INSTANCES[configuration.uid] = instance
+        cls._INSTANCES[configuration] = instance
         return instance
 
 

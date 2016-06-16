@@ -20,6 +20,8 @@ from .http_client_type import HttpClientType
 class HttpClientConfiguration(object):
     """Http client configuration."""
 
+    identity_attribtues = ("client_type", "url", "username", "password")
+
     def __init__(self, client_type: HttpClientType, url: str, username: str, password: str):
         self._validate("client_type", HttpClientType, client_type)
         self._validate("url", str, url)
@@ -28,6 +30,12 @@ class HttpClientConfiguration(object):
         self._url = url
         self._username = username
         self._password = password
+
+    def __eq__(self, other):
+        return all(getattr(self, a) == getattr(other, a) for a in self.identity_attribtues)
+
+    def __hash__(self):
+        return hash(tuple(getattr(self, a) for a in self.identity_attribtues))
 
     @property
     def client_type(self):
@@ -48,11 +56,6 @@ class HttpClientConfiguration(object):
     def password(self):
         """Client auth password."""
         return self._password
-
-    @property
-    def uid(self):
-        """Client configuration unique id."""
-        return "{}_{}_{}_{}".format(self.client_type, self.url, self.username, self.password)
 
     @staticmethod
     def _validate(property_name, property_type, property_value):

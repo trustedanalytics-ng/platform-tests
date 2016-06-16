@@ -14,15 +14,16 @@
 # limitations under the License.
 #
 
-from ..http_client.configuration_provider.kubernetes_broker import KubernetesBrokerBasicConfigurationProvider, \
-    KubernetesBrokerTokenConfigurationProvider
-from ..http_client.client_auth.http_method import HttpMethod
-from ..http_client.http_client_factory import HttpClientFactory
+from modules.constants import TapComponent
+from modules.http_client.configuration_provider.kubernetes_broker import KubernetesBrokerTokenConfigurationProvider
+from modules.http_client.configuration_provider.broker import BrokerConfigurationProvider
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.http_client_factory import HttpClientFactory
 
 
 def k8s_broker_get_catalog():
     """GET /v$/catalog"""
-    return HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.GET,
         path="catalog",
         msg="K8S BROKER: get catalog"
@@ -68,7 +69,7 @@ def k8s_broker_create_service_offering(org_guid, space_guid, service_name=None):
     body = {"organization_guid": org_guid, "space_guid": space_guid, "updateBroker": True,
             "parameters": None, "dynamicService": body_dynamic_service}
 
-    return HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.PUT,
         path="dynamicservice",
         body=body,
@@ -81,7 +82,7 @@ def k8s_broker_delete_service(service_name=None):
     body = {}
     if service_name is not None:
         body["dynamicService"] = {"serviceName": service_name}
-    response = HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
+    response = HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.DELETE,
         path="dynamicservice",
         body=body,
@@ -92,7 +93,7 @@ def k8s_broker_delete_service(service_name=None):
 
 def k8s_broker_get_service_status(org_guid, service_id):
     """GET /v$/:org_id/service/:instance_id/status"""
-    return HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.GET,
         path="{}/service/{}/status".format(org_guid, service_id),
         msg="K8S BROKER: get instance status"
@@ -140,7 +141,7 @@ def k8s_broker_get_instance_list(org_guid, space_guid):
 
 def k8s_broker_delete_instance(instance_guid):
     """DELETE /v$/service_instances/:instanceId"""
-    return HttpClientFactory.get(KubernetesBrokerBasicConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.DELETE,
         path="service_instances/{}".format(instance_guid),
         msg="K8S BROKER: delete instance"

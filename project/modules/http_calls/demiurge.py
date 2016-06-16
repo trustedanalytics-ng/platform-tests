@@ -14,14 +14,15 @@
 # limitations under the License.
 #
 
-from ..http_client.configuration_provider.demiurge import DemiurgeConfigurationProvider
-from ..http_client.client_auth.http_method import HttpMethod
-from ..http_client.http_client_factory import HttpClientFactory
+from modules.constants import TapComponent
+from modules.http_client.configuration_provider.broker import BrokerConfigurationProvider
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.http_client_factory import HttpClientFactory
 
 
 def demiurge_get_clusters():
     """GET /clusters"""
-    return HttpClientFactory.get(DemiurgeConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.demiurge)).request(
         method=HttpMethod.GET,
         path="clusters",
         msg="DEMIURGE: get list of clusters"
@@ -30,7 +31,7 @@ def demiurge_get_clusters():
 
 def demiurge_get_cluster(cluster_name):
     """GET /clusters/{cluster_name}"""
-    return HttpClientFactory.get(DemiurgeConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.demiurge)).request(
         method=HttpMethod.GET,
         path="clusters/{}".format(cluster_name),
         msg="DEMIURGE: get cluster"
@@ -38,7 +39,7 @@ def demiurge_get_cluster(cluster_name):
 
 def demiurge_create_cluster(cluster_name):
     """PUT /clusters/{cluster_name}"""
-    return HttpClientFactory.get(DemiurgeConfigurationProvider.get()).request(
+    return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.demiurge)).request(
         method=HttpMethod.PUT,
         path="clusters/{}".format(cluster_name),
         msg="DEMIURGE: create cluster"

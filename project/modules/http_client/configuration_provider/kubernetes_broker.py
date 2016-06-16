@@ -15,32 +15,10 @@
 #
 
 from configuration.config import CONFIG
-from ...constants import TapComponent
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
 from ..config import Config as ClientConfig
-from .base_broker import BaseBrokerConfigurationProvider
 from .base import BaseConfigurationProvider
-
-
-# noinspection PyAbstractClass
-class KubernetesBrokerBasicConfigurationProvider(BaseBrokerConfigurationProvider):
-    """Provide configuration for kubernetes broker http client."""
-
-    @classmethod
-    def tap_component(cls) -> TapComponent:
-        """Provide tap component."""
-        return TapComponent.kubernetes_broker
-
-    @classmethod
-    def http_client_type(cls) -> HttpClientType:
-        """Provide http client type."""
-        return HttpClientType.BROKER
-
-    @classmethod
-    def http_client_url(cls) -> str:
-        """Provide http client url."""
-        return ClientConfig.service_kubernetes_broker_basic_url()
 
 
 class KubernetesBrokerTokenConfigurationProvider(BaseConfigurationProvider):

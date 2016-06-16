@@ -32,6 +32,7 @@ class TestHttpClientFactory(MockHttpSession):
 
     USERNAME = "username"
     PASSWORD = "password"
+    URL = "api.test.platform.eu"
 
     def setUp(self):
         HttpClientFactory._INSTANCES = {}
@@ -56,41 +57,56 @@ class TestHttpClientFactory(MockHttpSession):
     def test_get_should_create_only_one_instance(self):
         # given
         configuration = self._get_configuration(HttpClientType.APPLICATION)
-        self.assertNotIn(configuration.uid, HttpClientFactory._INSTANCES, "Invalid instance reference.")
+        self.assertNotIn(configuration, HttpClientFactory._INSTANCES, "Invalid instance reference.")
         # when
         HttpClientFactory.get(configuration)
         HttpClientFactory.get(configuration)
         # then
-        self.assertIn(configuration.uid, HttpClientFactory._INSTANCES, "Missing instance reference.")
+        self.assertIn(configuration, HttpClientFactory._INSTANCES, "Missing instance reference.")
         self.assertEqual(1, len(HttpClientFactory._INSTANCES), "Invalid number of instances.")
 
     def test_get_should_return_new_instance_after_remove(self):
         # given
         configuration = self._get_configuration(HttpClientType.BROKER)
-        self.assertNotIn(configuration.uid, HttpClientFactory._INSTANCES, "Invalid instance reference.")
+        self.assertNotIn(configuration, HttpClientFactory._INSTANCES, "Invalid instance reference.")
         client = HttpClientFactory.get(configuration)
         self.assertEqual(client._auth.session.username, self.USERNAME)
         self.assertEqual(client._auth.session.password, self.PASSWORD)
         # when
         HttpClientFactory.remove(configuration)
-        new_configuration = self._get_configuration(HttpClientType.BROKER, self.USERNAME, "new_password")
+        new_configuration = self._get_configuration(HttpClientType.BROKER, self.URL, self.USERNAME, "new_password")
         new_client = HttpClientFactory.get(new_configuration)
         # then
-        self.assertNotIn(configuration.uid, HttpClientFactory._INSTANCES)
-        self.assertIn(new_configuration.uid, HttpClientFactory._INSTANCES)
+        self.assertNotIn(configuration, HttpClientFactory._INSTANCES)
+        self.assertIn(new_configuration, HttpClientFactory._INSTANCES)
         self.assertEqual(1, len(HttpClientFactory._INSTANCES), "Invalid number of instances.")
         self.assertEqual(new_client._auth.session.username, self.USERNAME)
         self.assertEqual(new_client._auth.session.password, "new_password")
+
+    def test_get_should_create_two_different_instances(self):
+        # given
+        url_first = "first.sample.url"
+        url_second = "second.sample.url"
+        configuration_first = self._get_configuration(HttpClientType.BROKER, url_first)
+        configuration_second = self._get_configuration(HttpClientType.BROKER, url_second)
+        # when
+        client_first = HttpClientFactory.get(configuration_first)
+        client_second = HttpClientFactory.get(configuration_second)
+        # then
+        self.assertEqual(client_first.url, url_first)
+        self.assertEqual(client_second.url, url_second)
+        self.assertNotEqual(client_first.url, client_second.url)
+        self.assertEqual(2, len(HttpClientFactory._INSTANCES), "Invalid number of instances.")
 
     def _assertHttpClientInstance(self, client_type, auth: ClientAuthBase):
         configuration = self._get_configuration(client_type)
         client = HttpClientFactory.get(configuration)
         self.assertIsInstance(client, HttpClient, "Invalid client class.")
         self.assertIsInstance(client._auth, auth, "Invalid auth class.")
-        self.assertIn(configuration.uid, HttpClientFactory._INSTANCES, "Missing instance reference.")
+        self.assertIn(configuration, HttpClientFactory._INSTANCES, "Missing instance reference.")
 
-    def _get_configuration(self, client_type, username=USERNAME, password=PASSWORD):
-        return HttpClientConfiguration(client_type, "api.test.platform.eu", username, password)
+    def _get_configuration(self, client_type, url=URL, username=USERNAME, password=PASSWORD):
+        return HttpClientConfiguration(client_type, url, username, password)
 
 
 if __name__ == '__main__':
