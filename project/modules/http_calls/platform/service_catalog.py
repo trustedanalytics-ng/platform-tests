@@ -78,8 +78,8 @@ def api_delete_service(service_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/marketplace/application/{}".format(service_guid),
-        msg="PLATFORM: create service"
+        path="/rest/marketplace/application/{}".format(service_guid),
+        msg="PLATFORM: delete service"
     )
 
 
