@@ -26,18 +26,17 @@ import pytest
 from modules import app_sources
 from configuration import config
 from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, TapGitHub
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components
+from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
-from tests.fixtures.test_data import TestData
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.mqtt_demo, TAP.service_catalog)
 pytestmark = [components.mqtt_demo, components.service_catalog]
 
 
-@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf")
-class Mqtt(TapTestCase):
+class Mqtt:
 
     SOURCES_OWNER = TapGitHub.intel_data
     REPO_NAME = TapGitHub.mqtt_demo
@@ -49,45 +48,45 @@ class Mqtt(TapTestCase):
 
     @priority.medium
     @pytest.mark.skip("DPNG-7402 Push mqtt app to cf failed due to SSL error")
-    def test_mqtt_demo(self):
-        self.step("Clone repository")
+    def test_mqtt_demo(self, test_org, test_space, login_to_cf):
+        step("Clone repository")
         mqtt_demo_sources = app_sources.AppSources(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER,
                                                    gh_auth=config.CONFIG["github_auth"])
         app_repo_path = mqtt_demo_sources.clone_or_pull()
-        self.step("Compile the sources")
+        step("Compile the sources")
         mqtt_demo_sources.compile_mvn()
 
-        self.step("Create required service instances.")
+        step("Create required service instances.")
         ServiceInstance.api_create_with_plan_name(
-            org_guid=TestData.test_org.guid,
-            space_guid=TestData.test_space.guid,
+            org_guid=test_org.guid,
+            space_guid=test_space.guid,
             service_label=ServiceLabels.INFLUX_DB,
             name=self.INFLUX_INSTANCE_NAME,
             service_plan_name=ServicePlan.FREE
         )
         ServiceInstance.api_create_with_plan_name(
-            org_guid=TestData.test_org.guid,
-            space_guid=TestData.test_space.guid,
+            org_guid=test_org.guid,
+            space_guid=test_space.guid,
             service_label=ServiceLabels.MOSQUITTO,
             name=self.MQTT_INSTANCE_NAME,
             service_plan_name=ServicePlan.FREE
         )
 
-        self.step("Push mqtt app to cf")
-        mqtt_demo_app = Application.push(source_directory=app_repo_path, space_guid=TestData.test_space.guid,
+        step("Push mqtt app to cf")
+        mqtt_demo_app = Application.push(source_directory=app_repo_path, space_guid=test_space.guid,
                                          env_proxy=config.CONFIG["pushed_app_proxy"])
 
-        self.step("Retrieve credentials for mqtt service instance")
+        step("Retrieve credentials for mqtt service instance")
         self.credentials = mqtt_demo_app.get_credentials(service_name=ServiceLabels.MOSQUITTO)
 
         mqtt_port = self.credentials.get("port")
-        self.assertIsNotNone(mqtt_port)
+        assert mqtt_port is not None
         mqtt_username = self.credentials.get("username")
-        self.assertIsNotNone(mqtt_username)
+        assert mqtt_username is not None
         mqtt_pwd = self.credentials.get("password")
-        self.assertIsNotNone(mqtt_pwd)
+        assert mqtt_pwd is not None
 
-        self.step("Connect to mqtt app with mqtt client")
+        step("Connect to mqtt app with mqtt client")
         mqtt_client = mqtt.Client()
         mqtt_client.username_pw_set(mqtt_username, mqtt_pwd)
         mqtt_client.tls_set(self.SERVER_CERTIFICATE, tls_version=ssl.PROTOCOL_TLSv1_2)
@@ -96,24 +95,24 @@ class Mqtt(TapTestCase):
         with open(self.TEST_DATA_FILE) as f:
             expected_data = f.read().split("\n")
 
-        self.step("Start reading logs")
+        step("Start reading logs")
         logs = subprocess.Popen(["cf", "logs", "mqtt-demo"], stdout=subprocess.PIPE)
         time.sleep(5)
 
-        self.step("Send {0} data vectors to {1}:{2} on topic {3}".format(len(expected_data), mqtt_server_address,
-                                                                         mqtt_port, self.MQTT_TOPIC_NAME))
+        step("Send {0} data vectors to {1}:{2} on topic {3}".format(len(expected_data), mqtt_server_address,
+                                                                    mqtt_port, self.MQTT_TOPIC_NAME))
         for line in expected_data:
             mqtt_client.publish(self.MQTT_TOPIC_NAME, line)
 
-        self.step("Stop reading logs. Retrieve vectors from log content.")
+        step("Stop reading logs. Retrieve vectors from log content.")
         grep = subprocess.Popen(["grep", "message:"], stdin=logs.stdout, stdout=subprocess.PIPE)
         logs.stdout.close()
         time.sleep(50)
         os.kill(logs.pid, signal.SIGTERM)
         cut = subprocess.Popen("cut -d ':' -f7 ", stdin=grep.stdout, stdout=subprocess.PIPE, shell=True)
         grep.stdout.close()
-        self.step("Check that logs display all the vectors sent")
+        step("Check that logs display all the vectors sent")
         log_result = cut.communicate()[0].decode().split("\n")
         log_result = [item.strip() for item in log_result if item not in (" ", "")]
         self.maxDiff = None  # allows for full diff to be displayed
-        self.assertListEqual(log_result, expected_data, "Data in logs do not match sent data")
+        assert log_result == expected_data, "Data in logs do not match sent data"

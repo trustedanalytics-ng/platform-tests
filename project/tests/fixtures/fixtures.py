@@ -97,10 +97,7 @@ def test_sample_app(request, test_org, test_space):
     log_fixture("test_sample_app: Login to cf targeting test org and test space")
     cf.cf_login(test_org.name, test_space.name)
     log_fixture("test_sample_app: Push app to cf")
-    app = Application.push(
-        space_guid=test_space.guid,
-        source_directory=ApplicationPath.SAMPLE_APP
-    )
+    app = Application.push(space_guid=test_space.guid, source_directory=ApplicationPath.SAMPLE_APP)
 
     def fin():
         log_fixture("test_sample_app: Delete sample app")

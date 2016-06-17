@@ -16,90 +16,80 @@
 
 import uuid
 
-import pytest
-
-from configuration.config import CONFIG
-from modules.constants import ApplicationPath, HttpStatus, TapComponent as TAP
+from modules.constants import HttpStatus, TapComponent as TAP
 from modules.http_calls import application_broker as broker_client
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority, components, incremental
-from modules.tap_object_model import Application, ServiceInstance, ServiceType
+from modules.tap_logger import step
+from modules.tap_object_model import ServiceInstance, ServiceType
 from modules.test_names import generate_test_object_name
-from tests.fixtures.test_data import TestData
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.application_broker,)
 pytestmark = [components.application_broker]
 
 
-class ApplicationBroker(TapTestCase):
+class TestApplicationBrokerCatalog:
 
     @priority.medium
     def test_get_catalog(self):
-        self.step("Getting catalog.")
+        step("Getting catalog.")
         response = broker_client.app_broker_get_catalog()
-        self.assertIsNotNone(response)
+        assert response is not None
 
     @priority.low
     def test_cannot_delete_non_existing_service(self):
-        self.step("Deleting random service.")
+        step("Deleting random service.")
         guid = uuid.uuid4()
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, "", broker_client.app_broker_delete_service,
-                                            service_id=guid)
+        assertions.assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, "", broker_client.app_broker_delete_service,
+                                                service_id=guid)
 
 
 @incremental
 @priority.medium
-@pytest.mark.usefixtures("test_org", "test_space", "login_to_cf")
-class ApplicationBrokerFlow(TapTestCase):
+class TestApplicationBrokerFlow:
 
     service_name = generate_test_object_name(short=True)
-    test_app = None
     cf_service = None
 
-    def test_0_push_example_app(self):
-        self.__class__.test_app = Application.push(space_guid=TestData.test_space.guid,
-                                                   source_directory=ApplicationPath.SAMPLE_APP,
-                                                   env_proxy=CONFIG["pushed_app_proxy"])
-
-    def test_1_register_service(self):
-        self.step("Registering new service.")
+    def test_1_register_service(self, test_sample_app):
+        step("Registering new service.")
         self.__class__.cf_service = ServiceType.app_broker_create_service_in_catalog(self.service_name,
                                                                                      "Example description",
-                                                                                     self.test_app.guid)
-        self.assertIsNotNone(self.cf_service)
-        self.assertEqual(self.cf_service.label, self.service_name)
+                                                                                     test_sample_app.guid)
+        assert self.cf_service is not None
+        assert self.cf_service.label == self.service_name
         response = broker_client.app_broker_get_catalog()
         services = [service['name'] for service in response["services"]]
-        self.assertIn(self.service_name, services)
+        assert self.service_name in services
 
-    def test_2_create_service_instance(self):
-        self.step("Provisioning new service instance.")
+    def test_2_create_service_instance(self, test_org, test_space):
+        step("Provisioning new service instance.")
         self.__class__.instance = ServiceInstance.app_broker_create_instance(
-            TestData.test_org.guid,
+            test_org.guid,
             self.cf_service.service_plans[0]["id"],
             self.cf_service.guid,
-            TestData.test_space.guid
+            test_space.guid
         )
 
-    def test_3_bind_service_instance_to_app(self):
-        self.step("Binding service instance to app.")
-        response = broker_client.app_broker_bind_service_instance(self.instance.guid, self.test_app.guid)
-        self.assertIsNotNone(response["credentials"]["url"])
+    def test_3_bind_service_instance_to_app(self, test_sample_app):
+        step("Binding service instance to app.")
+        response = broker_client.app_broker_bind_service_instance(self.instance.guid, test_sample_app.guid)
+        assert response["credentials"]["url"] is not None
 
     def test_4_cannot_delete_service_with_instance(self):
-        self.step("Deleting service who have existing instance.")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_INTERNAL_SERVER_ERROR, "",
-                                            broker_client.app_broker_delete_service,
-                                            service_id=self.cf_service.guid)
+        step("Deleting service who have existing instance.")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR, "",
+                                                broker_client.app_broker_delete_service,
+                                                service_id=self.cf_service.guid)
         response = broker_client.app_broker_get_catalog()
         services = [service['name'] for service in response["services"]]
-        self.assertIn(self.service_name, services)
+        assert self.service_name in services
 
     def test_5_delete_service_instance(self):
-        self.step("Deleting service instance.")
+        step("Deleting service instance.")
         broker_client.app_broker_delete_service_instance(self.instance.guid)
 
     def test_6_delete_service_offering(self):
-        self.step("Delete service offering from catalog")
+        step("Delete service offering from catalog")
         broker_client.app_broker_delete_service(self.cf_service.guid)
