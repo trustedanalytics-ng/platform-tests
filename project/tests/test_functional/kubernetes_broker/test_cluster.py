@@ -81,9 +81,9 @@ class TestCluster:
         step("Check the time after which the cluster should be removed")
         wait_before_remove_cluster_sec = KubernetesCluster.wait_before_removing_cluster()
 
-        if wait_before_remove_cluster_sec <= 60:
+        if int(wait_before_remove_cluster_sec) <= 60:
             step("Wait until the cluster is deleted.")
-            time.sleep(wait_before_remove_cluster_sec + 10)
+            time.sleep(int(wait_before_remove_cluster_sec))
             step("Check that the cluster is gone")
             clusters = KubernetesCluster.demiurge_api_get_list()
             cluster = next((c for c in clusters if self.cluster.name == c.name), None)

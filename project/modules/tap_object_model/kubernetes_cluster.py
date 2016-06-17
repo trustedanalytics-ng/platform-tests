@@ -62,7 +62,7 @@ class KubernetesCluster(object):
     @classmethod
     def wait_before_removing_cluster(self):
         try:
-            if self.wait_before_remove_cluster_sec is None:
+            if self.wait_before_remove_cluster_sec == 0:
                 response = cf.cf_api_get_apps()
                 app_guid = next((app["metadata"]["guid"] for app in response
                                  if app["entity"]["name"] == TAP.kubernetes_broker.value), None)
