@@ -19,13 +19,15 @@ import json
 import ssl
 import uuid
 
-import requests
 from retry import retry
 
+from configuration.config import CONFIG
 from ..constants import ServiceLabels, ServicePlan
-from ..exceptions import UnexpectedResponseError
-from ..tap_logger import get_logger, log_http_request, log_http_response
-from configuration import config
+from ..http_client.client_auth.http_method import HttpMethod
+from ..http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
+from ..http_client.http_client import HttpClient
+from ..http_client.http_client_factory import HttpClientFactory
+from ..tap_logger import get_logger
 from ..tap_object_model import ServiceInstance
 from ..test_names import generate_test_object_name
 from ..websocket_client import WebsocketClient
@@ -38,7 +40,7 @@ def _generate_uuid():
 
 
 class JupyterWSBase(metaclass=abc.ABCMeta):
-    WS_TIMEOUT = 5  # (seconds) - timeout for unresponsive socket
+    WS_TIMEOUT = 5
 
     def __init__(self, uri, origin, headers, cert_requirement):
         self.ws = WebsocketClient(uri, origin, headers, cert_requirement)
@@ -67,7 +69,6 @@ class JupyterWSBase(metaclass=abc.ABCMeta):
 
 
 class JupyterTerminal(JupyterWSBase):
-
     def __init__(self, uri, origin, headers, cert_requirement, number):
         super().__init__(uri, origin, headers, cert_requirement)
         self.number = number
@@ -80,7 +81,6 @@ class JupyterTerminal(JupyterWSBase):
 
 
 class JupyterNotebook(JupyterWSBase):
-
     def __init__(self, uri, origin, headers, cert_requirement, session_id, path):
         super().__init__(uri, origin, headers, cert_requirement)
         self._session_id = session_id
@@ -153,60 +153,55 @@ class JupyterNotebook(JupyterWSBase):
 
 
 class Jupyter(object):
+    """Jupyter service instance."""
+
     def __init__(self, org_guid, space_guid, instance_name=None, params=None):
-        """Create Jupyter service instance"""
-        if instance_name is None:
-            instance_name = generate_test_object_name(short=True, prefix=ServiceLabels.JUPYTER)
+        self.client = None
         self.cookie = None
         self.password = None
         self.instance_url = None
-        self.http_session = requests.Session()
-        self.ws_sslopt = None
-        if not config.CONFIG["ssl_validation"]:
-            self.http_session.verify = False
-            self.ws_sslopt = ssl.CERT_NONE
-        self.instance = ServiceInstance.api_create_with_plan_name(org_guid=org_guid, space_guid=space_guid,
-                                                                  name=instance_name,
-                                                                  service_label=ServiceLabels.JUPYTER,
-                                                                  service_plan_name=ServicePlan.FREE, params=params)
+        self.ws_sslopt = self._get_ws_ssl_options()
+        if instance_name is None:
+            instance_name = generate_test_object_name(short=True, prefix=ServiceLabels.JUPYTER)
+        self.instance = ServiceInstance.api_create_with_plan_name(
+            org_guid=org_guid,
+            space_guid=space_guid,
+            name=instance_name,
+            service_label=ServiceLabels.JUPYTER,
+            service_plan_name=ServicePlan.FREE,
+            params=params
+        )
 
     def __repr__(self):
         return "{} (instance_url={})".format(self.__class__.__name__, self.instance_url)
 
-    def _request(self, method, endpoint, body=None, data=None, params=None, message_on_error=""):
-        request = requests.Request(
-            method=method,
-            url="https://{}/{}".format(self.instance_url, endpoint),
-            data=data,
-            params=params,
-            json=body
-        )
-        request = self.http_session.prepare_request(request)
-        log_http_request(request, username="Jupyter Client", password=self.password)
-        response = self.http_session.send(request)
-        log_http_response(response)
-        if not response.ok:
-            raise UnexpectedResponseError(status=response.status_code, error_message=message_on_error)
-        self.cookie = ", ".join(["{}={}".format(k, v) for k, v in self.http_session.cookies.get_dict().items()])
-        try:
-            return json.loads(response.text)
-        except ValueError:
-            return response.text
-
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
+        """Set jupyter instance credentials."""
         response = self.instance.api_get_credentials()
         self.password = response["password"]
         self.instance_url = response["hostname"]
 
+    def get_client(self) -> HttpClient:
+        """Return jupyter http client."""
+        if self.client is None:
+            self.client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(
+                url=self.instance_url,
+                username="JupyterClient",
+                password=self.password
+            ))
+        return self.client
+
     def login(self):
-        self._request(
-            method="POST",
-            endpoint="login",
+        """Login into jupyter instance."""
+        self.get_client().request(
+            method=HttpMethod.POST,
+            path="/login",
             data={"password": self.password},
             params={"next": "/tree"},
-            message_on_error="Failed login to Jupyter"
+            msg="Jupyter: login"
         )
+        self.cookie = ", ".join(["{}={}".format(k, v) for k, v in self.get_client().cookies.get_dict().items()])
 
     def connect_to_terminal(self, terminal_no):
         uri = "{}://{}/terminals/websocket/{}".format(WebsocketClient.WSS, self.instance_url, terminal_no)
@@ -216,26 +211,34 @@ class Jupyter(object):
 
     def create_notebook(self, python_version=2):
         python_version = "python{}".format(python_version)
-        response = self._request(
-            method="POST",
-            endpoint="api/contents",
+        response = self.get_client().request(
+            method=HttpMethod.POST,
+            path="/api/contents",
             body={"type": "notebook"},
-            message_on_error="Could not create notebook"
+            msg="Jupyter: create notebook"
         )
         notebook_path = response["path"]
-        response = self._request(
-            method="POST",
-            endpoint="api/sessions",
+        response = self.get_client().request(
+            method=HttpMethod.POST,
+            path="/api/sessions",
             body={
                 "kernel": {"id": None, "name": python_version},
                 "notebook": {"path": notebook_path}
             },
-            message_on_error="Could not create kernel session for {}".format(python_version)
+            msg="Jupyter: create kernel session for {}".format(python_version)
         )
         kernel_id = response["kernel"]["id"]
-        session_id = _generate_uuid()  # see Jupyter JavaScript static/services/kernels/kernel.js, line 42
-        uri = "{}://{}/api/kernels/{}/channels?session_id={}".format(WebsocketClient.WSS, self.instance_url, kernel_id,
-                                                                     session_id)
+        session_id = _generate_uuid()
+        uri = "{}://{}/api/kernels/{}/channels?session_id={}".format(
+            WebsocketClient.WSS, self.instance_url, kernel_id, session_id)
         origin = "https://{}".format(self.instance_url)
         headers = {"Cookie": self.cookie}
         return JupyterNotebook(uri, origin, headers, self.ws_sslopt, session_id, notebook_path)
+
+    @staticmethod
+    def _get_ws_ssl_options():
+        """Get web socket ssl options."""
+        options = None
+        if not CONFIG["ssl_validation"]:
+            options = ssl.CERT_NONE
+        return options

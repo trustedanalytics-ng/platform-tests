@@ -35,6 +35,11 @@ class HttpClient(object):
         """Client auth."""
         return self._auth
 
+    @property
+    def cookies(self):
+        """Session cookies."""
+        return self.auth.session.cookies
+
     @url.setter
     def url(self, url):
         self._url = url

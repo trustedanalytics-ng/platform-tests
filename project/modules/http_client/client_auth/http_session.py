@@ -42,6 +42,11 @@ class HttpSession(object):
         """Session user password."""
         return self._password
 
+    @property
+    def cookies(self):
+        """Session cookies."""
+        return self._session.cookies
+
     def request(self, method: HttpMethod, url, headers=None, files=None, data=None, params=None, auth=None, body=None,
                 log_message="", raw_response=False):
         """Perform request and return response."""
