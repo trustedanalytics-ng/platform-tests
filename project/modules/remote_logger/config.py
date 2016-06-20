@@ -40,7 +40,7 @@ class Config(object):
     ELASTIC_SSH_TUNNEL_USER = "ubuntu"
 
     # Elastic search host
-    ELASTIC_SEARCH_HOST = "10.10.7.10"
+    ELASTIC_SEARCH_HOST = "10.0.7.10"
 
     # Elastic search port
     ELASTIC_SEARCH_PORT = 9200
