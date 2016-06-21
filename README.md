@@ -23,10 +23,8 @@ sudo -E apt update
 sudo -E apt install python3 python3-dev git git-crypt build=essential g++ libssl-dev
 ```
 
-**3. Clone repository**
-```
-git clone git@github.com:intel-data/platform-tests.git
-```
+**3. Clone this repository**
+
 
 **4. Decrypt repository secrets**
 
