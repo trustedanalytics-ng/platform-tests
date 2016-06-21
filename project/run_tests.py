@@ -70,6 +70,7 @@ if __name__ == "__main__":
                               remote_logger_retry_count=args.remote_logger_retry_count,
                               kerberos=args.kerberos,
                               jumpbox_address=args.jumpbox_address,
+                              elasticsearch_host=args.elasticsearch_host,
                               pushed_app_proxy=args.pushed_app_proxy,
                               kubernetes=args.kubernetes)
 

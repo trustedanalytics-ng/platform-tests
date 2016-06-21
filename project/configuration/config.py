@@ -60,7 +60,7 @@ CONFIG = {
 }
 
 LOGGED_CONFIG_KEYS = ["domain", "admin_username", "client_type", "ssl_validation", "platfom_version", "database_url",
-                      "ref_org_name", "ref_space_name", "jumpbox_address"]
+                      "ref_org_name", "ref_space_name", "jumpbox_address", "elasticsearch_host"]
 
 
 def update_test_config(domain=None, client_type=None, logged_response_body_length=None,
@@ -68,7 +68,7 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
                        test_suite=None, local_appstack=None, admin_username=None, admin_password=None,
                        ref_org_name=None, ref_space_name=None, test_run_id=None, disable_remote_logger=None,
                        remote_logger_retry_count=None, kerberos=None, jumpbox_address=None, kubernetes=None,
-                       pushed_app_proxy=None):
+                       pushed_app_proxy=None, elasticsearch_host=None):
     defaults = __CONFIG.defaults()
     defaults.update(__SECRETS.defaults())
     CONFIG["platform_version"] = platform_version
@@ -122,6 +122,7 @@ def update_test_config(domain=None, client_type=None, logged_response_body_lengt
     if kerberos is not None:
         CONFIG["kerberos"] = kerberos
     CONFIG["jumpbox_address"] = jumpbox_address
+    CONFIG["elasticsearch_host"] = elasticsearch_host
     CONFIG["kubernetes"] = ensure_bool(kubernetes) if kubernetes is not None else False
 
 
@@ -165,6 +166,7 @@ update_test_config(domain=os.environ.get("TEST_ENVIRONMENT"),
                    database_url=os.environ.get("DATABASE_URL"),
                    kerberos=os.environ.get("KERBEROS"),
                    jumpbox_address=os.environ.get("JUMPBOX_ADDRESS"),
+                   elasticsearch_host=os.environ.get("ELASTICSEARCH_HOST"),
                    kubernetes=os.environ.get("KUBERNETES"))
 
 
@@ -253,6 +255,9 @@ def parse_arguments():
                         default=None,
                         action='store_true',
                         help="Address of the jumpbox machine (jump.<domain> of empty)")
+    parser.add_argument("--elasticsearch_host",
+                        default=None,
+                        help="Address of the elasticsearch service")
     parser.add_argument("--pushed-app-proxy",
                         default=None,
                         help="Proxy to be set in pushed app manifest, e.g. proxy-mu.intel.com (no port)")

@@ -69,3 +69,10 @@ class Config(object):
     def get_elastic_ssh_tunnel_key_path():
         """ Returns ssh tunnel path to ssh key. """
         return CONFIG["cdh_key_path"]
+
+    @classmethod
+    def get_elasticsearch_host(cls):
+        """ Returns ElasticSearch host name. """
+        if CONFIG["elasticsearch_host"] is not None:
+            return CONFIG["elasticsearch_host"]
+        return cls.ELASTIC_SEARCH_HOST

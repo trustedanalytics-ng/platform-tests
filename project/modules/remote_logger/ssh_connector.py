@@ -51,7 +51,7 @@ class SshConnector(object):
         if self.__ssh_tunnel is not None:
             return
         self.__ssh_tunnel = SshTunnel(
-            hostname=Config.ELASTIC_SEARCH_HOST,
+            hostname=Config.get_elasticsearch_host(),
             port=Config.ELASTIC_SEARCH_PORT,
             username=Config.ELASTIC_SSH_TUNNEL_USER,
             path_to_key=Config.get_elastic_ssh_tunnel_key_path(),
