@@ -23,13 +23,15 @@ from retry import retry
 
 from configuration import config
 from modules.app_sources import AppSources
-from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
-from modules.hdfs import Hdfs
+from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub, ServicePlan
+from modules.webhdfs_tools import WebhdfsTools
+from modules.ssh_client import SshTunnel, CdhMasterSshClient
 from modules.markers import components, incremental, priority
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, Upsi
+from modules.tap_object_model import Application, ServiceInstance
 from tests.fixtures import fixtures
 from modules.websocket_client import WebsocketClient
+from modules.remote_logger.config import Config
 
 
 logged_components = (TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)
@@ -42,9 +44,8 @@ class TestWs2kafka2hdfs:
 
     REPO_OWNER = TapGitHub.intel_data
     MESSAGE_COUNT = 10
-    KERBEROS_SERVICE = "kerberos-service"
+    KERBEROS_INSTANCE_NAME = "kerberos-service"
     ENDPOINT_APP_STATS = "status/stats"
-    SHARED_SERVICE_PLAN_NAME = "shared"
     KAFKA_INSTANCE_NAME = "kafka-inst"
     ZOOKEEPER_INSTANCE_NAME = "zookeeper-inst"
     HDFS_INSTANCE_NAME = "hdfs-inst"
@@ -55,50 +56,36 @@ class TestWs2kafka2hdfs:
 
     @pytest.fixture(scope="class")
     def setup_kafka_zookeeper_hdfs_instances(self, request, test_org, test_space):
-        step("Create instances for kafka, zookeeper, hdfs")
+        step("Create instances for kafka, zookeeper, hdfs and kerberos")
 
         kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
                                                           service_label=ServiceLabels.KAFKA,
                                                           name=self.KAFKA_INSTANCE_NAME,
-                                                          service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+                                                          service_plan_name=ServicePlan.SHARED)
         zookeeper = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
                                                               service_label=ServiceLabels.ZOOKEEPER,
                                                               name=self.ZOOKEEPER_INSTANCE_NAME,
-                                                              service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+                                                              service_plan_name=ServicePlan.SHARED)
         hdfs = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
                                                          service_label=ServiceLabels.HDFS,
                                                          name=self.HDFS_INSTANCE_NAME,
-                                                         service_plan_name=self.SHARED_SERVICE_PLAN_NAME)
+                                                         service_plan_name=ServicePlan.SHARED)
+        kerberos = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+                                                             service_label=ServiceLabels.KERBEROS,
+                                                             name=self.KERBEROS_INSTANCE_NAME,
+                                                             service_plan_name=ServicePlan.SHARED)
 
-        instances = [kafka, zookeeper, hdfs]
+        instances = [kafka, zookeeper, hdfs, kerberos]
         request.addfinalizer(lambda: fixtures.tear_down_test_objects(instances))
-
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def delete_pushed_apps(cls, request, setup_kafka_zookeeper_hdfs_instances):
-        def fin():
-            test_objects = [a for a in [cls.app_ws2kafka, cls.app_kafka2hdfs] if a is not None]
-            fixtures.tear_down_test_objects(test_objects)
-        request.addfinalizer(fin)
-
-    @pytest.fixture(scope="class", autouse=True)
-    def workaround_for_kerberos_service(self, request, test_space, setup_kafka_zookeeper_hdfs_instances):
-        step("Get credentials for kerberos-service")
-        user_provided_services = Upsi.cf_api_get_list()
-        kerb_upsi = next((upsi for upsi in user_provided_services if upsi.name == self.KERBEROS_SERVICE), None)
-        assert kerb_upsi is not None, "{} not found".format(self.KERBEROS_SERVICE)
-        credentials = kerb_upsi.credentials
-        step("Create user-provided service instance for kerberos-service in test space")
-        Upsi.cf_api_create(name=self.KERBEROS_SERVICE, space_guid=test_space.guid, credentials=credentials)
 
     @retry(AssertionError, tries=5, delay=2)
     def _assert_message_count_in_app_stats(self, app, expected_message_count):
         step("Check that application api returns correct number of consumed messages")
         msg_count = app.api_request(path=self.ENDPOINT_APP_STATS)[0]["consumedMessages"]
-        assert msg_count == expected_message_count, "Sent {} messages, collected {}".format(expected_message_count, msg_count)
+        assert msg_count == expected_message_count, "Sent {} messages, collected {}".format(expected_message_count,
+                                                                                            msg_count)
 
     @pytest.mark.usefixtures("login_to_cf")
-    @pytest.mark.bugs("DPNG-5225 [hadoop-utils] remove the need for kerberos-service in non-kerberos envs")
     def test_step_0_push_ws2kafka2hdfs(self, test_space, class_context):
         step("Clone and compile ingestion app sources")
         github_auth = config.CONFIG["github_auth"]
@@ -124,7 +111,7 @@ class TestWs2kafka2hdfs:
                                                          bound_services=(self.KAFKA_INSTANCE_NAME,
                                                                          self.ZOOKEEPER_INSTANCE_NAME,
                                                                          self.HDFS_INSTANCE_NAME,
-                                                                         self.KERBEROS_SERVICE),
+                                                                         self.KERBEROS_INSTANCE_NAME),
                                                          env={"TOPICS": self.topic_name,
                                                               "CONSUMER_GROUP": "group-{}".format(postfix)},
                                                          env_proxy=config.CONFIG["pushed_app_proxy"])
@@ -137,12 +124,11 @@ class TestWs2kafka2hdfs:
         self._send_ws_messages(connection_string)
         self._assert_message_count_in_app_stats(self.app_kafka2hdfs, self.MESSAGE_COUNT)
 
-    @pytest.mark.bugs("DPNG-5173 Cannot access hdfs directories using ec2-user")
     def test_step_2_check_messages_in_hdfs(self):
         step("Get details of broker guid")
         broker_guid = self.app_kafka2hdfs.get_credentials("hdfs")["uri"].split("/", 3)[3]
         step("Get messages from hdfs")
-        hdfs_messages = self._get_messages_from_hdfs("/" + os.path.join(broker_guid, "from_kafka", self.topic_name))
+        hdfs_messages = self._get_messages_from_hdfs(os.path.join(broker_guid, "from_kafka", self.topic_name))
         step("Check that all sent messages are on hdfs")
         assert sorted(hdfs_messages) == sorted(self.messages)
 
@@ -160,6 +146,14 @@ class TestWs2kafka2hdfs:
         ws.close()
 
     def _get_messages_from_hdfs(self, hdfs_path):
-        hdfs = Hdfs()
-        topic_content = hdfs.cat(hdfs_path)
+        ssh_tunnel = SshTunnel(CdhMasterSshClient.CDH_MASTER_HOSTNAME, WebhdfsTools.VIA_HOST_USERNAME,
+                               path_to_key=WebhdfsTools.PATH_TO_KEY, port=WebhdfsTools.DEFAULT_PORT, via_port=22,
+                               via_hostname=Config.get_elastic_ssh_tunnel_host(), local_port=WebhdfsTools.DEFAULT_PORT)
+        ssh_tunnel.connect()
+        try:
+            webhdfs_client = WebhdfsTools.create_client(host="localhost")
+            hdfs = WebhdfsTools()
+            topic_content = hdfs.open_and_read(webhdfs_client, hdfs_path)
+        finally:
+            ssh_tunnel.disconnect()
         return [m for m in topic_content.split("\n")[:-1]]
