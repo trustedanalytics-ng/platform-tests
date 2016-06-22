@@ -114,6 +114,7 @@ class HttpStatus(object):
     CODE_LOCKED = 423
     MSG_FAILED_DEPENDENCY = "Failed Dependency"
     CODE_FAILED_DEPENDENCY = 424
+    CODE_TOO_MANY_REQUESTS = 429
 
     # --- 5xx Server Error ---
 
@@ -174,3 +175,7 @@ class KubernetesBrokerHttpStatus(HttpStatus):
     MSG_SECRET_NOT_FOUND = "secrets \"{}\" not found"
     MSG_SECRET_ALREADY_EXISTS = "secrets \"{}\" already exists"
     MSG_INVALID_SECRET = "Secret \"{}\" is invalid"
+
+
+class PlatformTestsHttpStatus(HttpStatus):
+    MSG_RUNNER_BUSY = "Runner is busy"

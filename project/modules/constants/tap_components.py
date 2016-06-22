@@ -47,6 +47,7 @@ class TapComponent(Enum):
     model_catalog = "model-catalog"
     platform_context = "platform-context"
     platform_snapshot = "platform-snapshot"
+    platform_tests = "platform-tests"
     platform_operations = "platform-operations"
     router_metrics_provider = "router-metrics-provider"
     service_catalog = "service-catalog"
