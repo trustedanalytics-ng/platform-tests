@@ -138,7 +138,7 @@ class TestWs2kafka2gearpump2hbase:
         self.hbase_reader.create_table(self.HBASE_TABLE_NAME)
         step("Check that pipeline table was created")
         hbase_tables = self.hbase_reader.get_tables()
-        assert self.db_and_table_name in hbase_tables is True, "No pipeline table"
+        assert self.db_and_table_name in hbase_tables, "No pipeline table"
 
     def test_step_4_submit_kafka2hbase_app_to_gearpump_dashboard(self):
         step("Download file kafka2hbase")
