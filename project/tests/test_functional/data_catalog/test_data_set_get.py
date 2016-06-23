@@ -27,6 +27,8 @@ pytestmark = [components.data_catalog, components.das, components.hdfs_downloade
 
 class TestGetDataSets(object):
 
+    data_sample = ["COL_0", "COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6", "COL_7"]
+
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def create_test_data_sets(cls, request, test_org, add_admin_to_test_org, class_context):
@@ -39,11 +41,11 @@ class TestGetDataSets(object):
         for transfer in cls.transfers:
             transfer.ensure_finished()
         step("Get all data sets in the test org")
-        transfer_titles = [t.title for t in cls.transfers]
-        cls.datasets = [d for d in DataSet.api_get_list(org_list=[test_org]) if d.title in transfer_titles]
+        cls.transfer_titles = [t.title for t in cls.transfers]
+        cls.datasets = [d for d in DataSet.api_get_list(org_list=[test_org]) if d.title in cls.transfer_titles]
 
-    def _filter_datasets(self, org, filters=(), only_private=False, only_public=False):
-        ds_list = DataSet.api_get_list(org_list=[org], filters=filters, only_private=only_private,
+    def _filter_datasets(self, org, filters=(), only_private=False, only_public=False, query=""):
+        ds_list = DataSet.api_get_list(org_list=[org], query=query, filters=filters, only_private=only_private,
                                        only_public=only_public)
         return [d for d in ds_list if d in self.datasets]
 
@@ -130,3 +132,24 @@ class TestGetDataSets(object):
         step("Check that all public data sets are visible in another org")
         self.missing_public_ds = [ds for ds in public_datasets if ds not in datasets]
         assert self.missing_public_ds == [], "Not all public data sets from another org returned"
+
+    @priority.medium
+    def test_get_datasets_by_keyword_title(self, test_org):
+        title = self.transfer_titles[0]
+        step("Retrieve datasets by title keyword")
+        filtered_datasets = self._filter_datasets(test_org, query=title)
+        expected_datasets = [d for d in self.datasets if d.title == title]
+        assert sorted(filtered_datasets) == sorted(expected_datasets)
+
+    @priority.medium
+    def test_get_datasets_by_keyword_source_uri(self, test_org):
+        step("Retrieve datasets by source uri keyword")
+        filtered_datasets = self._filter_datasets(test_org, query=Urls.test_transfer_link)
+        assert sorted(filtered_datasets) == sorted(self.datasets)
+
+    @priority.medium
+    @pytest.mark.parametrize("data_sample", data_sample)
+    def test_get_datasets_by_keyword_data_sample(self, data_sample, test_org):
+        step("Retrieve datasets by data sample keyword")
+        filtered_datasets = self._filter_datasets(test_org, query=data_sample)
+        assert sorted(filtered_datasets) == sorted(self.datasets)
