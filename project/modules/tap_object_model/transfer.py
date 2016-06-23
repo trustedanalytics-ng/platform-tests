@@ -15,28 +15,41 @@
 #
 
 import functools
-import time
+
+from retry import retry
 
 from ..http_calls.platform import das, hdfs_uploader
 from ..test_names import generate_test_object_name
 
 
+class TransferState(object):
+    ERROR = "ERROR"
+    FINISHED = "FINISHED"
+    NEW = "NEW"
+    VALIDATED = "VALIDATED"
+
+
+class TransferError(Exception):
+    pass
+
+
 @functools.total_ordering
 class Transfer(object):
 
-    TITLE_PREFIX = "transfer"
-    COMPARABLE_ATTRIBUTES = ["category", "id", "is_public", "organization_guid", "source",
-                             "state", "title", "user_id"]
-    new_status = "NEW"
-    finished_status = "FINISHED"
+    COMPARABLE_ATTRIBUTES = ["category", "id", "is_public", "organization_guid", "source", "state", "title", "user_id"]
 
     def __init__(self, category=None, id=None, id_in_object_store=None, is_public=None, org_guid=None, source=None,
-                 state=None, timestamps=None, title=None, user_id=None, from_local_file=False):
-        self.title, self.category, self.source = title, category, source
-        self.id, self.id_in_object_store = id, id_in_object_store
-        self.is_public, self.state, self.timestamps = is_public, state, timestamps
-        self.organization_guid, self.user_id = org_guid, user_id
-        self.from_local_file = from_local_file
+                 state=None, timestamps=None, title=None, user_id=None):
+        self.title = title
+        self.category = category
+        self.source = source
+        self.id = id
+        self.id_in_object_store = id_in_object_store
+        self.is_public = is_public
+        self.state = state
+        self.timestamps = timestamps
+        self.organization_guid = org_guid
+        self.user_id = user_id
 
     def __eq__(self, other):
         return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
@@ -55,14 +68,13 @@ class Transfer(object):
                    timestamps=api_response["timestamps"], title=api_response["title"], user_id=api_response["userId"])
 
     @classmethod
-    def api_create(cls, context, category="other", is_public=False, org_guid=None, source=None, title=None, user_id=0,
-                   client=None):
+    def api_create(cls, context, category="other", is_public=False, org_guid=None, source=None, title=None, client=None):
         title = generate_test_object_name() if title is None else title
         response = das.api_create_transfer(category=category, is_public=is_public, org_guid=org_guid, source=source,
                                            title=title, client=client)
         new_transfer = cls(category=category, id=response["id"], id_in_object_store=response["idInObjectStore"],
                            is_public=is_public, org_guid=org_guid, source=source, state=response["state"],
-                           timestamps=response["timestamps"], title=title, user_id=user_id)
+                           timestamps=response["timestamps"], title=title, user_id=response["userId"])
         context.transfers.append(new_transfer)
         return new_transfer
 
@@ -86,29 +98,18 @@ class Transfer(object):
         response = das.api_get_transfer(transfer_id, client=client)
         return cls._from_api_response(response)
 
-    @classmethod
-    def get_until_finished(cls, transfer_id, timeout=60):
-        start = time.time()
-        while time.time() - start < timeout:
-            transfer = cls.api_get(transfer_id)
-            if transfer.is_finished():
-                break
-            time.sleep(20)
-        return transfer
-
     def api_delete(self, client=None):
         return das.api_delete_transfer(self.id, client=client)
 
     def cleanup(self):
         self.api_delete()
 
-    def ensure_finished(self, timeout=150):
-        transfer = self.get_until_finished(self.id, timeout)
+    @retry(AssertionError, tries=50, delay=3)
+    def ensure_finished(self):
+        transfer = self.api_get(transfer_id=self.id)
         self.state = transfer.state
         self.id_in_object_store = transfer.id_in_object_store
         self.timestamps = transfer.timestamps
-        if self.state != self.finished_status:
-            raise AssertionError("Transfer did not finish in {}s. State: {}".format(timeout, self.state))
-
-    def is_finished(self):
-        return self.finished_status in self.timestamps.keys()
+        if self.state == TransferState.ERROR:
+            raise TransferError("Transfer finished in state: {}".format(TransferState.ERROR))
+        assert self.state == TransferState.FINISHED, "Transfer did not finish. State: {}".format(self.state)
