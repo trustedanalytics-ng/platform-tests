@@ -1,5 +1,6 @@
+#!/bin/bash
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2015 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.77'
-
+source ~/virtualenvs/pyvenv_api_tests/bin/activate
+py.test modules -l -v
+deactivate
 
