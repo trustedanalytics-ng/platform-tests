@@ -30,10 +30,8 @@ from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
 from modules.test_names import generate_test_object_name
-from tests.fixtures import fixtures
 from modules.websocket_client import WebsocketClient
 from tests.fixtures import fixtures
-
 
 logged_components = (TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)
 pytestmark = [components.ingestion_ws_kafka_gearpump_hbase, components.service_catalog]

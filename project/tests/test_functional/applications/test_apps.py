@@ -17,8 +17,8 @@
 import pytest
 
 from configuration.config import CONFIG
-from modules.app_sources import  AppSources
-from modules.constants import ApplicationPath, ServiceLabels, ServicePlan, TapComponent as TAP, HttpStatus
+from modules.app_sources import AppSources
+from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
 from modules.http_calls.platform import service_catalog
@@ -35,12 +35,11 @@ pytestmark = [components.service_catalog]
 
 class TestTapApp:
 
-    SAMPLE_APPLICATION = "sample-java-application"
-
     @pytest.fixture(scope="function")
     def instance(self, request, test_org, test_space):
         instance = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                             service_label=ServiceLabels.KAFKA, service_plan_name=ServicePlan.SHARED)
+                                                             service_label=ServiceLabels.KAFKA,
+                                                             service_plan_name=ServicePlan.SHARED)
         request.addfinalizer(lambda: fixtures.delete_or_not_found(instance.cleanup))
         return instance
 
@@ -57,7 +56,8 @@ class TestTapApp:
         step("Compile the sources")
         test_app_sources.compile_mvn()
         step("Push application to cf")
-        application = Application.push(context, source_directory=ApplicationPath.SAMPLE_JAVA_APP, space_guid=test_space.guid,
+        application = Application.push(context, source_directory=ApplicationPath.SAMPLE_JAVA_APP,
+                                       space_guid=test_space.guid,
                                        bound_services=(instance.name,), env_proxy=CONFIG["pushed_app_proxy"])
         step("Check the application is running")
         application.ensure_started()

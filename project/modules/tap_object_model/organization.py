@@ -18,7 +18,6 @@ import functools
 
 from retry import retry
 
-from ..constants import UserManagementHttpStatus
 from ..exceptions import UnexpectedResponseError
 from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import metrics_provider, user_management
@@ -27,8 +26,6 @@ from ..test_names import generate_test_object_name
 
 @functools.total_ordering
 class Organization(object):
-
-    TEST_ORG_NAMES = []
 
     def __init__(self, name, guid=None):
         self.name = name
