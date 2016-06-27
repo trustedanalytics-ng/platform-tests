@@ -20,8 +20,8 @@ from werkzeug.exceptions import default_exceptions, InternalServerError
 from pymongo import errors
 from bson.json_util import dumps
 
+from config import Config, MongoLabel
 from db_utils import DatabaseClient
-from config import Config
 
 
 def _handle_http_exception(error):
@@ -50,6 +50,11 @@ def create_app():
 
 app = create_app()
 db = DatabaseClient()
+c = Config()
+
+
+if c.mongodb_version == MongoLabel.MONGODB30_MULTINODE:
+    db.configure_mongo_cluster()
 
 
 @app.route("/")

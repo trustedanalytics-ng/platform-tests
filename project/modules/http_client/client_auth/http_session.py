@@ -27,7 +27,7 @@ from .http_method import HttpMethod
 class HttpSession(object):
     """User http session."""
 
-    def __init__(self, username: str, password: str):
+    def __init__(self, username: str=None, password: str=None):
         self._username = username
         self._password = password
         self._session = Session()

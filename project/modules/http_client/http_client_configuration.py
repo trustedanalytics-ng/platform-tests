@@ -24,7 +24,6 @@ class HttpClientConfiguration(object):
     def __init__(self, client_type: HttpClientType, url: str, username: str, password: str):
         self._validate("client_type", HttpClientType, client_type)
         self._validate("url", str, url)
-        self._validate("username", str, username)
         self._client_type = client_type
         self._url = url
         self._username = username

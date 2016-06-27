@@ -27,6 +27,11 @@ VCAP_APP_PORT = "VCAP_APP_PORT"
 logger = logging.getLogger(__name__)
 
 
+class MongoLabel:
+    MONGODB26 = "mongodb26"
+    MONGODB30_MULTINODE = "mongodb30-multinode"
+
+
 class NoConfigurationError(Exception):
     pass
 
@@ -53,18 +58,29 @@ class Config(object):
 
         try:
             vcap_services = os.environ[VCAP_SERVICES]
+            self.mongodb_version = list(json.loads(vcap_services).keys())[0]
         except KeyError:
             raise NoConfigurationError("VCAP_SERVICES environment variable not set")
 
-        mongodb_credentials = json.loads(vcap_services)["mongodb26"][0]["credentials"]
+        mongodb_credentials = json.loads(vcap_services)[self.mongodb_version][0]["credentials"]
         self.db_name = mongodb_credentials.get("dbname")
         self.db_username = mongodb_credentials.get("username")
         self.db_password = mongodb_credentials.get("password")
-        self.db_hostname = mongodb_credentials.get("hostname", "localhost")
-        self.db_port = int(mongodb_credentials.get("port", "27017"))
+        if self.mongodb_version == MongoLabel.MONGODB26:
+            self.db_hostname0 = mongodb_credentials.get("hostname", "localhost")
+            self.db_port0 = int(mongodb_credentials.get("port", "27017"))
+        elif self.mongodb_version == MongoLabel.MONGODB30_MULTINODE:
+            self.db_hostname0 = mongodb_credentials["replicas"][0]["host"]
+            self.db_port0 = int(mongodb_credentials["replicas"][0]["ports"]["27017/tcp"])
+            self.db_hostname1 = mongodb_credentials["replicas"][1]["host"]
+            self.db_port1 = int(mongodb_credentials["replicas"][1]["ports"]["27017/tcp"])
+            self.db_hostname2 = mongodb_credentials["replicas"][2]["host"]
+            self.db_port2 = int(mongodb_credentials["replicas"][2]["ports"]["27017/tcp"])
+        else:
+            raise Exception("Unexpected MongoDB label")
         self.log_level = os.environ.get(LOG_LEVEL, "DEBUG")
         self.app_port = int(os.environ.get(VCAP_APP_PORT, "5000"))
         self.app_host = "0.0.0.0"
         logger.info("DB name: {}, DB username: {}, DB password: {}, DB hostname: {}, DB port: {}"
-                    .format(self.db_name, self.db_username, self.db_password, self.db_hostname, self.db_port))
+                    .format(self.db_name, self.db_username, self.db_password, self.db_hostname0, self.db_port0))
 
