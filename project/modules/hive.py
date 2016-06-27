@@ -16,7 +16,7 @@
 from . import kerberos
 from .http_client.configuration_provider.uaa import UaaConfigurationProvider
 from .http_client.http_client_factory import HttpClientFactory
-from .ssh_client import CdhMaster2Client
+from .ssh_client import CdhMasterClient, SshConfig
 from .tap_logger import get_logger
 from .tap_object_model import User
 
@@ -49,5 +49,5 @@ class Hive(object):
         else:
             cmds[0] = ["sudo", "-u", self.__user.guid] + cmds[0]
 
-        return CdhMaster2Client.exec_command(cmds)[-1][0].split()
+        return CdhMasterClient(SshConfig.CDH_MASTER_2_HOSTNAME).exec_commands(cmds)[-1][0].split()
 

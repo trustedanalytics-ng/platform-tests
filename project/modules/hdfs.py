@@ -17,42 +17,45 @@
 import re
 
 from .exceptions import HdfsException
-from .ssh_client import CdhMaster2Client, SshConfig
+from .ssh_client import CdhMasterClient, SshConfig
 from .tap_logger import get_logger
-
 
 logger = get_logger(__name__)
 
 
 class Hdfs(object):
+    _SUDO = ["sudo", "-u", "hdfs"]
+    _HADOOP_CMD = _SUDO + ["hadoop", "fs"]
+    _HDFS_CMD = _SUDO + ["hdfs"]
 
     def __init__(self):
-        self.ssh_client = CdhMaster2Client()
-        logger.info("Accessing HDFS on {}".format(SshConfig.CDH_MASTER_2_HOSTNAME))
-        self.hadoop_fs = ["hadoop", "fs"]
+        self.ssh_client = CdhMasterClient(SshConfig.CDH_MASTER_0_HOSTNAME)
+        logger.info("Accessing HDFS on {}".format(self.ssh_client.cdh_host_name))
 
     def _execute(self, command):
-        stdout, stderr = self.ssh_client.exec_command([command])
+        stdout, stderr = self.ssh_client.exec_commands([command])[0]
         if stderr != "":
             raise HdfsException(stderr)
         return stdout
 
     def ls(self, directory_path):
         """Execute ls on a directory in hdfs. Return a list of file paths."""
-        command = self.hadoop_fs + ["-ls", directory_path]
-        output = self._execute(command)
+        output = self._execute(self._HADOOP_CMD + ["-ls", directory_path])
         paths = []
         for line in [line for line in output.split("\n")[1:-1]]:
-            r = re.search("\/.*$", line)
+            r = re.search(r"/.*$", line)
             paths.append(line[r.start():r.end()])
         return paths
 
     def cat(self, file_path):
-        command = self.hadoop_fs + ["-cat", file_path]
-        output = self._execute(command)
-        return output
+        return self._execute(self._HADOOP_CMD + ["-cat", file_path])
 
+    def put(self, file_path, content):
+        tmp_path = "/tmp/test_file"
+        self._execute(["python", "-c",
+                       "import sys;open(\"{}\",\"w\").write(sys.argv[1])".format(tmp_path),
+                       content])
+        self._execute(self._HADOOP_CMD + ["-put", tmp_path, file_path])
 
-
-
-
+    def list_zones(self):
+        return self._execute(self._HDFS_CMD + ["crypto", "-listZones"])
