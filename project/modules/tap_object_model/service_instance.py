@@ -27,6 +27,16 @@ from ..test_names import generate_test_object_name
 from . import ServiceKey
 
 
+class ServiceInstanceLastOperationState(object):
+    IN_PROGRESS = "in progress"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class ServiceInstanceCreationFailed(Exception):
+    pass
+
+
 @functools.total_ordering
 class ServiceInstance(object):
     COMPARABLE_ATTRS = ["guid", "name", "space_guid", "service_label"]
@@ -51,6 +61,14 @@ class ServiceInstance(object):
 
     def __hash__(self):
         return hash(tuple(getattr(self, a) for a in self.COMPARABLE_ATTRS))
+
+    @property
+    def last_operation_type(self):
+        return self.last_operation["type"]
+
+    @property
+    def last_operation_state(self):
+        return self.last_operation["state"]
 
     @classmethod
     @retry(AssertionError, tries=100, delay=3)
@@ -164,9 +182,11 @@ class ServiceInstance(object):
         updated_instance = next((i for i in instances if i.guid == self.guid), None)
         assert updated_instance is not None, "Instance of {} not found on the list".format(self.name)
         self.last_operation = updated_instance.last_operation
-        assert self.last_operation["type"] == "create",\
+        assert self.last_operation_type == "create",\
             "Instance of {} not created - last operation: {}".format(self.name, self.last_operation)
-        assert self.last_operation["state"] == "succeeded",\
+        if self.last_operation_state == ServiceInstanceLastOperationState.FAILED:
+            raise ServiceInstanceCreationFailed()
+        assert self.last_operation_state == ServiceInstanceLastOperationState.SUCCEEDED,\
             "Instance of {} not created - last operation: {}".format(self.name, self.last_operation)
 
     # ----------------------------------------- CF API ----------------------------------------- #
