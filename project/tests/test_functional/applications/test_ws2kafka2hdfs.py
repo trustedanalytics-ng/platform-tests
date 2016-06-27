@@ -25,7 +25,7 @@ from configuration import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub, ServicePlan
 from modules.webhdfs_tools import WebhdfsTools
-from modules.ssh_client import SshTunnel, CdhMasterSshClient
+from modules.ssh_client import SshTunnel, SshConfig
 from modules.markers import components, incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
@@ -146,9 +146,9 @@ class TestWs2kafka2hdfs:
         ws.close()
 
     def _get_messages_from_hdfs(self, hdfs_path):
-        ssh_tunnel = SshTunnel(CdhMasterSshClient.CDH_MASTER_HOSTNAME, WebhdfsTools.VIA_HOST_USERNAME,
+        ssh_tunnel = SshTunnel(SshConfig.CDH_MASTER_2_HOSTNAME, WebhdfsTools.VIA_HOST_USERNAME,
                                path_to_key=WebhdfsTools.PATH_TO_KEY, port=WebhdfsTools.DEFAULT_PORT, via_port=22,
-                               via_hostname=Config.get_elastic_ssh_tunnel_host(), local_port=WebhdfsTools.DEFAULT_PORT)
+                               via_hostname=Config.get_jumpbox_host_address(), local_port=WebhdfsTools.DEFAULT_PORT)
         ssh_tunnel.connect()
         try:
             webhdfs_client = WebhdfsTools.create_client(host="localhost")
