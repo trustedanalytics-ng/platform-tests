@@ -19,6 +19,8 @@ from retry import retry
 
 from modules.exceptions import UnexpectedResponseError
 from modules.tap_object_model.flows import data_catalog
+from modules.tap_object_model import User
+from modules.tap_logger import step
 
 
 @retry(AssertionError, tries=20, delay=3)
@@ -53,10 +55,22 @@ def assert_raises_http_exception(status, error_message_phrase, callableObj, *arg
         "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.status, e.value.error_message,
                                                             status, error_message_phrase)
 
+
+def assert_user_in_org_and_roles(invited_user, org_guid, expected_roles):
+    step("Check that the user is in the organization with expected roles ({}).".format(expected_roles))
+    org_users = User.api_get_list_via_organization(org_guid)
+    assert invited_user in org_users, "Invited user is not on org users list"
+    org_user = next(user for user in org_users if user.username == invited_user.username)
+    org_user_roles = list(org_user.org_roles.get(org_guid, []))
+    assert_unordered_list_equal(org_user_roles, list(expected_roles),
+                                "User's roles in org: {}, expected {}".format(org_user_roles, list(expected_roles)))
+
+
 @retry(AssertionError, tries=2, delay=360)
 def assert_greater_with_retry(get_list_method, list_to_compare, *args, **kwargs):
     obj_list = get_list_method(*args, **kwargs)
     assert len(obj_list) > len(list_to_compare)
+
 
 def assert_returns_http_error(callable_obj, *args, **kwargs):
     with pytest.raises(UnexpectedResponseError) as e:
