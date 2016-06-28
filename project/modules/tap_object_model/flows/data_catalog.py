@@ -17,23 +17,25 @@
 from .. import DataSet, Transfer
 
 
-def create_dataset_from_link(context, org, source, is_public=False, category=DataSet.CATEGORIES[0]) -> tuple:
-    transfer = Transfer.api_create(context, org_guid=org.guid, source=source, category=category, is_public=is_public)
+def create_dataset_from_link(context, org, source, is_public=False, category=DataSet.CATEGORIES[0],
+                             client=None) -> tuple:
+    transfer = Transfer.api_create(context, org_guid=org.guid, source=source, category=category, is_public=is_public,
+                                   client=client)
     transfer.ensure_finished()
-    data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title)
+    data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title, client=client)
     return transfer, data_set
 
 
-def create_dataset_from_file(context, org, file_path) -> tuple:
-    transfer = Transfer.api_create_by_file_upload(context, org_guid=org.guid, file_path=file_path)
+def create_dataset_from_file(context, org, file_path, client=None) -> tuple:
+    transfer = Transfer.api_create_by_file_upload(context, org_guid=org.guid, file_path=file_path, client=client)
     transfer.ensure_finished()
-    data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title)
+    data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title, client=client)
     return transfer, data_set
 
 
-def create_datasets_from_links(context, org, source_list):
+def create_datasets_from_links(context, org, source_list, client=None):
     datasets = []
     for source in source_list:
-        _, dataset = create_dataset_from_link(context, org, source)
+        _, dataset = create_dataset_from_link(context, org, source, client=client)
         datasets.append(dataset)
     return datasets

@@ -42,6 +42,7 @@ class DataSet(object):
         self.category, self.creation_time, self.data_sample, self.format = category, creation_time, data_sample, format
         self.is_public, self.id, self.record_count, self.size = is_public, id, record_count, size
         self.source_uri, self.target_uri, self.title, self.org_guid = source_uri, target_uri, title, org_guid
+        self.object_store_id = None if self.target_uri is None else self.target_uri.split("/")[8]
 
     def __eq__(self, other):
         return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
