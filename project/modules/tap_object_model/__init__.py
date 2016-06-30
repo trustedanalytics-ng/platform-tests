@@ -28,6 +28,7 @@ from .latest_event import EventCategory, EventMessage, LatestEvent
 from .organization import Organization
 from .platform import Platform
 from .platform_tests import TestSuite
+from .platform_snapshot import PlatformSnapshot
 from .service_binding import ServiceBinding
 from .service_broker import ServiceBroker
 from .service_key import ServiceKey
