@@ -166,4 +166,4 @@ class TestTapApp:
     def test_delete_app(self, test_space, sample_java_app):
         service_catalog.api_delete_app(sample_java_app.guid)
         cf_apps_list, _ = summaries.cf_api_get_space_summary(test_space.guid)
-        assert cf_apps_list == []
+        assert sample_java_app not in cf_apps_list

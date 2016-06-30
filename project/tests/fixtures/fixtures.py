@@ -92,7 +92,7 @@ def login_to_cf(test_org, test_space):
     cf.cf_login(test_org.name, test_space.name)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="class")
 def sample_python_app(request, test_org, test_space):
     context = Context()
     log_fixture("sample_python_app: Push app to cf")
@@ -113,7 +113,7 @@ def sample_python_app(request, test_org, test_space):
     return app
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="class")
 def sample_java_app(request, test_org, test_space):
     context = Context()
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
