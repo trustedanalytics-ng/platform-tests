@@ -26,26 +26,62 @@ logged_components = (TAP.latest_events_service,)
 pytestmark = [components.latest_events_service]
 
 
+@pytest.mark.usefixtures("add_admin_to_test_org")
 class TestDashboardLatestEvents:
 
-    @pytest.fixture(scope="class", autouse=True)
-    def produce_events_in_test_org(self, test_org, add_admin_to_test_org, class_context):
-        step("Produce an event in the tested organization - create a data set")
-        transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=Urls.test_transfer_link)
-        transfer.ensure_finished()
-        step("Create another organization and create a data set in that organization")
-        other_org = Organization.api_create(class_context)
-        step("Add admin to the second organization")
-        User.get_admin().api_add_to_organization(org_guid=other_org.guid)
-        transfer = Transfer.api_create(class_context, org_guid=other_org.guid, source=Urls.test_transfer_link)
-        transfer.ensure_finished()
+    @pytest.fixture(scope="function")
+    def another_org(self, context):
+        step("Create another test organization")
+        another_org = Organization.api_create(context)
+        return another_org
+
+    @pytest.fixture(scope="function")
+    def another_org_client(self, context, another_org):
+        step("Create org manager in another org")
+        user = User.api_create_by_adding_to_organization(org_guid=another_org.guid, context=context)
+        return user.login()
 
     @priority.high
-    def test_10_latest_events_on_dashboard_the_same_as_in_LES(self, test_org):
+    def test_10_latest_events_on_dashboard_the_same_as_in_LES(self, context, test_org):
+        step("Produce an event in the tested organization - create a data set")
+        transfer = Transfer.api_create(context, org_guid=test_org.guid, source=Urls.test_transfer_link)
+        transfer.ensure_finished()
         step("Retrieve latest events from dashboard")
         dashboard_latest_events = LatestEvent.api_get_latest_events_from_org_metrics(test_org.guid)
         step("Retrieve latest events from the LES, filtering with tested organization")
-        latest_events_response = LatestEvent.api_get_latest_events(org_guid=test_org.guid)
+        latest_events_response = LatestEvent.api_get_latest_events(test_org.guid)
         step("Check that dashboard contains 10 latest events from LES")
         ten_latest_events = sorted(latest_events_response, reverse=True)[:10]
         assert_unordered_list_equal(ten_latest_events, dashboard_latest_events)
+
+    @priority.low
+    def test_visibility_of_events(self, test_org, context, test_org_manager_client):
+        events_before = LatestEvent.api_get_latest_events_from_org_metrics(test_org.guid)
+        step("Create dataset by admin")
+        transfer = Transfer.api_create(context, org_guid=test_org.guid, source=Urls.test_transfer_link)
+        transfer.ensure_finished()
+        events_after = LatestEvent.api_get_latest_events_from_org_metrics(test_org.guid)
+        step("Check admin dataset creation event is visible")
+        assert len(events_before) + 1 == len(events_after)
+        step("Create dataset by non-admin user")
+        transfer = Transfer.api_create(context, org_guid=test_org.guid, source=Urls.test_transfer_link,
+                                       client=test_org_manager_client)
+        transfer.ensure_finished()
+        events_after = LatestEvent.api_get_latest_events_from_org_metrics(test_org.guid, client=test_org_manager_client)
+        step("Check that non-admin dataset creation event is visible")
+        assert len(events_before) + 2 == len(events_after)
+
+    @priority.low
+    def test_events_visibility_from_another_org(self, test_org, context, another_org, another_org_client):
+        events_before = LatestEvent.api_get_latest_events_from_org_metrics(another_org.guid, client=another_org_client)
+        step("Create dataset in another org")
+        transfer = Transfer.api_create(context, org_guid=another_org.guid, source=Urls.test_transfer_link,
+                                       client=another_org_client)
+        transfer.ensure_finished()
+        step("Check event is on the latest events list")
+        events_after = LatestEvent.api_get_latest_events_from_org_metrics(another_org.guid, client=another_org_client)
+        assert len(events_before) + 1 == len(events_after), "The new event is not visible"
+        step("Check events from one org are not visible in another org")
+        test_org_events = LatestEvent.api_get_latest_events_from_org_metrics(test_org.guid)
+        assert all((event not in test_org_events for event in events_after)), \
+            "Some events from the another org are visible in first org"
