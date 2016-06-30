@@ -41,13 +41,14 @@ class HbaseClient(object):
             .get("credentials")\
             .get("hbase.namespace")
 
-    def create_table(self, table_name):
+    def create_table(self, table_name, column_families=None):
+        column_families = ["post"] if column_families is None else column_families
         self.request(
             method="POST",
             instance_url=self.app.urls[0],
             endpoint=self.API_TABLES_ENDPOINT,
             username=self.HBASE_CLIENT_NAME,
-            body={'tableName': table_name, 'columnFamilies': ["post"]},
+            body={'tableName': table_name, 'columnFamilies': column_families},
             message_on_error="Failed create hbase table")
 
     def get_tables(self):

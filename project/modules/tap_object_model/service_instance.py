@@ -41,7 +41,8 @@ class ServiceInstanceCreationFailed(Exception):
 class ServiceInstance(object):
     COMPARABLE_ATTRS = ["guid", "name", "space_guid", "service_label"]
 
-    def __init__(self, guid, name, space_guid, service_label, bound_apps=None, credentials=None, last_operation=None):
+    def __init__(self, guid, name, space_guid, service_label, bound_apps=None, credentials=None, last_operation=None,
+                 tags=None):
         self.guid = guid
         self.name = name
         self.space_guid = space_guid
@@ -49,6 +50,7 @@ class ServiceInstance(object):
         self.bound_apps = bound_apps or []
         self.credentials = credentials
         self.last_operation = last_operation
+        self.tags = tags
 
     def __eq__(self, other):
         return all((getattr(self, a) == getattr(other, a) for a in self.COMPARABLE_ATTRS))
@@ -112,6 +114,9 @@ class ServiceInstance(object):
                 instance = cls._get_instance_with_retry(name, space_guid, service_label)
             else:
                 raise
+        instance_summary = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
+                                                                             client=client)
+        instance.tags = next(filter(lambda s: s["label"] == instance.service_label, instance_summary))["tags"]
         if context:
             context.service_instances.append(instance)
         return instance

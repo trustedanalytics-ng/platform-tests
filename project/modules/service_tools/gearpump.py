@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import json
 from retry import retry
 
 from ..constants import ServiceLabels
@@ -70,13 +71,21 @@ class Gearpump(object):
             msg="Gearpump: login"
         )
 
-    def submit_application_jar(self, jar_file, application_name, timeout=120) -> GearpumpApplication:
+    def submit_application_jar(self, jar_file, application_name, extra_params=None, instance_credentials=None,
+                               timeout=120) -> GearpumpApplication:
         """Submit gearpump application. Response returns only: {"success":true/false}"""
         files = {'jar': open(jar_file, 'rb')}
+        request_args = {}
+        if extra_params:
+            request_args.update({"usersArgs": extra_params})
+        if instance_credentials:
+            request_args.update(instance_credentials)
+        data = {"configstring": ("", "tap={}".format(json.dumps(request_args)))} if request_args else None
         response = self.get_client().request(
             method=HttpMethod.POST,
             path="api/v1.0/master/submitapp",
             files=files,
+            data=data,
             msg="Gearpump: submit application",
             timeout=timeout
         )

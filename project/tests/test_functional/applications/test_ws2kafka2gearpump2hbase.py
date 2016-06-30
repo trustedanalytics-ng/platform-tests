@@ -18,6 +18,7 @@ import os
 import ssl
 
 import pytest
+from retry import retry
 
 import config
 from modules.app_sources import AppSources
@@ -27,7 +28,7 @@ from modules.hbase_client import HbaseClient
 from modules.markers import components, incremental, priority
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance
+from modules.tap_object_model import Application, ServiceInstance, ServiceKey
 from modules.test_names import generate_test_object_name
 from modules.websocket_client import WebsocketClient
 from tests.fixtures import fixtures
@@ -41,10 +42,10 @@ pytestmark = [components.ingestion_ws_kafka_gearpump_hbase, components.service_c
 class TestWs2kafka2gearpump2hbase:
 
     REPO_OWNER = TapGitHub.intel_data
-    TOPIC_NAME = "myFavouriteKafkaTopic"
-    WS2KAFKA_APP_NAME = "ws2kafka"
-    HBASE_API_APP_NAME = "hbase-reader"
+    TOPIC_IN = "topicIn"
+    TOPIC_OUT = "topicOut"
     KAFKA2HBASE_APP_NAME = "kafka2hbase"
+    HBASE_COLUMN_FAMILY = "message"
     HBASE_TABLE_NAME = "pipeline"
     HBASE_INSTANCE_NAME = "hbase1"
     KAFKA_INSTANCE_NAME = "kafka-inst"
@@ -53,12 +54,13 @@ class TestWs2kafka2gearpump2hbase:
     ONE_WORKER_PLAN_NAME = ServicePlan.WORKER_1
     SHARED_PLAN_NAME = ServicePlan.SHARED
     BARE_PLAN_NAME = ServicePlan.BARE
-    hbase_namespace = None
     db_and_table_name = None
+    test_instances = []
+    instances_credentials = {}
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_kafka_zookeeper_hbase_instances(self, request, test_org, test_space):
-        step("Create instances of kafka, zookeeper, hbase")
+    def setup_required_instances(self, request, test_org, test_space):
+        step("Create instances of kafka, zookeeper, hbase and kerberos")
 
         kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
                                                           service_label=ServiceLabels.KAFKA,
@@ -76,12 +78,12 @@ class TestWs2kafka2gearpump2hbase:
                                                              service_label=ServiceLabels.KERBEROS,
                                                              name=self.KERBEROS_INSTANCE_NAME,
                                                              service_plan_name=self.SHARED_PLAN_NAME)
-        test_instances = [kafka, zookeeper, hbase, kerberos]
-        request.addfinalizer(lambda: fixtures.tear_down_test_objects(test_instances))
+        self.__class__.test_instances = [kafka, zookeeper, hbase, kerberos]
+        request.addfinalizer(lambda: fixtures.tear_down_test_objects(self.__class__.test_instances))
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def push_apps(cls, test_org, test_space, login_to_cf, setup_kafka_zookeeper_hbase_instances, class_context):
+    def push_apps(cls, test_org, test_space, login_to_cf, setup_required_instances, class_context):
         step("Get ws2kafka app sources")
         ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER,
                                                 gh_auth=config.github_credentials())
@@ -104,7 +106,8 @@ class TestWs2kafka2gearpump2hbase:
                                                             cls.ZOOKEEPER_INSTANCE_NAME, cls.KAFKA_INSTANCE_NAME))
         cls.hbase_reader = HbaseClient(app_hbase_reader)
 
-    def _send_messages(self, connection_string):
+    def _send_messages(self, ws2kafka_url, messages, topic_name):
+        connection_string = "{}/{}".format(ws2kafka_url, topic_name)
         step("Send messages to {}".format(connection_string))
         cert_requirement = None
         ws_protocol = WebsocketClient.WS
@@ -112,11 +115,22 @@ class TestWs2kafka2gearpump2hbase:
             cert_requirement = ssl.CERT_NONE
             ws_protocol = WebsocketClient.WSS
         url = "{}://{}".format(ws_protocol, connection_string)
-        messages = ["Test-{}".format(n) for n in range(2)]
         ws = WebsocketClient(url, certificate_requirement=cert_requirement)
         for message in messages:
             ws.send(message)
         ws.close()
+
+    def _get_service_key_dict(self, instance):
+        service_key = ServiceKey.api_create(instance.guid, instance.name)
+        service_key.api_delete()
+        plan = self.BARE_PLAN_NAME if instance.service_label == ServiceLabels.HBASE else self.SHARED_PLAN_NAME
+        return {
+            "label": instance.service_label,
+            "name": instance.name,
+            "tags": instance.tags,
+            "credentials": service_key.credentials,
+            "plan": plan
+        }
 
     def test_0_create_gearpump_instance(self, test_org, test_space):
         step("Create gearpump instance")
@@ -132,34 +146,52 @@ class TestWs2kafka2gearpump2hbase:
         step("Log into gearpump UI")
         self.gearpump.login()
 
-    def test_step_2_get_hbase_namespace(self):
-        step("Get hbase namespace from hbase-reader env")
-        self.__class__.hbase_namespace = self.hbase_reader.get_namespace()
-        assert self.hbase_namespace is not None, "hbase namespace is not set"
-        self.__class__.db_and_table_name = "{}:{}".format(self.hbase_namespace, self.HBASE_TABLE_NAME)
+    def test_2_get_api_keys(self):
+        step("Create service key for each service instance and prepare credentials dictionary")
+        for instance in self.test_instances:
+            if instance.service_label != ServiceLabels.KERBEROS:
+                key_dict = {instance.service_label: [self._get_service_key_dict(instance)]}
+                self.__class__.instances_credentials.update(key_dict)
 
-    def test_step_3_create_hbase_table(self):
+    def test_3_get_hbase_namespace(self):
+        step("Get hbase namespace")
+        hbase_namespace = self.instances_credentials["hbase"][0]["credentials"].get("hbase.namespace")
+        assert hbase_namespace is not None, "hbase namespace is not set"
+        self.__class__.db_and_table_name = "{}:{}".format(hbase_namespace, self.HBASE_TABLE_NAME)
+
+    def test_4_create_hbase_table(self):
         step("Create hbase table pipeline")
-        self.hbase_reader.create_table(self.HBASE_TABLE_NAME)
+        self.hbase_reader.create_table(self.HBASE_TABLE_NAME, column_families=[self.HBASE_COLUMN_FAMILY])
         step("Check that pipeline table was created")
         hbase_tables = self.hbase_reader.get_tables()
         assert self.db_and_table_name in hbase_tables, "No pipeline table"
 
-    def test_step_4_submit_kafka2hbase_app_to_gearpump_dashboard(self):
+    def test_5_submit_kafka2hbase_app_to_gearpump_dashboard(self):
+        step("Create input and output topics by sending messages")
+        self._send_messages(self.app_ws2kafka.urls[0], ["init_message"], self.TOPIC_IN)
+        self._send_messages(self.app_ws2kafka.urls[0], ["init_message"], self.TOPIC_OUT)
         step("Download file kafka2hbase")
-        kafka2hbase_app_path = download_file(url=Urls.kafka2hbase_app_url,
-                                             save_file_name=Urls.kafka2hbase_app_url.split("/")[-1])
+        kafka2hbase_app_path = download_file(url=Urls.kafka2gearpump2hbase,
+                                             save_file_name=Urls.kafka2gearpump2hbase.split("/")[-1])
         step("Submit application kafka2hbase to gearpump dashboard")
-        kafka2hbase_app = self.gearpump.submit_application_jar(kafka2hbase_app_path, self.KAFKA2HBASE_APP_NAME)
+        extra_params = {"inputTopic": self.TOPIC_IN, "outputTopic": self.TOPIC_OUT, "tableName": self.db_and_table_name,
+                        "columnFamily": self.HBASE_COLUMN_FAMILY, "hbaseUser": "cf"}
+        kafka2hbase_app = self.gearpump.submit_application_jar(kafka2hbase_app_path, self.KAFKA2HBASE_APP_NAME,
+                                                               extra_params, self.instances_credentials)
         step("Check that submitted application is started")
         assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 
-    def test_step_5_send_from_ws2kafka(self):
-        connection_string = "{}/{}".format(self.app_ws2kafka.urls[0], self.TOPIC_NAME)
-        self._send_messages(connection_string)
+    @pytest.mark.bugs("DPNG-7938 'HBase is security enabled' error - kerberos env")
+    def test_6_check_messages_flow(self):
 
-    @pytest.mark.bugs("DPNG-6031")
-    def test_step_6_get_hbase_table_rows(self):
-        pipeline_rows = self.hbase_reader.get_first_rows_from_table(self.db_and_table_name)
-        step("Check that messages from kafka were sent to hbase")
-        assert self.MESSAGES[0][::-1] in pipeline_rows and self.MESSAGES[1][::-1] in pipeline_rows, "No messages in hbase"
+        @retry(AssertionError, tries=10, delay=2)
+        def _assert_messages_in_hbase():
+            rows = self.hbase_reader.get_first_rows_from_table(self.db_and_table_name)
+            hbase_messages = [row["columnFamilies"][0]["columnValues"][0]["value"] for row in rows]
+            step("Check that messages from kafka were sent to hbase")
+            assert messages[0][::-1] in hbase_messages and messages[1][::-1] in hbase_messages, \
+                "No messages in hbase"
+
+        messages = [generate_test_object_name(short=True) for _ in range(2)]
+        self._send_messages(self.app_ws2kafka.urls[0], messages, self.TOPIC_IN)
+        _assert_messages_in_hbase()
