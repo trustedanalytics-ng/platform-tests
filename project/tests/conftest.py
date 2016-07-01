@@ -89,17 +89,28 @@ def pytest_runtest_logstart(nodeid, location):
     # TODO implement logging start of a test
 
 
+def _generate_test_cases(services):
+    test_cases = []
+    ids = []
+    for service_type in services:
+        for plan in service_type.service_plans:
+            if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
+                test_cases.append((service_type, plan))
+                ids.append("{}_{}".format(service_type.label, plan["name"]))
+    return test_cases, ids
+
+
 def pytest_generate_tests(metafunc):
     """Parametrize marketplace fixture with tuples of ServiceType and plan dict."""
     if "non_parametrized_marketplace_services" in metafunc.funcargnames:
         core_space = fixtures.core_space()
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
-        test_cases = []
-        ids = []
-        for service_type in marketplace:
-            for plan in service_type.service_plans:
-                if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
-                    test_cases.append((service_type, plan))
-                    ids.append("{}_{}".format(service_type.label, plan["name"]))
+        non_k8s_services = [s for s in marketplace if "k8s" not in s.tags]
+        test_cases, ids = _generate_test_cases(non_k8s_services)
         metafunc.parametrize("non_parametrized_marketplace_services", test_cases, ids=ids)
-
+    elif "kubernetes_marketplace" in metafunc.funcargnames:
+        core_space = fixtures.core_space()
+        marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
+        k8s_services = [s for s in marketplace if "k8s" in s.tags]
+        test_cases, ids = _generate_test_cases(k8s_services)
+        metafunc.parametrize("kubernetes_marketplace", test_cases, ids=ids)

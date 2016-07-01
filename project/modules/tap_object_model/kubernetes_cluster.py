@@ -13,11 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import json
 from retry import retry
 
-from modules.constants import TapComponent as TAP
+from modules.constants import HttpStatus, TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf, demiurge
+from ..exceptions import UnexpectedResponseError
+
+
+class KubernetesClusterCreateInProgress(Exception):
+    pass
 
 
 class KubernetesCluster(object):
@@ -47,12 +52,14 @@ class KubernetesCluster(object):
         return clusters
 
     @classmethod
-    @retry(AssertionError, tries=180, delay=5)
+    @retry(KubernetesClusterCreateInProgress, tries=180, delay=5)
     def demiurge_api_get(cls, name):
-        response = demiurge.demiurge_get_cluster(cluster_name=name)
-        if response == "":
-            raise AssertionError("Cluster {} not found".format(name))
-        return cls._from_demiurge_response(cluster_info=response)
+        response = demiurge.demiurge_get_cluster(cluster_name=name, raw_response=True)
+        if not response.ok:
+            raise UnexpectedResponseError(response.status_code, response.text)
+        if response.status_code == HttpStatus.CODE_NO_CONTENT:
+            raise KubernetesClusterCreateInProgress()
+        return cls._from_demiurge_response(cluster_info=json.loads(response.text))
 
     @classmethod
     def demiurge_api_create(cls, name):

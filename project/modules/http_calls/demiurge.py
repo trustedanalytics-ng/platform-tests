@@ -29,12 +29,13 @@ def demiurge_get_clusters():
     )
 
 
-def demiurge_get_cluster(cluster_name):
+def demiurge_get_cluster(cluster_name, raw_response=False):
     """GET /clusters/{cluster_name}"""
     return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.demiurge)).request(
         method=HttpMethod.GET,
         path="clusters/{}".format(cluster_name),
-        msg="DEMIURGE: get cluster"
+        msg="DEMIURGE: get cluster",
+        raw_response=raw_response
     )
 
 def demiurge_create_cluster(cluster_name):

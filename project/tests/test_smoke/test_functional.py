@@ -20,7 +20,7 @@ from modules.http_client.configuration_provider.console import ConsoleConfigurat
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import components, long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Organization, ServiceInstance, Space, Transfer, User
+from modules.tap_object_model import DataSet, KubernetesCluster, Organization, ServiceInstance, Space, Transfer, User
 from modules.tap_object_model.flows import onboarding
 import tests.fixtures.assertions as assertions
 
@@ -186,6 +186,28 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
     instance = ServiceInstance.api_create(org_guid=core_org.guid, space_guid=core_space.guid,
                                           service_label=service_type.label, service_plan_guid=plan["guid"],
                                           context=context)
+    step("Check that the instance was created")
+    instance.ensure_created()
+    step("Delete the instance")
+    instance.api_delete()
+    step("Check that the instance was deleted")
+    instances = ServiceInstance.api_get_list(space_guid=core_space.guid, service_type_guid=service_type.guid)
+    assert instance not in instances
+
+
+@long
+@components.demiurge
+@components.kubernetes_broker
+def test_create_and_delete_kubernetes_service_instances(core_org, core_space, context, kubernetes_marketplace):
+    service_type = kubernetes_marketplace[0]
+    plan = kubernetes_marketplace[1]
+
+    step("Create instance {} {}".format(service_type.label, plan["name"]))
+    instance = ServiceInstance.api_create(org_guid=core_org.guid, space_guid=core_space.guid,
+                                          service_label=service_type.label, service_plan_guid=plan["guid"],
+                                          context=context)
+    step("Check that the cluster was created")
+    KubernetesCluster.demiurge_api_get(name=core_org.guid)
     step("Check that the instance was created")
     instance.ensure_created()
     step("Delete the instance")
