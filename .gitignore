@@ -13,4 +13,6 @@
 /project/applications/sample-apps/sample-java-application/target/*
 .cache
 *.iml
+project/target/*
+target/*
 *user_config*
