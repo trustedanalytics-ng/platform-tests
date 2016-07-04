@@ -99,7 +99,7 @@ class ServiceInstance(object):
         Create service instance using using plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
-        name = generate_test_object_name() if name is None else name
+        name = generate_test_object_name(short=True) if name is None else name
         instance = None
         try:
             response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,

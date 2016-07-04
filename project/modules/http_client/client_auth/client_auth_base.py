@@ -26,13 +26,8 @@ class ClientAuthBase(object, metaclass=ABCMeta):
 
     def __init__(self, url: str, session: HttpSession):
         self._url = url
-        self._session = session
+        self.session = session
         self._http_auth = self.authenticate()
-
-    @property
-    def session(self) -> HttpSession:
-        """Http session."""
-        return self._session
 
     @property
     def http_auth(self) -> AuthBase:

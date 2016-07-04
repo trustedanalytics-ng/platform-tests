@@ -22,13 +22,8 @@ class HttpClient(object):
     """Http api client."""
 
     def __init__(self, url: str, auth: ClientAuthBase):
-        self._url = url
+        self.url = url
         self._auth = auth
-
-    @property
-    def url(self):
-        """Client api base url address."""
-        return self._url
 
     @property
     def auth(self):
@@ -40,9 +35,13 @@ class HttpClient(object):
         """Session cookies."""
         return self.auth.session.cookies
 
-    @url.setter
-    def url(self, url):
-        self._url = url
+    @property
+    def session(self):
+        return self._auth.session
+
+    @session.setter
+    def session(self, session):
+        self._auth.session = session
 
     def request(self, method: HttpMethod, path, headers=None, files=None, params=None, data=None, body=None, msg="",
                 raw_response=False):

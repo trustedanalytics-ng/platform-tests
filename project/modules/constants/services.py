@@ -48,6 +48,7 @@ class ServiceLabels(object):
     RETHINK_DB = "rethinkdb"
     RSTUDIO = "rstudio"
     SCORING_ENGINE = "scoring-engine"
+    SEAHORSE = "k-seahorse-dev"
     SMTP = "smtp"
     YARN = "yarn"
     ZOOKEEPER = "zookeeper"

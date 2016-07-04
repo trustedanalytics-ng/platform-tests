@@ -30,7 +30,8 @@ class HttpSession(object):
     def __init__(self, username: str, password: str):
         self._username = username
         self._password = password
-        self._session = self._create_session()
+        self._session = Session()
+        self._session.verify = config.ssl_validation
 
     @property
     def username(self) -> str:
@@ -81,10 +82,3 @@ class HttpSession(object):
             return json.loads(response.text)
         except ValueError:
             return response.text
-
-    @staticmethod
-    def _create_session():
-        """Create http session."""
-        session = Session()
-        session.verify = config.ssl_validation
-        return session
