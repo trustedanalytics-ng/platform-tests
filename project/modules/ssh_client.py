@@ -80,7 +80,6 @@ class DirectSshClient(object):
 
     def exec_command(self, command):
         log_command(command)
-        command = " ".join(command)
         _, stdout, stderr = self.client.exec_command(command)
         return stdout.read().decode(), stderr.read().decode()
 

@@ -24,6 +24,7 @@ from modules.service_tools.psql import PsqlTable, PsqlColumn, PsqlRow
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceType
 from modules.test_names import generate_test_object_name
+from tests.fixtures.db_input import DbInput
 
 logged_components = (TAP.service_catalog,)
 pytestmark = [components.service_catalog]
@@ -31,23 +32,9 @@ pytestmark = [components.service_catalog]
 
 class TestPsql(object):
     psql_app = None
-    test_table_name = "oh_hai"
-    test_columns = [
-        {"name": "col0", "type": "VARCHAR", "max_len": 15},
-        {"name": "col1", "type": "INTEGER", "is_nullable": False},
-        {"name": "col2", "type": "BOOLEAN", "is_nullable": True}
-    ]
-    row_value_list = [[
-        {"column_name": "col0", "value": "kitten"},
-        {"column_name": "col1", "value": 42},
-        {"column_name": "col2", "value": True}
-    ], [
-        {"column_name": "col1", "value": 0}
-    ], [
-        {"column_name": "col0", "value": None},
-        {"column_name": "col1", "value": 9000},
-        {"column_name": "col2", "value": None}
-    ]]
+    test_table_name = DbInput.test_table_name
+    test_columns = DbInput.test_columns
+    row_value_list = DbInput.test_rows_1
 
     @pytest.fixture(scope="class", autouse=True)
     def postgres_instance(self, request, test_org, test_space):
@@ -143,7 +130,7 @@ class TestPsql(object):
     def test_put_row(self):
         PsqlTable.post(self.psql_app, self.test_table_name, self.test_columns)
         expected_rows = self._get_expected_rows()
-        new_values = [{"column_name": "col0", "value": "oh hai"}, {"column_name": "col2", "value": True}]
+        new_values = [{"column_name": "col0", "value": self.test_table_name}, {"column_name": "col2", "value": True}]
         expected_rows[1].put(new_values)
         row = PsqlRow.get(self.psql_app, self.test_table_name, row_id=expected_rows[1].id)
         assert expected_rows[1] == row

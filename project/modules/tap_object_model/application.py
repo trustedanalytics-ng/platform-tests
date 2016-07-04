@@ -251,7 +251,8 @@ class Application(object):
         response = cf.cf_api_get_app_env(self.guid)
         return {
             "VCAP_SERVICES": response["system_env_json"]["VCAP_SERVICES"],
-            "VCAP_APPLICATION": response["application_env_json"]["VCAP_APPLICATION"]
+            "VCAP_APPLICATION": response["application_env_json"]["VCAP_APPLICATION"],
+            "ENVIRONMENT_JSON": response["environment_json"]
         }
 
     def get_credentials(self, service_name, i=0):

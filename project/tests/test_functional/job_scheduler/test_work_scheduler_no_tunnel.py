@@ -23,6 +23,7 @@ from modules.tap_object_model import HdfsJob
 from modules.tap_object_model.flows import data_catalog
 from modules.markers import components, priority, incremental
 from tests.fixtures import assertions
+from tests.fixtures.db_input import DbInput
 
 logged_components = (TAP.workflow_scheduler,)
 pytestmark = [components.workflow_scheduler]
@@ -50,12 +51,10 @@ class TestJobSchedulerNoTunnelIncremental:
     TEST_DATASET = None
 
     TEST_TABLE = None
-    TEST_TABLE_NAME = "oh_hai"
-    TEST_COLUMNS = [{"name": "col0", "type": "character varying", "max_len": 15},
-                    {"name": "col1", "type": "integer", "is_nullable": False},
-                    {"name": "col2", "type": "boolean", "is_nullable": True}]
-    TEST_ROW = [{"column_name": "col0", "value": "kitten"}, {"column_name": "col1", "value": 1000000000},
-                {"column_name": "col2", "value": True}]
+    TEST_TABLE_NAME = DbInput.test_table_name
+    TEST_COLUMNS = DbInput.test_columns
+    TEST_ROWS = DbInput.test_rows_0[0]
+
     PSQL_CREDENTIALS = None
 
     HDFS_CONFIG_DIR = ""
@@ -66,20 +65,15 @@ class TestJobSchedulerNoTunnelIncremental:
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app):
+    def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app, request, class_context):
         step("Create a table in postgres DB")
         cls.TEST_TABLE = PsqlTable.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_COLUMNS)
-        PsqlRow.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_ROW)
-
+        PsqlRow.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_ROWS)
         step("Get psql credentials")
         PSQL_CREDENTIALS = Psql.get_credentials(psql_app)
         cls.db_hostname, cls.db_name, cls.username, cls.password, cls.port = PSQL_CREDENTIALS
-
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def cleanup_test(cls, request, class_context):
+        step("Create context")
         cls.context = class_context
-
         def fin():
             for table in PsqlTable.TABLES:
                 table.delete()
@@ -109,7 +103,7 @@ class TestJobSchedulerNoTunnelIncremental:
 
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_2_check_new_dataset_from_HDFS(self, test_org, psql_app):
-        PsqlRow.post(psql_app, self.TEST_TABLE_NAME, self.TEST_ROW)
+        PsqlRow.post(psql_app, self.TEST_TABLE_NAME, self.TEST_ROWS)
         assertions.assert_dataset_greater_with_retry(self.TEST_DATASET.size, self.context, test_org,
                                                      self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[1])
 

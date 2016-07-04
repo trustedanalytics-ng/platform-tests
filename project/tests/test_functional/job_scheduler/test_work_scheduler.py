@@ -25,6 +25,7 @@ from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
 from modules.webhdfs_tools import WebhdfsTools
 from tests.fixtures import assertions
+from tests.fixtures.db_input import DbInput
 
 logged_components = (TAP.workflow_scheduler,)
 pytestmark = [components.workflow_scheduler]
@@ -41,15 +42,10 @@ class Psql(object):
 
 @incremental
 @priority.medium
-@pytest.mark.skipif(config.kerberos, reason="Kerberos environment needs kerberos ticket (kinit required)")
+@pytest.mark.skipif(config.kerberos, reason="DPNG-8628 WebHDFS needs to be workable on environments with kerberos")
 class TestJobScheduler:
 
     TEST_HOST = "localhost"
-
-    USERNAME = config.jumpbox_username
-    PATH_TO_KEY = config.jumpbox_key_path
-    VIA_HOSTNAME = config.jumpbox_hostname
-    DESTINATION_HOSTNAME = "cdh-master-0"
 
     TEST_JOB = None
     JOB_FREQUENCY_AMOUNT = 5
@@ -59,14 +55,10 @@ class TestJobScheduler:
     JOB_OUTPUT_FILES_LIST = []
 
     TEST_TABLE = None
-    TEST_TABLE_NAME = "oh_hai"
-    TEST_COLUMNS = [{"name": "col0", "type": "character varying", "max_len": 15},
-                    {"name": "col1", "type": "integer", "is_nullable": False},
-                    {"name": "col2", "type": "boolean", "is_nullable": True}]
-    TEST_ROWS = [[{"column_name": "col0", "value": "kitten"}, {"column_name": "col1", "value": 42},
-                  {"column_name": "col2", "value": True}],
-                 [{"column_name": "col0", "value": "doggy"}, {"column_name": "col1", "value": 42},
-                  {"column_name": "col2", "value": True}]]
+    TEST_TABLE_NAME = DbInput.test_table_name
+    TEST_COLUMNS = DbInput.test_columns
+    TEST_ROWS = DbInput.test_rows_0
+
     PSQL_CREDENTIALS = None
 
     SSH_TUNNEL = None
@@ -78,14 +70,14 @@ class TestJobScheduler:
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app):
+    def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app, request):
         step("Create a table in postgres DB")
         cls.TEST_TABLE = PsqlTable.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_COLUMNS)
         PsqlRow.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_ROWS[0])
-
         step("Create tunnel to cdh-master-0")
-        cls.SSH_TUNNEL = SshTunnel(cls.DESTINATION_HOSTNAME, cls.USERNAME, path_to_key=cls.PATH_TO_KEY,
-                                   port=WebhdfsTools.DEFAULT_PORT, via_hostname=cls.VIA_HOSTNAME, via_port=22,
+        cls.SSH_TUNNEL = SshTunnel(hostname=config.cdh_master_0_hostname, username=config.jumpbox_username,
+                                   path_to_key=config.jumpbox_key_path, port=WebhdfsTools.DEFAULT_PORT,
+                                   via_hostname=config.jumpbox_hostname, via_port=22,
                                    local_port=WebhdfsTools.DEFAULT_PORT)
         cls.SSH_TUNNEL.connect()
         step("Get psql credentials")
@@ -93,13 +85,11 @@ class TestJobScheduler:
         cls.db_hostname, cls.db_name, cls.username, cls.password, cls.port = PSQL_CREDENTIALS
         cls.WEBHDFS = WebhdfsTools.create_client(host=cls.TEST_HOST)
 
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def cleanup_test(cls, request):
         def fin():
             cls.SSH_TUNNEL.disconnect()
             for table in PsqlTable.TABLES:
                 table.delete()
+
         request.addfinalizer(fin)
 
     def test_0_create_job(self, test_org):
