@@ -15,10 +15,9 @@
 #
 
 import json
-
 import pytest
-import requests
 
+from modules.file_utils import get_link_content
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub, Urls
 from modules.markers import priority, components, incremental
@@ -82,12 +81,6 @@ class TestDatasetReader:
                     binding.api_delete()
         request.addfinalizer(fin)
 
-    def _get_link_content(self, link):
-        """ Return content under the link as a string. """
-        r = requests.get(link)
-        r.raise_for_status()
-        return r.content.decode()
-
     def test_0_push_dataset_reader_app(self, test_space, dataset_target_uri, hdfs_instance, kerberos_instance,
                                        login_to_cf, class_context):
         step("Get app sources")
@@ -104,11 +97,11 @@ class TestDatasetReader:
 
     def test_1_check_dataset_is_correct(self):
         step("Get content of the csv file submitted as transfer")
-        expected_transfer = self._get_link_content(Urls.test_transfer_link)
+        expected_transfer = get_link_content(Urls.test_transfer_link)
         expected_transfer = [i.split(",") for i in expected_transfer.split("\n") if i]
 
         step("Get content of the transfer from dataset reader app")
-        reader_transfer = self._get_link_content("http://{}/rest/parsed-dataset".format(self.hdfs_reader_app.urls[0]))
+        reader_transfer = get_link_content("http://{}/rest/parsed-dataset".format(self.hdfs_reader_app.urls[0]))
         reader_transfer = json.loads(reader_transfer)
 
         step("Check both are the same")

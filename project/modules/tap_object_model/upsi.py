@@ -15,6 +15,7 @@
 #
 
 from ..http_calls import cloud_foundry as cf
+from ..http_calls.platform.service_catalog import api_delete_service_instance
 
 
 class Upsi(object):
@@ -45,3 +46,9 @@ class Upsi(object):
                        credentials=data["entity"]["credentials"])
             upsi_list.append(upsi)
         return upsi_list
+
+    def api_delete(self, client=None):
+        api_delete_service_instance(self.guid, client)
+
+    def cleanup(self):
+        self.api_delete()

@@ -114,3 +114,10 @@ def get_value_from_core_site_xml(xml_content, name):
     if value_tag is None:
         raise AssertionError("Missing tag 'value' in tag 'property' with text '{}'.".format(name))
     return value_tag.text
+
+
+def get_link_content(link):
+    """ Return content under the link as a string. """
+    r = requests.get(link)
+    r.raise_for_status()
+    return r.content.decode()

@@ -32,6 +32,7 @@ class TapGitHub:
     ws_kafka_hdfs = "ingestion-ws-kafka-hdfs"
     ws2kafka = "ws2kafka"
     space_shuttle_demo = "space-shuttle-demo"
+    hdfs_hive_demo = "hdfs-hive-demo"
 
 
 class RelativeRepositoryPaths:
