@@ -40,5 +40,4 @@ echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
 # assemble the artifact
 VERSION=$(grep current_version .bumpversion.cfg | cut -d " " -f 3)
 rm -rf $DELETED_ITEMS
-rm -rf $SECRETS_PATH
 zip -r platform-tests-${VERSION}.zip $VENDOR $ZIPPED_ITEMS
