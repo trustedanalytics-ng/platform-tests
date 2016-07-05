@@ -17,51 +17,77 @@
 import pytest
 
 from modules.file_utils import download_file
-from modules.constants import TapComponent as TAP, Urls, ServicePlan
-from modules.markers import components, priority
+from modules.constants import ServicePlan, TapComponent as TAP, Urls
+from modules.markers import components, incremental
 from modules.service_tools.gearpump import Gearpump
-from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
+from modules.tap_logger import step
+from modules.yarn import YarnAppStatus
+from tests.fixtures import assertions
 
 logged_components = (TAP.gearpump_broker, TAP.application_broker, TAP.service_catalog)
 pytestmark = [components.gearpump_broker, components.application_broker, components.service_catalog]
 
 
-class TestGearpumpConsole(object):
+@incremental
+class TestGearpumpConsole:
 
     COMPLEXDAG_APP_NAME = "dag"
     ONE_WORKER_PLAN_NAME = ServicePlan.WORKER_1
     COMPLEXDAG_FILE_NAME = Urls.complexdag_app_url.split("/")[-1]
 
+    gearpump = None
+    dag_app = None
+
     @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def download_complexdag(cls):
+    @pytest.fixture(scope="class")
+    def complexdag_app_path(cls):
         step("Download file complexdag")
-        cls.complexdag_app_path = download_file(
-            url=Urls.complexdag_app_url,
-            save_file_name=cls.COMPLEXDAG_FILE_NAME
-        )
+        return download_file(url=Urls.complexdag_app_url, save_file_name=cls.COMPLEXDAG_FILE_NAME)
 
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def create_gearpump(cls, test_org, test_space):
+    @pytest.fixture(scope="function")
+    def go_to_dashboard(self, request):
+        self.gearpump.go_to_dashboard()
+        request.addfinalizer(self.gearpump.go_to_console)
+
+    def test_0_create_gearpump_instance(self, test_org, test_space):
         step("Create gearpump instance with plan: 1 worker")
-        cls.gearpump = Gearpump(test_org.guid, test_space.guid, service_plan_name=cls.ONE_WORKER_PLAN_NAME)
-        step("Check that gearpump instance has been created")
+        self.__class__.gearpump = Gearpump(test_org.guid, test_space.guid, service_plan_name=self.ONE_WORKER_PLAN_NAME)
         instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
-        if cls.gearpump.instance not in instances:
-            raise AssertionError("gearpump instance is not on list of instances")
-        cls.gearpump.get_credentials()
-        step("Log into gearpump UI")
-        cls.gearpump.login()
+        assert self.gearpump.instance in instances, "Gearpump instance is not on list of instances"
+        step("Check yarn app status")
+        yarn_app_status = self.gearpump.get_yarn_app_status()
+        assert yarn_app_status == YarnAppStatus.RUNNING
 
-    @priority.high
-    def test_submit_complexdag_app_to_gearpump_dashboard(self):
+    def test_1_check_gearpump_ui_app_created(self):
+        step("Check that gearpump ui app has been created")
+        gearpump_ui_app = self.gearpump.get_ui_app()
+        assert gearpump_ui_app is not None, "Gearpump ui application was not created"
+        self.gearpump.get_credentials()
+
+    def test_2_submit_complexdag_app_to_gearpump_dashboard(self, add_admin_to_test_org, go_to_dashboard,
+                                                           complexdag_app_path):
         step("Submit application complexdag to gearpump dashboard")
-        dag_app = self.gearpump.submit_application_jar(self.complexdag_app_path, self.COMPLEXDAG_APP_NAME)
+        self.__class__.dag_app = self.gearpump.submit_application_jar(complexdag_app_path, self.COMPLEXDAG_APP_NAME)
         step("Check that submitted application is started")
-        assert dag_app.is_started is True
+        assert self.dag_app.is_started
+
+    def test_3_kill_complexdag_app(self, go_to_dashboard):
         step("Kill application")
-        dag_app.kill_application()
-        step("Check that killed application is stopped")
-        assert dag_app.is_started is False
+        self.dag_app.kill_application()
+        step("Check that application is stopped")
+        assert not self.dag_app.is_started
+
+    def test_4_delete_gearpump_instance(self, test_space):
+        step("Delete gearpump instance")
+        self.gearpump.instance.api_delete()
+        assertions.assert_not_in_with_retry(self.gearpump.instance, ServiceInstance.api_get_list,
+                                            space_guid=test_space.guid)
+        step("Check yarn app status")
+        yarn_app_status = self.gearpump.get_yarn_app_status()
+        assert yarn_app_status == YarnAppStatus.KILLED
+
+    def test_5_check_gearpump_ui_app_is_deleted(self):
+        step("Check that gearpump ui application is deleted")
+        gearpump_ui_app = self.gearpump.get_ui_app()
+        assert gearpump_ui_app is None, "Gearpump ui app was not deleted"

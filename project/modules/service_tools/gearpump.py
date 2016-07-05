@@ -17,12 +17,13 @@
 import json
 from retry import retry
 
-from ..constants import ServiceLabels
-from ..tap_object_model import ServiceInstance
-from ..http_client.client_auth.http_method import HttpMethod
-from ..http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
-from ..http_client.http_client import HttpClient
-from ..http_client.http_client_factory import HttpClientFactory
+import config
+from modules.constants import ServiceLabels
+from modules.tap_object_model import Application, ServiceInstance, ServiceKey
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
+from modules.http_client.http_client_factory import HttpClientFactory
+from modules.yarn import Yarn
 from .gearpump_application import GearpumpApplication
 
 
@@ -38,17 +39,9 @@ class Gearpump(object):
             service_plan_name=service_plan_name,
             params=params
         )
-        self.client = None
-
-    def get_client(self) -> HttpClient:
-        """Return gearpump http client."""
-        if self.client is None:
-            self.client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(
-                url=self.instance.instance_url,
-                username=self.instance.login,
-                password=self.instance.password
-            ))
-        return self.client
+        self.space_guid = space_guid
+        self.yarn_app_id = None
+        self.client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
 
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
@@ -58,18 +51,17 @@ class Gearpump(object):
         self.instance.password = response["password"]
         self.instance.instance_url = response["hostname"]
 
-    def login(self):
-        """Login into gearpump instance."""
-        data = {
-            "username": self.instance.login,
-            "password": self.instance.password,
-        }
-        self.get_client().request(
-            method=HttpMethod.POST,
-            path="login",
-            data=data,
-            msg="Gearpump: login"
+    def go_to_dashboard(self):
+        """Simulate going to gearpump dashboard"""
+        self.client.url = "http://{}".format(self.instance.instance_url)
+        self.client.request(
+            method=HttpMethod.GET,
+            path="login/oauth2/cloudfoundryuaa/authorize",
+            msg="Go to dashboard"
         )
+
+    def go_to_console(self):
+        self.client.url = config.console_url
 
     def submit_application_jar(self, jar_file, application_name, extra_params=None, instance_credentials=None,
                                timeout=120) -> GearpumpApplication:
@@ -81,7 +73,7 @@ class Gearpump(object):
         if instance_credentials:
             request_args.update(instance_credentials)
         data = {"configstring": ("", "tap={}".format(json.dumps(request_args)))} if request_args else None
-        response = self.get_client().request(
+        response = self.client.request(
             method=HttpMethod.POST,
             path="api/v1.0/master/submitapp",
             files=files,
@@ -90,4 +82,18 @@ class Gearpump(object):
             timeout=timeout
         )
         if response["success"]:
-            return GearpumpApplication(application_name, self.get_client())
+            return GearpumpApplication(application_name, self.client)
+
+    def get_ui_app(self):
+        apps = Application.api_get_list(space_guid=self.space_guid)
+        gearpump_ui_app = next((app for app in apps if "gearpump-ui-{}".format(self.instance.guid) in app.name), None)
+        return gearpump_ui_app
+
+    def get_yarn_app_status(self):
+        if self.yarn_app_id is None:
+            gearpump_key = ServiceKey.api_create(self.instance.guid)
+            self.yarn_app_id = gearpump_key.credentials["yarnApplicationId"]
+            gearpump_key.api_delete()
+        yarn = Yarn()
+        result = yarn.get_application_details(self.yarn_app_id)
+        return result["State"]
