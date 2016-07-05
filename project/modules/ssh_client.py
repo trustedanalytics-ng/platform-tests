@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from datetime import datetime
 import os
 import subprocess
 
@@ -192,13 +192,28 @@ class ClouderManagerSshTunnel(SshTunnel):
 
 class CdhMasterClient:
 
-    _OUTPUTS_PATH = "/tmp/remote_cmds"
-    _PREPARE_COMMANDS = [["set", "-e"], ["rm", "-rf", _OUTPUTS_PATH], ["mkdir", _OUTPUTS_PATH]]
-
-    _SSH_NO_HOST_CHECKING = ["-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no"]
-
     def __init__(self, cdh_host_name):
         self.cdh_host_name = cdh_host_name
+        self.output_path = "/tmp/{}".format(datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
+
+        ssh_no_host_checking = ["-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no"]
+        key_path = Config.get_cdh_key_path()
+        jumpbox_host = Config.get_jumpbox_host_address()
+
+        self._prepare_commands = [["set", "-e"], ["rm", "-rf", self.output_path], ["mkdir", self.output_path]]
+        self._ssh_command = ["ssh", "-tt"] + ssh_no_host_checking + ["-i", key_path,
+                                                                     "{}@{}".format(SshConfig.JUMPBOX_USERNAME,
+                                                                                    jumpbox_host),
+                                                                     "sudo", "ssh",
+                                                                     "-tt"] + ssh_no_host_checking + \
+                            ["{}@{}".format(SshConfig.CDH_MASTER_USERNAME, self.cdh_host_name)]
+        self._rsync_command = [
+            "rsync", "-avz", "--delete", "-e", "ssh {}@{} {} -i {} sudo ssh {}".format(
+                SshConfig.JUMPBOX_USERNAME, jumpbox_host,
+                " ".join(ssh_no_host_checking),
+                key_path, " ".join(ssh_no_host_checking)),
+            "{}@{}:{}/".format(SshConfig.CDH_MASTER_USERNAME, self.cdh_host_name, self.output_path), self.output_path
+        ]
 
     def exec_commands(self, commands):
         """
@@ -209,7 +224,7 @@ class CdhMasterClient:
             exec_commands([["echo", "hello"], ["python", "-c", "import os; os.write(2, \"world\")"]])
             -> [["hello", ""], ["", "world"]]
         """
-        process = subprocess.Popen(self._get_ssh_command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        process = subprocess.Popen(self._ssh_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT, universal_newlines=True)
 
         string_commands = self._send_commands_to_process(process, commands)
@@ -225,25 +240,9 @@ class CdhMasterClient:
 
         return_code = process.poll()
         if return_code != 0:
-            raise CommandExecutionException(return_code, " ".join(self._get_ssh_command()))
+            raise CommandExecutionException(return_code, " ".join(self._ssh_command))
 
         return outputs
-
-    def _get_ssh_command(self):
-        return ["ssh", "-tt"] + self._SSH_NO_HOST_CHECKING + ["-i", Config.get_cdh_key_path(),
-                                                              "{}@{}".format(SshConfig.JUMPBOX_USERNAME,
-                                                                             Config.get_jumpbox_host_address()),
-                                                              "sudo", "ssh", "-tt"] + self._SSH_NO_HOST_CHECKING + \
-               ["{}@{}".format(SshConfig.CDH_MASTER_USERNAME, self.cdh_host_name)]
-
-    def _get_rsync_command(self):
-        return [
-            "rsync", "-avz", "--delete", "-e", "ssh {}@{} {} -i {} sudo ssh {}".format(
-                SshConfig.JUMPBOX_USERNAME, Config.get_jumpbox_host_address(), " ".join(self._SSH_NO_HOST_CHECKING),
-                Config.get_cdh_key_path(), " ".join(self._SSH_NO_HOST_CHECKING)),
-            "{}@{}:{}/".format(SshConfig.CDH_MASTER_USERNAME, self.cdh_host_name, self._OUTPUTS_PATH),
-            self._OUTPUTS_PATH
-        ]
 
     @classmethod
     def _ensure_quote(cls, query):
@@ -253,7 +252,7 @@ class CdhMasterClient:
         return query
 
     def _send_commands_to_process(self, process, commands):
-        for command in self._PREPARE_COMMANDS:
+        for command in self._prepare_commands:
             process.stdin.write(" ".join(command + ["\n"]))
 
         string_commands = []
@@ -261,7 +260,7 @@ class CdhMasterClient:
         for i, command in enumerate(commands):
             command = [self._ensure_quote(i) for i in command]
             string_command = " ".join(
-                command + ["1>{}/{}_1".format(self._OUTPUTS_PATH, i), "2>{}/{}_2".format(self._OUTPUTS_PATH, i), "\n"])
+                command + ["1>{}/{}_1".format(self.output_path, i), "2>{}/{}_2".format(self.output_path, i), "\n"])
             logger.info("Executing command: %s", string_command)
             process.stdin.write(string_command)
             string_commands.append(string_command)
@@ -271,7 +270,7 @@ class CdhMasterClient:
         return string_commands
 
     def _get_commands_outputs(self, string_commands):
-        run(self._get_rsync_command())
+        run(self._rsync_command)
 
         cmds_outputs = []
         for i, command in enumerate(string_commands):
@@ -279,7 +278,7 @@ class CdhMasterClient:
             cmd_outputs = []
             for fd_name, fd in [("stdout", 1), ("stderr", 2)]:
                 logger.info("%s:", fd_name)
-                path = "{}/{}_{}".format(self._OUTPUTS_PATH, i, fd)
+                path = "{}/{}_{}".format(self.output_path, i, fd)
                 if os.path.exists(path):
                     with open(path) as f:
                         output = f.read().strip()
