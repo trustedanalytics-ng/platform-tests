@@ -138,7 +138,7 @@ def sample_java_app(request, test_org, test_space):
     return app
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="class")
 def sample_service(request, test_org, test_space, sample_python_app):
     log_fixture("sample_service: Register sample app in marketplace")
     service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name,
