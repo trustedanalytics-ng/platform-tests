@@ -18,29 +18,29 @@ from ...http_client.client_auth.http_method import HttpMethod
 from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
 from ...http_client.http_client_factory import HttpClientFactory
 
+
 def api_get_test_suites(client=None):
-    """GET /rest/platform_tests/testsuites"""
+    """GET /rest/platform_tests/tests"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/platform_tests/testsuites",
+        path="/rest/platform_tests/tests",
         msg="PLATFORM: get list of test suites"
     )
 
 
 def api_get_test_suite_results(suite_id, client=None):
-    """GET /rest/platform_tests/testsuites/{suite_id}/results"""
+    """GET /rest/platform_tests/tests/{suite_id}/results"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="/rest/platform_tests/testsuites/{}/results".format(suite_id),
+        path="/rest/platform_tests/tests/{}/results".format(suite_id),
         msg="PLATFORM: get results of test suite"
     )
 
 
-
 def api_create_test_suite(username, password, client=None):
-    """POST /rest/platform_tests/testsuites"""
+    """POST /rest/platform_tests/tests"""
     body = {
         "username": username,
         "password": password
@@ -48,7 +48,7 @@ def api_create_test_suite(username, password, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="/rest/platform_tests/testsuites",
+        path="/rest/platform_tests/tests",
         body=body,
         msg="PLATFORM: create test suite"
     )

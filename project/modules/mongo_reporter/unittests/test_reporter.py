@@ -50,6 +50,10 @@ class MockPassingItem:
     components = MockMarker(*_components)
     bugs = MockMarker(*_bugs)
 
+    @property
+    def obj(self):
+        return ""
+
     @classmethod
     def get_marker(cls, name):
         return getattr(cls, name)
@@ -69,6 +73,11 @@ class MockFailingReport:
 
 
 class MockFailingItem:
+
+    @property
+    def obj(self):
+        return ""
+
     @classmethod
     def get_marker(cls, name):
         return getattr(cls, name, None)
