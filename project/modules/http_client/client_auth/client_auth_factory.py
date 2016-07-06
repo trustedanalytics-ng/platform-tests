@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-import sys
-
 from ..config import Config
 from .http_session import HttpSession
 from .client_auth_base import ClientAuthBase
@@ -24,6 +22,7 @@ from .client_auth_login_page import ClientAuthLoginPage
 from .client_auth_token import ClientAuthToken
 from .client_auth_type import ClientAuthType
 from .client_auth_no_auth import ClientAuthNoAuth
+from .webhdfs_session import WebhdfsSession
 
 
 class ClientAuthFactory(object):
@@ -49,9 +48,7 @@ class ClientAuthFactory(object):
             return ClientAuthLoginPage(Config.auth_login_url(), session)
 
         elif auth_type == ClientAuthType.WEBHDFS:
-            __import__('modules.http_client.client_auth.webhdfs_session')
-            webhdfs_session = sys.modules['modules.http_client.client_auth.webhdfs_session']
-            return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, webhdfs_session.WebhdfsSession(username, password))
+            return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, WebhdfsSession(username, password))
 
         elif auth_type == ClientAuthType.NO_AUTH:
             return ClientAuthNoAuth(ClientAuthFactory.EMPTY_URL, session)

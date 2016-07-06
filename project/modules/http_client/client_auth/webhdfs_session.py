@@ -15,12 +15,12 @@
 #
 
 import json
+import sys
 
 from requests import Request
 
 from ...tap_logger import log_http_response
 from ...constants.http_status import HttpStatus
-from ...ssh_client import SshTunnel, SshTunnelException
 from ...exceptions import RedirectionLimitException, UnexpectedResponseError
 from .http_session import HttpSession
 
@@ -66,15 +66,20 @@ class WebhdfsSession(HttpSession):
             target_port = int(target_port)
         new_params = {"namenoderpcaddress": "nameservice1", "offset": 0}
         params.update(new_params)
+
+        # Dynamic import due to pack.sh remove module issue
+        __import__('modules.ssh_client')
+        ssh_client = sys.modules['modules.ssh_client']
+
         try:
-            ssh_tunnel = SshTunnel(
+            ssh_tunnel = ssh_client.SshTunnel(
                 target_host, via_host_username, path_to_key=path_to_key, port=target_port,
                 via_hostname=webhdfs_get_via_hostname(), local_port=target_port)
             ssh_tunnel.connect()
             webhdfs = webhdfs_create(host=test_host, port=target_port)
             response = webhdfs.request(method, body=body, params=params, path=hdfs_path)
         except ConnectionError:
-            raise SshTunnelException()
+            raise ssh_client.SshTunnelException()
         finally:
             ssh_tunnel.disconnect()
         return response
