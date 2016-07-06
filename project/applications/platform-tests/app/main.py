@@ -26,17 +26,15 @@ from config import AppConfig
 from console_authenticator import AuthenticationException, ConsoleAuthenticator
 from model import TestSuiteModel
 from runner import Runner
-
+from suite_provider import SuiteProvider
 
 app = flask.Flask(__name__)
 api = flask_restful.Api(app)
-
 
 app_config = AppConfig()
 
 
 class ExceptionHandlingApi(flask_restful.Api):
-
     def handle_error(self, e):
         code = getattr(e, "code", 500)
         message = getattr(e, "description", "Internal Server Error")
@@ -46,12 +44,12 @@ class ExceptionHandlingApi(flask_restful.Api):
         return self.make_response(response, code)
 
 
-class TestSuite(flask_restful.Resource):
+class Test(flask_restful.Resource):
     runner = Runner()
     console_authenticator = ConsoleAuthenticator(tap_domain=app_config.tap_domain)
 
     def get(self):
-        """Return a list of test suites."""
+        """Return a list of performed tests."""
         all_suites = [s.to_dict() for s in TestSuiteModel.get_list()]
         return flask.Response(json.dumps(all_suites), mimetype="application/json")
 
@@ -60,7 +58,7 @@ class TestSuite(flask_restful.Resource):
         Check whether runner is busy
         if so, return 429
         else, call Runner.run
-        return suite id from Runner.run
+        return test id from Runner.run
         """
         if self.runner.is_busy:
             flask_restful.abort(429, message="Runner is busy")
@@ -81,20 +79,28 @@ class TestSuite(flask_restful.Resource):
         return flask.jsonify(new_suite.to_dict())
 
 
-class TestSuiteResults(flask_restful.Resource):
-    def get(self, suite_id):
-        """Return detailed results of one test suite."""
+class TestResult(flask_restful.Resource):
+    def get(self, test_id):
+        """Return detailed results of one test."""
         suite = None
         try:
-            suite = TestSuiteModel.get_by_id(suite_id=ObjectId(suite_id))
+            suite = TestSuiteModel.get_by_id(suite_id=ObjectId(test_id))
         except (pymongo.errors.InvalidId, TypeError):
             flask_restful.abort(404, message="Not found")
         return flask.jsonify(suite.to_dict())
 
 
+class TestSuite(flask_restful.Resource):
+    def get(self):
+        """Return a list of available test suites."""
+        suites = SuiteProvider.get_list(TestSuiteModel)
+        return flask.Response(json.dumps(suites), mimetype="application/json")
+
+
 if __name__ == "__main__":
     api = ExceptionHandlingApi(app, catch_all_404s=True)
-    api.add_resource(TestSuite, "/rest/platform_tests/testsuites")
-    api.add_resource(TestSuiteResults, "/rest/platform_tests/testsuites/<suite_id>/results")
+    api.add_resource(Test, "/rest/platform_tests/tests")
+    api.add_resource(TestResult, "/rest/platform_tests/tests/<test_id>/results")
+    api.add_resource(TestSuite, "/rest/platform_tests/tests/suites")
 
     app.run(host=app_config.hostname, port=app_config.port, debug=app_config.debug)

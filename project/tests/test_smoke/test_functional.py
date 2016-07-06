@@ -33,6 +33,7 @@ pytestmark = [priority.high]
 
 
 def test_test_admin_can_login_to_platform():
+    """Admin Login"""
     HttpClientFactory.get(ConsoleConfigurationProvider.get())
 
 
@@ -40,6 +41,7 @@ def test_test_admin_can_login_to_platform():
 @components.auth_gateway
 @components.auth_proxy
 def test_create_and_delete_organization(context):
+    """Create and Delete Organization"""
     step("Create organization")
     test_org = Organization.api_create(context)
     step("Check that organization is on the list")
@@ -56,6 +58,7 @@ def test_create_and_delete_organization(context):
 @components.auth_gateway
 @components.auth_proxy
 def test_onboarding(context):
+    """Test Onboarding"""
     step("Onboard new user")
     test_user, test_org = onboarding.onboard(context, check_email=False)
     step("Check that user is created")
@@ -70,6 +73,7 @@ def test_onboarding(context):
 @components.auth_gateway
 @components.auth_proxy
 def test_add_new_user_to_and_delete_from_org(core_org, context):
+    """Add New User to and Delete from Organization"""
     step("Add new user to organization")
     test_user, test_org = onboarding.onboard(context, check_email=False)
     test_user.api_add_to_organization(core_org.guid, roles=User.ORG_ROLES["manager"],)
@@ -85,6 +89,7 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
 
 @components.user_management
 def test_create_and_delete_space(core_org):
+    """Create and Delete Space"""
     step("Create new space")
     test_space = Space.api_create(org=core_org)
     step("Check that the space was created")
@@ -100,6 +105,7 @@ def test_create_and_delete_space(core_org):
 @components.auth_gateway
 @components.auth_proxy
 def test_add_new_user_to_and_delete_from_space(core_org, core_space, context):
+    """Add New User to and Delete from Space"""
     step("Add new user to space")
     test_user, test_org = onboarding.onboard(context, check_email=False)
     test_user.api_add_to_space(core_space.guid, core_org.guid, roles=User.SPACE_ROLES["manager"])
@@ -141,6 +147,7 @@ def transfer_flow(transfer, core_org):
 @components.metadata_parser
 @components.data_catalog
 def test_add_and_delete_transfer_from_link(core_org, context):
+    """Create and Delete Transfer from Link"""
     step("Create a transfer")
     transfer = Transfer.api_create(context, category="other", source=Urls.test_transfer_link, org_guid=core_org.guid)
     transfer_flow(transfer, core_org)
@@ -151,6 +158,7 @@ def test_add_and_delete_transfer_from_link(core_org, context):
 @components.metadata_parser
 @components.data_catalog
 def test_add_and_delete_transfer_from_file(core_org, context):
+    """Create and Delete Transfer from File"""
     step("Generate a test csv file")
     file_path = generate_csv_file(column_count=10, row_count=100)
     step("Create a transfer by file upload")
@@ -170,6 +178,7 @@ def test_add_and_delete_transfer_from_file(core_org, context):
 @components.zookeeper_wssb_broker
 def test_create_and_delete_marketplace_service_instances(core_org, core_space, context,
                                                          non_parametrized_marketplace_services):
+    """Create and Delete Marketplace Service Instance"""
     service_type = non_parametrized_marketplace_services[0]
     plan = non_parametrized_marketplace_services[1]
 

@@ -78,13 +78,14 @@ class MongoReporter(object):
         self._save_test_run()
 
     def log_report(self, report, item):
+        name = item.obj.__doc__.strip() if item.obj.__doc__ else report.nodeid
         if report.when == "call":
             self._on_test_end(
                 components=self._marker_args_from_item(item, "components"),
                 defects=self._marker_args_from_item(item, "bugs"),
                 duration=report.duration,
                 log="",
-                name=report.nodeid,
+                name=name,
                 priority=self._priority_from_report(report),
                 stacktrace=self._stacktrace_from_report(report),
                 status=self.test_status_from_report(report),
@@ -93,7 +94,7 @@ class MongoReporter(object):
         elif report.failed:
             self._on_fixture_error(
                 log="",
-                name="{}: {} error".format(report.nodeid, report.when),
+                name="{}: {} error".format(name, report.when),
                 stacktrace=self._stacktrace_from_report(report)
             )
 

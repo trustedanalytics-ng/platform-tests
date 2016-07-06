@@ -18,6 +18,7 @@ from bson.objectid import ObjectId
 import pymongo
 
 from config import DatabaseConfig
+from suite_provider import SuiteProvider
 
 
 class DatabaseClient(object):
@@ -142,6 +143,13 @@ class TestSuiteModel(object):
             suites.append(cls(mongo_document=suite_document))
         return suites
 
+    @classmethod
+    def get_last_five(cls) -> int:
+        """
+        Query database and return last five runs.
+        """
+        return cls._collection.find(sort=[("end_date", -1)]).limit(5)
+
     def to_dict(self):
         result = {
             "suiteId": str(self.id),
@@ -149,7 +157,8 @@ class TestSuiteModel(object):
             "startDate": self.__start_date,
             "endDate": self.__end_date,
             "testsAll": self.__tests_all,
-            "testsFinished": self.__tests_finished
+            "testsFinished": self.__tests_finished,
+            "testName": SuiteProvider.SUITE_NAME
         }
         if self.__test_results is not None:
             result["tests"] = [t.to_dict() for t in self.__test_results]
