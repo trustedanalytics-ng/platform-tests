@@ -75,6 +75,7 @@ _delete_empty_env_variables()
 tap_domain = os.environ["PT_TAP_DOMAIN"]
 kerberos = get_bool("PT_KERBEROS", False)
 kubernetes = get_bool("PT_KUBERNETES", True)
+seahorse = get_bool("PT_SEAHORSE", False)
 core_org_name = os.environ.get("PT_CORE_ORG_NAME", "trustedanalytics")
 core_space_name = os.environ.get("PT_CORE_SPACE_NAME", "platform")
 ssl_validation = get_bool("PT_SSL_VALIDATION", False)
