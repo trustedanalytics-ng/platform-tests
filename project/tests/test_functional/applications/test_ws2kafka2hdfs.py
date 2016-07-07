@@ -24,13 +24,13 @@ from retry import retry
 import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub, ServicePlan
-from modules.webhdfs_tools import WebhdfsTools
-from modules.ssh_client import SshTunnel
 from modules.markers import components, incremental, priority
+from modules.ssh_client import SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
-from tests.fixtures import fixtures
+from modules.webhdfs_tools import WebhdfsTools
 from modules.websocket_client import WebsocketClient
+from tests.fixtures import fixtures
 
 logged_components = (TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)
 pytestmark = [components.ingestion_ws_kafka_hdfs, components.service_catalog]
@@ -53,7 +53,7 @@ class TestWs2kafka2hdfs:
     topic_name = None
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_kafka_zookeeper_hdfs_instances(self, request, test_org, test_space):
+    def setup_test_services(self, request, test_org, test_space):
         step("Create instances for kafka, zookeeper, hdfs and kerberos")
 
         kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
@@ -120,6 +120,7 @@ class TestWs2kafka2hdfs:
         self._send_ws_messages(connection_string)
         self._assert_message_count_in_app_stats(self.app_kafka2hdfs, self.MESSAGE_COUNT)
 
+    @pytest.mark.bugs("DPNG-6071 [api-tests] Error reading SSH protocol banner")
     def test_step_2_check_messages_in_hdfs(self):
         step("Get details of broker guid")
         broker_guid = self.app_kafka2hdfs.get_credentials("hdfs")["uri"].split("/", 3)[3]
