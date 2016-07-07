@@ -86,8 +86,9 @@ class Seahorse:
         return cloned_workflow_id
 
     def launch(self, workflow_id):
-        msg = '["SEND\ndestination:/exchange/seahorse/workflow.{0}.{0}.from\n\n{\\"messageType\\":\\"launch\\",' \
-              '\\"messageBody\\":{\\"workflowId\\":\\"{0}\\",\\"nodesToExecute\\":[]}}\u0000"]'.format(workflow_id)
+        msg = '["SEND\ndestination:/exchange/seahorse/workflow.' + workflow_id + '.' + workflow_id + \
+              '.from\n\n{\\"messageType\\":\\"launch\\",\\"messageBody\\":{\\"workflowId\\":\\"' + \
+              workflow_id + '\\",\\"nodesToExecute\\":[]}}\u0000"]'
         self.ws.send(msg)
 
     def assert_n_nodes_completed_successfully(self, n):
@@ -117,7 +118,7 @@ class Seahorse:
     def get_workflows(self):
         return self.http_client.request(HttpMethod.GET, path="{}".format(self.WORKFLOWS_PATH))
 
-    @retry(Exception, tries=10, delay=30)
+    @retry(Exception, tries=30, delay=30)
     def _ensure_seahorse_accessible(self):
         # Somehow test sometimes freezes on HTTPS connection - that's why there is timeout here
         with timeout(seconds=5):
