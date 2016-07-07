@@ -74,11 +74,11 @@ def api_create_service(name, description, org_guid, app_name, app_guid, image=No
 
 
 def api_delete_service(service_guid, client=None):
-    """DELETE /rest/marketplace/application/{service_guid}"""
+    """DELETE /rest/services/{service_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/marketplace/application/{}".format(service_guid),
+        path="rest/services/{}".format(service_guid),
         msg="PLATFORM: delete service"
     )
 
