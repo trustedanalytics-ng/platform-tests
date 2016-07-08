@@ -154,8 +154,8 @@ class TestSuiteModel(object):
         result = {
             "suiteId": str(self.id),
             "state": self.__state,
-            "startDate": self.__start_date,
-            "endDate": self.__end_date,
+            "startDate": str(self.__start_date),
+            "endDate": str(self.__end_date),
             "testsAll": self.__tests_all,
             "testsFinished": self.__tests_finished,
             "testName": SuiteProvider.SUITE_NAME

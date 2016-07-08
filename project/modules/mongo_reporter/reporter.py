@@ -62,7 +62,7 @@ class MongoReporter(object):
             "environment": environment,
             "environment_version": environment_version,
             "platform_components": platform_components,
-            "start_date": datetime.now().isoformat(),
+            "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "total_test_count": tests_to_run_count
         }
@@ -71,7 +71,7 @@ class MongoReporter(object):
 
     def on_run_end(self):
         mongo_run_document = {
-            "end_date": datetime.now().isoformat(),
+            "end_date": datetime.now(),
             "finished": True
         }
         self._mongo_run_document.update(mongo_run_document)
