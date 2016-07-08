@@ -41,7 +41,7 @@ pytestmark = [components.service_catalog, components.application_broker, compone
 class MarketplaceServices(TapTestCase):
 
     SERVICES_TESTED_SEPARATELY = [ServiceLabels.YARN, ServiceLabels.HDFS, ServiceLabels.HBASE, ServiceLabels.GEARPUMP,
-                                  ServiceLabels.H2O]
+                                  ServiceLabels.H2O, ServiceLabels.SEAHORSE]
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)

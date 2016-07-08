@@ -19,7 +19,7 @@ import signal
 from retry import retry
 import websocket
 
-from configuration import config
+import config
 from modules.constants import ServiceLabels, ServicePlan
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -33,11 +33,11 @@ logger = get_logger(__name__)
 
 
 class Seahorse:
-    tap_domain = config.CONFIG["domain"]
-    username = config.CONFIG["admin_username"]
-    password = config.CONFIG["admin_password"]
-    SESSIONS_PATH = "/v1/sessions"
-    WORKFLOWS_PATH = "/v1/workflows"
+    tap_domain = config.tap_domain
+    username = config.admin_username
+    password = config.admin_password
+    SESSIONS_PATH = "v1/sessions"
+    WORKFLOWS_PATH = "v1/workflows"
 
     def __init__(self, org_uuid, space_uuid, tap_http_client):
         self.service_instance = ServiceInstance.api_create_with_plan_name(

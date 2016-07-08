@@ -16,34 +16,17 @@
 
 import pytest
 
+import config
 from modules.service_tools.seahorse import Seahorse
-from modules.tap_object_model import Organization, Space
 
 
+@pytest.mark.skipif(not config.seahorse, "No seahorse on TAP")
 class TestSeahorse:
     WORKFLOW_NAME = "Text Message Spam Detection"
-    SEAHORSE_ORG_NAME = "seahorse"
-    SEAHORSE_SPACE_NAME = "seahorse"
 
     @pytest.fixture(scope="class")
-    def seahorse_org(self):
-        # TODO use test_org instead of this fixture when seahorse is fully integrated
-        orgs = Organization.api_get_list()
-        seahorse_org = next((o for o in orgs if o.name == self.SEAHORSE_ORG_NAME), None)
-        assert seahorse_org is not None, "No seahorse org found"
-        return seahorse_org
-
-    @pytest.fixture(scope="class")
-    def seahorse_space(self):
-        # TODO use test_space instead of this fixture when seahorse is fully integrated
-        spaces = Space.api_get_list()
-        seahorse_space = next((s for s in spaces if s.name == self.SEAHORSE_SPACE_NAME), None)
-        assert seahorse_space is not None, "No seahorse space found"
-        return seahorse_space
-
-    @pytest.fixture(scope="class")
-    def seahorse(self, request, admin_client, seahorse_org, seahorse_space):
-        seahorse = Seahorse(seahorse_org.guid, seahorse_space.guid, admin_client)
+    def seahorse(self, request, admin_client, test_org, test_space):
+        seahorse = Seahorse(test_org.guid, test_space.guid, admin_client)
         request.addfinalizer(seahorse.cleanup)
         return seahorse
 
