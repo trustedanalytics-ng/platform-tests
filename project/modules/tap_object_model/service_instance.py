@@ -42,7 +42,7 @@ class ServiceInstance(object):
     COMPARABLE_ATTRS = ["guid", "name", "space_guid", "service_label"]
 
     def __init__(self, guid, name, space_guid, service_label, bound_apps=None, credentials=None, last_operation=None,
-                 tags=None):
+                 dashboard_url=None, tags=None):
         self.guid = guid
         self.name = name
         self.space_guid = space_guid
@@ -51,6 +51,7 @@ class ServiceInstance(object):
         self.credentials = credentials
         self.last_operation = last_operation
         self.tags = tags
+        self.dashboard_url = dashboard_url
 
     def __eq__(self, other):
         return all((getattr(self, a) == getattr(other, a) for a in self.COMPARABLE_ATTRS))
@@ -108,7 +109,8 @@ class ServiceInstance(object):
                                                                    org_guid=org_guid, space_guid=space_guid,
                                                                    params=params, client=client)
             instance = cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid,
-                           service_label=service_label, last_operation=response["entity"].get("last_operation"))
+                           service_label=service_label, last_operation=response["entity"].get("last_operation"),
+                           dashboard_url=response["entity"]["dashboard_url"])
         except UnexpectedResponseError as e:
             if e.status == 504 and "Gateway Timeout" in e.error_message:
                 instance = cls._get_instance_with_retry(name, space_guid, service_label)
@@ -139,7 +141,8 @@ class ServiceInstance(object):
                           for binding_data in data["bound_apps"]]
             service_label = data["service_plan"]["service"]["label"] if data.get("service_plan") is not None else None
             instance = cls(guid=data["guid"], name=data["name"], space_guid=space_guid, service_label=service_label,
-                           bound_apps=bound_apps, last_operation=data.get("last_operation"))
+                           bound_apps=bound_apps, last_operation=data.get("last_operation"),
+                           dashboard_url=data.get("dashboard_url"))
             instances.append(instance)
         return instances
 
