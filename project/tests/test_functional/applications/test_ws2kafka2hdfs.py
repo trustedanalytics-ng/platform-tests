@@ -52,7 +52,7 @@ class TestWs2kafka2hdfs:
     app_kafka2hdfs = None
     topic_name = None
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="class", autouse=True)
     def setup_kafka_zookeeper_hdfs_instances(self, request, test_org, test_space):
         step("Create instances for kafka, zookeeper, hdfs and kerberos")
 

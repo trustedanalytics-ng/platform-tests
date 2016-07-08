@@ -16,7 +16,6 @@
 
 import os
 import ssl
-import unittest
 
 import pytest
 
@@ -47,6 +46,10 @@ class TestWs2kafka2gearpump2hbase:
     HBASE_API_APP_NAME = "hbase-reader"
     KAFKA2HBASE_APP_NAME = "kafka2hbase"
     HBASE_TABLE_NAME = "pipeline"
+    HBASE_INSTANCE_NAME = "hbase1"
+    KAFKA_INSTANCE_NAME = "kafka-inst"
+    KERBEROS_INSTANCE_NAME = "kerberos-instance"
+    ZOOKEEPER_INSTANCE_NAME = "zookeeper-inst"
     ONE_WORKER_PLAN_NAME = ServicePlan.WORKER_1
     SHARED_PLAN_NAME = ServicePlan.SHARED
     BARE_PLAN_NAME = ServicePlan.BARE
@@ -58,18 +61,20 @@ class TestWs2kafka2gearpump2hbase:
         step("Create instances of kafka, zookeeper, hbase")
 
         kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                          service_label=ServiceLabels.KAFKA, name="kafka-inst",
+                                                          service_label=ServiceLabels.KAFKA,
+                                                          name=self.KAFKA_INSTANCE_NAME,
                                                           service_plan_name=self.SHARED_PLAN_NAME)
         zookeeper = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
                                                               service_label=ServiceLabels.ZOOKEEPER,
-                                                              name="zookeeper-inst",
+                                                              name=self.ZOOKEEPER_INSTANCE_NAME,
                                                               service_plan_name=self.SHARED_PLAN_NAME)
         hbase = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                          service_label=ServiceLabels.HBASE, name="hbase1",
+                                                          service_label=ServiceLabels.HBASE,
+                                                          name=self.HBASE_INSTANCE_NAME,
                                                           service_plan_name=self.BARE_PLAN_NAME)
         kerberos = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
                                                              service_label=ServiceLabels.KERBEROS,
-                                                             name="kerberos-instance",
+                                                             name=self.KERBEROS_INSTANCE_NAME,
                                                              service_plan_name=self.SHARED_PLAN_NAME)
         test_instances = [kafka, zookeeper, hbase, kerberos]
         request.addfinalizer(lambda: fixtures.tear_down_test_objects(test_instances))
@@ -90,10 +95,13 @@ class TestWs2kafka2gearpump2hbase:
         step("Push apps")
         cls.app_ws2kafka = Application.push(class_context, space_guid=test_space.guid,
                                             source_directory=ws2kafka_path,
-                                            name=generate_test_object_name(short=True))
+                                            name=generate_test_object_name(short=True),
+                                            bound_services=(cls.KAFKA_INSTANCE_NAME,))
         app_hbase_reader = Application.push(class_context, space_guid=test_space.guid,
                                             source_directory=hbase_reader_repo.path,
-                                            name=generate_test_object_name(short=True))
+                                            name=generate_test_object_name(short=True),
+                                            bound_services=(cls.HBASE_INSTANCE_NAME, cls.KERBEROS_INSTANCE_NAME,
+                                                            cls.ZOOKEEPER_INSTANCE_NAME, cls.KAFKA_INSTANCE_NAME))
         cls.hbase_reader = HbaseClient(app_hbase_reader)
 
     def _send_messages(self, connection_string):
@@ -150,8 +158,8 @@ class TestWs2kafka2gearpump2hbase:
         connection_string = "{}/{}".format(self.app_ws2kafka.urls[0], self.TOPIC_NAME)
         self._send_messages(connection_string)
 
-    @unittest.skip("DPNG-6031")
+    @pytest.mark.bugs("DPNG-6031")
     def test_step_6_get_hbase_table_rows(self):
         pipeline_rows = self.hbase_reader.get_first_rows_from_table(self.db_and_table_name)
         step("Check that messages from kafka were sent to hbase")
-        assert self.MESSAGES[0][::-1] in pipeline_rows and self.MESSAGES[1][::-1] in pipeline_rows,"No messages in hbase"
+        assert self.MESSAGES[0][::-1] in pipeline_rows and self.MESSAGES[1][::-1] in pipeline_rows, "No messages in hbase"

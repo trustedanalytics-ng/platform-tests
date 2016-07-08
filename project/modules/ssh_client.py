@@ -188,6 +188,7 @@ class CdhMasterClient:
 
     def __init__(self, cdh_host_name):
 
+        self.cdh_host_name = cdh_host_name
         ssh_no_host_checking = ["-o", "UserKnownHostsFile=/dev/null", "-o", "StrictHostKeyChecking=no"]
         key_path = config.jumpbox_key_path
         jumpbox_host = config.jumpbox_hostname
@@ -198,12 +199,12 @@ class CdhMasterClient:
         self._prepare_commands = [["set", "-e"], ["rm", "-rf", self._output_path], ["mkdir", self._output_path]]
         self._ssh_command = ["ssh", "-tt"] + ssh_no_host_checking + \
                             ["-i", key_path, "{}@{}".format(jumpbox_username, jumpbox_host), "sudo", "ssh", "-tt"] + \
-                            ssh_no_host_checking + ["{}@{}".format(cdh_master_username, cdh_host_name)]
+                            ssh_no_host_checking + ["{}@{}".format(cdh_master_username, self.cdh_host_name)]
         self._rsync_command = [
             "rsync", "-avz", "--delete", "-e",
             "ssh {}@{} {} -i {} sudo ssh {}".format(jumpbox_username, jumpbox_host, " ".join(ssh_no_host_checking),
                                                     key_path, " ".join(ssh_no_host_checking)),
-            "{}@{}:{}/".format(cdh_master_username, cdh_host_name, self._output_path), self._output_path
+            "{}@{}:{}/".format(cdh_master_username, self.cdh_host_name, self._output_path), self._output_path
         ]
 
     def exec_commands(self, commands):
