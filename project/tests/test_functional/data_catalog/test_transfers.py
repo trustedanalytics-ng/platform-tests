@@ -23,10 +23,10 @@ from modules.file_utils import generate_csv_file
 from modules.http_calls.platform import das, hdfs_uploader
 from modules.markers import components, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Transfer
+from modules.tap_object_model import DataSet, Transfer, Organization
+from modules.tap_object_model.flows.data_catalog import create_dataset_from_file
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
-
 
 logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
 
@@ -44,12 +44,45 @@ class TestSubmitTransfer:
         transfer.ensure_finished()
         return transfer
 
+    @staticmethod
+    def check_transfer_and_dataset_are_visible_in_test_org(transfer, dataset, test_org):
+        step("Check transfer is visible on list of transfers")
+        transfers = Transfer.api_get_list(org_guid_list=[test_org.guid])
+        assert transfer in transfers
+        step("Check dataset is visible on list of datasets")
+        datasets = DataSet.api_get_list(org_list=[test_org])
+        assert dataset in datasets
+
+    @staticmethod
+    def check_transfer_and_dataset_are_not_visible_in_other_org(transfer, dataset, core_org):
+        step("Check transfer is not visible on other organization")
+        transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])
+        assert transfer not in transfers
+        step("Check dataset is not visible on other organization")
+        datasets = DataSet.api_get_list(org_list=[core_org])
+        assert dataset not in datasets
+
     @priority.high
-    def test_submit_transfer(self, context, test_org):
+    def test_submit_and_delete_transfer(self, context, test_org, core_org):
         transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid)
         step("Get transfers and check if they are the same as the uploaded ones")
         retrieved_transfer = Transfer.api_get(transfer.id)
         assert transfer == retrieved_transfer, "The transfer is not the same"
+        dataset = DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=transfer.title)
+        TestSubmitTransfer.check_transfer_and_dataset_are_visible_in_test_org(transfer=transfer, dataset=dataset,
+                                                                              test_org=test_org)
+        TestSubmitTransfer.check_transfer_and_dataset_are_not_visible_in_other_org(transfer=transfer, dataset=dataset,
+                                                                                   core_org=core_org)
+        step("Delete transfer")
+        transfer.cleanup()
+        step("Check transfer is not visible on list of transfers")
+        transfers = Transfer.api_get_list(org_guid_list=[test_org.guid])
+        assert transfer not in transfers
+        step("Delete dataset")
+        dataset.cleanup()
+        step("Check dataset is not visible on list of datasets")
+        datasets = DataSet.api_get_list(org_list=[test_org])
+        assert dataset not in datasets
 
     @priority.low
     def test_create_transfer_with_new_category(self, context, test_org):
@@ -63,11 +96,10 @@ class TestSubmitTransfer:
     def test_cannot_create_transfer_when_providing_invalid_org_guid(self, context):
         org_guid = "invalid_guid"
         step("Try create a transfer by providing invalid org guid")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, self.MSG_ON_INVALID_ORG_GUID,
-                                     self._create_transfer, context, org_guid=org_guid, category=self.DEFAULT_CATEGORY)
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, self.MSG_ON_INVALID_ORG_GUID, self._create_transfer,
+                                     context, org_guid=org_guid, category=self.DEFAULT_CATEGORY)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-6074 Transfer (from link) without category timeouts")
     def test_create_transfer_without_category(self, context, test_org):
         transfer = self._create_transfer(context, category=None, org_guid=test_org.guid)
         step("Get transfer and check it's category")
@@ -89,19 +121,50 @@ class TestSubmitTransfer:
 
 
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
-    pytestmark = [components.das, components.hdfs_downloader, components.metadata_parser]
+    pytestmark = [components.das, components.hdfs_downloader, components.hdfs_uploader, components.metadata_parser]
 
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_BAD_REQUEST
 
-    def _create_transfer(self, context, org_guid, column_count=10, row_count=10, category=TestSubmitTransfer.DEFAULT_CATEGORY,
-                         size=None, file_name=None):
-        step("Generate sample csv file")
+    def _create_transfer(self, context, org_guid, column_count=10, row_count=10,
+                         category=TestSubmitTransfer.DEFAULT_CATEGORY, size=None, file_name=None):
+        step("Generate sample file")
         file_path = generate_csv_file(column_count=column_count, row_count=row_count, size=size, file_name=file_name)
         step("Create a transfer with new category")
         transfer = Transfer.api_create_by_file_upload(context, category=category, org_guid=org_guid,
                                                       file_path=file_path)
         transfer.ensure_finished()
         return transfer
+
+    @priority.high
+    def test_cannot_submit_transfer_in_foreign_org(self, context):
+        foreign_org = Organization.api_create(context=context)
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN, self._create_transfer,
+                                     context, org_guid=foreign_org.guid, category=self.DEFAULT_CATEGORY)
+
+    @priority.low
+    @pytest.mark.parametrize("category", DataSet.CATEGORIES)
+    def test_submit_transfer_from_txt_file(self, category, context, test_org, core_org):
+        step("Create txt file name")
+        txt_file_name = "{}.txt".format(generate_test_object_name())
+        step("Create transfer from file")
+        transfer, dataset = create_dataset_from_file(context=context, org=test_org,
+                                                     file_path=generate_csv_file(file_name=txt_file_name),
+                                                     category=category)
+        TestSubmitTransfer.check_transfer_and_dataset_are_visible_in_test_org(transfer=transfer, dataset=dataset,
+                                                                              test_org=test_org)
+        TestSubmitTransfer.check_transfer_and_dataset_are_not_visible_in_other_org(transfer=transfer, dataset=dataset,
+                                                                                   core_org=core_org)
+
+    @priority.low
+    @pytest.mark.parametrize("category", DataSet.CATEGORIES)
+    def test_submit_transfer_from_csv_file_all_categories(self, context, category, test_org, core_org):
+        step("Create a transfer with chosen category")
+        transfer, dataset = create_dataset_from_file(context=context, org=test_org, file_path=generate_csv_file(),
+                                                     category=category)
+        TestSubmitTransfer.check_transfer_and_dataset_are_visible_in_test_org(transfer=transfer, dataset=dataset,
+                                                                              test_org=test_org)
+        TestSubmitTransfer.check_transfer_and_dataset_are_not_visible_in_other_org(transfer=transfer, dataset=dataset,
+                                                                                   core_org=core_org)
 
     @priority.medium
     def test_submit_transfer_from_large_file(self, context, test_org):
@@ -110,7 +173,6 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
         DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=transfer.title)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-3678 Create transfer by file upload without category - http 500")
     def test_create_transfer_without_category(self, context, test_org):
         return super().test_create_transfer_without_category(context, test_org)
 

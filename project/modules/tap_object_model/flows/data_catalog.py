@@ -26,8 +26,9 @@ def create_dataset_from_link(context, org, source, is_public=False, category=Dat
     return transfer, data_set
 
 
-def create_dataset_from_file(context, org, file_path, client=None) -> tuple:
-    transfer = Transfer.api_create_by_file_upload(context, org_guid=org.guid, file_path=file_path, client=client)
+def create_dataset_from_file(context, org, file_path, client=None, category=None) -> tuple:
+    transfer = Transfer.api_create_by_file_upload(context, org_guid=org.guid, file_path=file_path, category=category,
+                                                  client=client)
     transfer.ensure_finished()
     data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title, client=client)
     return transfer, data_set
