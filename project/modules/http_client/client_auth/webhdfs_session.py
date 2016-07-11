@@ -39,9 +39,9 @@ def counted(func):
 
 class WebhdfsSession(HttpSession):
 
-    def _request_perform(self, request: Request, raw_response: bool):
+    def _request_perform(self, request: Request, raw_response: bool, timeout: int):
         """Perform request and return response."""
-        response = self._session.send(request, allow_redirects=False)
+        response = self._session.send(request, allow_redirects=False, timeout=timeout)
         log_http_response(response)
         if raw_response is True:
             return response
