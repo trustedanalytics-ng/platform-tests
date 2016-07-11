@@ -33,6 +33,7 @@ pytestmark = [components.auth_gateway]
 
 @incremental
 @priority.medium
+@pytest.mark.skipif(config.kerberos, reason="DPNG-8628 WebHDFS needs to be workable on environments with kerberos")
 class TestAuthGateway:
     HDFS_INSTANCE_NAME = "hdfs-instance"
     REQUIRED_SUB_DIRS = ["apps", "brokers", "tmp", "user"]
