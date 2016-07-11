@@ -44,7 +44,7 @@ class HttpClient(object):
         self._auth.session = session
 
     def request(self, method: HttpMethod, path, headers=None, files=None, params=None, data=None, body=None, msg="",
-                raw_response=False):
+                raw_response=False, timeout=None):
         """Perform request and return response."""
         if not self._auth.authenticated:
             self._auth.authenticate()
@@ -58,5 +58,6 @@ class HttpClient(object):
             body=body,
             auth=self._auth.http_auth,
             log_message=msg,
-            raw_response=raw_response
+            raw_response=raw_response,
+            timeout=timeout
         )

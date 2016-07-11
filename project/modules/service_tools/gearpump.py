@@ -70,14 +70,15 @@ class Gearpump(object):
             msg="Gearpump: login"
         )
 
-    def submit_application_jar(self, jar_file, application_name) -> GearpumpApplication:
+    def submit_application_jar(self, jar_file, application_name, timeout=None) -> GearpumpApplication:
         """Submit gearpump application. Response returns only: {"success":true/false}"""
         files = {'jar': open(jar_file, 'rb')}
         response = self.get_client().request(
             method=HttpMethod.POST,
             path="api/v1.0/master/submitapp",
             files=files,
-            msg="Gearpump: submit application"
+            msg="Gearpump: submit application",
+            timeout=timeout
         )
         if response["success"]:
             return GearpumpApplication(application_name, self.get_client())
