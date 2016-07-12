@@ -121,6 +121,7 @@ class TestReporter(TestCase):
         self.mongo_reporter.on_run_start(
             expected_run_document["environment"],
             expected_run_document["environment_version"],
+            expected_run_document["appstack_version"],
             expected_run_document["platform_components"],
             expected_run_document["total_test_count"]
         )
@@ -212,6 +213,7 @@ class TestReporter(TestCase):
         expected_run = {
             "environment": "test_environment",
             "environment_version": "0.7",
+            "appstack_version": "master",
             "finished": finished,
             "log": "",
             "platform_components": ("a", "b", "c"),

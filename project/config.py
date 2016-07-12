@@ -80,6 +80,9 @@ core_org_name = os.environ.get("PT_CORE_ORG_NAME", "trustedanalytics")
 core_space_name = os.environ.get("PT_CORE_SPACE_NAME", "platform")
 ssl_validation = get_bool("PT_SSL_VALIDATION", False)
 
+# TAP version provided by user
+tap_version = os.environ.get("PT_TAP_VERSION", None)
+
 # local_appstack_path - if None, appstack is retrieved from GitHub apployer repository
 appstack_file_path = os.environ.get("PT_APPSTACK_PATH", None)
 appstack_version = os.environ.get("PT_APPSTACK_VERSION", "master")
