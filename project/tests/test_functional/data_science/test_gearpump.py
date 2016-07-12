@@ -58,7 +58,7 @@ class TestGearpumpConsole(object):
     @priority.high
     def test_submit_complexdag_app_to_gearpump_dashboard(self):
         step("Submit application complexdag to gearpump dashboard")
-        dag_app = self.gearpump.submit_application_jar(self.complexdag_app_path, self.COMPLEXDAG_APP_NAME, timeout=120)
+        dag_app = self.gearpump.submit_application_jar(self.complexdag_app_path, self.COMPLEXDAG_APP_NAME)
         step("Check that submitted application is started")
         assert dag_app.is_started is True
         step("Kill application")
