@@ -20,7 +20,7 @@ import config
 from modules.service_tools.seahorse import Seahorse
 
 
-@pytest.mark.skipif(not config.seahorse, "No seahorse on TAP")
+@pytest.mark.skipif(not config.seahorse, reason="No seahorse on TAP")
 class TestSeahorse:
     WORKFLOW_NAME = "Text Message Spam Detection"
 
