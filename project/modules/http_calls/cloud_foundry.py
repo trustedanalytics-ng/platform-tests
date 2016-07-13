@@ -18,10 +18,10 @@ import config
 from .. import command as cmd
 from ..constants import LoggerType
 from ..exceptions import YouMustBeJokingException
-from ..tap_logger import get_logger, log_command
-from ..http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from ..http_client.client_auth.http_method import HttpMethod
+from ..http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from ..http_client.http_client_factory import HttpClientFactory
+from ..tap_logger import get_logger, log_command
 
 # ====================================================== cf cli ====================================================== #
 
@@ -269,6 +269,11 @@ def cf_api_get_service_instances():
     """GET /v2/service_instances"""
     return __get_all_pages("service_instances", log_msg="CF: get service instances")
 
+
+def cf_api_get_service_keys_for_instance(org_guid):
+    """GET /v2/service_instances/{org_guid}/service_keys"""
+    return __get_all_pages("service_instances/{}/service_keys".format(org_guid),
+                           log_msg="CF: get service keys for service")
 
 # ---------------------------------------------------- buildpacks ---------------------------------------------------- #
 

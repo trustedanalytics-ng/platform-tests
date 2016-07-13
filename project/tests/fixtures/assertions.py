@@ -18,9 +18,10 @@ import pytest
 from retry import retry
 
 from modules.exceptions import UnexpectedResponseError
-from modules.tap_object_model.flows import data_catalog
-from modules.tap_object_model import User
 from modules.tap_logger import step
+from modules.tap_object_model import User
+from modules.tap_object_model.flows import data_catalog
+from modules.tap_object_model.flows.summaries import cf_api_get_space_summary
 
 
 @retry(AssertionError, tries=20, delay=3)
@@ -105,3 +106,16 @@ def assert_dataset_greater_with_retry(value_to_compare, *args, **kwargs):
 def assert_datasets_not_empty(dataset_list):
     for dataset in dataset_list:
         assert dataset.size > 0
+
+
+def assert_instance_in_space(instance, space):
+    assert instance_in_space(instance, space)
+
+
+def assert_instance_not_in_space(instance, space):
+    assert not instance_in_space(instance, space)
+
+
+def instance_in_space(instance, space):
+    _, instances = cf_api_get_space_summary(space.guid)
+    return any((i for i in instances if instance == i))

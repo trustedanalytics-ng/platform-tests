@@ -18,13 +18,13 @@ import itertools
 
 import pytest
 
-from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ParametrizedService, ServiceLabels, ServicePlan, \
+from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, ServicePlan, \
     TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.markers import components, long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance, ServiceType, Space, User
+from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space, User
 from modules.tap_object_model.flows.services import create_instance_and_key_then_delete_key_and_instance
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_no_errors, assert_raises_http_exception, assert_in_with_retry, \
@@ -40,9 +40,7 @@ pytestmark = [components.service_catalog, components.application_broker, compone
 
 
 class TestMarketplaceServices:
-
-    SERVICES_TESTED_SEPARATELY = [ServiceLabels.YARN, ServiceLabels.HDFS, ServiceLabels.HBASE, ServiceLabels.GEARPUMP,
-                                  ServiceLabels.H2O, ServiceLabels.SEAHORSE]
+    SERVICES_TESTED_SEPARATELY = [ServiceLabels.HDFS, ServiceLabels.SEAHORSE]
 
     @staticmethod
     @pytest.fixture(scope="class")
@@ -61,6 +59,16 @@ class TestMarketplaceServices:
         space_manager = User.api_create_by_adding_to_space(class_context, test_org.guid, test_space.guid,
                                                            roles=User.SPACE_ROLES["manager"])
         cls.space_manager_client = space_manager.login()
+
+    @staticmethod
+    @pytest.fixture(scope="class")
+    def other_org(class_context):
+        return Organization.api_create(class_context)
+
+    @staticmethod
+    @pytest.fixture(scope="class")
+    def other_space(other_org):
+        return Space.api_create(other_org)
 
     def _create_jupyter_instance_and_login(self, context, param_key, param_value, test_org, test_space):
         param = {param_key: param_value}
@@ -82,20 +90,26 @@ class TestMarketplaceServices:
 
     @long
     @priority.high
-    def test_create_and_delete_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
-        errors = []
-        for service_type in marketplace_services:
-            if service_type.label in self.SERVICES_TESTED_SEPARATELY:
-                continue
-            for plan in service_type.service_plans:
-                if ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
-                    continue
-                try:
-                    create_instance_and_key_then_delete_key_and_instance(
-                        context, test_org.guid, test_space.guid, service_type.label, plan["guid"], plan["name"])
-                except Exception as e:
-                    errors.append("Service {} plan {}\n{}".format(service_type.label, plan["name"], str(e)))
-        assert_no_errors(errors)
+    @pytest.mark.bugs("DPNG-3474 Command cf create-service-key does not work for yarn broker")
+    @pytest.mark.bugs("DPNG-2798 Enable HBase broker to use Service Keys")
+    @pytest.mark.bugs("DPNG-6087 Connection to service catalog timedout - cannot create gearpump instance")
+    @pytest.mark.bugs("DPNG-6086 Adding service key to H2O instance fails")
+    def test_create_and_delete_service_instance_and_keys(self, context, test_org, test_space, other_space,
+                                                         space_users_clients,
+                                                         non_parametrized_marketplace_services):
+        service_type, plan = non_parametrized_marketplace_services
+        self._skip_if_service_excluded(service_type)
+        create_instance_and_key_then_delete_key_and_instance(context=context,
+                                                             org=test_org,
+                                                             space=test_space,
+                                                             other_space=other_space,
+                                                             service_label=service_type.label,
+                                                             plan=plan,
+                                                             client=space_users_clients["developer"])
+
+    def _skip_if_service_excluded(self, service):
+        if service.label in self.SERVICES_TESTED_SEPARATELY:
+            pytest.skip(msg="Service {} is tested separately".format(service.label))
 
     @priority.low
     def test_create_instance_with_non_required_parameter(self, context, test_org, test_space):
@@ -159,64 +173,6 @@ class TestMarketplaceServices:
                                                service_plan_guid=plan["guid"], client=client)
                 if e is None or e.value.status != HttpStatus.CODE_FORBIDDEN:
                     errors.append("Service '{}' failed to respond with given error status.".format(service_type.label))
-        assert_no_errors(errors)
-
-    @priority.low
-    @pytest.mark.bugs("DPNG-6086 Adding service key to H2O instance fails")
-    def test_create_h2o_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
-        label = ServiceLabels.H2O
-        h2o = next((s for s in marketplace_services if s.label == label), None)
-        if h2o is None:
-            pytest.skip("h2o is not available in Marketplace")
-        errors = []
-        for plan in h2o.service_plans:
-            try:
-                create_instance_and_key_then_delete_key_and_instance(
-                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
-            except Exception as e:
-                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
-        assert_no_errors(errors)
-
-    @priority.low
-    @pytest.mark.bugs("DPNG-3474 Command cf create-service-key does not work for yarn broker")
-    def test_create_yarn_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
-        label = ServiceLabels.YARN
-        yarn = next(s for s in marketplace_services if s.label == label)
-        errors = []
-        for plan in yarn.service_plans:
-            try:
-                create_instance_and_key_then_delete_key_and_instance(
-                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
-            except Exception as e:
-                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
-        assert_no_errors(errors)
-
-    @priority.low
-    @pytest.mark.bugs("DPNG-2798 Enable HBase broker to use Service Keys")
-    def test_create_hbase_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
-        label = ServiceLabels.HBASE
-        hbase = next(s for s in marketplace_services if s.label == label)
-        errors = []
-        for plan in hbase.service_plans:
-            try:
-                create_instance_and_key_then_delete_key_and_instance(
-                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
-            except Exception as e:
-                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
-        assert_no_errors(errors)
-
-    @priority.low
-    @pytest.mark.bugs("DPNG-6087 Connection to service catalog timedout - cannot create gearpump instance")
-    def test_create_gearpump_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
-        label = ServiceLabels.GEARPUMP
-        gearpump = next(s for s in marketplace_services if s.label == label)
-        errors = []
-        for plan in gearpump.service_plans:
-            try:
-                create_instance_and_key_then_delete_key_and_instance(
-                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
-            except Exception as e:
-                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
