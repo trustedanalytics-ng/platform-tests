@@ -61,11 +61,11 @@ class Application(object):
 
     @property
     def is_started(self):
-        if self._state is None:
-            return None
-        if self._state.upper() == self.STATUS["start"]:
-            return True
-        return False
+        return self._state.upper() == self.STATUS["start"]
+
+    @property
+    def is_stopped(self):
+        return self._state.upper() == self.STATUS["stop"]
 
     @property
     def is_running(self):
@@ -201,11 +201,17 @@ class Application(object):
     def ensure_started(self):
         applications = self.api_get_list(self.space_guid)
         application = next((app for app in applications if app.name == self.name), None)
-        if application is None:
-            raise AssertionError("App does not exist")
+        assert application is not None, "App does not exist"
         self._state = application._state
-        if not self.is_started:
-            raise AssertionError("App is not started")
+        assert self.is_started is True, "App is not started"
+
+    @retry(AssertionError, tries=30, delay=2)
+    def ensure_stopped(self):
+        applications = self.api_get_list(self.space_guid)
+        application = next((app for app in applications if app.name == self.name), None)
+        assert application is not None, "App does not exist"
+        self._state = application._state
+        assert self.is_stopped is True, "App is not stopped"
 
     # -------------------------------- cf api -------------------------------- #
 

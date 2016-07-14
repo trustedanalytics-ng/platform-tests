@@ -79,6 +79,15 @@ def assert_returns_http_error(callable_obj, *args, **kwargs):
     assert status_first_digit in (4, 5), "Status code: {}. Expected: 4XX or 5XX".format(e.exception.status)
 
 
+@retry(AssertionError, tries=5, delay=10)
+def assert_returns_http_success_with_retry(callable_obj, *args, **kwargs):
+    response = None
+    try:
+        response = callable_obj(*args, **kwargs)
+    finally:
+        assert response is not None
+
+
 def assert_no_errors(errors: list):
     assert len(errors) == 0, "\n".join([str(e) for e in errors])
 

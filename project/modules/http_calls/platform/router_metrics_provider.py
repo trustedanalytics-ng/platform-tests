@@ -14,7 +14,16 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.132'
+from ...http_client.client_auth.http_method import HttpMethod
+from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
+def api_get_router_metrics(client=None):
+    """GET /rest/metrics/load-data"""
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="rest/metrics/load-data",
+        msg="PLATFORM: get router metrics"
+    )
