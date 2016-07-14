@@ -25,7 +25,7 @@ pytest==2.9.1
 python-dateutil==2.5.3
 pytz==2016.4
 PyYAML==3.11
-requests==2.7.0
+requests==2.10.0
 retry==0.9.1
 rsa==3.4.2
 sentinels==0.0.6
