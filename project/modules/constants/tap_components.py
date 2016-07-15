@@ -69,6 +69,8 @@ class TapComponent(Enum):
     gateway = "gateway"
     scoring_engine = "scoring-engine"
 
+    space_shuttle_demo = "space-shuttle-demo"
+
     # ---- TAP NG components ---- #
     blob_store = "blob-store"
     catalog = "catalog"
