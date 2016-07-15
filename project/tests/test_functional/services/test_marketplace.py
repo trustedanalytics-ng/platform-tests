@@ -94,7 +94,7 @@ class TestMarketplaceServices:
                     create_instance_and_key_then_delete_key_and_instance(
                         test_org.guid, test_space.guid, service_type.label, plan["guid"], plan["name"])
                 except Exception as e:
-                    errors.append(e)
+                    errors.append("Service {} plan {}\n{}".format(service_type.label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
@@ -173,7 +173,7 @@ class TestMarketplaceServices:
                 create_instance_and_key_then_delete_key_and_instance(
                     test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
-                errors.append(e)
+                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
@@ -187,7 +187,7 @@ class TestMarketplaceServices:
                 create_instance_and_key_then_delete_key_and_instance(
                     test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
-                errors.append(e)
+                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
@@ -201,7 +201,7 @@ class TestMarketplaceServices:
                 create_instance_and_key_then_delete_key_and_instance(
                     test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
-                errors.append(e)
+                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
@@ -215,7 +215,7 @@ class TestMarketplaceServices:
                 create_instance_and_key_then_delete_key_and_instance(
                     test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
-                errors.append(e)
+                errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
