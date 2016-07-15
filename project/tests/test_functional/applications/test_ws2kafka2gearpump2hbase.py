@@ -106,6 +106,11 @@ class TestWs2kafka2gearpump2hbase:
                                                             cls.ZOOKEEPER_INSTANCE_NAME, cls.KAFKA_INSTANCE_NAME))
         cls.hbase_reader = HbaseClient(app_hbase_reader)
 
+    @pytest.fixture(scope="function")
+    def go_to_dashboard(self, request):
+        self.gearpump.go_to_dashboard()
+        request.addfinalizer(self.gearpump.go_to_console)
+
     def _send_messages(self, ws2kafka_url, messages, topic_name):
         connection_string = "{}/{}".format(ws2kafka_url, topic_name)
         step("Send messages to {}".format(connection_string))
@@ -134,39 +139,34 @@ class TestWs2kafka2gearpump2hbase:
 
     def test_0_create_gearpump_instance(self, test_org, test_space):
         step("Create gearpump instance")
-        self.__class__.gearpump = Gearpump(test_org.guid, test_space.guid,
-                                           service_plan_name=self.ONE_WORKER_PLAN_NAME)
+        self.__class__.gearpump = Gearpump(test_org.guid, test_space.guid, service_plan_name=self.ONE_WORKER_PLAN_NAME)
         step("Check that gearpump instance has been created")
         instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
         if self.gearpump.instance not in instances:
             raise AssertionError("gearpump instance is not on list of instances")
         self.gearpump.get_credentials()
 
-    def test_1_login_to_gearpump_ui(self):
-        step("Log into gearpump UI")
-        self.gearpump.login()
-
-    def test_2_get_api_keys(self):
+    def test_1_get_api_keys(self):
         step("Create service key for each service instance and prepare credentials dictionary")
         for instance in self.test_instances:
             if instance.service_label != ServiceLabels.KERBEROS:
                 key_dict = {instance.service_label: [self._get_service_key_dict(instance)]}
                 self.__class__.instances_credentials.update(key_dict)
 
-    def test_3_get_hbase_namespace(self):
+    def test_2_get_hbase_namespace(self):
         step("Get hbase namespace")
         hbase_namespace = self.instances_credentials["hbase"][0]["credentials"].get("hbase.namespace")
         assert hbase_namespace is not None, "hbase namespace is not set"
         self.__class__.db_and_table_name = "{}:{}".format(hbase_namespace, self.HBASE_TABLE_NAME)
 
-    def test_4_create_hbase_table(self):
+    def test_3_create_hbase_table(self):
         step("Create hbase table pipeline")
         self.hbase_reader.create_table(self.HBASE_TABLE_NAME, column_families=[self.HBASE_COLUMN_FAMILY])
         step("Check that pipeline table was created")
         hbase_tables = self.hbase_reader.get_tables()
         assert self.db_and_table_name in hbase_tables, "No pipeline table"
 
-    def test_5_submit_kafka2hbase_app_to_gearpump_dashboard(self):
+    def test_4_submit_kafka2hbase_app_to_gearpump_dashboard(self, add_admin_to_test_org, go_to_dashboard):
         step("Create input and output topics by sending messages")
         self._send_messages(self.app_ws2kafka.urls[0], ["init_message"], self.TOPIC_IN)
         self._send_messages(self.app_ws2kafka.urls[0], ["init_message"], self.TOPIC_OUT)
@@ -182,7 +182,7 @@ class TestWs2kafka2gearpump2hbase:
         assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 
     @pytest.mark.bugs("DPNG-7938 'HBase is security enabled' error - kerberos env")
-    def test_6_check_messages_flow(self):
+    def test_5_check_messages_flow(self):
 
         @retry(AssertionError, tries=10, delay=2)
         def _assert_messages_in_hbase():
