@@ -82,8 +82,8 @@ class TestGatlingRunner(PackageTestCase):
             self._gatling_runner.run
         )
 
-    @mock.patch('modules.gatling_runner.config.config.TIME_BEFORE_NEXT_TRY', 0)
-    @mock.patch('modules.gatling_runner.config.config.NUMBER_OF_TRIALS_WITHOUT_LOG_CHANGE', 1)
+    @mock.patch('modules.gatling_runner.config.Config.TIME_BEFORE_NEXT_TRY', 0)
+    @mock.patch('modules.gatling_runner.config.Config.NUMBER_OF_TRIALS_WITHOUT_LOG_CHANGE', 1)
     @mock.patch("modules.gatling_runner.gatling_runner.GatlingRunner._connect")
     def test_run_should_return_exceeded_number_of_trials_without_log_change_exception(self, connect_mock):
         # given
