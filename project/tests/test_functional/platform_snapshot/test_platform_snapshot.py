@@ -17,7 +17,7 @@
 from retry import retry
 
 from modules.constants import TapComponent as TAP
-from modules.markers import components
+from modules.markers import priority, components
 from modules.tap_logger import step
 from modules.tap_object_model import PlatformSnapshot
 
@@ -34,6 +34,7 @@ class TestSnapshot:
         assert len(snapshots_after) > len(snapshots_before)
         return snapshots_after[0]
 
+    @priority.medium
     def test_compare_snapshot_and_version(self):
         step("Get snapshots")
         snapshots = PlatformSnapshot.api_get_snapshots()
@@ -41,6 +42,7 @@ class TestSnapshot:
         version = PlatformSnapshot.api_get_version()
         assert snapshots[0] == version
 
+    @priority.medium
     def test_trigger_snapshot(self):
         step("Get snapshots")
         snapshots_before = PlatformSnapshot.api_get_snapshots()

@@ -85,7 +85,6 @@ class TestJobSchedulerNoTunnelIncremental:
                 table.delete()
         request.addfinalizer(fin)
 
-    @priority.low
     def test_0_create_job(self, test_org):
         self.__class__.TEST_JOB = HdfsJob.api_create(
             test_org.guid, frequency_amount=self.JOB_FREQUENCY_AMOUNT,
@@ -98,7 +97,6 @@ class TestJobSchedulerNoTunnelIncremental:
         self.__class__.HDFS_CONFIG_DIR = self.TEST_JOB.app_path
         self.__class__.HDFS_OUTPUT_DIR = self.TEST_JOB.target_dirs[0]
 
-    @priority.low
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_1_check_dataset_from_HDFS(self, test_org):
         datasets = data_catalog.create_datasets_from_links(self.context, test_org, [self.HDFS_CONFIG_DIR +
@@ -109,7 +107,6 @@ class TestJobSchedulerNoTunnelIncremental:
             self.context, test_org, self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[0])
         assert self.TEST_DATASET.size > 0
 
-    @priority.low
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_2_check_new_dataset_from_HDFS(self, test_org, psql_app):
         PsqlRow.post(psql_app, self.TEST_TABLE_NAME, self.TEST_ROW)

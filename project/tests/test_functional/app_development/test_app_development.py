@@ -16,7 +16,7 @@
 
 from modules.constants import TapComponent as TAP
 from modules.http_calls.platform import platform_pages as api
-from modules.markers import components
+from modules.markers import priority, components
 from modules.tap_logger import step
 
 logged_components = (TAP.console,)
@@ -25,6 +25,7 @@ logged_components = (TAP.console,)
 class TestAppDevelopmentPage(object):
     pytestmark = [components.console]
 
+    @priority.low
     def test_get_app_development_page(self, admin_client, test_org_manager_client):
         self._assert_app_development_page(admin_client)
         self._assert_app_development_page(test_org_manager_client)

@@ -102,7 +102,6 @@ class TestJobScheduler:
                 table.delete()
         request.addfinalizer(fin)
 
-    @priority.low
     def test_0_create_job(self, test_org):
         self.__class__.TEST_JOB = HdfsJob.api_create(
             test_org.guid, frequency_amount=self.JOB_FREQUENCY_AMOUNT,
@@ -114,7 +113,6 @@ class TestJobScheduler:
         self.__class__.HDFS_CONFIG_DIR = self.TEST_JOB.app_path.split("nameservice1/")[1]
         self.__class__.HDFS_OUTPUT_DIR = self.TEST_JOB.target_dirs[0].split("nameservice1/")[1]
 
-    @priority.low
     def test_1_check_HDFS(self):
         job_config_files_list = self.TEST_JOB.get_files_list(self.WEBHDFS, self.HDFS_CONFIG_DIR)
         assert set(self.HDFS_CONFIG_FILES).issubset(set(job_config_files_list))
@@ -124,7 +122,6 @@ class TestJobScheduler:
                                                                  self.JOB_OUTPUT_FILES_LIST[0])
         HdfsJob.check_response(job_output_file_content, self.TEST_ROWS)
 
-    @priority.low
     def test_2_check_new_data_on_HDFS(self, psql_app):
         PsqlRow.post(psql_app, self.TEST_TABLE_NAME, self.TEST_ROWS[1])
         rows = PsqlRow.get_list(psql_app, self.TEST_TABLE_NAME)
