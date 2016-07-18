@@ -57,10 +57,11 @@ class MongoReporter(object):
             }
         return cls._instance
 
-    def on_run_start(self, environment, environment_version, appstack_version, platform_components, tests_to_run_count):
+    def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components, tests_to_run_count):
         mongo_run_document = {
             "environment": environment,
             "environment_version": environment_version,
+            "infrastructure_type": infrastructure_type,
             "appstack_version": appstack_version,
             "platform_components": platform_components,
             "start_date": datetime.now(),

@@ -83,6 +83,9 @@ ssl_validation = get_bool("PT_SSL_VALIDATION", False)
 # TAP version provided by user
 tap_version = os.environ.get("PT_TAP_VERSION", None)
 
+# TAP infrastructure type provided by user (AWS, OS or Hybrid)
+tap_infrastructure_type = os.environ.get("PT_TAP_INFRASTRUCTURE_TYPE", None)
+
 # local_appstack_path - if None, appstack is retrieved from GitHub apployer repository
 appstack_file_path = os.environ.get("PT_APPSTACK_PATH", None)
 appstack_version = os.environ.get("PT_APPSTACK_VERSION", "master")
