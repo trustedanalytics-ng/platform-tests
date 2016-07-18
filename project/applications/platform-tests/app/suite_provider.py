@@ -62,8 +62,8 @@ class SuiteProvider(object):
         suite_documents = suite_model.get_last_five()
         for suite_document in suite_documents:
             counter += 1
-            start_date = dateutil.parser.parse(suite_document['start_date'])
-            end_date = dateutil.parser.parse(suite_document['end_date'])
+            start_date = dateutil.parser.parse(str(suite_document['start_date']))
+            end_date = dateutil.parser.parse(str(suite_document['end_date']))
             time_taken = end_date - start_date
             execution_time += time_taken.seconds
         if counter == 0:
