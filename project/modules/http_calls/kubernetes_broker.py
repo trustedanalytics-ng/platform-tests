@@ -14,8 +14,9 @@
 # limitations under the License.
 #
 
+import config
 from modules.constants import TapComponent
-from modules.http_client.configuration_provider.kubernetes_broker import KubernetesBrokerTokenConfigurationProvider
+from modules.http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from modules.http_client.configuration_provider.broker import BrokerConfigurationProvider
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -110,7 +111,7 @@ def k8s_broker_change_instance_visibility(org_guid, space_guid, plan_id, service
         "visibility": visibility
     }
 
-    response = HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    response = HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.POST,
         path="rest/kubernetes/service/visibility",
         body=body,
@@ -121,7 +122,7 @@ def k8s_broker_change_instance_visibility(org_guid, space_guid, plan_id, service
 
 def k8s_broker_get_instance(org_guid, space_guid, service_id):
     """GET /rest/kubernetes/{org_guid}/{space_guid}/service/{service_instance_guid}"""
-    response = HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    response = HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.GET,
         path="rest/kubernetes/{}/{}/service/{}".format(org_guid, space_guid, service_id),
         msg="K8S BROKER: get instance"
@@ -131,7 +132,7 @@ def k8s_broker_get_instance(org_guid, space_guid, service_id):
 
 def k8s_broker_get_instance_list(org_guid, space_guid):
     """GET /rest/kubernetes/{org_guid}/{space_guid}/services"""
-    response = HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    response = HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.GET,
         path="rest/kubernetes/{}/{}/services".format(org_guid, space_guid),
         msg="K8S BROKER: get instance list"
@@ -156,7 +157,7 @@ def k8s_broker_create_secret(org_guid, key_id, username_b64, password_b64):
         "kind": "Secret",
         "metadata": {"name": key_id, "labels": {"managed_by": "TAP"}}
     }
-    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.POST,
         body=body,
         path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
@@ -166,7 +167,7 @@ def k8s_broker_create_secret(org_guid, key_id, username_b64, password_b64):
 
 def k8s_broker_get_secret(org_guid, key_id):
     """GET /rest/kubernetes/{org_id}/secret/{key}"""
-    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.GET,
         path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
         msg="K8S BROKER: get secret"
@@ -184,7 +185,7 @@ def k8s_broker_update_secret(org_guid, key_id, username_b64=None, password_b64=N
     if password_b64 is not None:
         body["data"]["password"] = password_b64
 
-    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.PUT,
         body=body,
         path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
@@ -194,7 +195,7 @@ def k8s_broker_update_secret(org_guid, key_id, username_b64=None, password_b64=N
 
 def k8s_broker_delete_secret(org_guid, key_id):
     """DELETE /rest/kubernetes/{org_id}/secret/{key}"""
-    return HttpClientFactory.get(KubernetesBrokerTokenConfigurationProvider.get()).request(
+    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.DELETE,
         path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
         msg="K8S BROKER: delete secret"

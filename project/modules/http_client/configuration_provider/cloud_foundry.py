@@ -24,14 +24,16 @@ class CloudFoundryConfigurationProvider(BaseConfigurationProvider):
     """Provide configuration for cloud foundry http client."""
 
     @classmethod
-    def get(cls, username=None, password=None) -> HttpClientConfiguration:
+    def get(cls, url=None, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
         if username is None:
             username = config.admin_username
             password = config.admin_password
+        if url is None:
+            url = config.cf_api_url_full
         return HttpClientConfiguration(
             client_type=HttpClientType.CLOUD_FOUNDRY,
-            url=config.cf_api_url_full,
+            url=url,
             username=username,
             password=password
         )

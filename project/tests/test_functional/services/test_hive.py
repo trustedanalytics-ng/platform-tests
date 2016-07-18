@@ -122,10 +122,10 @@ class TestHive:
         assert len(self.hdfs_reader_app.urls) == 1
 
     def test_1_create_and_get_table_content(self, dataset_target_uri, expected_transfer_content):
-        self.__class__.hive_client = HttpClientFactory.get(CloudFoundryConfigurationProvider.get())
+        self.__class__.hive_client = HttpClientFactory.get(
+            CloudFoundryConfigurationProvider.get(url="http://{}/rest/hive".format(self.hdfs_reader_app.urls[0])))
         dir_path = dataset_target_uri[:dataset_target_uri.rfind("/")]
         step("Create hive table with csv data")
-        self.hive_client.url = "http://{}/rest/hive".format(self.hdfs_reader_app.urls[0])
         self.hive_client.request(method=HttpMethod.POST, path=self.TABLE_NAME,
                                  params={"fullHdfsDirPath": dir_path, "headerFilePath": dataset_target_uri})
 
