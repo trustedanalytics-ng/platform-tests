@@ -144,11 +144,11 @@ class TestSuiteModel(object):
         return suites
 
     @classmethod
-    def get_last_five(cls) -> int:
+    def get_last_five(cls):
         """
         Query database and return last five runs.
         """
-        return cls._collection.find(sort=[("end_date", -1)]).limit(5)
+        return cls._collection.find({'end_date': {'$ne': None}}, sort=[("end_date", pymongo.DESCENDING)]).limit(5)
 
     def to_dict(self):
         result = {

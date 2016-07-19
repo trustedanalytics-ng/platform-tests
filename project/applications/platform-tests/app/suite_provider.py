@@ -34,12 +34,12 @@ class SuiteProvider(object):
     }]
 
     @classmethod
-    def get_list(cls, suite_model) -> list:
+    def get_list(cls, last_runs) -> list:
         """Return list of available test suites"""
         suites = []
         for s in cls.SUITES:
             s["tests"] = cls._get_tests(s)
-            s["approxRunTime"] = cls._get_average_run_time(suite_model)
+            s["approxRunTime"] = cls._get_average_run_time(last_runs)
             suites.append(s)
         return suites
 
@@ -55,11 +55,10 @@ class SuiteProvider(object):
         return docs
 
     @classmethod
-    def _get_average_run_time(cls, suite_model):
+    def _get_average_run_time(cls, suite_documents):
         """Get suite average run time"""
         counter = 0
         execution_time = 0.0
-        suite_documents = suite_model.get_last_five()
         for suite_document in suite_documents:
             counter += 1
             start_date = dateutil.parser.parse(str(suite_document['start_date']))
@@ -68,6 +67,7 @@ class SuiteProvider(object):
             execution_time += time_taken.seconds
         if counter == 0:
             return "30 Minutes"
+        execution_time = execution_time / counter
         minutes = math.floor(execution_time / 60)
         seconds = int(execution_time - (minutes * 60))
         return "{} Minutes {} Seconds".format(minutes, seconds)

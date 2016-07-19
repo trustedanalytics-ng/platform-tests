@@ -93,7 +93,8 @@ class TestResult(flask_restful.Resource):
 class TestSuite(flask_restful.Resource):
     def get(self):
         """Return a list of available test suites."""
-        suites = SuiteProvider.get_list(TestSuiteModel)
+        last_runs = TestSuiteModel.get_last_five()
+        suites = SuiteProvider.get_list(last_runs)
         return flask.Response(json.dumps(suites), mimetype="application/json")
 
 
