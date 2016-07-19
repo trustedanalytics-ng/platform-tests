@@ -77,13 +77,15 @@ class ServiceType(object):
         return cls._from_details(space_guid, response)
 
     @classmethod
-    def register_app_in_marketplace(cls, app_name, app_guid, org_guid, space_guid, service_name=None,
+    def register_app_in_marketplace(cls, context, app_name, app_guid, org_guid, space_guid, service_name=None,
                                     service_description=None, image=None, display_name=None, tags=None, client=None):
         service_name = generate_test_object_name(short=True) if service_name is None else service_name
         service_description = generate_test_object_name(short=True) if service_description is None else service_description
         response = service_catalog.api_create_service(service_name, service_description, org_guid, app_name, app_guid,
                                                       image, display_name, tags, client)
-        return cls._from_details(space_guid, response)
+        service = cls._from_details(space_guid, response)
+        context.service_offerings.append(service)
+        return service
 
     def api_get_service_plans(self, client=None):
         """
@@ -100,6 +102,9 @@ class ServiceType(object):
 
     def api_delete(self, client=None):
         service_catalog.api_delete_service(self.guid, client)
+
+    def cleanup(self):
+        self.api_delete()
 
     @classmethod
     def cf_api_get_list_from_marketplace_by_space(cls, space_guid):

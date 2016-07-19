@@ -59,27 +59,29 @@ class TestWs2kafka2gearpump2hbase:
     instances_credentials = {}
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_required_instances(self, request, test_org, test_space):
+    def setup_required_instances(self, class_context, request, test_org, test_space):
         step("Create instances of kafka, zookeeper, hbase and kerberos")
 
-        kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                          service_label=ServiceLabels.KAFKA,
-                                                          name=self.KAFKA_INSTANCE_NAME,
-                                                          service_plan_name=self.SHARED_PLAN_NAME)
-        zookeeper = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                              service_label=ServiceLabels.ZOOKEEPER,
-                                                              name=self.ZOOKEEPER_INSTANCE_NAME,
-                                                              service_plan_name=self.SHARED_PLAN_NAME)
-        hbase = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                          service_label=ServiceLabels.HBASE,
-                                                          name=self.HBASE_INSTANCE_NAME,
-                                                          service_plan_name=self.BARE_PLAN_NAME)
-        kerberos = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                             service_label=ServiceLabels.KERBEROS,
-                                                             name=self.KERBEROS_INSTANCE_NAME,
-                                                             service_plan_name=self.SHARED_PLAN_NAME)
-        self.__class__.test_instances = [kafka, zookeeper, hbase, kerberos]
-        request.addfinalizer(lambda: fixtures.tear_down_test_objects(self.__class__.test_instances))
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.KAFKA,
+                                                  name=self.KAFKA_INSTANCE_NAME,
+                                                  service_plan_name=self.SHARED_PLAN_NAME)
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.ZOOKEEPER,
+                                                  name=self.ZOOKEEPER_INSTANCE_NAME,
+                                                  service_plan_name=self.SHARED_PLAN_NAME)
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.HBASE,
+                                                  name=self.HBASE_INSTANCE_NAME,
+                                                  service_plan_name=self.BARE_PLAN_NAME)
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.KERBEROS,
+                                                  name=self.KERBEROS_INSTANCE_NAME,
+                                                  service_plan_name=self.SHARED_PLAN_NAME)
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -137,9 +139,10 @@ class TestWs2kafka2gearpump2hbase:
             "plan": plan
         }
 
-    def test_0_create_gearpump_instance(self, test_org, test_space):
+    def test_0_create_gearpump_instance(self, class_context, test_org, test_space):
         step("Create gearpump instance")
-        self.__class__.gearpump = Gearpump(test_org.guid, test_space.guid, service_plan_name=self.ONE_WORKER_PLAN_NAME)
+        self.__class__.gearpump = Gearpump(class_context, test_org.guid, test_space.guid,
+                                           service_plan_name=self.ONE_WORKER_PLAN_NAME)
         step("Check that gearpump instance has been created")
         instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
         if self.gearpump.instance not in instances:

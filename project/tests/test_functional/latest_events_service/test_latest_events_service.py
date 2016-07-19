@@ -71,10 +71,10 @@ class TestLatestEventsService:
                                       message=EventMessage.dataset_deleted.format(Urls.test_transfer_link))
 
     @priority.medium
-    def test_failed_instance_creation_event(self, org, space, events_before):
+    def test_failed_instance_creation_event(self, context, org, space, events_before):
         step("Trigger failed instance creation")
         with pytest.raises(AssertionError):
-            ServiceInstance.api_create_with_plan_name(org.guid, space.guid, ServiceLabels.SCORING_ENGINE,
+            ServiceInstance.api_create_with_plan_name(context, org.guid, space.guid, ServiceLabels.SCORING_ENGINE,
                                                       service_plan_name=ServicePlan.SIMPLE_ATK)
         step("Retrieve latest events. Check there are two new events related to failed instance creation")
         events_after = LatestEvent.api_get_latest_events(org_guid=org.guid)
@@ -85,9 +85,9 @@ class TestLatestEventsService:
                                       message=EventMessage.create_service_failed.format(Urls.test_transfer_link))
 
     @priority.medium
-    def test_successful_instance_creation_event(self, org, space, events_before):
+    def test_successful_instance_creation_event(self, context, org, space, events_before):
         step("Create example instance")
-        ServiceInstance.api_create_with_plan_name(org.guid, space.guid, ServiceLabels.ATK,
+        ServiceInstance.api_create_with_plan_name(context, org.guid, space.guid, ServiceLabels.ATK,
                                                   service_plan_name=ServicePlan.SIMPLE_ATK)
         step("Retrieve latest events. Check there are two new events related to successful instance creation")
         events_after = LatestEvent.api_get_latest_events(org_guid=org.guid)

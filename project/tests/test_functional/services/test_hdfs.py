@@ -70,7 +70,7 @@ class TestHdfsRegularPlans(object):
 @priority.medium
 class TestHdfsUserDirectoryPlans(object):
 
-    def test_0_hdfs_create_user_directory_instance(self, test_org, test_space, add_admin_to_test_org,
+    def test_0_hdfs_create_user_directory_instance(self, class_context, test_org, test_space, add_admin_to_test_org,
                                                    add_admin_to_test_space, hdfs_service_offering):
         step("Create {} instance with {} plan".format(label, ServicePlan.CREATE_USER_DIRECTORY))
         create_directory_plan_guid = next((p["guid"] for p in hdfs_service_offering.service_plans
@@ -78,6 +78,7 @@ class TestHdfsUserDirectoryPlans(object):
         assert create_directory_plan_guid is not None,\
             "Plan with name {} for service {} not found".format(ServicePlan.CREATE_USER_DIRECTORY, label)
         self.__class__.instance_cud = ServiceInstance.api_create(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=label,
@@ -100,7 +101,7 @@ class TestHdfsUserDirectoryPlans(object):
                                                            username=username, password=password)
         HttpClientFactory.get(uaa_client_configuration).request(method=HttpMethod.GET, path="", msg="UAA: test request")
 
-    def test_3_hdfs_get_user_directory_instance(self, test_org, test_space, hdfs_service_offering):
+    def test_3_hdfs_get_user_directory_instance(self, class_context, test_org, test_space, hdfs_service_offering):
         step("Create {} instance with {} plan".format(ServiceLabels.HDFS, ServicePlan.GET_USER_DIRECTORY))
         uri = self.key.credentials["uri"]
         get_directory_plan_guid = next((p["guid"] for p in hdfs_service_offering.service_plans
@@ -108,6 +109,7 @@ class TestHdfsUserDirectoryPlans(object):
         assert get_directory_plan_guid is not None,\
             "Plan with name {} for service {} not found".format(ServicePlan.GET_USER_DIRECTORY, label)
         self.__class__.instance_gud = ServiceInstance.api_create(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=label,

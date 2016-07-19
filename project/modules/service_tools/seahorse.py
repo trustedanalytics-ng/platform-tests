@@ -39,9 +39,9 @@ class Seahorse:
     SESSIONS_PATH = "v1/sessions"
     WORKFLOWS_PATH = "v1/workflows"
 
-    def __init__(self, org_uuid, space_uuid, tap_http_client):
+    def __init__(self, context, org_uuid, space_uuid, tap_http_client):
         self.service_instance = ServiceInstance.api_create_with_plan_name(
-            org_uuid, space_uuid,
+            context, org_uuid, space_uuid,
             ServiceLabels.SEAHORSE,
             service_plan_name=ServicePlan.FREE
         )

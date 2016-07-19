@@ -52,7 +52,7 @@ class TestAtk:
                 pass
         request.addfinalizer(fin)
 
-    def test_0_create_atk_instance(self, test_org, test_space, add_admin_to_test_org):
+    def test_0_create_atk_instance(self, class_context, test_org, test_space, add_admin_to_test_org):
         step("Check that atk service is available in Marketplace")
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         atk_service = next((s for s in marketplace if s.label == ServiceLabels.ATK), None)
@@ -61,6 +61,7 @@ class TestAtk:
 
         atk_instance_name = generate_test_object_name()
         atk_instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.ATK,

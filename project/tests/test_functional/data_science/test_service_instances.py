@@ -37,12 +37,13 @@ class TestDataScienceInstances(object):
 
     @priority.high
     @pytest.mark.parametrize("service_label", [ServiceLabels.JUPYTER])
-    def test_create_and_delete_service_instances(self, service_label):
+    def test_create_and_delete_service_instances(self, context, service_label):
         service_type = next((s for s in self.marketplace if s.label == service_label), None)
         assert service_type is not None, "{} service is not available in Marketplace".format(service_label)
         plan = next(iter(service_type.service_plans))
         step("Create service instance")
         instance = ServiceInstance.api_create(
+            context=context,
             org_guid=TestData.test_org.guid,
             space_guid=TestData.test_space.guid,
             service_label=service_type.label,

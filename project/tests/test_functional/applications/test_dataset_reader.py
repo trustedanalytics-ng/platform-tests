@@ -37,29 +37,29 @@ class TestDatasetReader:
     hdfs_reader_app = None
 
     @pytest.fixture(scope="class")
-    def hdfs_instance(self, request, test_org, test_space):
+    def hdfs_instance(self, class_context, request, test_org, test_space):
         step("Create hdfs instance")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.HDFS,
             name=self.HDFS_INSTANCE_NAME,
             service_plan_name=ServicePlan.SHARED
         )
-        request.addfinalizer(lambda: instance.cleanup())
         return instance
 
     @pytest.fixture(scope="class")
-    def kerberos_instance(self, request, test_org, test_space):
+    def kerberos_instance(self, class_context, request, test_org, test_space):
         step("Create kerberos instance")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.KERBEROS,
             name=self.KERBEROS_INSTANCE_NAME,
             service_plan_name=ServicePlan.SHARED
         )
-        request.addfinalizer(lambda: instance.cleanup())
         return instance
 
     @pytest.fixture(scope="class")

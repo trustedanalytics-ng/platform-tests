@@ -53,28 +53,29 @@ class TestWs2kafka2hdfs:
     topic_name = None
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_test_services(self, request, test_org, test_space):
+    def setup_test_services(self, class_context, request, test_org, test_space):
         step("Create instances for kafka, zookeeper, hdfs and kerberos")
 
-        kafka = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                          service_label=ServiceLabels.KAFKA,
-                                                          name=self.KAFKA_INSTANCE_NAME,
-                                                          service_plan_name=ServicePlan.SHARED)
-        zookeeper = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                              service_label=ServiceLabels.ZOOKEEPER,
-                                                              name=self.ZOOKEEPER_INSTANCE_NAME,
-                                                              service_plan_name=ServicePlan.SHARED)
-        hdfs = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                         service_label=ServiceLabels.HDFS,
-                                                         name=self.HDFS_INSTANCE_NAME,
-                                                         service_plan_name=ServicePlan.SHARED)
-        kerberos = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
-                                                             service_label=ServiceLabels.KERBEROS,
-                                                             name=self.KERBEROS_INSTANCE_NAME,
-                                                             service_plan_name=ServicePlan.SHARED)
-
-        instances = [kafka, zookeeper, hdfs, kerberos]
-        request.addfinalizer(lambda: fixtures.tear_down_test_objects(instances))
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.KAFKA,
+                                                  name=self.KAFKA_INSTANCE_NAME,
+                                                  service_plan_name=ServicePlan.SHARED)
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.ZOOKEEPER,
+                                                  name=self.ZOOKEEPER_INSTANCE_NAME,
+                                                  service_plan_name=ServicePlan.SHARED)
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.HDFS,
+                                                  name=self.HDFS_INSTANCE_NAME,
+                                                  service_plan_name=ServicePlan.SHARED)
+        ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                  org_guid=test_org.guid, space_guid=test_space.guid,
+                                                  service_label=ServiceLabels.KERBEROS,
+                                                  name=self.KERBEROS_INSTANCE_NAME,
+                                                  service_plan_name=ServicePlan.SHARED)
 
     @retry(AssertionError, tries=5, delay=2)
     def _assert_message_count_in_app_stats(self, app, expected_message_count):

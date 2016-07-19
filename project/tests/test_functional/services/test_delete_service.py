@@ -31,17 +31,12 @@ pytestmark = [components.service_catalog]
 class TestDeleteService:
 
     @pytest.fixture(autouse=True)
-    def create_service_and_instance(self, request, test_org, test_space, sample_service):
+    def create_service_and_instance(self, context, request, test_org, test_space, sample_service):
         step("Create an instance")
-        instance = ServiceInstance.api_create(test_org.guid, test_space.guid, sample_service.label,
+        instance = ServiceInstance.api_create(context, test_org.guid, test_space.guid, sample_service.label,
                                               service_plan_guid=sample_service.service_plans[0]["guid"])
         step("Check that service instance is present")
         assert_in_with_retry(instance, ServiceInstance.api_get_list, test_space.guid, sample_service.guid)
-
-        def fin():
-            step("Delete instance")
-            instance.api_delete()
-        request.addfinalizer(fin)
 
     @pytest.mark.parametrize("role", ["auditor", "manager"])
     def test_cannot_delete_service_as_non_space_manager(self, space_users_clients, role, sample_service):

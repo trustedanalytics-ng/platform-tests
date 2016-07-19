@@ -34,21 +34,22 @@ class ServiceInstancesMonitoring(TapTestCase):
         cls.step("Get list of available services from Marketplace")
         cls.marketplace_services = ServiceType.api_get_list_from_marketplace(test_space.guid)
 
-    def test_service_instances(self):
+    def test_service_instances(self, context):
         tested_service_types = [st for st in self.marketplace_services if st.label in self.TESTED_APP_NAMES]
         errors = []
         for service_type in tested_service_types:
             for plan in service_type.service_plans:
                 try:
-                    self._create_instance(plan, service_type)
+                    self._create_instance(context, plan, service_type)
                 except Exception as e:
                     errors.append(e)
         assert_no_errors(errors)
 
-    def _create_instance(self, plan, service_type):
+    def _create_instance(self, context, plan, service_type):
         self.step("Create instance of {} ({} plan). Check it exists.".format(service_type.label, plan["name"]))
         service_instance_name = service_type.label + datetime.now().strftime('%Y%m%d_%H%M%S_%f')
         instance = ServiceInstance.api_create(
+            context=context,
             org_guid=self.test_org.guid,
             space_guid=service_type.space_guid,
             service_label=service_type.label,

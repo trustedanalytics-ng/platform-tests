@@ -86,18 +86,18 @@ class ServiceInstance(object):
     # ----------------------------------------- Platform API ----------------------------------------- #
 
     @classmethod
-    def api_create_with_plan_name(cls, org_guid, space_guid, service_label, name=None, service_plan_name=None,
-                                  params=None, client=None, context=None):
+    def api_create_with_plan_name(cls, context, org_guid, space_guid, service_label, name=None, service_plan_name=None,
+                                  params=None, client=None):
         """
         Create service instance using using plan name - first make call to retrieve plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
         service_plan_guid = cls._retrieve_service_plan_guid(service_label, service_plan_name, client)
-        return cls.api_create(org_guid, space_guid, service_label, name, service_plan_guid, params, client, context)
+        return cls.api_create(context, org_guid, space_guid, service_label, name, service_plan_guid, params, client, )
 
     @classmethod
-    def api_create(cls, org_guid, space_guid, service_label, name=None, service_plan_guid=None,
-                   params=None, client=None, context=None):
+    def api_create(cls, context, org_guid, space_guid, service_label, name=None, service_plan_guid=None,
+                   params=None, client=None):
         """
         Create service instance using using plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
@@ -119,8 +119,7 @@ class ServiceInstance(object):
         instance_summary = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
                                                                              client=client)
         instance.tags = next(filter(lambda s: s["label"] == instance.service_label, instance_summary))["tags"]
-        if context:
-            context.service_instances.append(instance)
+        context.service_instances.append(instance)
         return instance
 
     @classmethod

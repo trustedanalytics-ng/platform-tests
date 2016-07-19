@@ -31,7 +31,6 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, Space, User
 from modules.tap_object_model.flows import data_catalog
-from .context import Context
 from .test_data import TestData
 
 
@@ -43,18 +42,10 @@ from .test_data import TestData
 
 @pytest.fixture(scope="session")
 @retry(UnexpectedResponseError, tries=3, delay=15)
-def test_org(request):
-    context = Context()
+def test_org(request, session_context):
     log_fixture("test_org: Create test organization")
-    test_org = Organization.api_create(context)
+    test_org = Organization.api_create(session_context)
     TestData.test_org = test_org
-
-    def fin():
-        log_finalizer("test_org: Delete test organization")
-        context.cleanup()
-
-    request.addfinalizer(fin)
-
     return test_org
 
 
@@ -66,17 +57,10 @@ def test_space(request, test_org):
 
 
 @pytest.fixture(scope="session")
-def test_org_manager(request, test_org):
-    context = Context()
+def test_org_manager(request, session_context, test_org):
     log_fixture("test_org_manager: Add org manager to test org")
-    test_org_manager = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
+    test_org_manager = User.api_create_by_adding_to_organization(session_context, org_guid=test_org.guid)
     TestData.test_org_manager = test_org_manager
-
-    def fin():
-        log_finalizer("test_org_manager: Delete test org manager")
-        context.cleanup()
-
-    request.addfinalizer(fin)
     return test_org_manager
 
 
@@ -94,59 +78,40 @@ def login_to_cf(test_org, test_space):
 
 
 @pytest.fixture(scope="class")
-def sample_python_app(request, test_org, test_space):
-    context = Context()
+def sample_python_app(request, class_context, test_org, test_space):
     log_fixture("sample_python_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
-    app = Application.push(context=context, space_guid=test_space.guid,
+    app = Application.push(context=class_context, space_guid=test_space.guid,
                            source_directory=ApplicationPath.SAMPLE_PYTHON_APP)
-
-    def fin():
-        log_fixture("sample_python_app: Delete sample app")
-        context.cleanup()
-
-    request.addfinalizer(fin)
-
+    log_fixture("Check the application is running")
+    app.ensure_started()
     return app
 
 
 @pytest.fixture(scope="class")
-def sample_java_app(request, test_org, test_space):
-    context = Context()
+def sample_java_app(request, class_context, test_org, test_space):
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
     log_fixture("sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()
     log_fixture("sample_java_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
-    app = Application.push(context=context, space_guid=test_space.guid,
+    app = Application.push(context=class_context, space_guid=test_space.guid,
                            source_directory=ApplicationPath.SAMPLE_JAVA_APP)
-    app.ensure_started()
     log_fixture("Check the application is running")
-
-    def fin():
-        log_fixture("sample_java_app: Delete sample app")
-        context.cleanup()
-    request.addfinalizer(fin)
-
+    app.ensure_started()
     return app
 
 
 @pytest.fixture(scope="class")
-def sample_service(request, test_org, test_space, sample_python_app):
+def sample_service(class_context, request, test_org, test_space, sample_python_app):
     log_fixture("sample_service: Register sample app in marketplace")
-    service = ServiceType.register_app_in_marketplace(app_name=sample_python_app.name,
+    service = ServiceType.register_app_in_marketplace(context=class_context,
+                                                      app_name=sample_python_app.name,
                                                       app_guid=sample_python_app.guid,
                                                       org_guid=test_org.guid,
                                                       space_guid=test_space.guid)
     log_fixture("sample_service: Get service plans")
     service.api_get_service_plans()
-
-    def fin():
-        log_fixture("sample_service: Delete service")
-        service.api_delete()
-
-    request.addfinalizer(fin)
-
     return service
 
 
@@ -167,20 +132,13 @@ def admin_client():
 
 
 @pytest.fixture(scope="session")
-def space_users_clients(request, test_org, test_space, admin_client):
-    context = Context()
+def space_users_clients(request, session_context, test_org, test_space, admin_client):
     log_fixture("clients: Create clients")
     clients = {}
     for role, value in User.SPACE_ROLES.items():
-        clients[role] = User.api_create_by_adding_to_space(context, org_guid=test_org.guid, space_guid=test_space.guid,
+        clients[role] = User.api_create_by_adding_to_space(session_context, org_guid=test_org.guid, space_guid=test_space.guid,
                                                            roles=value).login()
     clients["admin"] = admin_client
-
-    def fin():
-        log_finalizer("clients: Delete test users")
-        context.cleanup()
-
-    request.addfinalizer(fin)
     return clients
 
 
@@ -246,11 +204,12 @@ def example_image():
 
 
 @pytest.fixture(scope="session")
-def psql_instance(test_org, test_space):
+def psql_instance(session_context, test_org, test_space):
     log_fixture("create_postgres_instance")
     marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
     psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
     TestData.psql_instance = ServiceInstance.api_create(
+        context=session_context,
         org_guid=test_org.guid,
         space_guid=test_space.guid,
         service_label=ServiceLabels.PSQL,
@@ -260,13 +219,12 @@ def psql_instance(test_org, test_space):
 
 
 @pytest.fixture(scope="session")
-def psql_app(psql_instance):
+def psql_app(psql_instance, session_context):
     sql_api_sources = AppSources.from_github(repo_name=TapGitHub.sql_api_example,
                                              repo_owner=TapGitHub.intel_data,
                                              gh_auth=config.github_credentials())
-    context = Context()
     TestData.psql_app = Application.push(
-        context=context,
+        context=session_context,
         space_guid=TestData.test_space.guid,
         source_directory=sql_api_sources.path,
         bound_services=(psql_instance.name,)
@@ -275,11 +233,9 @@ def psql_app(psql_instance):
 
 
 @pytest.fixture(scope="session")
-def model_hdfs_path(request, test_org, add_admin_to_test_org):
+def model_hdfs_path(request, session_context, test_org, add_admin_to_test_org):
     log_fixture("Create a transfer and get hdfs path")
-    context = Context()
-    _, data_set = data_catalog.create_dataset_from_link(context, org=test_org, source=Urls.model_url)
-    request.addfinalizer(lambda: context.cleanup())
+    _, data_set = data_catalog.create_dataset_from_link(session_context, org=test_org, source=Urls.model_url)
     return data_set.target_uri
 
 

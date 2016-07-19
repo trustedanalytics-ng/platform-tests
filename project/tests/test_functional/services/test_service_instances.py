@@ -36,8 +36,9 @@ class TestTapServiceInstance:
         return test_org, test_space
 
     @pytest.fixture(scope="function")
-    def instance(self, org_space):
-        instance = ServiceInstance.api_create_with_plan_name(org_guid=org_space[0].guid, space_guid=org_space[1].guid,
+    def instance(self, context, org_space):
+        instance = ServiceInstance.api_create_with_plan_name(context=context,
+                                                             org_guid=org_space[0].guid, space_guid=org_space[1].guid,
                                                              service_label=ServiceLabels.KAFKA,
                                                              service_plan_name=ServicePlan.SHARED)
         return instance

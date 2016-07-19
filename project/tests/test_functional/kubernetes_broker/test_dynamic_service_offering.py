@@ -57,9 +57,10 @@ class TestKubernetes:
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
         assert self.test_service in marketplace
 
-    def test_3_create_instance_of_dynamic_kubernetes_service(self, core_org, core_space):
+    def test_3_create_instance_of_dynamic_kubernetes_service(self, class_context, core_org, core_space):
         step("Create instance of the new service and check it's on the list")
         self.__class__.test_instance = ServiceInstance.api_create(
+            context=class_context,
             org_guid=core_org.guid,
             space_guid=core_space.guid,
             service_label=self.service_name,

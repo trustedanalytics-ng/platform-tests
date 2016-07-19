@@ -34,11 +34,11 @@ pytestmark = [components.service_catalog]
 class TestTapApp:
 
     @pytest.fixture(scope="function")
-    def instance(self, request, test_org, test_space):
-        instance = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+    def instance(self, context, request, test_org, test_space):
+        instance = ServiceInstance.api_create_with_plan_name(context=context, org_guid=test_org.guid,
+                                                             space_guid=test_space.guid,
                                                              service_label=ServiceLabels.KAFKA,
                                                              service_plan_name=ServicePlan.SHARED)
-        request.addfinalizer(lambda: fixtures.delete_or_not_found(instance.cleanup))
         return instance
 
     @pytest.fixture(scope="function")
@@ -151,8 +151,8 @@ class TestTapApp:
         assert instance not in cf_service_instances_list and test_app not in cf_apps_list
 
     @priority.medium
-    def test_app_register_in_marketplace(self, test_org, test_space, sample_java_app):
-        register_service = ServiceType.register_app_in_marketplace(sample_java_app.name, sample_java_app.guid,
+    def test_app_register_in_marketplace(self, context, test_org, test_space, sample_java_app):
+        register_service = ServiceType.register_app_in_marketplace(context, sample_java_app.name, sample_java_app.guid,
                                                                    test_org.guid, test_space.guid)
         services = ServiceType.cf_api_get_list_from_marketplace_by_space(test_space.guid)
         assert register_service in services

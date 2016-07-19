@@ -29,15 +29,13 @@ pytestmark = [components.service_catalog]
 
 
 @pytest.fixture(scope="class")
-def test_instance(request, test_org, test_space):
+def test_instance(class_context, request, test_org, test_space):
     step("Create test instance")
-    instance = ServiceInstance.api_create_with_plan_name(org_guid=test_org.guid, space_guid=test_space.guid,
+    instance = ServiceInstance.api_create_with_plan_name(context=class_context, org_guid=test_org.guid,
+                                                         space_guid=test_space.guid,
                                                          service_label=ServiceLabels.MONGO_DB,
                                                          service_plan_name=ServicePlan.FREE)
 
-    def fin():
-        fixtures.delete_or_not_found(instance.cleanup)
-    request.addfinalizer(fin)
     return instance
 
 
@@ -123,14 +121,11 @@ class TestBindingErrors:
     INCORRECT_GUID = "incorrect_guid"
 
     @pytest.fixture(scope="class")
-    def test_instance(self, request, test_org, test_space):
+    def test_instance(self, class_context, request, test_org, test_space):
         step("Create test instance")
-        instance = ServiceInstance.api_create_with_plan_name(test_org.guid, test_space.guid, ServiceLabels.MONGO_DB,
-                                                             service_plan_name=ServicePlan.FREE)
+        instance = ServiceInstance.api_create_with_plan_name(class_context, test_org.guid, test_space.guid,
+                                                             ServiceLabels.MONGO_DB, service_plan_name=ServicePlan.FREE)
 
-        def fin():
-            fixtures.delete_or_not_found(instance.api_delete)
-        request.addfinalizer(fin)
         return instance
 
     def test_cannot_bind_not_existing_service_instance(self, sample_python_app):

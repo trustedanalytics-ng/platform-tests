@@ -157,7 +157,7 @@ class JupyterNotebook(JupyterWSBase):
 class Jupyter(object):
     """Jupyter service instance."""
 
-    def __init__(self, org_guid, space_guid, instance_name=None, params=None):
+    def __init__(self, context, org_guid, space_guid, instance_name=None, params=None):
         self.client = None
         self.cookie = None
         self.password = None
@@ -166,6 +166,7 @@ class Jupyter(object):
         if instance_name is None:
             instance_name = generate_test_object_name(short=True, prefix=ServiceLabels.JUPYTER)
         self.instance = ServiceInstance.api_create_with_plan_name(
+            context=context,
             org_guid=org_guid,
             space_guid=space_guid,
             name=instance_name,

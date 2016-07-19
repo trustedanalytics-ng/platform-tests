@@ -33,7 +33,7 @@ class TestExposeKubernetesService:
     service_label = ServiceLabels.MONGO_DB_30_MULTINODE
     plan_name = ServicePlan.CLUSTERED
 
-    def test_0_create_instance_of_kubernetes_service(self, test_org, test_space):
+    def test_0_create_instance_of_kubernetes_service(self, context, test_org, test_space):
         step("Retrieve example kubernetes service from marketplace")
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=test_space.guid)
         k8s_service = next((s for s in marketplace if s.label == self.service_label), None)
@@ -42,6 +42,7 @@ class TestExposeKubernetesService:
         assert plan_guid is not None, "Plan {} not available".format(self.plan_name)
         step("Create instance of the k8s service")
         self.__class__.test_instance = ServiceInstance.api_create(
+            context=context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=self.service_label,

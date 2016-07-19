@@ -50,9 +50,10 @@ class TestGearpumpConsole:
         self.gearpump.go_to_dashboard()
         request.addfinalizer(self.gearpump.go_to_console)
 
-    def test_0_create_gearpump_instance(self, test_org, test_space):
+    def test_0_create_gearpump_instance(self, class_context, test_org, test_space):
         step("Create gearpump instance with plan: 1 worker")
-        self.__class__.gearpump = Gearpump(test_org.guid, test_space.guid, service_plan_name=self.ONE_WORKER_PLAN_NAME)
+        self.__class__.gearpump = Gearpump(class_context, test_org.guid, test_space.guid,
+                                           service_plan_name=self.ONE_WORKER_PLAN_NAME)
         instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
         assert self.gearpump.instance in instances, "Gearpump instance is not on list of instances"
         step("Check yarn app status")

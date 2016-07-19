@@ -30,8 +30,9 @@ from .gearpump_application import GearpumpApplication
 class Gearpump(object):
     """Gearpump service instance."""
 
-    def __init__(self, org_guid, space_guid, service_plan_name, instance_name=None, params=None):
+    def __init__(self, context, org_guid, space_guid, service_plan_name, instance_name=None, params=None):
         self.instance = ServiceInstance.api_create_with_plan_name(
+            context=context,
             org_guid=org_guid,
             space_guid=space_guid,
             name=instance_name,

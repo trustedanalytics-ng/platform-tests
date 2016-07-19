@@ -34,7 +34,7 @@ class TestOrientDB(object):
     _API = None
 
     @pytest.fixture(scope="class", autouse=True)
-    def orientdb_service(self, test_org, test_space):
+    def orientdb_service(self, class_context, test_org, test_space):
         """SetUp: OrientDB service creation."""
         step("Create OrientDB service instance.")
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
@@ -42,6 +42,7 @@ class TestOrientDB(object):
         assert orient_db is not None, "{} service is not available in Marketplace".format(ServiceLabels.ORIENT_DB)
         instance_name = generate_test_object_name()
         return ServiceInstance.api_create(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.ORIENT_DB,

@@ -110,13 +110,13 @@ class TestScoringEngineInstance:
         self.__class__.client = space_users_clients["developer"]
         step("Create scoring engine instance")
         self.__class__.instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.SCORING_ENGINE,
             service_plan_name=ServicePlan.SIMPLE_ATK,
             params={"uri": self.atk_model_uri},
-            client=self.client,
-            context=class_context
+            client=self.client
         )
         step("Check instance is on the instance list")
         instances_list = ServiceInstance.api_get_list(test_space.guid, client=self.client)
@@ -163,12 +163,12 @@ class TestScoringEngineUnauthorizedUsers:
     unauthorized_roles = ("manager", "auditor")
 
     @pytest.mark.parametrize("user_role", unauthorized_roles)
-    def test_cannot_create_scoring_engine(self, test_org, test_space, space_users_clients, model_hdfs_path, user_role):
+    def test_cannot_create_scoring_engine(self, context, test_org, test_space, space_users_clients, model_hdfs_path, user_role):
         step("Check that unauthorized user cannot create scoring engine")
         client = space_users_clients[user_role]
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_FORBIDDEN,
                                                 ServiceCatalogHttpStatus.MSG_FORBIDDEN,
-                                                ServiceInstance.api_create_with_plan_name,
+                                                ServiceInstance.api_create_with_plan_name, context=context,
                                                 org_guid=test_org.guid, space_guid=test_space.guid,
                                                 service_label=ServiceLabels.SCORING_ENGINE,
                                                 service_plan_name=ServicePlan.SIMPLE_ATK,

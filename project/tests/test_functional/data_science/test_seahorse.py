@@ -25,8 +25,8 @@ class TestSeahorse:
     WORKFLOW_NAME = "Text Message Spam Detection"
 
     @pytest.fixture(scope="class")
-    def seahorse(self, request, admin_client, test_org, test_space):
-        seahorse = Seahorse(test_org.guid, test_space.guid, admin_client)
+    def seahorse(self, class_context, request, admin_client, test_org, test_space):
+        seahorse = Seahorse(class_context, test_org.guid, test_space.guid, admin_client)
         request.addfinalizer(seahorse.cleanup)
         return seahorse
 

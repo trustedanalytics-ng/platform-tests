@@ -62,10 +62,10 @@ class TestMarketplaceServices:
                                                            roles=User.SPACE_ROLES["manager"])
         cls.space_manager_client = space_manager.login()
 
-    def _create_jupyter_instance_and_login(self, param_key, param_value, test_org, test_space):
+    def _create_jupyter_instance_and_login(self, context, param_key, param_value, test_org, test_space):
         param = {param_key: param_value}
         step("Create service instance and check it exist in list")
-        jupyter = Jupyter(test_org.guid, test_space.guid, params=param)
+        jupyter = Jupyter(context, test_org.guid, test_space.guid, params=param)
         assert_in_with_retry(jupyter.instance, ServiceInstance.api_get_list, test_space.guid)
         step("Get credentials for the new jupyter service instance")
         jupyter.get_credentials()
@@ -107,11 +107,12 @@ class TestMarketplaceServices:
         assert "{}={}".format(param_key, param_value) in output
 
     @priority.medium
-    def test_cannot_create_service_instance_with_name_of_an_existing_instance(self, test_org, test_space,
+    def test_cannot_create_service_instance_with_name_of_an_existing_instance(self, context, test_org, test_space,
                                                                               marketplace_services):
         existing_name = generate_test_object_name()
         step("Create service instance")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.KAFKA,
@@ -126,7 +127,7 @@ class TestMarketplaceServices:
             plan_guid = next(iter(service_type.service_plan_guids))
             step("Try to create {} service instance".format(service_type.label))
             with pytest.raises(UnexpectedResponseError) as e:
-                ServiceInstance.api_create(test_org.guid, test_space.guid, service_type.label,
+                ServiceInstance.api_create(context, test_org.guid, test_space.guid, service_type.label,
                                            existing_name, service_plan_guid=plan_guid)
             if e is None or e.value.status != HttpStatus.CODE_CONFLICT:
                 errors.append("Service '{}' failed to respond with given error status.".format(service_type.label))
@@ -136,11 +137,11 @@ class TestMarketplaceServices:
 
     @priority.low
     @pytest.mark.bugs("DPNG-5154 Http status 500 when trying to create a service instance without a name")
-    def test_cannot_create_instance_without_a_name(self, test_org, test_space):
+    def test_cannot_create_instance_without_a_name(self, context, test_org, test_space):
         expected_instance_list = ServiceInstance.api_get_list(test_space.guid)
         step("Check that instance cannot be created with empty name")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     ServiceInstance.api_create_with_plan_name, test_org.guid,
+                                     ServiceInstance.api_create_with_plan_name, context, test_org.guid,
                                      test_space.guid, ServiceLabels.KAFKA, "",
                                      service_plan_name=ServicePlan.SHARED)
         assert_unordered_list_equal(expected_instance_list, ServiceInstance.api_get_list(test_space.guid),
@@ -148,13 +149,13 @@ class TestMarketplaceServices:
 
     @priority.medium
     @pytest.mark.usefixtures("non_space_developer_users")
-    def test_cannot_create_instance_as_non_space_developer(self, test_org, test_space, marketplace_services):
+    def test_cannot_create_instance_as_non_space_developer(self, context, test_org, test_space, marketplace_services):
         test_clients = {"space_auditor": self.space_auditor_client, "space_manager": self.space_manager_client}
         errors = []
         for service_type, (name, client) in itertools.product(marketplace_services, test_clients.items()):
             for plan in service_type.service_plans:
                 with pytest.raises(UnexpectedResponseError) as e:
-                    ServiceInstance.api_create(test_org.guid, test_space.guid, service_type.label,
+                    ServiceInstance.api_create(context, test_org.guid, test_space.guid, service_type.label,
                                                service_plan_guid=plan["guid"], client=client)
                 if e is None or e.value.status != HttpStatus.CODE_FORBIDDEN:
                     errors.append("Service '{}' failed to respond with given error status.".format(service_type.label))
@@ -219,10 +220,10 @@ class TestMarketplaceServices:
         assert_no_errors(errors)
 
     @priority.low
-    def test_get_service_instance_summary_from_empty_space(self, test_org, test_space, marketplace_services):
+    def test_get_service_instance_summary_from_empty_space(self, context, test_org, test_space, marketplace_services):
         step("Create a service instance in one space")
         service_type = next(s for s in marketplace_services if s.label == ServiceLabels.KAFKA)
-        ServiceInstance.api_create(org_guid=test_org.guid, space_guid=test_space.guid,
+        ServiceInstance.api_create(context=context, org_guid=test_org.guid, space_guid=test_space.guid,
                                    service_label=service_type.label,
                                    service_plan_guid=service_type.service_plan_guids[0])
         test_space = Space.api_create(test_org)

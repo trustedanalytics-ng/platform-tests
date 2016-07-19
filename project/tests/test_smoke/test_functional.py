@@ -183,9 +183,8 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
     plan = non_parametrized_marketplace_services[1]
 
     step("Create instance {} {}".format(service_type.label, plan["name"]))
-    instance = ServiceInstance.api_create(org_guid=core_org.guid, space_guid=core_space.guid,
-                                          service_label=service_type.label, service_plan_guid=plan["guid"],
-                                          context=context)
+    instance = ServiceInstance.api_create(context=context, org_guid=core_org.guid, space_guid=core_space.guid,
+                                          service_label=service_type.label, service_plan_guid=plan["guid"])
     step("Check that the instance was created")
     instance.ensure_created()
     step("Delete the instance")
@@ -203,9 +202,8 @@ def test_create_and_delete_kubernetes_service_instances(core_org, core_space, co
     plan = kubernetes_marketplace[1]
 
     step("Create instance {} {}".format(service_type.label, plan["name"]))
-    instance = ServiceInstance.api_create(org_guid=core_org.guid, space_guid=core_space.guid,
-                                          service_label=service_type.label, service_plan_guid=plan["guid"],
-                                          context=context)
+    instance = ServiceInstance.api_create(context=context, org_guid=core_org.guid, space_guid=core_space.guid,
+                                          service_label=service_type.label, service_plan_guid=plan["guid"])
     step("Check that the cluster was created")
     KubernetesCluster.demiurge_api_get(name=core_org.guid)
     step("Check that the instance was created")

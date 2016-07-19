@@ -36,15 +36,15 @@ class TestEncryptedHdfs:
 
     @classmethod
     @pytest.fixture(scope="class")
-    def hdfs_instance(cls, request, test_org, test_space):
+    def hdfs_instance(cls, class_context, request, test_org, test_space):
         step("Create Hdfs encrypted instance.")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.HDFS,
             service_plan_name=ServicePlan.ENCRYPTED
         )
-        request.addfinalizer(instance.cleanup)
         return instance
 
     @classmethod

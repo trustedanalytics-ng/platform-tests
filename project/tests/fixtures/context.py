@@ -32,6 +32,7 @@ class Context(object):
         self.transfers = []
         self.apps = []
         self.service_instances = []
+        self.service_offerings = []
         self.templates = []
 
     def _cleanup_test_objects(self, object_list: list):
@@ -54,6 +55,7 @@ class Context(object):
             self._cleanup_test_objects(self.transfers)
         self._cleanup_test_objects(self.service_instances)
         self._cleanup_test_objects(self.apps)
+        self._cleanup_test_objects(self.service_offerings)
         self._cleanup_test_objects(self.orgs)
 
         # TAP NG
@@ -63,12 +65,19 @@ class Context(object):
 @pytest.fixture(scope="function")
 def context(request):
     context = Context()
-    request.addfinalizer(lambda: context.cleanup())
+    request.addfinalizer(context.cleanup)
     return context
 
 
 @pytest.fixture(scope="class")
 def class_context(request):
     context = Context()
-    request.addfinalizer(lambda: context.cleanup())
+    request.addfinalizer(context.cleanup)
+    return context
+
+
+@pytest.fixture(scope="session")
+def session_context(request):
+    context = Context()
+    request.addfinalizer(context.cleanup)
     return context

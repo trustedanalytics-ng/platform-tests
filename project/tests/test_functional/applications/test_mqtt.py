@@ -46,7 +46,7 @@ class Mqtt:
 
     @priority.medium
     @pytest.mark.skip("DPNG-7402 Push mqtt app to cf failed due to SSL error")
-    def test_mqtt_demo(self, test_org, test_space, login_to_cf, class_context):
+    def test_mqtt_demo(self, context, test_org, test_space, login_to_cf, class_context):
         step("Clone repository")
         mqtt_demo_sources = AppSources.from_github(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER,
                                                    gh_auth=config.github_credentials())
@@ -55,6 +55,7 @@ class Mqtt:
 
         step("Create required service instances.")
         ServiceInstance.api_create_with_plan_name(
+            context=context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.INFLUX_DB,
@@ -62,6 +63,7 @@ class Mqtt:
             service_plan_name=ServicePlan.FREE
         )
         ServiceInstance.api_create_with_plan_name(
+            context=context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.MOSQUITTO,

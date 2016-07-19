@@ -63,12 +63,13 @@ class TestGoToDashboard:
         finally:
             client.url = config.console_url
 
-    def _test_service(self, org_guid, space_guid, tested_services):
+    def _test_service(self, context, org_guid, space_guid, tested_services):
         errors = []
         for service in tested_services:
             try:
                 step("Create instance")
                 instance = ServiceInstance.api_create(
+                    context=context,
                     org_guid=org_guid,
                     space_guid=space_guid,
                     service_label=service["label"],

@@ -48,12 +48,13 @@ class TestDataScienceAtkInstance:
         assert ref_atk_app is not None, "ATK app not found in the reference space"
         self.__class__.atk_bindings = [s[0]["label"] for s in ref_atk_app.cf_api_env()["VCAP_SERVICES"].values()]
 
-    def test_1_create_atk_instance(self, test_org, test_space):
+    def test_1_create_atk_instance(self, class_context, test_org, test_space):
         step("Get tested service type")
         service_type = next(s for s in self.marketplace if s.label == ServiceLabels.ATK)
         plan = next(iter(service_type.service_plans))
         step("Create atk instance")
         self.__class__.atk_instance = ServiceInstance.api_create(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=service_type.label,

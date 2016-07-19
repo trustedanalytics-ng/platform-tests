@@ -45,10 +45,10 @@ def create_instance_and_key_then_delete_key_and_instance(org_guid, space_guid, s
         raise service_key_exception
 
 
-def create_instance(org_guid, space_guid, service_label, plan_guid, params=None):
+def create_instance(context, org_guid, space_guid, service_label, plan_guid, params=None):
     step("Create service instance")
-    instance = ServiceInstance.api_create(org_guid=org_guid, space_guid=space_guid, service_label=service_label,
-                                          service_plan_guid=plan_guid, params=params)
+    instance = ServiceInstance.api_create(context=context, org_guid=org_guid, space_guid=space_guid,
+                                          service_label=service_label, service_plan_guid=plan_guid, params=params)
     step("Check that the instance was created")
     instance.ensure_created()
     return instance

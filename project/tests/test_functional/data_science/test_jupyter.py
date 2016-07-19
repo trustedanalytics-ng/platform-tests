@@ -45,11 +45,11 @@ class TestJupyterConsole:
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_jupyter_instance(cls, request, test_org, test_space, admin_user):
+    def create_jupyter_instance(cls, class_context, request, test_org, test_space, admin_user):
         admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
                                     roles=User.SPACE_ROLES["developer"])
         step("Create instance of Jupyter service")
-        cls.jupyter = Jupyter(org_guid=test_org.guid, space_guid=test_space.guid)
+        cls.jupyter = Jupyter(class_context, org_guid=test_org.guid, space_guid=test_space.guid)
         assertions.assert_in_with_retry(cls.jupyter.instance, ServiceInstance.api_get_list, space_guid=test_space.guid)
         step("Get credentials for the new jupyter service instance")
         cls.jupyter.get_credentials()

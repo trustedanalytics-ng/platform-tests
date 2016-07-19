@@ -28,24 +28,23 @@ pytestmark = [components.service_catalog]
 
 @priority.high
 @pytest.mark.parametrize("role", ["auditor", "manager"])
-def test_cannot_create_instance_as_an_unauthorized_user(space_users_clients, role, test_org, test_space,
+def test_cannot_create_instance_as_an_unauthorized_user(context, space_users_clients, role, test_org, test_space,
                                                         sample_service):
     client = space_users_clients[role]
     step("Attempt to create an instance")
     assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_NOT_AUTHORIZED,
-                                 ServiceInstance.api_create, test_org.guid, test_space.guid, sample_service.label,
-                                 service_plan_guid=sample_service.service_plans[0]["guid"], client=client)
+                                 ServiceInstance.api_create, context, test_org.guid, test_space.guid,
+                                 sample_service.label, service_plan_guid=sample_service.service_plans[0]["guid"],
+                                 client=client)
 
 
 @priority.high
 @pytest.mark.parametrize("role", ["developer", "admin"])
-def test_create_instance_as_authorized_user(space_users_clients, role, test_org, test_space, sample_service):
+def test_create_instance_as_authorized_user(context, space_users_clients, role, test_org, test_space, sample_service):
     client = space_users_clients[role]
     step("Create an instance")
-    instance = ServiceInstance.api_create(test_org.guid, test_space.guid, sample_service.label,
+    instance = ServiceInstance.api_create(context, test_org.guid, test_space.guid, sample_service.label,
                                           service_plan_guid=sample_service.service_plans[0]["guid"], client=client)
     step("Check that service instance is present")
     assert_in_with_retry(instance, ServiceInstance.api_get_list, test_space.guid, sample_service.guid,
                          client=client)
-    step("Delete instance")
-    instance.api_delete()

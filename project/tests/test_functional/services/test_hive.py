@@ -46,42 +46,42 @@ class TestHive:
     hive_client = None
 
     @pytest.fixture(scope="class")
-    def hdfs_instance(self, request, test_org, test_space):
+    def hdfs_instance(self, class_context, request, test_org, test_space):
         step("Create hdfs instance")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.HDFS,
             name=generate_test_object_name(),
             service_plan_name=ServicePlan.SHARED
         )
-        request.addfinalizer(instance.cleanup)
         return instance
 
     @pytest.fixture(scope="class")
-    def kerberos_instance(self, request, test_org, test_space):
+    def kerberos_instance(self, class_context, request, test_org, test_space):
         step("Create kerberos instance")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.KERBEROS,
             name=generate_test_object_name(),
             service_plan_name=ServicePlan.SHARED
         )
-        request.addfinalizer(instance.cleanup)
         return instance
 
     @pytest.fixture(scope="class")
-    def hive_instance(self, request, test_org, test_space):
+    def hive_instance(self, class_context, request, test_org, test_space):
         step("Create hive instance")
         instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.HIVE,
             name=generate_test_object_name(),
             service_plan_name=ServicePlan.SHARED
         )
-        request.addfinalizer(instance.cleanup)
         return instance
 
     @pytest.fixture(scope="class")

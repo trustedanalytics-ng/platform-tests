@@ -37,19 +37,19 @@ class TestPsql(object):
     row_value_list = DbInput.test_rows_1
 
     @pytest.fixture(scope="class", autouse=True)
-    def postgres_instance(self, request, test_org, test_space):
+    def postgres_instance(self, class_context, request, test_org, test_space):
         step("Create postgres service instance")
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
         instance_name = generate_test_object_name()
         psql_instance = ServiceInstance.api_create(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=ServiceLabels.PSQL,
             name=instance_name,
             service_plan_guid=psql.service_plan_guids[0]
         )
-        request.addfinalizer(lambda: psql_instance.cleanup())
         return psql_instance
 
     @classmethod

@@ -47,7 +47,7 @@ class TestCluster:
         clusters_after = KubernetesCluster.demiurge_api_get_list()
         assert len(clusters_before) == len(clusters_after)
 
-    def test_1_create_service_instance(self):
+    def test_1_create_service_instance(self, class_context):
         step("Get list of services to retrieve a {} service".format(ServiceTag.K8S))
         services = ServiceType.api_get_list_from_marketplace(space_guid=self.test_space.guid)
         service = next((s for s in services if ServiceTag.K8S in s.tags), None)
@@ -56,6 +56,7 @@ class TestCluster:
 
         step("Create instance")
         self.__class__.test_instance = ServiceInstance.api_create(
+            context=class_context,
             org_guid=self.test_org.guid,
             space_guid=self.test_space.guid,
             name=test_names.generate_test_object_name(short=True),
