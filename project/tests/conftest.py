@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import os
+
 import pytest
 import requests
 
@@ -37,8 +39,22 @@ logger = get_logger(__name__)
 INCREMENTAL_KEYWORD = "incremental"
 
 
+def log_test_configuration():
+    logger.info("============== configuration variables ==============")
+    pt_env_vars = []
+    for key, value in os.environ.items():
+        if key.startswith("PT_"):
+            if "password" in key.lower():
+                value = "*******"
+            pt_env_vars.append("{}={}".format(key, value))
+    pt_env_vars.sort()
+    for env_var in pt_env_vars:
+        logger.info(env_var)
+
+
 def pytest_sessionstart(session):
     """ Check environment viability. If the check fails, don't start test session. """
+    log_test_configuration()
     if not config.ng_disable_environment_check:
         try:
             requests.get(config.console_url, verify=config.ssl_validation).raise_for_status()
