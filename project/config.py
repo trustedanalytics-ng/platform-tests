@@ -81,13 +81,13 @@ core_space_name = os.environ.get("PT_CORE_SPACE_NAME", "platform")
 ssl_validation = get_bool("PT_SSL_VALIDATION", False)
 
 # TAP version provided by user
-tap_version = os.environ.get("PT_TAP_VERSION", None)
+tap_version = os.environ.get("PT_TAP_VERSION")
 
 # TAP infrastructure type provided by user (AWS, OS or Hybrid)
-tap_infrastructure_type = os.environ.get("PT_TAP_INFRASTRUCTURE_TYPE", None)
+tap_infrastructure_type = os.environ.get("PT_TAP_INFRASTRUCTURE_TYPE")
 
 # local_appstack_path - if None, appstack is retrieved from GitHub apployer repository
-appstack_file_path = os.environ.get("PT_APPSTACK_PATH", None)
+appstack_file_path = os.environ.get("PT_APPSTACK_PATH")
 appstack_version = os.environ.get("PT_APPSTACK_VERSION", "master")
 
 # jumpbox configuration
@@ -96,19 +96,19 @@ jumpbox_username = os.environ.get("PT_JUMPBOX_USERNAME", "ubuntu")
 jumpbox_key_path = os.environ.get("PT_JUMPBOX_KEY_PATH", os.path.expanduser(os.path.join("~", ".ssh", "auto-deploy-virginia.pem")))
 
 # when TAP is behind a proxy, e.g. proxy-mu.intel.com
-cf_proxy = os.environ.get("PT_CF_PROXY", None)
+cf_proxy = os.environ.get("PT_CF_PROXY")
 
 # Credentials - secrets are obligatory
 admin_username = os.environ.get("PT_ADMIN_USERNAME", "trusted.analytics.tester@gmail.com")  # Test user
 admin_password = os.environ["PT_ADMIN_PASSWORD"]  # Secret
 github_user_username = os.environ.get("PT_GITHUB_USER_USERNAME", "inteldatatests")
-_github_user_password = os.environ.get("PT_GITHUB_USER_PASSWORD", None)  # Secret
+_github_user_password = os.environ.get("PT_GITHUB_USER_PASSWORD")  # Secret
 arcadia_username = os.environ.get("PT_ARCADIA_USERNAME", "admin")
-_arcadia_password = os.environ.get("PT_ARCADIA_PASSWORD", None)
+_arcadia_password = os.environ.get("PT_ARCADIA_PASSWORD")
 cdh_manager_username = os.environ.get("PT_CDH_MANAGER_USERNAME", "admin")
-_cdh_manager_password = os.environ.get("PT_CDH_MANAGER_PASSWORD", None)  # Secret
+_cdh_manager_password = os.environ.get("PT_CDH_MANAGER_PASSWORD")  # Secret
 kinit_username = os.environ.get("PT_KINIT_USERNAME", "cf")
-_kinit_password = os.environ.get("PT_KINIT_PASSWORD", None)  # Secret
+_kinit_password = os.environ.get("PT_KINIT_PASSWORD")  # Secret
 
 # cdh
 cdh_master_0_hostname = "cdh-master-0"
@@ -136,9 +136,9 @@ kubernetes_broker_url = os.environ.get("PT_KUBERNETES_BROKER_URL", "http://kuber
 
 # Test resources
 test_user_email = os.environ.get("PT_TEST_USER_EMAIL", "intel.data.tests@gmail.com")
-database_url = os.environ.get("PT_DATABASE_URL", None)  # if specified, results will be logged in database
+database_url = os.environ.get("PT_DATABASE_URL")  # if specified, results will be logged in database
 # This config value is only used by the platform-test app
-test_run_id = os.environ.get("PT_TEST_RUN_ID", None)
+test_run_id = os.environ.get("PT_TEST_RUN_ID")
 
 # Logsearch
 collect_logsearch_logs = get_bool("PT_COLLECT_LOGSEARCH_LOGS", True)
@@ -146,6 +146,25 @@ logsearch_collect_retry_count = get_int("PT_LOGSEARCH_COLLECT_RETRY_COUNT", 5)
 logsearch_elastic_search_host = os.environ.get("PT_LOGSEARCH_ELASTIC_SEARCH_HOST", "10.0.7.10")
 # Logging
 logging_level = os.environ.get("PT_LOGGING_LEVEL", "DEBUG")
+
+# -------------------------------------- TAP NG -------------------------------------- #
+
+ng_disable_environment_check = get_bool("PT_DISABLE_ENVIRONMENT_CHECK", False)
+ng_jump_ip = os.environ.get("PT_NG_JUMP_IP")  # required for running component tests on TAP NG
+ng_jump_key_path = os.environ.get("PT_NG_JUMP_KEY_PATH")  # if not passed, key will be retrieved from GitHub
+ng_jump_username = os.environ.get("PT_NG_JUMP_USERNAME", "centos")
+ng_kubernetes_api_host = os.environ.get("PT_KUBERNETES_API_HOST", "localhost")
+ng_kubernetes_api_port = get_int("PT_KUBERNETES_API_PORT", 8080)
+ng_socks_proxy_port = get_int("PT_SOCKS_PROXY_PORT", 5555)
+ng_kubernetes_api_version = os.environ.get("PT_KUBERNETES_API_VERSION", "v1")
+ng_service_http_scheme = os.environ.get("PT_SERVICE_HTTP_SCHEME", "http")
+ng_k8s_service_auth_username = os.environ.get("PT_K8S_SERVICE_AUTH_USERNAME", "admin")
+_ng_k8s_service_auth_password = os.environ.get("PT_K8S_SERVICE_AUTH_PASSWORD")
+
+
+def ng_k8s_service_credentials() -> tuple:
+    _assert_config_value_set("_ng_k8s_service_auth_password")
+    return ng_k8s_service_auth_username, _ng_k8s_service_auth_password
 
 
 def github_credentials() -> tuple:

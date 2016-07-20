@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import config
+
 from .http_client import HttpClient
 from .http_client_type import HttpClientType
 from .client_auth.client_auth_type import ClientAuthType
@@ -37,7 +39,7 @@ class HttpClientFactory(object):
         elif client_type == HttpClientType.CONSOLE:
             return cls._get_instance(configuration, ClientAuthType.LOGIN_PAGE)
 
-        elif client_type == HttpClientType.CONSOLE_NO_AUTH:
+        elif client_type == HttpClientType.NO_AUTH:
             return cls._get_instance(configuration, ClientAuthType.NO_AUTH)
 
         elif client_type == HttpClientType.APPLICATION:
@@ -51,9 +53,6 @@ class HttpClientFactory(object):
 
         elif client_type == HttpClientType.WEBHDFS:
             return cls._get_instance(configuration, ClientAuthType.WEBHDFS)
-        
-        elif client_type == HttpClientType.SERVICE_TOOL:
-            return cls._get_instance(configuration, ClientAuthType.NO_AUTH)
 
         elif client_type == HttpClientType.CLOUDERA:
             return cls._get_instance(configuration, ClientAuthType.HTTP_BASIC)
@@ -80,7 +79,8 @@ class HttpClientFactory(object):
         auth = ClientAuthFactory.get(
             username=configuration.username,
             password=configuration.password,
-            auth_type=auth_type
+            auth_type=auth_type,
+            proxies=configuration.proxies
         )
         instance = HttpClient(configuration.url, auth)
         cls._INSTANCES[configuration] = instance

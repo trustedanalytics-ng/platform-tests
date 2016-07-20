@@ -13,18 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from enum import Enum
-
-
-class HttpClientType(Enum):
-    """Http client types."""
-
-    UAA = "UserAccountAndAuthentication"
-    CONSOLE = "Console"
-    NO_AUTH = "No Auth"
-    APPLICATION = "Application"
-    CLOUD_FOUNDRY = "CloudFoundry"
-    BROKER = "Broker"
-    WEBHDFS = "Webhdfs"
-    CLOUDERA = "Cloudera"

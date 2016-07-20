@@ -14,17 +14,24 @@
 # limitations under the License.
 #
 
-from enum import Enum
+import pytest
+
+from modules.tap_object_model import Template
 
 
-class HttpClientType(Enum):
-    """Http client types."""
+@pytest.mark.usefixtures("open_tunnel")
+class TestTemplateRepository:
 
-    UAA = "UserAccountAndAuthentication"
-    CONSOLE = "Console"
-    NO_AUTH = "No Auth"
-    APPLICATION = "Application"
-    CLOUD_FOUNDRY = "CloudFoundry"
-    BROKER = "Broker"
-    WEBHDFS = "Webhdfs"
-    CLOUDERA = "Cloudera"
+    def test_pass(self):
+        Template.get_list()
+
+    @pytest.mark.bugs("DPNG-9607 [tapng-template-repository] POST for /api/v1/templates returns empty body")
+    def test_create_and_delete_template(self, context):
+        template = Template.create(context)
+        templates = Template.get_list()
+        assert template in templates
+
+        template.delete()
+        templates = Template.get_list()
+        assert template not in templates
+

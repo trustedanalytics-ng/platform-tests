@@ -33,9 +33,9 @@ class ClientAuthFactory(object):
     EMPTY_URL = ""
 
     @staticmethod
-    def get(username: str, password: str, auth_type: ClientAuthType) -> ClientAuthBase:
+    def get(username: str, password: str, auth_type: ClientAuthType, proxies: dict=None) -> ClientAuthBase:
         """Create client authentication for given type."""
-        session = HttpSession(username, password)
+        session = HttpSession(username, password, proxies)
 
         if auth_type == ClientAuthType.TOKEN_CF:
             return ClientAuthToken(config.cf_oauth_token_url, session)

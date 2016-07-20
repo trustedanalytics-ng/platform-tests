@@ -25,7 +25,7 @@ class ServiceToolConfigurationProvider(object):
     def get(cls, url, username=None, password=None) -> HttpClientConfiguration:
         """Return http client configuration."""
         return HttpClientConfiguration(
-            client_type=HttpClientType.SERVICE_TOOL,
+            client_type=HttpClientType.NO_AUTH,
             url=cls._prepare_url(url),
             username=username,
             password=password,

@@ -52,7 +52,7 @@ class TestHttpClientFactory(MockHttpSession):
         self._assertHttpClientInstance(HttpClientType.BROKER, ClientAuthHttpBasic)
 
     def test_get_should_return_client_for_service_tool(self):
-        self._assertHttpClientInstance(HttpClientType.SERVICE_TOOL, ClientAuthNoAuth)
+        self._assertHttpClientInstance(HttpClientType.NO_AUTH, ClientAuthNoAuth)
 
     def test_get_should_create_only_one_instance(self):
         # given

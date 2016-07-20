@@ -21,13 +21,15 @@ class HttpClientConfiguration(object):
     """Http client configuration."""
     identity_attribtues = ("client_type", "url", "username", "password")
 
-    def __init__(self, client_type: HttpClientType, url: str, username: str, password: str):
+    def __init__(self, client_type: HttpClientType, url: str, username: str=None, password: str=None,
+                 proxies: dict=None):
         self._validate("client_type", HttpClientType, client_type)
         self._validate("url", str, url)
         self._client_type = client_type
         self._url = url
         self._username = username
         self._password = password
+        self.proxies = proxies
 
     def __eq__(self, other):
         return all(getattr(self, a) == getattr(other, a) for a in self.identity_attribtues)

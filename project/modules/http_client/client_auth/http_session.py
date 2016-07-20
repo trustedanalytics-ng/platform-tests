@@ -27,10 +27,12 @@ from .http_method import HttpMethod
 class HttpSession(object):
     """User http session."""
 
-    def __init__(self, username: str=None, password: str=None):
+    def __init__(self, username: str=None, password: str=None, proxies: dict=None):
         self._username = username
         self._password = password
         self._session = Session()
+        if proxies is not None:
+            self._session.proxies = proxies
         self._session.verify = config.ssl_validation
 
     @property

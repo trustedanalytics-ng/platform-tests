@@ -14,3 +14,7 @@
 # limitations under the License.
 #
 
+from .client_auth.http_method import HttpMethod
+from .http_client_configuration import HttpClientConfiguration
+from .http_client_factory import HttpClientFactory
+from .http_client_type import HttpClientType

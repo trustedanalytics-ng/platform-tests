@@ -69,6 +69,15 @@ class TapComponent(Enum):
     gateway = "gateway"
     scoring_engine = "scoring-engine"
 
+    # ---- TAP NG components ---- #
+    blob_store = "blob-store"
+    catalog = "catalog"
+    console_service = "console-service"
+    container_broker = "container-broker"
+    dashboard = "dashboard"
+    image_factory = "image-factory"
+    template_repository = "template-repository"
+
     @classmethod
     def names(cls):
         return [i.name for i in list(cls)]

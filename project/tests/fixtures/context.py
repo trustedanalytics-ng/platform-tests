@@ -32,6 +32,7 @@ class Context(object):
         self.transfers = []
         self.apps = []
         self.service_instances = []
+        self.templates = []
 
     def _cleanup_test_objects(self, object_list: list):
         while len(object_list) > 0:
@@ -54,6 +55,9 @@ class Context(object):
         self._cleanup_test_objects(self.service_instances)
         self._cleanup_test_objects(self.apps)
         self._cleanup_test_objects(self.orgs)
+
+        # TAP NG
+        self._cleanup_test_objects(self.templates)
 
 
 @pytest.fixture(scope="function")

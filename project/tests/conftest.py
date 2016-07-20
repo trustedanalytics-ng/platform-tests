@@ -27,7 +27,8 @@ import tests.fixtures.fixtures as fixtures
 pytest_plugins = ["tests.fixtures.context",
                   "tests.fixtures.db_logging",
                   "tests.fixtures.fixtures",
-                  "tests.fixtures.remote_logging"]
+                  "tests.fixtures.remote_logging",
+                  "tests.fixtures.fixtures_ng"]
 
 
 logger = get_logger(__name__)
@@ -38,13 +39,14 @@ INCREMENTAL_KEYWORD = "incremental"
 
 def pytest_sessionstart(session):
     """ Check environment viability. If the check fails, don't start test session. """
-    try:
-        requests.get(config.console_url, verify=config.ssl_validation).raise_for_status()
-        cf_api_url = "{}/info".format(config.cf_api_url_full)
-        requests.get(cf_api_url, verify=config.ssl_validation).raise_for_status()
-    except requests.HTTPError as e:
-        logger.error("Environment {} is unavailable - status {}".format(config.console_url, e.response.status_code))
-        raise
+    if not config.ng_disable_environment_check:
+        try:
+            requests.get(config.console_url, verify=config.ssl_validation).raise_for_status()
+            cf_api_url = "{}/info".format(config.cf_api_url_full)
+            requests.get(cf_api_url, verify=config.ssl_validation).raise_for_status()
+        except requests.HTTPError as e:
+            logger.error("Environment {} is unavailable - status {}".format(config.console_url, e.response.status_code))
+            raise
 
 
 def pytest_collection_finish(session):

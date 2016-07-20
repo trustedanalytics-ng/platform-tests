@@ -27,7 +27,7 @@ class ConsoleNoAuthConfigurationProvider(BaseConfigurationProvider):
     def get(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
         return HttpClientConfiguration(
-            client_type=HttpClientType.CONSOLE_NO_AUTH,
+            client_type=HttpClientType.NO_AUTH,
             url=config.console_url,
             username=username,
             password=password

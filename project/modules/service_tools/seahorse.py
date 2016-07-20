@@ -49,7 +49,7 @@ class Seahorse:
         self.seahorse_url = "{}-{}.{}".format(self.service_instance.name, self.service_instance.guid, self.tap_domain)
 
         http_client_configuration = HttpClientConfiguration(
-            client_type=HttpClientType.SERVICE_TOOL,
+            client_type=HttpClientType.NO_AUTH,
             url="https://{}".format(self.seahorse_url),
             username=self.username,
             password=self.password
