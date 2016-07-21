@@ -28,30 +28,21 @@ pytestmark = [components.platform_snapshot]
 class TestSnapshot:
 
     @retry(AssertionError, tries=10, delay=3)
-    def _get_new_snapshot(self, snapshots_before):
+    def _get_snapshots_after_trigger(self, snapshots_before):
         step("Get new snapshot after triggering")
         snapshots_after = PlatformSnapshot.api_get_snapshots()
         assert len(snapshots_after) > len(snapshots_before)
-        return snapshots_after[0]
-
-    @priority.medium
-    def test_compare_snapshot_and_version(self):
-        step("Get snapshots")
-        snapshots = PlatformSnapshot.api_get_snapshots()
-        step("Get version")
-        version = PlatformSnapshot.api_get_version()
-        assert snapshots[0] == version
+        return snapshots_after
 
     @priority.medium
     def test_trigger_snapshot(self):
         step("Get snapshots")
         snapshots_before = PlatformSnapshot.api_get_snapshots()
-        step("Get version")
-        version_before = PlatformSnapshot.api_get_version()
         step("Trigger new snapshot")
         PlatformSnapshot.api_trigger_snapshots()
-        new_snapshot = self._get_new_snapshot(snapshots_before=snapshots_before)
-        step("Get new versions")
-        version_after = PlatformSnapshot.api_get_version()
-        assert version_before != version_after
-        assert new_snapshot == version_after
+        step("Get snapshots after triggering")
+        snapshots_after = self._get_snapshots_after_trigger(snapshots_before)
+        step("Get version")
+        version = PlatformSnapshot.api_get_version()
+        step("Compare snapshot and version")
+        assert snapshots_after[0] == version

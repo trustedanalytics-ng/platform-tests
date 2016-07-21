@@ -19,7 +19,7 @@ from ..http_calls.platform import platform_snapshot
 
 class PlatformSnapshot(object):
 
-    comparable_attributes = ["id", "platform_version", "cf_version", "cdh_version", "created_at"]
+    comparable_attributes = ["platform_version", "cf_version", "cdh_version"]
 
     def __init__(self, id=None, platform_version=None, created_at=None, cdh_version=None, cf_version=None,
                  applications=None, cdh_services=None, cf_services=None):
@@ -51,7 +51,7 @@ class PlatformSnapshot(object):
     @classmethod
     def api_get_version(cls, client=None):
         response = platform_snapshot.api_get_version(client=client)
-        return cls._from_api_response(response)
+        return cls(platform_version=response["tap"], cdh_version=response["cdh"], cf_version=response["cf"])
 
     @classmethod
     def api_get_snapshots(cls, client=None):
