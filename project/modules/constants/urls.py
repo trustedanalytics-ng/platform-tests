@@ -20,3 +20,4 @@ class Urls(object):
     model_url = "https://repo.gotapaas.eu/files/models_a8ab76353c2143509514da386d32a2f8.tar"
     kafka2gearpump2hbase = "https://repo.gotapaas.eu/files/gearpump-app-0.6.0-jar-with-dependencies.jar"
     complexdag_app_url = "https://repo.gotapaas.eu/files/complexdag-2.11.5-0.7.1-SNAPSHOT-assembly.jar"
+    nodejs_app_url = "https://repo.gotapaas.eu/files/test_blob"

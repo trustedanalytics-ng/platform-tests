@@ -14,7 +14,19 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.144'
+import config
+
+from modules.http_client import HttpClientFactory, HttpMethod
+from modules.http_client.configuration_provider.k8s_service import ProxiedConfigurationProvider
 
 
+def _get_client():
+    configuration = ProxiedConfigurationProvider.get("http://{}/v2".format(config.ng_image_repository_url))
+    return HttpClientFactory.get(configuration)
+
+
+def get_image_repositories():
+    response = _get_client().request(HttpMethod.GET,
+                                     path="_catalog",
+                                     msg="IMAGE REPOSITORY: get repositories")
+    return response

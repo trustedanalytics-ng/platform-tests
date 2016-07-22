@@ -14,7 +14,13 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.144'
+import modules.http_calls.platform.image_repository as image_repository
 
+
+class ImageRepository(object):
+
+    @classmethod
+    def get_repositories(cls):
+        response = image_repository.get_image_repositories()
+        return response["repositories"]
 

@@ -162,6 +162,9 @@ ng_kubernetes_api_version = os.environ.get("PT_KUBERNETES_API_VERSION", "v1")
 ng_service_http_scheme = os.environ.get("PT_SERVICE_HTTP_SCHEME", "http")
 ng_k8s_service_auth_username = os.environ.get("PT_K8S_SERVICE_AUTH_USERNAME", "admin")
 _ng_k8s_service_auth_password = os.environ.get("PT_K8S_SERVICE_AUTH_PASSWORD")
+ng_component_api_version = os.environ.get("PT_NG_COMPONENT_API_VERSION", "v1")
+ng_component_api_version_alias = os.environ.get("PT_NG_COMPONENT_API_VERSION_ALIAS", "v1.0")
+ng_image_repository_url = os.environ.get("PT_NG_IMAGE_REPOSITORY_URL", "127.0.0.1:30000")
 
 
 def ng_k8s_service_credentials() -> tuple:
