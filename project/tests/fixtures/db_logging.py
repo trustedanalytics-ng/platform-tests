@@ -47,8 +47,13 @@ def log_test_run_in_database(request, test_type):
                                     infrastructure_type=config.tap_infrastructure_type,
                                     appstack_version=config.appstack_version,
                                     platform_components=[],
-                                    components=get_tap_components_from_request(request))
+                                    components=[] if request is None else get_tap_components_from_request(request),
+                                    environment_availability=False if request is None else True)
 
         def finalizer():
             mongo_reporter.on_run_end()
-        request.addfinalizer(finalizer)
+
+        if request is None:
+            finalizer()
+        else:
+            request.addfinalizer(finalizer)

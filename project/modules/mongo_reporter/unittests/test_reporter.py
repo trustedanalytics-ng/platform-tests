@@ -141,7 +141,8 @@ class TestReporter(TestCase):
             expected_run_document["infrastructure_type"],
             expected_run_document["appstack_version"],
             expected_run_document["platform_components"],
-            expected_run_document["components"]
+            expected_run_document["components"],
+            expected_run_document["environment_availability"]
         )
         return expected_run_document
 
@@ -236,7 +237,7 @@ class TestReporter(TestCase):
         }
 
     def get_expected_run_document(self, pass_count=0, fail_count=0, skipped_count=0, test_count=0, finished=False,
-                                  status="PASS"):
+                                  status="PASS", environment_availability=True):
         expected_run = {
             "environment": "test_environment",
             "environment_version": "0.7",
@@ -256,6 +257,7 @@ class TestReporter(TestCase):
             "test_count": test_count,
             "test_type": reporter.TestRunType.API_FUNCTIONAL,
             "total_test_count": 0,
-            "test_version": config.get_test_version()
+            "test_version": config.get_test_version(),
+			"environment_availability": environment_availability
         }
         return expected_run

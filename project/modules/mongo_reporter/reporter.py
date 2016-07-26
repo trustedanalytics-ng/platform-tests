@@ -20,7 +20,6 @@ import socket
 from bson import ObjectId
 
 import config
-from modules.constants import TapComponent
 from .client import DBClient
 
 
@@ -70,13 +69,14 @@ class MongoReporter(object):
                 "total_test_count": 0,
                 "test_version": config.get_test_version(),
                 "test_type": test_run_type,
+                "environment_availability": False
             }
             cls._instance._save_test_run()
             cls._instance._log = []
         return cls._instance
 
     def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components,
-                     components):
+                     components, environment_availability):
         mongo_run_document = {
             "environment": environment,
             "environment_version": environment_version,
@@ -87,6 +87,7 @@ class MongoReporter(object):
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "test_version": config.get_test_version(),
+            "environment_availability": environment_availability
         }
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()

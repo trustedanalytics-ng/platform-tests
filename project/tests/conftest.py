@@ -24,6 +24,7 @@ from modules.constants import Path, ParametrizedService
 from modules.mongo_reporter.reporter import MongoReporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceType
+import tests.fixtures.db_logging as db_logging
 import tests.fixtures.fixtures as fixtures
 
 pytest_plugins = ["tests.fixtures.context",
@@ -60,8 +61,9 @@ def pytest_sessionstart(session):
             requests.get(config.console_url, verify=config.ssl_validation).raise_for_status()
             cf_api_url = "{}/info".format(config.cf_api_url_full)
             requests.get(cf_api_url, verify=config.ssl_validation).raise_for_status()
-        except requests.HTTPError as e:
-            logger.error("Environment {} is unavailable - status {}".format(config.console_url, e.response.status_code))
+        except Exception as e:
+            logger.error("Environment {} is unavailable - {}: {}".format(config.console_url, type(e).__name__, e))
+            db_logging.log_test_run_in_database(request=None, test_type=None)
             raise
 
 
