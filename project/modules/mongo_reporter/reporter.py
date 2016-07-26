@@ -20,6 +20,7 @@ import socket
 from bson import ObjectId
 
 from .client import DBClient
+from modules.constants import TapComponent
 
 
 class MongoReporter(object):
@@ -32,6 +33,8 @@ class MongoReporter(object):
 
     _test_run_collection_name = "test_run"
     _test_result_collection_name = "test_result"
+
+    TAP_COMPONENT_NAMES = TapComponent.names()
 
     def __new__(cls, mongo_uri, run_id=None):
         if cls._instance is None:
@@ -57,7 +60,8 @@ class MongoReporter(object):
             }
         return cls._instance
 
-    def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components, tests_to_run_count):
+    def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components,
+                     tests_to_run_count):
         mongo_run_document = {
             "environment": environment,
             "environment_version": environment_version,
@@ -79,11 +83,19 @@ class MongoReporter(object):
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
 
+    def get_tap_components_from_item(self, item):
+        components = []
+        keywords = item.keywords.items()
+        for keyword in keywords:
+            if keyword[0] in self.TAP_COMPONENT_NAMES:
+                components.append(keyword[0])
+        return sorted(components)
+
     def log_report(self, report, item):
         name = item.obj.__doc__.strip() if item.obj.__doc__ else report.nodeid
         if report.when == "call":
             self._on_test_end(
-                components=self._marker_args_from_item(item, "components"),
+                components=self.get_tap_components_from_item(item),
                 defects=self._marker_args_from_item(item, "bugs"),
                 duration=report.duration,
                 log="",
@@ -97,6 +109,7 @@ class MongoReporter(object):
             self._on_fixture_error(
                 log="",
                 name="{}: {} error".format(name, report.when),
+                components=self.get_tap_components_from_item(item),
                 stacktrace=self._stacktrace_from_report(report)
             )
 
@@ -130,7 +143,7 @@ class MongoReporter(object):
             test_status = cls.UNKNOWN
         return test_status
 
-    def _on_test_end(self, components: tuple, defects: tuple, duration: float, log: str, name: str, priority: str,
+    def _on_test_end(self, components: list, defects: tuple, duration: float, log: str, name: str, priority: str,
                      stacktrace: str, status: str, tags: tuple):
         mongo_test_document = {
             "run_id": self._run_id,
@@ -138,7 +151,7 @@ class MongoReporter(object):
             "duration": duration,
             "order": self._test_counter,
             "priority": priority,
-            "components": ", ".join(components),
+            "components": components,
             "defects": ", ".join(defects),
             "tags": ", ".join(tags),
             "status": status,
@@ -149,10 +162,11 @@ class MongoReporter(object):
         self._update_run_status(test_status=status)
         self._test_counter += 1
 
-    def _on_fixture_error(self, name: str, stacktrace: str, log: str):
+    def _on_fixture_error(self, name: str, components: list, stacktrace: str, log: str):
         fixture_mongo_document = {
             "run_id": self._run_id,
             "name": name,
+            "components": components,
             "stacktrace": stacktrace,
             "log": log
         }
