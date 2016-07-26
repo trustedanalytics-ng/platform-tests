@@ -55,7 +55,7 @@ class MongoReporter(object):
                 run_id = ObjectId(run_id)
             cls._instance._db_client = DBClient(uri=mongo_uri)
             cls._instance._run_id = run_id
-            cls._instance._test_counter = 0
+            cls._instance._total_test_counter = 0
             cls._instance._mongo_run_document = {
                 "end_date": None,
                 "environment": None,
@@ -73,10 +73,12 @@ class MongoReporter(object):
                 "test_version": get_test_version(),
                 "test_type": test_run_type,
             }
+            cls._instance._save_test_run()
+            cls._instance._log = []
         return cls._instance
 
     def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components,
-                     components, tests_to_run_count):
+                     components):
         mongo_run_document = {
             "environment": environment,
             "environment_version": environment_version,
@@ -86,8 +88,7 @@ class MongoReporter(object):
             "components": components,
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
-            "total_test_count": tests_to_run_count,
-            "test_version": get_test_version(),
+            "test_version": get_test_version()
         }
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
@@ -95,6 +96,7 @@ class MongoReporter(object):
     def on_run_end(self):
         mongo_run_document = {
             "end_date": datetime.now(),
+            "total_test_count": self._total_test_counter,
             "finished": True
         }
         self._mongo_run_document.update(mongo_run_document)
@@ -110,28 +112,24 @@ class MongoReporter(object):
 
     def log_report(self, report, item):
         test_type = self._get_test_type_from_report(report)
-        name = item.obj.__doc__.strip() if item.obj.__doc__ else report.nodeid
+        doc, status = None, None
         if report.when == "call":
-            self._on_test_end(
-                components=self.get_tap_components_from_item(item),
-                defects=self._marker_args_from_item(item, "bugs"),
-                duration=report.duration,
-                log="",
-                name=name,
-                priority=self._priority_from_report(report),
-                stacktrace=self._stacktrace_from_report(report),
-                status=self.test_status_from_report(report),
-                tags=report.keywords,
-                test_type=test_type
-            )
+            doc, status = self._on_test(report, item)
         elif report.failed:
-            self._on_fixture_error(
-                log="",
-                name="{}: {} error".format(name, report.when),
-                components=self.get_tap_components_from_item(item),
-                stacktrace=self._stacktrace_from_report(report),
-                test_type=test_type
-            )
+            doc, status = self._on_fixture(report, item, reason="error")
+        elif report.skipped:
+            doc, status = self._on_fixture(report, item, reason="skipped")
+        if doc and status:
+            self._update_status(doc, status, increment_test_count=(report.when == "call"))
+
+        # Also for integrity with Team City:
+        if report.failed and report.when == "setup":
+            doc, status = self._on_test(report, item, failed_by_setup=True)
+            self._update_status(doc, status)
+
+    @staticmethod
+    def _test_name_from_report_or_item(report, item):
+        return item.obj.__doc__.strip() if item.obj.__doc__ else report.nodeid
 
     @staticmethod
     def _marker_args_from_item(item, marker_name):
@@ -172,44 +170,56 @@ class MongoReporter(object):
             test_status = cls.UNKNOWN
         return test_status
 
-    def _on_test_end(self, components: list, defects: tuple, duration: float, log: str, name: str, priority: str,
-                     stacktrace: str, status: str, tags: tuple, test_type: str):
-        mongo_test_document = {
+    def _on_test(self, report, item, log="", failed_by_setup=False):
+        status = self.test_status_from_report(report)
+        bugs = self._marker_args_from_item(item, "bugs")
+        name = self._test_name_from_report_or_item(report, item)
+        test_mongo_document = {
             "run_id": self._run_id,
-            "name": name,
-            "duration": duration,
-            "order": self._test_counter,
-            "priority": priority,
-            "components": components,
-            "defects": ", ".join(defects),
-            "tags": ", ".join(tags),
+            "name": name if not failed_by_setup else "{}: failed on setup".format(name),
+            "duration": report.duration if not failed_by_setup else 0.0,
+            "priority": self._priority_from_report(report),
+            "components": self.get_tap_components_from_item(item),
+            "defects": ", ".join(bugs),
+            "tags": ", ".join(report.keywords),
             "status": status,
-            "stacktrace": stacktrace,
+            "stacktrace": self._stacktrace_from_report(report),
             "log": log,
-            "test_type": test_type,
+            "test_type": self._get_test_type_from_report(report),
         }
-        self._db_client.insert(collection_name=self._test_result_collection_name, document=mongo_test_document)
-        self._update_run_status(test_status=status)
-        self._test_counter += 1
+        if not failed_by_setup:
+            test_mongo_document.update({"order": self._mongo_run_document["test_count"]})
+        return test_mongo_document, status
 
-    def _on_fixture_error(self, name: str, components: list, stacktrace: str, log: str, test_type: str):
+    def _on_fixture(self, report, item, reason, log=""):
+        status = None
+        name = self._test_name_from_report_or_item(report, item)
+        if reason == "error":
+            name = "{}: {} error".format(name, report.when)
+            status = self.FAIL
+        elif reason == "skipped":
+            name = "{}: skipped".format(name)
+            status = self.SKIPPED
         fixture_mongo_document = {
             "run_id": self._run_id,
             "name": name,
-            "components": components,
-            "stacktrace": stacktrace,
+            "stacktrace": self._stacktrace_from_report(report),
+            "components": self.get_tap_components_from_item(item),
             "log": log,
-            "test_type": test_type,
+            "test_type": self._get_test_type_from_report(report)
         }
-        self._update_run_status(test_status=self.FAIL, increment_test_count=False)
-        self._db_client.insert(collection_name=self._test_result_collection_name, document=fixture_mongo_document)
+        return fixture_mongo_document, status
 
-    def _update_run_status(self, test_status, increment_test_count=True):
-        if self._mongo_run_document["status"] == self.PASS and test_status == self.FAIL:
-            self._mongo_run_document["status"] = self.FAIL
+    def _update_status(self, result_document, test_status, increment_test_count=False):
+        self._total_test_counter += 1
         if increment_test_count:
             self._mongo_run_document["test_count"] += 1
-            self._mongo_run_document["result"][test_status] += 1
+
+        self._db_client.insert(collection_name=self._test_result_collection_name, document=result_document)
+
+        if self._mongo_run_document["status"] == self.PASS and test_status == self.FAIL:
+            self._mongo_run_document["status"] = self.FAIL
+        self._mongo_run_document["result"][test_status] += 1
         self._save_test_run()
 
     def _save_test_run(self):

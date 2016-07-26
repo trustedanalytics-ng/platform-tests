@@ -51,8 +51,7 @@ def log_test_run_in_database(request, test_type):
                                     infrastructure_type=config.tap_infrastructure_type,
                                     appstack_version=config.appstack_version,
                                     platform_components=[],
-                                    components=get_tap_components_from_request(request),
-                                    tests_to_run_count=len(request.session.items))
+                                    components=get_tap_components_from_request(request))
 
         def finalizer():
             mongo_reporter.on_run_end()

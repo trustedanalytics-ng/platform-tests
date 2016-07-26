@@ -76,6 +76,19 @@ class MockFailingReport:
     test_type = reporter.TestResultType.REGRESSION
 
 
+class MockFailingSetupReport:
+    class Traceback:
+        reprtraceback = "stacktrace"
+    _priority = "medium"
+    when = "setup"
+    duration = 0.123
+    passed = False
+    failed = True
+    nodeid = "failing.test"
+    keywords = ("priority_" + _priority,)
+    longrepr = Traceback()
+
+
 class MockFailingItem:
 
     @property
@@ -132,8 +145,7 @@ class TestReporter(TestCase):
             expected_run_document["infrastructure_type"],
             expected_run_document["appstack_version"],
             expected_run_document["platform_components"],
-            expected_run_document["components"],
-            expected_run_document["total_test_count"]
+            expected_run_document["components"]
         )
         return expected_run_document
 
@@ -202,6 +214,14 @@ class TestReporter(TestCase):
         )
         self.assertTestDocument(result_documents[0], expected_document)
 
+    def test_should_log_two_results_on_setup_fail(self):
+        self.mongo_reporter.log_report(MockFailingSetupReport, MockFailingItem)
+        run_documents = self.get_run_documents()
+        self.assertEqual(len(run_documents), 1)
+        result_documents = self.get_result_documents()
+        self.assertEqual(len(result_documents), 2)
+        self.assertEqual(run_documents[0]["result"], self.get_expected_run_document(fail_count=2)["result"])
+
     def get_expected_test_document(self, run_id, test_name, duration, order, priority, components, defects,
                                    tags, status, stacktrace, log, test_type):
         return {
@@ -238,8 +258,8 @@ class TestReporter(TestCase):
             "started_by": socket.gethostname(),
             "status": status,
             "test_count": test_count,
-            "total_test_count": 100,
-            "test_version": get_test_version(),
             "test_type": reporter.TestRunType.API_FUNCTIONAL,
+            "total_test_count": 0,
+            "test_version": get_test_version()
         }
         return expected_run
