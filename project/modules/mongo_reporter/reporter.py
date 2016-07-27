@@ -51,6 +51,7 @@ class MongoReporter(object):
                 "finished": False,
                 "log": "",
                 "platform_components": [],
+                "components": [],
                 "result": {cls.PASS: 0, cls.FAIL: 0, cls.SKIPPED: 0},
                 "start_date": None,
                 "started_by": None,
@@ -61,13 +62,14 @@ class MongoReporter(object):
         return cls._instance
 
     def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components,
-                     tests_to_run_count):
+                     components, tests_to_run_count):
         mongo_run_document = {
             "environment": environment,
             "environment_version": environment_version,
             "infrastructure_type": infrastructure_type,
             "appstack_version": appstack_version,
             "platform_components": platform_components,
+            "components": components,
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "total_test_count": tests_to_run_count

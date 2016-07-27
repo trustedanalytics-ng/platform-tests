@@ -17,7 +17,19 @@
 import pytest
 
 import config
+from modules.constants import TapComponent
 from modules.mongo_reporter.reporter import MongoReporter
+
+
+def get_tap_components_from_request(request):
+    tap_component_names = TapComponent.names()
+    components = set()
+    for i in range(0, len(request.session.items)):
+        keywords = request.session.items[i].keywords.items()
+        for keyword in keywords:
+            if keyword[0] in tap_component_names:
+                components.add(keyword[0])
+    return sorted(list(components))
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -29,6 +41,7 @@ def log_test_run_in_database(request):
                                     infrastructure_type=config.tap_infrastructure_type,
                                     appstack_version=config.appstack_version,
                                     platform_components=[],
+                                    components=get_tap_components_from_request(request),
                                     tests_to_run_count=len(request.session.items))
 
         def finalizer():
