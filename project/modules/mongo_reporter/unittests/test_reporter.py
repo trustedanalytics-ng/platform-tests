@@ -20,6 +20,7 @@ from unittest import TestCase, mock
 import mongomock
 
 from modules.mongo_reporter import reporter
+from config import get_test_version
 
 
 class MockClient(reporter.DBClient):
@@ -227,6 +228,7 @@ class TestReporter(TestCase):
             "started_by": socket.gethostname(),
             "status": status,
             "test_count": test_count,
-            "total_test_count": 100
+            "total_test_count": 100,
+            "test_version": get_test_version()
         }
         return expected_run
