@@ -40,8 +40,8 @@ class TapGitHub:
 
 class RelativeRepositoryPaths:
 
-    space_shuttle_model_input_data = os.path.join("src", "main", "client", "shuttle_scale_cut_val.csv")
-    space_shuttle_model_generator = os.path.join("src", "main", "atkmodelgenerator", "atk_model_generator.py")
+    space_shuttle_model_input_data = os.path.join("tools", "shuttle_scale_cut_val.csv")
+    space_shuttle_model_generator = os.path.join("atkmodelgenerator", "atk_model_generator.py")
 
     # Path to the private ssh key for TAP NG environments - in tapng-ilab-deploy repository
     ilab_centos_key = "id_rsa"

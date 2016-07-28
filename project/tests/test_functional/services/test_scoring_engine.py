@@ -49,8 +49,8 @@ def space_shuttle_sources():
 
 
 @pytest.fixture(scope="class")
-def space_shuttle_model_input(request, test_org, test_space, add_admin_to_test_org, class_context,
-                              space_shuttle_sources):
+def space_shuttle_model_input(request, test_org, test_space, add_admin_to_test_org, add_admin_to_test_space,
+                              class_context, space_shuttle_sources):
     model_path = os.path.join(space_shuttle_sources, RepoPath.space_shuttle_model_input_data)
     step("Submit model as a transfer")
     _, data_set = data_catalog.create_dataset_from_file(class_context, org=test_org, file_path=model_path)
@@ -86,6 +86,7 @@ class TestScoringEngineInstance:
     expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
     ATK_MODEL_NAME = "model_name"  # name is hardcoded in atk_model_generator.py - task for changing the name DPNG-8390
 
+    @pytest.mark.bugs("DPNG-9781 atkmodelgenerator - permission denied on hdfs when generating model")
     def test_0_get_atk_model(self, atk_virtualenv, core_atk_app, core_org, space_shuttle_sources,
                              space_shuttle_model_input):
         step("Check if there already is an atk model generated")
