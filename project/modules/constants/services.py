@@ -54,7 +54,7 @@ class ServiceLabels(object):
     RSTUDIO = "rstudio"
     SCORING_ENGINE = "scoring-engine"
     SCORING_PIPELINES = "scoring-pipelines"
-    SEAHORSE = "k-seahorse-dev"
+    SEAHORSE = "seahorse"
     SMTP = "smtp"
     YARN = "yarn"
     ZOOKEEPER = "zookeeper"

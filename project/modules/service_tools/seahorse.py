@@ -17,13 +17,13 @@
 import signal
 
 from retry import retry
-import websocket
+import websockets
 
 import config
 from modules.constants import ServiceLabels, ServicePlan
 from modules.http_client.client_auth.http_method import HttpMethod
-from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.http_client_configuration import HttpClientConfiguration
+from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.http_client_type import HttpClientType
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceInstance
@@ -69,7 +69,7 @@ class Seahorse:
     @property
     def ws(self):
         if self._ws is None:
-            self._ws = websocket.WebSocket()
+            self._ws = websockets.WebSocket()
         return self._ws
 
     def clone_workflow(self, workflow_id):

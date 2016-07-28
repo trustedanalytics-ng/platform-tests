@@ -21,6 +21,7 @@ from modules.service_tools.seahorse import Seahorse
 
 
 @pytest.mark.skipif(not config.seahorse, reason="No seahorse on TAP")
+@pytest.mark.bugs("DPNG-9808 Seahorse - App Url is not redirecting to dashboard")
 class TestSeahorse:
     WORKFLOW_NAME = "Text Message Spam Detection"
 
