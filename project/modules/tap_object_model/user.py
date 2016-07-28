@@ -18,6 +18,7 @@ import functools
 import random
 import string
 
+import config
 from .. import gmail_api
 from ..exceptions import NoSuchUserException
 from ..http_calls import cloud_foundry as cf
@@ -157,6 +158,14 @@ class User(object):
 
     def api_delete_from_space(self, space_guid, client=None):
         user_management.api_delete_space_user(space_guid, self.guid, client=client)
+
+    @classmethod
+    def get_admin(cls):
+        """Return User object for admin user"""
+        if cls.__ADMIN is None:
+            cls.__ADMIN = cls.cf_api_get_user(config.admin_username)
+            cls.__ADMIN.password = config.admin_password
+        return cls.__ADMIN
 
     @classmethod
     def _get_user_list_from_cf_api_response(cls, response):

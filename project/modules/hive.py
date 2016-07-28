@@ -43,7 +43,7 @@ class Hive(object):
         return url
 
     def exec_query(self, query):
-        cmds = [["beeline", "-u", "'{}'".format(self.__url), "--showHeader=false", "--outputformat=csv2", "-e", query]]
+        cmds = [["beeline", "-n", "hive", "-u", "'{}'".format(self.__url), "--showHeader=false", "--outputformat=csv2", "-e", query]]
 
         if self.__is_kerberos:
             client = HttpClientFactory.get(UaaConfigurationProvider.get(self.__user.username, self.__user.password))
