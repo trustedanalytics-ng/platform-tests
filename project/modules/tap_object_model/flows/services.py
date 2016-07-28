@@ -25,9 +25,9 @@ def get_service_keys(instance):
     return summary[instance]
 
 
-def create_instance_and_key_then_delete_key_and_instance(org_guid, space_guid, service_label, plan_guid, plan_name):
+def create_instance_and_key_then_delete_key_and_instance(context, org_guid, space_guid, service_label, plan_guid, plan_name):
     step("Testing service {} plan {}".format(service_label, plan_name))
-    instance = create_instance(org_guid, space_guid, service_label, plan_guid)
+    instance = create_instance(context, org_guid, space_guid, service_label, plan_guid)
 
     service_key_exception = None
     try:

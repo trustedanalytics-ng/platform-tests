@@ -47,7 +47,7 @@ def hdfs_service_offering(test_marketplace):
 class TestHdfsRegularPlans(object):
 
     @priority.high
-    def test_create_hdfs_service_instance_and_keys(self, test_org, test_space, hdfs_service_offering):
+    def test_create_hdfs_service_instance_and_keys(self, context, test_org, test_space, hdfs_service_offering):
         failures = []
         for plan in hdfs_service_offering.service_plans:
             if plan["name"] in special_plan_names:
@@ -55,6 +55,7 @@ class TestHdfsRegularPlans(object):
             try:
                 step("Testing service {} plan {}".format(label, plan["name"]))
                 services.create_instance_and_key_then_delete_key_and_instance(
+                    context=context,
                     org_guid=test_org.guid,
                     space_guid=test_space.guid,
                     service_label=label,

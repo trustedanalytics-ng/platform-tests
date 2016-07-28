@@ -77,7 +77,7 @@ class TestYarnAuthGateway:
 
         request.addfinalizer(fin)
 
-    def test_0_create_kerberos_instance(self, test_org, test_space):
+    def test_0_create_kerberos_instance(self, class_context, test_org, test_space):
         step("Check kerberos in marketplace")
         service_label = ServiceLabels.KERBEROS
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
@@ -85,6 +85,7 @@ class TestYarnAuthGateway:
         assert kerberos is not None, "{} not available".format(service_label)
         step("Create instance of kerberos")
         self.__class__.kerberos_instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=service_label,

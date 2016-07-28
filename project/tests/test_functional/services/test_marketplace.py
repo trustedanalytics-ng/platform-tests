@@ -82,7 +82,7 @@ class TestMarketplaceServices:
 
     @long
     @priority.high
-    def test_create_and_delete_service_instance_and_keys(self, test_org, test_space, marketplace_services):
+    def test_create_and_delete_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
         errors = []
         for service_type in marketplace_services:
             if service_type.label in self.SERVICES_TESTED_SEPARATELY:
@@ -92,16 +92,16 @@ class TestMarketplaceServices:
                     continue
                 try:
                     create_instance_and_key_then_delete_key_and_instance(
-                        test_org.guid, test_space.guid, service_type.label, plan["guid"], plan["name"])
+                        context, test_org.guid, test_space.guid, service_type.label, plan["guid"], plan["name"])
                 except Exception as e:
                     errors.append("Service {} plan {}\n{}".format(service_type.label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
-    def test_create_instance_with_non_required_parameter(self, test_org, test_space):
+    def test_create_instance_with_non_required_parameter(self, context, test_org, test_space):
         param_key = "test_param"
         param_value = "test_value"
-        terminal = self._create_jupyter_instance_and_login(param_key, param_value, test_org, test_space)
+        terminal = self._create_jupyter_instance_and_login(context, param_key, param_value, test_org, test_space)
         terminal.send_input("env\n")
         output = "".join(terminal.get_output())
         assert "{}={}".format(param_key, param_value) in output
@@ -163,7 +163,7 @@ class TestMarketplaceServices:
 
     @priority.low
     @pytest.mark.bugs("DPNG-6086 Adding service key to H2O instance fails")
-    def test_create_h2o_service_instance_and_keys(self, test_org, test_space, marketplace_services):
+    def test_create_h2o_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
         label = ServiceLabels.H2O
         h2o = next((s for s in marketplace_services if s.label == label), None)
         if h2o is None:
@@ -172,49 +172,49 @@ class TestMarketplaceServices:
         for plan in h2o.service_plans:
             try:
                 create_instance_and_key_then_delete_key_and_instance(
-                    test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
+                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
                 errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-3474 Command cf create-service-key does not work for yarn broker")
-    def test_create_yarn_service_instance_and_keys(self, test_org, test_space, marketplace_services):
+    def test_create_yarn_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
         label = ServiceLabels.YARN
         yarn = next(s for s in marketplace_services if s.label == label)
         errors = []
         for plan in yarn.service_plans:
             try:
                 create_instance_and_key_then_delete_key_and_instance(
-                    test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
+                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
                 errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-2798 Enable HBase broker to use Service Keys")
-    def test_create_hbase_service_instance_and_keys(self, test_org, test_space, marketplace_services):
+    def test_create_hbase_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
         label = ServiceLabels.HBASE
         hbase = next(s for s in marketplace_services if s.label == label)
         errors = []
         for plan in hbase.service_plans:
             try:
                 create_instance_and_key_then_delete_key_and_instance(
-                    test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
+                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
                 errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
 
     @priority.low
     @pytest.mark.bugs("DPNG-6087 Connection to service catalog timedout - cannot create gearpump instance")
-    def test_create_gearpump_service_instance_and_keys(self, test_org, test_space, marketplace_services):
+    def test_create_gearpump_service_instance_and_keys(self, context, test_org, test_space, marketplace_services):
         label = ServiceLabels.GEARPUMP
         gearpump = next(s for s in marketplace_services if s.label == label)
         errors = []
         for plan in gearpump.service_plans:
             try:
                 create_instance_and_key_then_delete_key_and_instance(
-                    test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
+                    context, test_org.guid, test_space.guid, label, plan["guid"], plan["name"])
             except Exception as e:
                 errors.append("Service {} plan {}\n{}".format(label, plan["name"], str(e)))
         assert_no_errors(errors)
