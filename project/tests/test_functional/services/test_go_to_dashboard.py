@@ -85,11 +85,11 @@ class TestGoToDashboard:
 
     @long
     @priority.low
-    def test_go_to_service_instance_dashboard(self, test_org, test_space, non_parametrized_services,
+    def test_go_to_service_instance_dashboard(self, context, test_org, test_space, non_parametrized_services,
                                               add_admin_to_test_org, add_admin_to_test_space):
         excluded_services = self.DASHBOARD_URL_NOT_YET_SUPPORTED + self.MISSING_DASHBOARD_URL
         tested_services = [s for s in non_parametrized_services if s["label"] not in excluded_services]
-        self._test_service(test_org.guid, test_space.guid, tested_services)
+        self._test_service(context, test_org.guid, test_space.guid, tested_services)
 
     @long
     @priority.low

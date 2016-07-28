@@ -44,11 +44,12 @@ class Gateway(TapTestCase):
         space_developer_user = User.api_create_by_adding_to_space(class_context, test_org.guid, test_space.guid,
                                                                   roles=User.SPACE_ROLES["developer"])
         cls.space_developer_client = space_developer_user.login()
+        cls.class_context = class_context
 
-    def test_0_create_gateway_instance(self, class_context):
+    def test_0_create_gateway_instance(self):
         self.step("Create gateway instance")
         gateway_instance = ServiceInstance.api_create_with_plan_name(
-            class_context,
+            self.class_context,
             TestData.test_org.guid,
             TestData.test_space.guid,
             ServiceLabels.GATEWAY,
