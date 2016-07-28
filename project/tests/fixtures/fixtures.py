@@ -15,8 +15,8 @@
 #
 
 import base64
-import os
 import io
+import os
 
 import pytest
 from retry import retry
@@ -32,8 +32,6 @@ from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, Space, User
 from modules.tap_object_model.flows import data_catalog
 from .test_data import TestData
-
-
 
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables

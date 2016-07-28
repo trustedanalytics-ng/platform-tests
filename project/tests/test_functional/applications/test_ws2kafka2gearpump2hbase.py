@@ -31,7 +31,6 @@ from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceKey
 from modules.test_names import generate_test_object_name
 from modules.websocket_client import WebsocketClient
-from tests.fixtures import fixtures
 
 logged_components = (TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)
 pytestmark = [components.ingestion_ws_kafka_gearpump_hbase, components.service_catalog]
@@ -62,26 +61,27 @@ class TestWs2kafka2gearpump2hbase:
     def setup_required_instances(self, class_context, request, test_org, test_space):
         step("Create instances of kafka, zookeeper, hbase and kerberos")
 
-        ServiceInstance.api_create_with_plan_name(context=class_context,
-                                                  org_guid=test_org.guid, space_guid=test_space.guid,
-                                                  service_label=ServiceLabels.KAFKA,
-                                                  name=self.KAFKA_INSTANCE_NAME,
-                                                  service_plan_name=self.SHARED_PLAN_NAME)
-        ServiceInstance.api_create_with_plan_name(context=class_context,
-                                                  org_guid=test_org.guid, space_guid=test_space.guid,
-                                                  service_label=ServiceLabels.ZOOKEEPER,
-                                                  name=self.ZOOKEEPER_INSTANCE_NAME,
-                                                  service_plan_name=self.SHARED_PLAN_NAME)
-        ServiceInstance.api_create_with_plan_name(context=class_context,
-                                                  org_guid=test_org.guid, space_guid=test_space.guid,
-                                                  service_label=ServiceLabels.HBASE,
-                                                  name=self.HBASE_INSTANCE_NAME,
-                                                  service_plan_name=self.BARE_PLAN_NAME)
-        ServiceInstance.api_create_with_plan_name(context=class_context,
-                                                  org_guid=test_org.guid, space_guid=test_space.guid,
-                                                  service_label=ServiceLabels.KERBEROS,
-                                                  name=self.KERBEROS_INSTANCE_NAME,
-                                                  service_plan_name=self.SHARED_PLAN_NAME)
+        kafka = ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                          org_guid=test_org.guid, space_guid=test_space.guid,
+                                                          service_label=ServiceLabels.KAFKA,
+                                                          name=self.KAFKA_INSTANCE_NAME,
+                                                          service_plan_name=self.SHARED_PLAN_NAME)
+        zookeeper = ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                              org_guid=test_org.guid, space_guid=test_space.guid,
+                                                              service_label=ServiceLabels.ZOOKEEPER,
+                                                              name=self.ZOOKEEPER_INSTANCE_NAME,
+                                                              service_plan_name=self.SHARED_PLAN_NAME)
+        hbase = ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                          org_guid=test_org.guid, space_guid=test_space.guid,
+                                                          service_label=ServiceLabels.HBASE,
+                                                          name=self.HBASE_INSTANCE_NAME,
+                                                          service_plan_name=self.BARE_PLAN_NAME)
+        kerberos = ServiceInstance.api_create_with_plan_name(context=class_context,
+                                                             org_guid=test_org.guid, space_guid=test_space.guid,
+                                                             service_label=ServiceLabels.KERBEROS,
+                                                             name=self.KERBEROS_INSTANCE_NAME,
+                                                             service_plan_name=self.SHARED_PLAN_NAME)
+        self.__class__.test_instances = [kafka, zookeeper, hbase, kerberos]
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -180,7 +180,7 @@ class TestWs2kafka2gearpump2hbase:
         extra_params = {"inputTopic": self.TOPIC_IN, "outputTopic": self.TOPIC_OUT, "tableName": self.db_and_table_name,
                         "columnFamily": self.HBASE_COLUMN_FAMILY, "hbaseUser": "cf"}
         kafka2hbase_app = self.gearpump.submit_application_jar(kafka2hbase_app_path, self.KAFKA2HBASE_APP_NAME,
-                                                               extra_params, self.instances_credentials)
+                                                               extra_params, self.instances_credentials, timeout=180)
         step("Check that submitted application is started")
         assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 
