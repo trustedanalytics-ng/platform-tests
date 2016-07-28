@@ -45,7 +45,7 @@ class MockPassingItem:
     class MockMarker:
         def __init__(self, *args):
             self.args = args
-    _components = ("c", "o", "m", "p")
+    _components = ["console", "demiurge", "platform_tests", "yarn_broker"]
     _bugs = ("b", "u", "g")
     components = MockMarker(*_components)
     bugs = MockMarker(*_bugs)
@@ -57,6 +57,8 @@ class MockPassingItem:
     @classmethod
     def get_marker(cls, name):
         return getattr(cls, name)
+
+    keywords = {"demiurge": "", "console": "", "platform_tests": "", "yarn_broker": "", "priority": "high"}
 
 
 class MockFailingReport:
@@ -81,6 +83,8 @@ class MockFailingItem:
     @classmethod
     def get_marker(cls, name):
         return getattr(cls, name, None)
+
+    keywords = {"priority": "low"}
 
 
 class TestReporter(TestCase):
@@ -125,6 +129,7 @@ class TestReporter(TestCase):
             expected_run_document["infrastructure_type"],
             expected_run_document["appstack_version"],
             expected_run_document["platform_components"],
+            expected_run_document["components"],
             expected_run_document["total_test_count"]
         )
         return expected_run_document
@@ -188,7 +193,7 @@ class TestReporter(TestCase):
         self.assertEqual(len(result_documents), 1)
         expected_document = self.get_expected_test_document(
             run_id=run_id, test_name=MockFailingReport.nodeid, duration=MockFailingReport.duration,
-            order=0, priority=MockFailingReport._priority, components=tuple(), defects=tuple(),
+            order=0, priority=MockFailingReport._priority, components=list(), defects=tuple(),
             tags=MockFailingReport.keywords, stacktrace=MockFailingReport.Traceback.reprtraceback, log="",
             status=reporter.MongoReporter.FAIL
         )
@@ -202,7 +207,7 @@ class TestReporter(TestCase):
             "duration": duration,
             "order": order,
             "priority": priority,
-            "components": ", ".join(components),
+            "components": components,
             "defects": ", ".join(defects),
             "tags": ", ".join(tags),
             "status": status,
@@ -220,6 +225,7 @@ class TestReporter(TestCase):
             "finished": finished,
             "log": "",
             "platform_components": ("a", "b", "c"),
+            "components": ["d", "e", "f"],
             "result": {
                 reporter.MongoReporter.PASS: pass_count,
                 reporter.MongoReporter.FAIL: fail_count,
