@@ -24,6 +24,17 @@ from modules.constants import TapComponent
 from config import get_test_version
 
 
+class TestResultType:
+    OTHER = "other"
+    REGRESSION = "regression"
+    SMOKE = "smoke"
+
+
+class TestRunType:
+    API_SMOKE = "api-smoke"
+    API_FUNCTIONAL = "api-functional"
+
+
 class MongoReporter(object):
     _instance = None
 
@@ -37,7 +48,7 @@ class MongoReporter(object):
 
     TAP_COMPONENT_NAMES = TapComponent.names()
 
-    def __new__(cls, mongo_uri, run_id=None):
+    def __new__(cls, mongo_uri, run_id=None, test_run_type=None):
         if cls._instance is None:
             cls._instance = object.__new__(cls)
             if run_id is not None:
@@ -60,6 +71,7 @@ class MongoReporter(object):
                 "test_count": 0,
                 "total_test_count": 0,
                 "test_version": get_test_version(),
+                "test_type": test_run_type,
             }
         return cls._instance
 
@@ -97,6 +109,7 @@ class MongoReporter(object):
         return sorted(components)
 
     def log_report(self, report, item):
+        test_type = self._get_test_type_from_report(report)
         name = item.obj.__doc__.strip() if item.obj.__doc__ else report.nodeid
         if report.when == "call":
             self._on_test_end(
@@ -108,14 +121,16 @@ class MongoReporter(object):
                 priority=self._priority_from_report(report),
                 stacktrace=self._stacktrace_from_report(report),
                 status=self.test_status_from_report(report),
-                tags=report.keywords
+                tags=report.keywords,
+                test_type=test_type
             )
         elif report.failed:
             self._on_fixture_error(
                 log="",
                 name="{}: {} error".format(name, report.when),
                 components=self.get_tap_components_from_item(item),
-                stacktrace=self._stacktrace_from_report(report)
+                stacktrace=self._stacktrace_from_report(report),
+                test_type=test_type
             )
 
     @staticmethod
@@ -136,6 +151,15 @@ class MongoReporter(object):
         if stacktrace is not None:
             return str(stacktrace)
 
+    def _get_test_type_from_report(self, report):
+        test_directory = getattr(report, "fspath", None)
+        if test_directory is not None and "test_smoke" in test_directory:
+            return TestResultType.SMOKE
+        priority = self._priority_from_report(report)
+        if priority in ["medium", "high"]:
+            return TestResultType.REGRESSION
+        return TestResultType.OTHER
+
     @classmethod
     def test_status_from_report(cls, report):
         if report.passed:
@@ -149,7 +173,7 @@ class MongoReporter(object):
         return test_status
 
     def _on_test_end(self, components: list, defects: tuple, duration: float, log: str, name: str, priority: str,
-                     stacktrace: str, status: str, tags: tuple):
+                     stacktrace: str, status: str, tags: tuple, test_type: str):
         mongo_test_document = {
             "run_id": self._run_id,
             "name": name,
@@ -162,18 +186,20 @@ class MongoReporter(object):
             "status": status,
             "stacktrace": stacktrace,
             "log": log,
+            "test_type": test_type,
         }
         self._db_client.insert(collection_name=self._test_result_collection_name, document=mongo_test_document)
         self._update_run_status(test_status=status)
         self._test_counter += 1
 
-    def _on_fixture_error(self, name: str, components: list, stacktrace: str, log: str):
+    def _on_fixture_error(self, name: str, components: list, stacktrace: str, log: str, test_type: str):
         fixture_mongo_document = {
             "run_id": self._run_id,
             "name": name,
             "components": components,
             "stacktrace": stacktrace,
-            "log": log
+            "log": log,
+            "test_type": test_type,
         }
         self._update_run_status(test_status=self.FAIL, increment_test_count=False)
         self._db_client.insert(collection_name=self._test_result_collection_name, document=fixture_mongo_document)

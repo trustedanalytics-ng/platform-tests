@@ -18,7 +18,16 @@ import pytest
 
 import config
 from modules.constants import TapComponent
-from modules.mongo_reporter.reporter import MongoReporter
+from modules.mongo_reporter.reporter import MongoReporter, TestRunType
+
+
+@pytest.fixture(scope="session")
+def test_type(request):
+    for path in request.config.option.file_or_dir:
+        if "test_smoke" in path:
+            return TestRunType.API_SMOKE
+        if "test_functional" in path:
+            return TestRunType.API_FUNCTIONAL
 
 
 def get_tap_components_from_request(request):
@@ -33,9 +42,10 @@ def get_tap_components_from_request(request):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def log_test_run_in_database(request):
+def log_test_run_in_database(request, test_type):
     if config.database_url is not None:
-        mongo_reporter = MongoReporter(mongo_uri=config.database_url, run_id=config.test_run_id)
+        mongo_reporter = MongoReporter(mongo_uri=config.database_url, run_id=config.test_run_id,
+                                       test_run_type=test_type)
         mongo_reporter.on_run_start(environment=config.tap_domain,
                                     environment_version=config.tap_version,
                                     infrastructure_type=config.tap_infrastructure_type,

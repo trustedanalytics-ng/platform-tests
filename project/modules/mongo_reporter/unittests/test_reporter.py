@@ -39,6 +39,7 @@ class MockPassingReport:
     nodeid = "passing.test"
     keywords = ("a", "b", "c", "priority_" + _priority)
     longrepr = Dummy()
+    test_type = reporter.TestResultType.REGRESSION
 
 
 class MockPassingItem:
@@ -72,6 +73,7 @@ class MockFailingReport:
     nodeid = "failing.test"
     keywords = ("priority_" + _priority,)
     longrepr = Traceback()
+    test_type = reporter.TestResultType.REGRESSION
 
 
 class MockFailingItem:
@@ -91,7 +93,8 @@ class TestReporter(TestCase):
 
     @mock.patch.object(reporter, "DBClient", MockClient)
     def setUp(self):
-        self.mongo_reporter = reporter.MongoReporter(mongo_uri=None, run_id=None)
+        self.mongo_reporter = reporter.MongoReporter(mongo_uri=None, run_id=None,
+                                                     test_run_type=reporter.TestRunType.API_FUNCTIONAL)
 
     def tearDown(self):
         reporter.MongoReporter._instance = None
@@ -170,7 +173,7 @@ class TestReporter(TestCase):
             run_id=run_id, test_name=MockPassingReport.nodeid, duration=MockPassingReport.duration,
             order=0, priority=MockPassingReport._priority, components=MockPassingItem._components,
             defects=MockPassingItem._bugs, tags=MockPassingReport.keywords, stacktrace=None, log="",
-            status=reporter.MongoReporter.PASS
+            status=reporter.MongoReporter.PASS, test_type=MockPassingReport.test_type
         )
         self.assertTestDocument(result_documents[0], expected_document)
 
@@ -195,12 +198,12 @@ class TestReporter(TestCase):
             run_id=run_id, test_name=MockFailingReport.nodeid, duration=MockFailingReport.duration,
             order=0, priority=MockFailingReport._priority, components=list(), defects=tuple(),
             tags=MockFailingReport.keywords, stacktrace=MockFailingReport.Traceback.reprtraceback, log="",
-            status=reporter.MongoReporter.FAIL
+            status=reporter.MongoReporter.FAIL, test_type=MockFailingReport.test_type
         )
         self.assertTestDocument(result_documents[0], expected_document)
 
     def get_expected_test_document(self, run_id, test_name, duration, order, priority, components, defects,
-                                   tags, status, stacktrace, log):
+                                   tags, status, stacktrace, log, test_type):
         return {
             "run_id": run_id,
             "name": test_name,
@@ -213,6 +216,7 @@ class TestReporter(TestCase):
             "status": status,
             "stacktrace": stacktrace,
             "log": log,
+            "test_type": test_type,
         }
 
     def get_expected_run_document(self, pass_count=0, fail_count=0, skipped_count=0, test_count=0, finished=False,
@@ -235,6 +239,7 @@ class TestReporter(TestCase):
             "status": status,
             "test_count": test_count,
             "total_test_count": 100,
-            "test_version": get_test_version()
+            "test_version": get_test_version(),
+            "test_type": reporter.TestRunType.API_FUNCTIONAL,
         }
         return expected_run
