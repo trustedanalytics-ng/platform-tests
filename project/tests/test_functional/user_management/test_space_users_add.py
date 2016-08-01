@@ -18,7 +18,7 @@ import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.runner.tap_test_case import TapTestCase
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_object_model import Space, User
 from modules.test_names import generate_test_object_name
 from tests.fixtures import fixtures
@@ -52,7 +52,7 @@ class BaseTestClass(TapTestCase):
 
 
 class AddNewUserToSpace(BaseTestClass):
-    pytestmark = [components.auth_gateway, components.auth_proxy, components.user_management]
+    pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)]
 
     def _get_test_user(self, org_guid, space_guid, space_role=User.ORG_ROLES["manager"]):
         user = User.api_create_by_adding_to_space(self.context, org_guid, space_guid, roles=space_role)
@@ -102,7 +102,7 @@ class AddNewUserToSpace(BaseTestClass):
 
 
 class AddExistingUserToSpace(AddNewUserToSpace):
-    pytestmark = [components.user_management]
+    pytestmark = [pytest.mark.components(TAP.user_management)]
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -129,7 +129,7 @@ class AddExistingUserToSpace(AddNewUserToSpace):
 
 
 class AddUserToSpace(TapTestCase):
-    pytestmark = [components.user_management]
+    pytestmark = [pytest.mark.components(TAP.user_management)]
 
     @pytest.fixture(scope="function", autouse=True)
     def setup_context(self, context):

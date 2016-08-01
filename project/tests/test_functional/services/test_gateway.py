@@ -21,13 +21,13 @@ from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.runner.tap_test_case import TapTestCase
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.tap_object_model import ServiceInstance, User
 from tests.fixtures.test_data import TestData
 from modules.websocket_client import WebsocketClient
 
 logged_components = (TAP.gateway, TAP.application_broker, TAP.service_catalog)
-pytestmark = [components.gateway, components.application_broker, components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.gateway, TAP.application_broker, TAP.service_catalog)]
 
 
 @incremental

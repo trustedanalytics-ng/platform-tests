@@ -17,12 +17,12 @@
 import pytest
 
 from modules.constants import TapComponent as TAP, Urls
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Organization, Transfer
 
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
-pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
 
 class TestGetDataSets(object):

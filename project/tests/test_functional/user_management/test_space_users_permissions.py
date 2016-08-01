@@ -19,7 +19,7 @@ import pytest
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Organization, User, Space
 from tests.fixtures.assertions import assert_raises_http_exception, assert_not_in_with_retry, assert_no_errors
@@ -27,7 +27,7 @@ from tests.fixtures.test_data import TestData
 
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-pytestmark = [components.user_management]
+pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
 class TestSpaceUserPermissions(object):

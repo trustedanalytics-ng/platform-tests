@@ -18,13 +18,13 @@ import pytest
 
 from modules.constants import TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import ExternalTools
 from tests.fixtures.assertions import assert_no_errors
 
 logged_components = (TAP.platform_context,)
-pytestmark = [components.platform_context]
+pytestmark = [pytest.mark.components(TAP.platform_context)]
 
 
 class TestExternalToolsStatus(object):

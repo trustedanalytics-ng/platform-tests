@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
 from modules.constants import TapComponent as TAP
 from modules.tap_object_model import Platform
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_object_model.buildpack import Buildpack
 from modules.tap_logger import step
 from tests.fixtures.assertions import assert_unordered_list_equal
 
 logged_components = (TAP.platform_operations, TAP.metrics_provider)
-pytestmark = [components.platform_operations, components.metrics_provider]
+pytestmark = [pytest.mark.components(TAP.platform_operations, TAP.metrics_provider)]
 
 
 class TestBuildpacks(object):

@@ -25,7 +25,7 @@ from modules.app_sources import AppSources
 from modules.constants import TapComponent as TAP, ServiceLabels, Urls, TapGitHub, ServicePlan
 from modules.file_utils import download_file
 from modules.hbase_client import HbaseClient
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceKey
@@ -33,7 +33,7 @@ from modules.test_names import generate_test_object_name
 from modules.websocket_client import WebsocketClient
 
 logged_components = (TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)
-pytestmark = [components.ingestion_ws_kafka_gearpump_hbase, components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_gearpump_hbase, TAP.service_catalog)]
 
 
 @incremental

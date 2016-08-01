@@ -46,7 +46,7 @@ class MockPassingItem:
     class MockMarker:
         def __init__(self, *args):
             self.args = args
-    _components = ["console", "demiurge", "platform_tests", "yarn_broker"]
+    _components = ("c", "o", "m", "p")
     _bugs = ("b", "u", "g")
     components = MockMarker(*_components)
     bugs = MockMarker(*_bugs)
@@ -58,8 +58,6 @@ class MockPassingItem:
     @classmethod
     def get_marker(cls, name):
         return getattr(cls, name)
-
-    keywords = {"demiurge": "", "console": "", "platform_tests": "", "yarn_broker": "", "priority": "high"}
 
 
 class MockFailingReport:
@@ -98,8 +96,6 @@ class MockFailingItem:
     @classmethod
     def get_marker(cls, name):
         return getattr(cls, name, None)
-
-    keywords = {"priority": "low"}
 
 
 class TestReporter(TestCase):
@@ -183,8 +179,8 @@ class TestReporter(TestCase):
         self.assertEqual(len(result_documents), 1)
         expected_document = self.get_expected_test_document(
             run_id=run_id, test_name=MockPassingReport.nodeid, duration=MockPassingReport.duration,
-            order=0, priority=MockPassingReport._priority, components=MockPassingItem._components,
-            defects=MockPassingItem._bugs, tags=MockPassingReport.keywords, stacktrace=None, log="",
+            order=0, priority=MockPassingReport._priority, components=tuple(sorted(MockPassingItem._components)),
+            defects=tuple(sorted(MockPassingItem._bugs)), tags=MockPassingReport.keywords, stacktrace=None, log="",
             status=reporter.MongoReporter.PASS, test_type=MockPassingReport.test_type
         )
         self.assertTestDocument(result_documents[0], expected_document)
@@ -208,7 +204,7 @@ class TestReporter(TestCase):
         self.assertEqual(len(result_documents), 1)
         expected_document = self.get_expected_test_document(
             run_id=run_id, test_name=MockFailingReport.nodeid, duration=MockFailingReport.duration,
-            order=0, priority=MockFailingReport._priority, components=list(), defects=tuple(),
+            order=0, priority=MockFailingReport._priority, components=tuple(), defects=tuple(),
             tags=MockFailingReport.keywords, stacktrace=MockFailingReport.Traceback.reprtraceback, log="",
             status=reporter.MongoReporter.FAIL, test_type=MockFailingReport.test_type
         )

@@ -21,13 +21,13 @@ import pytest
 
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
 from modules.http_calls.platform import space_shuttle_demo
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.platform_version import get_appstack_yml
 from modules.tap_logger import step
 from modules.tap_object_model import Application, DataSet, ServiceBinding, ServiceInstance
 
 logged_components = (TAP.space_shuttle_demo,)
-pytestmark = [components.space_shuttle_demo]
+pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
 
 
 @incremental
@@ -42,7 +42,7 @@ class TestSpaceShuttleDemo:
     @pytest.fixture(scope="class")
     def space_shuttle_demo_app(self, core_space):
         space_shuttle_demo_app = next((app for app in Application.api_get_list(core_space.guid)
-                                       if TAP.space_shuttle_demo.value == app.name), None)
+                                       if TAP.space_shuttle_demo == app.name), None)
         return space_shuttle_demo_app
 
     @pytest.fixture(scope="class")
@@ -54,10 +54,10 @@ class TestSpaceShuttleDemo:
     def test_0_check_if_app_is_on_appstack_and_is_deployed_and_is_running(self, space_shuttle_demo_app):
         step("Try to get application from appstack.yml to check if the application should be deployed")
         space_shuttle_demo_yml = next((app for app in get_appstack_yml(TapGitHub.intel_data)["apps"]
-                                       if app["name"] == TAP.space_shuttle_demo.value), None)
-        assert space_shuttle_demo_yml is not None, '{} is not on appstack.yml list'.format(TAP.space_shuttle_demo.value)
+                                       if app["name"] == TAP.space_shuttle_demo), None)
+        assert space_shuttle_demo_yml is not None, '{} is not on appstack.yml list'.format(TAP.space_shuttle_demo)
         step('Check the app is deployed')
-        assert space_shuttle_demo_app is not None, '{} is not deployed'.format(TAP.space_shuttle_demo.value)
+        assert space_shuttle_demo_app is not None, '{} is not deployed'.format(TAP.space_shuttle_demo)
         step('Check the app is running')
         assert space_shuttle_demo_app.is_running, 'space shuttle is not running'
 

@@ -18,13 +18,13 @@ import pytest
 
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceType, AtkInstance
 
 
 logged_components = (TAP.service_catalog, TAP.service_exposer, TAP.application_broker)
-pytestmark = [components.service_catalog, components.application_broker, components.service_exposer]
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.service_exposer)]
 
 
 @incremental

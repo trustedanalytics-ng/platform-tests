@@ -16,9 +16,11 @@
 
 import uuid
 
+import pytest
+
 from modules.constants import HttpStatus, TapComponent as TAP
 from modules.http_calls import application_broker as broker_client
-from modules.markers import priority, components, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance, ServiceType
 from modules.test_names import generate_test_object_name
@@ -26,7 +28,7 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.application_broker,)
-pytestmark = [components.application_broker]
+pytestmark = [pytest.mark.components(TAP.application_broker)]
 
 
 class TestApplicationBrokerCatalog:

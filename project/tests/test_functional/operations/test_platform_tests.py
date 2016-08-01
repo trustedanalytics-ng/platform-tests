@@ -13,16 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
 from modules.constants import TapComponent as TAP
 from modules.constants.http_status import PlatformTestsHttpStatus
 from modules.exceptions import UnexpectedResponseError
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import TestSuite
 
 logged_components = (TAP.platform_tests,)
-pytestmark = [components.platform_tests]
+pytestmark = [pytest.mark.components(TAP.platform_tests)]
 
 
 @incremental

@@ -21,7 +21,7 @@ from retry import retry
 from config import jumpbox_hostname, jumpbox_key_path, jumpbox_username, kubernetes
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.constants.services import ServicePlan
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.ssh_client import DirectSshClient
 from modules.tap_logger import get_logger, step
 from modules.tap_object_model import KubernetesCluster, KubernetesInstance, ServiceInstance, ServiceKey, ServiceType
@@ -29,7 +29,7 @@ from modules.tap_object_model import KubernetesCluster, KubernetesInstance, Serv
 logger = get_logger(__name__)
 
 logged_components = (TAP.service_catalog, TAP.application_broker, TAP.kubernetes_broker)
-pytestmark = [components.service_catalog, components.application_broker, components.kubernetes_broker]
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.kubernetes_broker)]
 
 
 KUBECTL_DOWNLOAD_URL = "http://storage.googleapis.com/kubernetes-release/release/v1.2.0/bin/linux/amd64/kubectl"

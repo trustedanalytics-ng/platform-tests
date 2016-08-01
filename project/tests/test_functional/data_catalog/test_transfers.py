@@ -21,7 +21,7 @@ import pytest
 from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
 from modules.file_utils import generate_csv_file
 from modules.http_calls.platform import das, hdfs_uploader
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Transfer, Organization
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_file
@@ -33,7 +33,7 @@ logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metada
 
 @pytest.mark.usefixtures("add_admin_to_test_org")
 class TestSubmitTransfer:
-    pytestmark = [components.das, components.hdfs_downloader, components.metadata_parser]
+    pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
     DEFAULT_CATEGORY = "other"
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
@@ -121,7 +121,7 @@ class TestSubmitTransfer:
 
 
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
-    pytestmark = [components.das, components.hdfs_downloader, components.hdfs_uploader, components.metadata_parser]
+    pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)]
 
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_BAD_REQUEST
 
@@ -204,7 +204,7 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
 
 
 class GetTransfers:
-    pytestmark = [components.das]
+    pytestmark = [pytest.mark.components(TAP.das)]
 
     @priority.high
     def test_admin_can_get_transfer_list(self, test_org):

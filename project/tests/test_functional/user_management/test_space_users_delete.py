@@ -19,12 +19,12 @@ import pytest
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.tap_object_model import Space, User
 from modules.runner.tap_test_case import TapTestCase
-from modules.markers import components, priority
+from modules.markers import priority
 from tests.fixtures.test_data import TestData
 
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-pytestmark = [components.user_management, components.auth_gateway, components.auth_proxy]
+pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
 
 
 class DeleteSpaceUser(TapTestCase):

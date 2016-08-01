@@ -16,19 +16,20 @@
 
 import csv
 
+import pytest
 from bs4 import BeautifulSoup
 
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import download_file
 from modules.hive import Hive
 from modules.http_calls import hue
-from modules.markers import components, priority, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_link
 from modules.test_names import escape_hive_name
 
 logged_components = (TAP.data_catalog, TAP.dataset_publisher, TAP.das)
-pytestmark = [components.dataset_publisher]
+pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
 @priority.medium

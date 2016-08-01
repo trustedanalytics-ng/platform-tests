@@ -18,13 +18,13 @@ import pytest
 
 import config
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
-from modules.markers import incremental, priority, components
+from modules.markers import incremental, priority
 from modules.tap_object_model import KubernetesInstance, ServiceInstance, ServiceType
 from modules.tap_logger import step
 
 
 logged_components = (TAP.kubernetes_broker,)
-pytestmark = [priority.medium, components.kubernetes_broker]
+pytestmark = [priority.medium, pytest.mark.components(TAP.kubernetes_broker)]
 
 
 @incremental

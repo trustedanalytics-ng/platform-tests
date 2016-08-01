@@ -18,14 +18,14 @@ import pytest
 
 import config
 from modules.constants import KubernetesBrokerHttpStatus, TapComponent as TAP
-from modules.markers import components, incremental
+from modules.markers import incremental
 from modules.tap_logger import step
 from modules.tap_object_model import KubernetesCluster, KubernetesSecret
 from tests.fixtures import assertions
 
 
 logged_components = (TAP.kubernetes_broker,)
-pytestmark = [components.kubernetes_broker]
+pytestmark = [pytest.mark.components(TAP.kubernetes_broker)]
 
 
 @pytest.fixture(scope="module")

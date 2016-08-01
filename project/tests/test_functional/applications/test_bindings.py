@@ -18,14 +18,14 @@ import pytest
 
 from modules.constants import ServiceCatalogHttpStatus, ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf
-from modules.markers import priority, components, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceBinding, ServiceInstance
 from tests.fixtures import assertions, fixtures
 
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
 @pytest.fixture(scope="class")

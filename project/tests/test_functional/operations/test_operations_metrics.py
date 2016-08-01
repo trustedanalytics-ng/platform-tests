@@ -25,7 +25,7 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.platform_operations, )
-pytestmark = [components.platform_operations]
+pytestmark = [pytest.mark.components(TAP.platform_operations)]
 
 
 class TestNonAdminOperationsMetrics:

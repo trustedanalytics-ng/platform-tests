@@ -24,7 +24,7 @@ from retry import retry
 import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub, ServicePlan
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.ssh_client import SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
@@ -33,7 +33,7 @@ from modules.websocket_client import WebsocketClient
 from tests.fixtures import fixtures
 
 logged_components = (TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)
-pytestmark = [components.ingestion_ws_kafka_hdfs, components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)]
 
 
 @incremental

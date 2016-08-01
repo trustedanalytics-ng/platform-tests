@@ -65,12 +65,12 @@ class RemoteLogger(object):
             p.join()
         return logs
 
-    def __create_log_provider_configuration(self, app_name: Enum):
+    def __create_log_provider_configuration(self, app_name):
         """Create log provider configuration."""
         return LogProviderConfiguration(
             from_date=self.__configuration.from_date,
             to_date=self.__configuration.to_date,
-            app_name=app_name.value
+            app_name=app_name
         )
 
     def __save_logs(self, logs):

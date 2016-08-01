@@ -26,12 +26,12 @@ import pytest
 import config
 from modules.app_sources import AppSources
 from modules.constants import Path, ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub
-from modules.markers import priority, components
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
 
 logged_components = (TAP.mqtt_demo, TAP.service_catalog)
-pytestmark = [components.mqtt_demo, components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.mqtt_demo, TAP.service_catalog)]
 
 
 class Mqtt:

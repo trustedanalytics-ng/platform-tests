@@ -72,7 +72,7 @@ class KubernetesCluster(object):
             if self.wait_before_remove_cluster_sec == 0:
                 response = cf.cf_api_get_apps()
                 app_guid = next((app["metadata"]["guid"] for app in response
-                                 if app["entity"]["name"] == TAP.kubernetes_broker.value), None)
+                                 if app["entity"]["name"] == TAP.kubernetes_broker), None)
                 assert app_guid is not None, "No such app {}".format(TAP.kubernetes_broker)
                 app_env = cf.cf_api_get_app_env(app_guid)
                 self.wait_before_remove_cluster_sec = app_env["environment_json"]["WAIT_BEFORE_REMOVE_CLUSTER_SEC"]

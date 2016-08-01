@@ -16,8 +16,6 @@
 
 import pytest
 
-from modules.constants import tap_components
-
 
 class Priority:
     high = pytest.mark.priority_high
@@ -25,15 +23,7 @@ class Priority:
     low = pytest.mark.priority_low
 
 
-# markers for all components in enum TapComponent
-class TapComponent: pass
-for component in list(tap_components.TapComponent):
-    setattr(TapComponent, component.name, getattr(pytest.mark, component.name))
-
-
 # marker definitions
-components = TapComponent
 incremental = pytest.mark.incremental
 long = pytest.mark.long
 priority = Priority
-

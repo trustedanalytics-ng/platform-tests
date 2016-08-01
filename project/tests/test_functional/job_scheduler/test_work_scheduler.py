@@ -18,7 +18,7 @@ import pytest
 
 import config
 from modules.constants import ServiceLabels, TapComponent as TAP
-from modules.markers import components, priority, incremental
+from modules.markers import priority, incremental
 from modules.service_tools.psql import PsqlTable, PsqlRow
 from modules.ssh_client import SshTunnel
 from modules.tap_logger import step
@@ -29,7 +29,7 @@ from tests.fixtures import assertions
 from tests.fixtures.db_input import DbInput
 
 logged_components = (TAP.workflow_scheduler,)
-pytestmark = [components.workflow_scheduler]
+pytestmark = [pytest.mark.components(TAP.workflow_scheduler)]
 
 
 class Psql(object):

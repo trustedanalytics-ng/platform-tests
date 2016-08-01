@@ -23,7 +23,7 @@ from modules.constants import HttpStatus
 
 def _get_client():
     api_version = k8s_core_services[TapComponent.image_factory]["api_version"]
-    configuration = K8sServiceConfigurationProvider.get(TapComponent.image_factory.value,
+    configuration = K8sServiceConfigurationProvider.get(TapComponent.image_factory,
                                                         api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
 

@@ -20,7 +20,7 @@ from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
-from modules.markers import priority, components
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, User, ServiceType
 from modules.tap_object_model.flows import summaries
@@ -28,7 +28,7 @@ from tests.fixtures import assertions, fixtures
 
 
 logged_components = (TAP.service_catalog, TAP.user_management)
-pytestmark = [components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
 class TestTapApp:

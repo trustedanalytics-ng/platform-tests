@@ -19,7 +19,7 @@ import pytest
 import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
-from modules.markers import priority, components
+from modules.markers import priority
 from modules.service_tools.psql import PsqlTable, PsqlColumn, PsqlRow
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceType
@@ -27,7 +27,7 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.db_input import DbInput
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
 class TestPsql(object):

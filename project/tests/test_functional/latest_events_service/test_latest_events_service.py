@@ -17,14 +17,14 @@
 import pytest
 
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, Urls
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, EventCategory, EventMessage, LatestEvent, Organization, ServiceInstance,\
     Space, Transfer
 
 
 logged_components = (TAP.latest_events_service, TAP.service_catalog)
-pytestmark = [components.latest_events_service]
+pytestmark = [pytest.mark.components(TAP.latest_events_service)]
 
 
 class TestLatestEventsService:

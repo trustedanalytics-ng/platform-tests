@@ -14,10 +14,7 @@
 # limitations under the License.
 #
 
-from enum import Enum
-
-
-class TapComponent(Enum):
+class TapComponent:
     auth_gateway = "auth-gateway"
     auth_proxy = "auth-proxy"
     app_dependency_discoverer = "app-dependency-discoverer"
@@ -79,16 +76,8 @@ class TapComponent(Enum):
     dashboard = "dashboard"
     image_factory = "image-factory"
     template_repository = "template-repository"
-    message_queue = "queue"
 
     # ---- TAP NG components - 3rd party ---- #
     image_repository = "image-repository"
-
-    @classmethod
-    def names(cls):
-        return [i.name for i in list(cls)]
-
-    @classmethod
-    def values(cls):
-        return [i.value for i in list(cls)]
+    message_queue = "queue"
 

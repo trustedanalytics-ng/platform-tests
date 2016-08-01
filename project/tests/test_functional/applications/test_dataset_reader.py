@@ -20,12 +20,12 @@ import pytest
 from modules.file_utils import get_link_content
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub, Urls
-from modules.markers import priority, components, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, Transfer, DataSet, User, ServiceBinding
 
 logged_components = (TAP.service_catalog, TAP.das)
-pytestmark = [components.dataset_reader]
+pytestmark = [pytest.mark.components(TAP.dataset_reader)]
 
 
 @incremental

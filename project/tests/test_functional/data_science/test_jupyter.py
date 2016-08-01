@@ -20,7 +20,7 @@ import pytest
 
 import config
 from modules.constants import TapComponent as TAP
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_object_model import Application, ServiceInstance, User
 from modules.tap_logger import step
@@ -28,7 +28,7 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.service_catalog, TAP.service_exposer)
-pytestmark = [components.service_catalog, components.service_exposer]
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
 
 
 class TestJupyterConsole:

@@ -20,7 +20,7 @@ import pytest
 import config
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus
 from modules.hive import Hive
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Organization, Space, User
 from modules.tap_object_model.flows.onboarding import onboard
@@ -29,7 +29,7 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
-pytestmark = [components.auth_gateway, components.auth_proxy, components.user_management]
+pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)]
 
 
 class TestOrganization:

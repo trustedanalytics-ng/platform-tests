@@ -13,17 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
 from modules.constants import TapComponent as TAP
 from modules.http_calls.platform import platform_pages as api
-from modules.markers import priority, components
+from modules.markers import priority
 from modules.tap_logger import step
 
 logged_components = (TAP.console,)
 
 
 class TestAppDevelopmentPage(object):
-    pytestmark = [components.console]
+    pytestmark = [pytest.mark.components(TAP.console)]
 
     @priority.low
     def test_get_app_development_page(self, admin_client, test_org_manager_client):

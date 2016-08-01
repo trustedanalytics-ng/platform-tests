@@ -18,14 +18,14 @@ import pytest
 
 from modules.constants import ApplicationPath, TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, Organization, Space
 from tests.fixtures import assertions
 
 
 logged_components = (TAP.user_management, TAP.service_catalog)
-pytestmark = [components.user_management, components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.user_management, TAP.service_catalog)]
 
 
 class TestDeleteSpaceAndOrg:

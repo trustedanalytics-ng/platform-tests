@@ -18,14 +18,14 @@ import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus
 from modules.http_calls.platform import metrics_provider, router_metrics_provider
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, User
 from modules.tap_object_model.flows import summaries
 from tests.fixtures.assertions import assert_raises_http_exception, assert_returns_http_success_with_retry
 
 logged_components = (TAP.metrics_provider, TAP.router_metrics_provider)
-pytestmark = [components.metrics_provider, components.router_metrics_provider]
+pytestmark = [pytest.mark.components(TAP.metrics_provider, TAP.router_metrics_provider)]
 
 expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsage", "domainsUsagePercent",
                          "latestEvents", "memoryUsage", "memoryUsageAbsolute", "privateDatasets", "publicDatasets",
@@ -119,11 +119,11 @@ class TestMetrics(object):
 
     @priority.low
     def test_router_metrics_provider(self):
-        self.stop_start_application(self, TAP.router_metrics_provider.value,
+        self.stop_start_application(self, TAP.router_metrics_provider,
                                     router_metrics_provider.api_get_router_metrics)
 
     @priority.low
     def test_metrics_provider(self, core_org):
-        self.stop_start_application(self, TAP.metrics_provider.value, metrics_provider.api_get_org_metrics,
+        self.stop_start_application(self, TAP.metrics_provider, metrics_provider.api_get_org_metrics,
                                     core_org.guid)
 

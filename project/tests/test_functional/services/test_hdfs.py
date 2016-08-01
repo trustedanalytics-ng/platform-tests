@@ -22,7 +22,7 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.http_client_configuration import HttpClientConfiguration
 from modules.http_client.http_client_type import HttpClientType
-from modules.markers import components, incremental ,priority
+from modules.markers import incremental ,priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance, ServiceKey
 from modules.tap_object_model.flows import services
@@ -30,7 +30,7 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.hdfs_broker,)
-pytestmark = [components.hdfs_broker]
+pytestmark = [pytest.mark.components(TAP.hdfs_broker)]
 
 
 label = ServiceLabels.HDFS

@@ -23,14 +23,14 @@ from modules.exceptions import CommandExecutionException
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.markers import components, priority, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import Application, KubernetesCluster, ServiceInstance, ServiceKey, ServiceType
 from tests.fixtures import assertions
 
 
 logged_components = (TAP.kubernetes_broker, TAP.demiurge, TAP.service_catalog)
-pytestmark = [components.kubernetes_broker, components.demiurge]
+pytestmark = [pytest.mark.components(TAP.kubernetes_broker, TAP.demiurge)]
 
 
 @incremental

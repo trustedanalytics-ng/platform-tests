@@ -21,7 +21,7 @@ import pytest
 import config
 from modules.app_sources import AppSources
 from modules.constants import ServicePlan, ServiceLabels, TapGitHub, TapComponent as TAP
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.service_tools.psql import PsqlRow, PsqlTable
 from modules.ssh_client import DirectSshClient, SshTunnel
 from modules.tap_logger import step
@@ -34,7 +34,7 @@ from tests.fixtures.db_input import DbInput
 
 
 logged_components = (TAP.workflow_scheduler,)
-pytestmark = [components.workflow_scheduler]
+pytestmark = [pytest.mark.components(TAP.workflow_scheduler)]
 
 
 @incremental
@@ -156,7 +156,7 @@ class TestYarnAuthGateway:
                                  path_to_key=config.jumpbox_key_path)
         client.connect()
         step("Check job in cloudera manager")
-        app_name = TAP.cdh_broker.value
+        app_name = TAP.cdh_broker
         cdh_broker = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
                            if app_name in app.name), None)
         assert cdh_broker is not None, "{} not available".format(app_name)

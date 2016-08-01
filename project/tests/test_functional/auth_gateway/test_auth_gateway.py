@@ -19,7 +19,7 @@ import pytest
 import config
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import generate_csv_file
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.ssh_client import SshTunnel
 from modules.tap_object_model import Organization, ServiceInstance, User
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_file, create_dataset_from_link
@@ -28,7 +28,7 @@ from modules.webhdfs_tools import WebhdfsTools
 
 logged_components = (TAP.auth_gateway, TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
                      TAP.hdfs_uploader, TAP.user_management)
-pytestmark = [components.auth_gateway]
+pytestmark = [pytest.mark.components(TAP.auth_gateway)]
 
 
 @incremental

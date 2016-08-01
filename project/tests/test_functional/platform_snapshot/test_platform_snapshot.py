@@ -13,16 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import pytest
 from retry import retry
 
 from modules.constants import TapComponent as TAP
-from modules.markers import priority, components
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import PlatformSnapshot
 
 logged_components = (TAP.platform_snapshot,)
-pytestmark = [components.platform_snapshot]
+pytestmark = [pytest.mark.components(TAP.platform_snapshot)]
 
 
 class TestSnapshot:

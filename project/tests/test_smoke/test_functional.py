@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
 from modules.file_utils import generate_csv_file
 from modules.constants import TapComponent as TAP, Urls
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.markers import components, long, priority
+from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, KubernetesCluster, Organization, ServiceInstance, Space, Transfer, User
 from modules.tap_object_model.flows import onboarding
@@ -37,9 +38,7 @@ def test_test_admin_can_login_to_platform():
     HttpClientFactory.get(ConsoleConfigurationProvider.get())
 
 
-@components.user_management
-@components.auth_gateway
-@components.auth_proxy
+@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_create_and_delete_organization(context):
     """Create and Delete Organization"""
     step("Create organization")
@@ -54,9 +53,7 @@ def test_create_and_delete_organization(context):
     assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
 
 
-@components.user_management
-@components.auth_gateway
-@components.auth_proxy
+@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_onboarding(context):
     """Test Onboarding"""
     step("Onboard new user")
@@ -68,10 +65,7 @@ def test_onboarding(context):
     org_list = Organization.api_get_list()
     assert test_org in org_list
 
-
-@components.user_management
-@components.auth_gateway
-@components.auth_proxy
+@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """Add New User to and Delete from Organization"""
     step("Add new user to organization")
@@ -87,7 +81,7 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     assert test_user not in users
 
 
-@components.user_management
+@pytest.mark.components(TAP.user_management)
 def test_create_and_delete_space(core_org):
     """Create and Delete Space"""
     step("Create new space")
@@ -101,9 +95,7 @@ def test_create_and_delete_space(core_org):
     assertions.assert_not_in_with_retry(test_space, Space.api_get_list)
 
 
-@components.user_management
-@components.auth_gateway
-@components.auth_proxy
+@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_add_new_user_to_and_delete_from_space(core_org, core_space, context):
     """Add New User to and Delete from Space"""
     step("Add new user to space")
@@ -142,10 +134,7 @@ def transfer_flow(transfer, core_org):
     assert transfer not in transfers
 
 
-@components.das
-@components.hdfs_downloader
-@components.metadata_parser
-@components.data_catalog
+@pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_link(core_org, context):
     """Create and Delete Transfer from Link"""
     step("Create a transfer")
@@ -153,10 +142,7 @@ def test_add_and_delete_transfer_from_link(core_org, context):
     transfer_flow(transfer, core_org)
 
 
-@components.das
-@components.hdfs_uploader
-@components.metadata_parser
-@components.data_catalog
+@pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_file(core_org, context):
     """Create and Delete Transfer from File"""
     step("Generate a test csv file")
@@ -167,15 +153,9 @@ def test_add_and_delete_transfer_from_file(core_org, context):
 
 
 @long
-@components.service_catalog
-@components.application_broker
-@components.gearpump_broker
-@components.hbase_broker
-@components.kafka_broker
-@components.smtp_broker
-@components.yarn_broker
-@components.zookeeper_broker
-@components.zookeeper_wssb_broker
+@pytest.mark.components(TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
+                        TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
+                        TAP.zookeeper_wssb_broker)
 def test_create_and_delete_marketplace_service_instances(core_org, core_space, context,
                                                          non_parametrized_marketplace_services):
     """Create and Delete Marketplace Service Instance"""
@@ -195,8 +175,7 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
 
 
 @long
-@components.demiurge
-@components.kubernetes_broker
+@pytest.mark.components(TAP.demiurge, TAP.kubernetes_broker)
 def test_create_and_delete_kubernetes_service_instances(core_org, core_space, context, kubernetes_marketplace):
     service_type = kubernetes_marketplace[0]
     plan = kubernetes_marketplace[1]

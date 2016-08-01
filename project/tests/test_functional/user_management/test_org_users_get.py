@@ -18,13 +18,13 @@ import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.runner.tap_test_case import TapTestCase
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_object_model import Organization, User
 from tests.fixtures.test_data import TestData
 
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-pytestmark = [components.user_management]
+pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
 class GetOrganizationUsers(TapTestCase):

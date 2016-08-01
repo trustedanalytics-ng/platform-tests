@@ -19,12 +19,12 @@ import re
 
 from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan
 from modules.hdfs import Hdfs
-from modules.markers import components, priority, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
 
 logged_components = (TAP.hdfs_broker,)
-pytestmark = [components.hdfs_broker]
+pytestmark = [pytest.mark.components(TAP.hdfs_broker)]
 
 
 @incremental

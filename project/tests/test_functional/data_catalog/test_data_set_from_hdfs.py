@@ -20,14 +20,14 @@ import pytest
 
 from modules.constants import TapComponent as TAP, Urls
 from modules.tap_logger import step
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import Application
 from modules.tap_object_model.flows import data_catalog
 
 
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
-pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
 
 class TestDataSetFromHdfs(object):

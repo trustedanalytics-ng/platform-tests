@@ -18,7 +18,7 @@ import pytest
 
 import config
 from modules.constants import HttpStatus, TapComponent as TAP
-from modules.markers import priority, components
+from modules.markers import priority
 from modules.http_calls import kubernetes_broker
 from modules.runner.tap_test_case import TapTestCase
 from modules.tap_logger import step
@@ -26,7 +26,7 @@ from modules import test_names
 
 
 logged_components = (TAP.kubernetes_broker,)
-pytestmark = [priority.low, components.kubernetes_broker]
+pytestmark = [priority.low, pytest.mark.components(TAP.kubernetes_broker)]
 
 
 @pytest.mark.skipif(not config.kubernetes, reason="No point to run without kubernetes")

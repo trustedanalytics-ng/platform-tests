@@ -17,13 +17,13 @@
 import pytest
 
 from modules.constants import TapComponent as TAP, Urls
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import LatestEvent, Organization, Transfer, User
 from tests.fixtures.assertions import assert_unordered_list_equal
 
 logged_components = (TAP.latest_events_service,)
-pytestmark = [components.latest_events_service]
+pytestmark = [pytest.mark.components(TAP.latest_events_service)]
 
 
 @pytest.mark.usefixtures("add_admin_to_test_org")

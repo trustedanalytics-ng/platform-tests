@@ -16,16 +16,18 @@
 
 import unittest
 
+import pytest
+
 import config
 from modules.constants import TapComponent as Tap
 from modules.gatling_runner.gatling_runner import GatlingRunner
 from modules.gatling_runner.gatling_runner_parameters import GatlingRunnerParameters
 from modules.gatling_runner.simulation.simulation_name import SimulationName
-from modules.markers import components, priority
+from modules.markers import priority
 
 
 logged_components = (Tap.data_catalog, Tap.das, Tap.hdfs_downloader, Tap.metadata_parser)
-pytestmark = [components.data_catalog, components.das, components.hdfs_downloader, components.metadata_parser]
+pytestmark = [pytest.mark.components(Tap.data_catalog, Tap.das, Tap.hdfs_downloader, Tap.metadata_parser)]
 
 
 class DataCatalogPerformanceTest(unittest.TestCase):

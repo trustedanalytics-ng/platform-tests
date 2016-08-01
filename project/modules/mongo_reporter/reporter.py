@@ -20,8 +20,8 @@ import socket
 from bson import ObjectId
 
 import config
-from .client import DBClient
 from modules.constants import TapComponent
+from .client import DBClient
 
 
 class TestResultType:
@@ -45,8 +45,6 @@ class MongoReporter(object):
 
     _test_run_collection_name = "test_run"
     _test_result_collection_name = "test_result"
-
-    TAP_COMPONENT_NAMES = TapComponent.names()
 
     def __new__(cls, mongo_uri, run_id=None, test_run_type=None):
         if cls._instance is None:
@@ -102,16 +100,7 @@ class MongoReporter(object):
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
 
-    def get_tap_components_from_item(self, item):
-        components = []
-        keywords = item.keywords.items()
-        for keyword in keywords:
-            if keyword[0] in self.TAP_COMPONENT_NAMES:
-                components.append(keyword[0])
-        return sorted(components)
-
     def log_report(self, report, item):
-        test_type = self._get_test_type_from_report(report)
         doc, status = None, None
         if report.when == "call":
             doc, status = self._on_test(report, item)
@@ -134,7 +123,7 @@ class MongoReporter(object):
     @staticmethod
     def _marker_args_from_item(item, marker_name):
         args = item.get_marker(marker_name)
-        return getattr(args, "args", tuple())
+        return tuple(sorted(set(getattr(args, "args", tuple()))))
 
     @staticmethod
     def _priority_from_report(report):
@@ -179,7 +168,7 @@ class MongoReporter(object):
             "name": name if not failed_by_setup else "{}: failed on setup".format(name),
             "duration": report.duration if not failed_by_setup else 0.0,
             "priority": self._priority_from_report(report),
-            "components": self.get_tap_components_from_item(item),
+            "components": self._marker_args_from_item(item, "components"),
             "defects": ", ".join(bugs),
             "tags": ", ".join(report.keywords),
             "status": status,
@@ -204,7 +193,7 @@ class MongoReporter(object):
             "run_id": self._run_id,
             "name": name,
             "stacktrace": self._stacktrace_from_report(report),
-            "components": self.get_tap_components_from_item(item),
+            "components": self._marker_args_from_item(item, "components"),
             "log": log,
             "test_type": self._get_test_type_from_report(report)
         }

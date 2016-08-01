@@ -19,13 +19,13 @@ import pytest
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls.platform import user_management
 from modules.runner.tap_test_case import TapTestCase
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_object_model import Space, User
 from tests.fixtures import fixtures, test_data
 
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-pytestmark = [components.user_management]
+pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
 class UpdateSpaceUser(TapTestCase):

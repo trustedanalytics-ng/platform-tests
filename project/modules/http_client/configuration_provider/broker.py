@@ -45,7 +45,7 @@ class BrokerConfigurationProvider(object):
     def get(cls, broker_component: TapComponent) -> HttpClientConfiguration:
         """Provide http client configuration."""
         broker_config = cls.config.get(broker_component)
-        assert broker_config is not None, "No configuration for {}".format(broker_component.value)
+        assert broker_config is not None, "No configuration for {}".format(broker_component)
         cls._set_username_and_password(broker_component, broker_config)
         return HttpClientConfiguration(
             client_type=cls.http_client_type,
@@ -59,8 +59,8 @@ class BrokerConfigurationProvider(object):
         """Provide environment variables."""
         response = cf.cf_api_get_apps()
         app_guid = next((app["metadata"]["guid"] for app in response
-                         if app["entity"]["name"] == broker_component.value), None)
-        assert app_guid is not None, "No such app {}".format(broker_component.value)
+                         if app["entity"]["name"] == broker_component), None)
+        assert app_guid is not None, "No such app {}".format(broker_component)
         return cf.cf_api_get_app_env(app_guid)
 
     @classmethod

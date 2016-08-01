@@ -17,19 +17,21 @@
 import re
 import time
 
+import pytest
+
 import config
 from modules import gmail_api
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls.platform import user_management
 from modules.tap_logger import step
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_object_model import Invitation, Organization, User
 from modules.tap_object_model.flows import onboarding
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception, assert_user_in_org_and_roles
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
-pytestmark = [components.user_management, components.auth_gateway, components.auth_proxy]
+pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
 
 
 class TestOnboarding:

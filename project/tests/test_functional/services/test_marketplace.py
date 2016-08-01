@@ -21,7 +21,7 @@ import pytest
 from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ServiceLabels, ServicePlan, \
     TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
-from modules.markers import components, long, priority
+from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
 from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space, User
@@ -34,9 +34,9 @@ from tests.fixtures.assertions import assert_no_errors, assert_raises_http_excep
 logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
                      TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                      TAP.zookeeper_wssb_broker)
-pytestmark = [components.service_catalog, components.application_broker, components.gearpump_broker,
-              components.hbase_broker, components.kafka_broker, components.smtp_broker,
-              components.yarn_broker, components.zookeeper_broker, components.zookeeper_wssb_broker]
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+                                     TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
+                                     TAP.zookeeper_wssb_broker)]
 
 
 class TestMarketplaceServices:

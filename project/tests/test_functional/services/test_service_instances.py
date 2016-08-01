@@ -18,13 +18,13 @@ import pytest
 
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
 from modules.http_calls import cloud_foundry as cf
-from modules.markers import components, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Organization, ServiceInstance, Space
 from modules.tap_object_model.flows.summaries import cf_api_get_space_summary
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
 class TestTapServiceInstance:

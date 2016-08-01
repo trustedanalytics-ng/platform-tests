@@ -25,7 +25,7 @@ from modules.app_sources import AppSources
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus, ServiceLabels, ServicePlan, TapGitHub, \
     RelativeRepositoryPaths as RepoPath
-from modules.markers import components, incremental, long, priority
+from modules.markers import incremental, long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance, ServiceKey, Application, DataSet
 from modules.tap_object_model.flows import data_catalog
@@ -34,7 +34,7 @@ from modules.service_tools.atk import ATKtools
 
 logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.application_broker, TAP.das, TAP.hdfs_downloader,
                      TAP.metadata_parser)
-pytestmark = [components.scoring_engine, components.service_catalog, components.application_broker]
+pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog, TAP.application_broker)]
 
 
 @pytest.fixture(scope="class")

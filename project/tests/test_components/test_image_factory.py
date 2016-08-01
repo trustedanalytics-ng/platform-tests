@@ -21,7 +21,7 @@ from modules.constants import TapComponent as TAP
 from modules.constants.urls import Urls
 from modules.file_utils import download_file
 from modules.tap_logger import step
-from modules.markers import components, priority, incremental
+from modules.markers import priority, incremental
 from modules.tap_object_model.catalog_image import CatalogImage
 from modules.tap_object_model.blob import Blob
 from modules.tap_object_model.image import Image
@@ -30,7 +30,7 @@ from modules.constants import ImageFactoryHttpStatus
 from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry
 
 logged_components = (TAP.image_factory, TAP.blob_store, TAP.catalog)
-pytestmark = [components.image_factory]
+pytestmark = [pytest.mark.components(TAP.image_factory)]
 
 
 @incremental

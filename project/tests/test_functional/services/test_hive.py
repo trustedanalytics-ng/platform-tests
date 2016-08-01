@@ -24,7 +24,7 @@ from modules.file_utils import get_link_content
 from modules.http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
-from modules.markers import components, priority, incremental
+from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import Application, Upsi, ServiceInstance
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_link
@@ -32,7 +32,7 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
 
 logged_components = (TAP.hive_broker,)
-pytestmark = [components.hive_broker]
+pytestmark = [pytest.mark.components(TAP.hive_broker)]
 
 
 @incremental

@@ -18,7 +18,7 @@ import pytest
 
 from modules.file_utils import download_file
 from modules.constants import ServicePlan, TapComponent as TAP, Urls
-from modules.markers import components, incremental
+from modules.markers import incremental
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_object_model import ServiceInstance
 from modules.tap_logger import step
@@ -26,7 +26,7 @@ from modules.yarn import YarnAppStatus
 from tests.fixtures import assertions
 
 logged_components = (TAP.gearpump_broker, TAP.application_broker, TAP.service_catalog)
-pytestmark = [components.gearpump_broker, components.application_broker, components.service_catalog]
+pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.application_broker, TAP.service_catalog)]
 
 
 @incremental

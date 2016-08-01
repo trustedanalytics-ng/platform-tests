@@ -20,7 +20,7 @@ import config
 from modules.constants import TapComponent as TAP, ParametrizedService, ServiceLabels
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
-from modules.markers import components, long, priority
+from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model.flows.services import create_instance, delete_instance
 from tests.fixtures.assertions import assert_no_errors
@@ -28,9 +28,9 @@ from tests.fixtures.assertions import assert_no_errors
 logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
                      TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                      TAP.zookeeper_wssb_broker)
-pytestmark = [components.service_catalog, components.application_broker, components.gearpump_broker,
-              components.hbase_broker, components.kafka_broker, components.smtp_broker,
-              components.yarn_broker, components.zookeeper_broker, components.zookeeper_wssb_broker]
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+                                     TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
+                                     TAP.zookeeper_wssb_broker)]
 
 
 class TestGoToDashboard:

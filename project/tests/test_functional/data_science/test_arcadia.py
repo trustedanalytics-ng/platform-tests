@@ -18,7 +18,7 @@ import pytest
 
 import config
 from modules.constants import TapComponent as TAP, Urls
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.service_tools.arcadia import Arcadia
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet
@@ -28,7 +28,7 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.dataset_publisher, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
-pytestmark = [components.dataset_publisher, components.das, components.hdfs_downloader, components.metadata_parser]
+pytestmark = [pytest.mark.components(TAP.dataset_publisher, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
 
 @incremental

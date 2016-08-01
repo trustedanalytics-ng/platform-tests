@@ -22,14 +22,14 @@ from retry import retry
 import config
 from modules.constants import ServiceTag, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
-from modules.markers import components, incremental, priority
+from modules.markers import incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import KubernetesCluster, Organization, ServiceInstance, ServiceType, Space
 from modules import test_names
 
 
 logged_components = (TAP.demiurge, TAP.kubernetes_broker)
-pytestmark = [components.demiurge, components.kubernetes_broker, priority.high]
+pytestmark = [priority.high, pytest.mark.components(TAP.demiurge, TAP.kubernetes_broker)]
 
 
 @incremental
