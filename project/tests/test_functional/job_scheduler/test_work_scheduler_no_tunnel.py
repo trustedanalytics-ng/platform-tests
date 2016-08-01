@@ -17,11 +17,12 @@
 import pytest
 
 from modules.constants import ServiceLabels, TapComponent as TAP
+from modules.markers import components, priority, incremental
 from modules.service_tools.psql import PsqlTable, PsqlRow
 from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
 from modules.tap_object_model.flows import data_catalog
-from modules.markers import components, priority, incremental
+from modules.test_names import generate_test_object_name
 from tests.fixtures import assertions
 from tests.fixtures.db_input import DbInput
 
@@ -51,7 +52,7 @@ class TestJobSchedulerNoTunnelIncremental:
     TEST_DATASET = None
 
     TEST_TABLE = None
-    TEST_TABLE_NAME = DbInput.test_table_name
+    test_table_name = None
     TEST_COLUMNS = DbInput.test_columns
     TEST_ROWS = DbInput.test_rows_0[0]
 
@@ -67,8 +68,9 @@ class TestJobSchedulerNoTunnelIncremental:
     @pytest.fixture(scope="class", autouse=True)
     def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app, request, class_context):
         step("Create a table in postgres DB")
-        cls.TEST_TABLE = PsqlTable.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_COLUMNS)
-        PsqlRow.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_ROWS)
+        cls.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
+        cls.TEST_TABLE = PsqlTable.post(psql_app, cls.test_table_name, cls.TEST_COLUMNS)
+        PsqlRow.post(psql_app, cls.test_table_name, cls.TEST_ROWS)
         step("Get psql credentials")
         PSQL_CREDENTIALS = Psql.get_credentials(psql_app)
         cls.db_hostname, cls.db_name, cls.username, cls.password, cls.port = PSQL_CREDENTIALS
@@ -84,7 +86,7 @@ class TestJobSchedulerNoTunnelIncremental:
             test_org.guid, frequency_amount=self.JOB_FREQUENCY_AMOUNT,
             frequency_unit=self.JOB_FREQUENCY_UNIT, zone_id=self.ZONE_ID, check_column="col1",
             import_mode=self.IMPORT_MODE, db_hostname=self.db_hostname, db_name=self.db_name, port=self.port,
-            last_value=0, password=self.password, table=self.TEST_TABLE_NAME, target_dir="", username=self.username,
+            last_value=0, password=self.password, table=self.test_table_name, target_dir="", username=self.username,
             end_job_minutes_later=15)
         assertions.assert_in_with_retry(self.TEST_JOB, HdfsJob.api_get_list, test_org.guid)
         self.TEST_JOB.ensure_successful(test_org.guid)
@@ -103,7 +105,7 @@ class TestJobSchedulerNoTunnelIncremental:
 
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_2_check_new_dataset_from_HDFS(self, test_org, psql_app):
-        PsqlRow.post(psql_app, self.TEST_TABLE_NAME, self.TEST_ROWS)
+        PsqlRow.post(psql_app, self.test_table_name, self.TEST_ROWS)
         assertions.assert_dataset_greater_with_retry(self.TEST_DATASET.size, self.context, test_org,
                                                      self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[1])
 

@@ -23,6 +23,7 @@ from modules.service_tools.psql import PsqlTable, PsqlRow
 from modules.ssh_client import SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
+from modules.test_names import generate_test_object_name
 from modules.webhdfs_tools import WebhdfsTools
 from tests.fixtures import assertions
 from tests.fixtures.db_input import DbInput
@@ -55,7 +56,7 @@ class TestJobScheduler:
     JOB_OUTPUT_FILES_LIST = []
 
     TEST_TABLE = None
-    TEST_TABLE_NAME = DbInput.test_table_name
+    test_table_name = None
     TEST_COLUMNS = DbInput.test_columns
     TEST_ROWS = DbInput.test_rows_0
 
@@ -72,8 +73,9 @@ class TestJobScheduler:
     @pytest.fixture(scope="class", autouse=True)
     def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app, request):
         step("Create a table in postgres DB")
-        cls.TEST_TABLE = PsqlTable.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_COLUMNS)
-        PsqlRow.post(psql_app, cls.TEST_TABLE_NAME, cls.TEST_ROWS[0])
+        cls.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
+        cls.TEST_TABLE = PsqlTable.post(psql_app, cls.test_table_name, cls.TEST_COLUMNS)
+        PsqlRow.post(psql_app, cls.test_table_name, cls.TEST_ROWS[0])
         step("Create tunnel to cdh-master-0")
         cls.SSH_TUNNEL = SshTunnel(hostname=config.cdh_master_0_hostname, username=config.jumpbox_username,
                                    path_to_key=config.jumpbox_key_path, port=WebhdfsTools.DEFAULT_PORT,
@@ -97,7 +99,7 @@ class TestJobScheduler:
             test_org.guid, frequency_amount=self.JOB_FREQUENCY_AMOUNT,
             frequency_unit=self.JOB_FREQUENCY_UNIT, zone_id=self.ZONE_ID, check_column="", import_mode=self.IMPORT_MODE,
             db_hostname=self.db_hostname, db_name=self.db_name, port=self.port, last_value="", password=self.password,
-            table=self.TEST_TABLE_NAME, target_dir="", username=self.username, end_job_minutes_later=15)
+            table=self.test_table_name, target_dir="", username=self.username, end_job_minutes_later=15)
         assertions.assert_in_with_retry(self.TEST_JOB, HdfsJob.api_get_list, test_org.guid)
         self.TEST_JOB.ensure_successful(test_org.guid)
         self.__class__.HDFS_CONFIG_DIR = self.TEST_JOB.app_path.split("nameservice1/")[1]
@@ -113,8 +115,8 @@ class TestJobScheduler:
         HdfsJob.check_response(job_output_file_content, self.TEST_ROWS)
 
     def test_2_check_new_data_on_HDFS(self, psql_app):
-        PsqlRow.post(psql_app, self.TEST_TABLE_NAME, self.TEST_ROWS[1])
-        rows = PsqlRow.get_list(psql_app, self.TEST_TABLE_NAME)
+        PsqlRow.post(psql_app, self.test_table_name, self.TEST_ROWS[1])
+        rows = PsqlRow.get_list(psql_app, self.test_table_name)
         rows = [row.values for row in rows]
         rows = [list(row.values()) for row in rows]
         test_rows = [[x['value'] for x in row] for row in self.TEST_ROWS]

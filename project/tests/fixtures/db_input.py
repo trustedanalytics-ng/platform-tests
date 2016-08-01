@@ -18,7 +18,7 @@ class DbInput:
     test_table_name = "oh_hai"
 
     test_columns = [
-        {"name": "col0", "type": "VARCHAR", "max_len": 15},
+        {"name": "col0", "type": "VARCHAR", "max_len": 35},
         {"name": "col1", "type": "INTEGER", "is_nullable": False},
         {"name": "col2", "type": "BOOLEAN", "is_nullable": True}
     ]

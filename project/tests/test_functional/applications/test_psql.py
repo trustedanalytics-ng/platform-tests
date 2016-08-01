@@ -37,7 +37,7 @@ class TestPsql(object):
     row_value_list = DbInput.test_rows_1
 
     @pytest.fixture(scope="class", autouse=True)
-    def postgres_instance(self, class_context, request, test_org, test_space):
+    def postgres_instance(self, class_context, test_org, test_space):
         step("Create postgres service instance")
         marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
         psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
@@ -91,6 +91,7 @@ class TestPsql(object):
 
     @priority.medium
     def test_create_and_delete_table(self):
+        self.__class__.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
         test_table = PsqlTable.post(self.psql_app, self.test_table_name, self.test_columns)
         table_list = PsqlTable.get_list(self.psql_app)
         assert test_table in table_list

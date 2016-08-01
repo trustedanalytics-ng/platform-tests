@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
-import pytest
-
 import json
+
+import pytest
 
 import config
 from modules.app_sources import AppSources
@@ -27,6 +27,7 @@ from modules.ssh_client import DirectSshClient, SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import Application, HdfsJob, ServiceInstance, ServiceType
 from modules.tap_object_model.hdfs_job import JobStatus
+from modules.test_names import generate_test_object_name
 from modules.webhdfs_tools import WebhdfsTools
 from tests.fixtures import assertions
 from tests.fixtures.db_input import DbInput
@@ -53,7 +54,7 @@ class TestYarnAuthGateway:
     job_output_files_list = []
     hdfs_output_dir = ""
 
-    TEST_TABLE_NAME = DbInput.test_table_name
+    test_table_name = None
     TEST_COLUMNS = DbInput.test_columns
     TEST_ROWS = DbInput.test_rows_0[0]
 
@@ -110,15 +111,17 @@ class TestYarnAuthGateway:
         assert self.psql_app in apps
 
     def test_2_post_data(self):
+        step("Create test table name")
+        self.__class__.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
         step("Pass POST request to the application")
-        PsqlTable.post(self.psql_app, self.TEST_TABLE_NAME, self.TEST_COLUMNS)
+        PsqlTable.post(self.psql_app, self.test_table_name, self.TEST_COLUMNS)
         tables = str(PsqlTable.get_list(self.psql_app))
-        step("Check that table with name '{}' was created.".format(self.TEST_TABLE_NAME))
-        assert self.TEST_TABLE_NAME in tables, "There is no '{}' table in database".format(self.TEST_TABLE_NAME)
+        step("Check that table with name '{}' was created.".format(self.test_table_name))
+        assert self.test_table_name in tables, "There is no '{}' table in database".format(self.test_table_name)
         step("Fill postgres table with data")
-        PsqlRow.post(self.psql_app, self.TEST_TABLE_NAME, self.TEST_ROWS)
+        PsqlRow.post(self.psql_app, self.test_table_name, self.TEST_ROWS)
         step("Check if there is data in table")
-        rows = PsqlRow.get_list(self.psql_app, self.TEST_TABLE_NAME)
+        rows = PsqlRow.get_list(self.psql_app, self.test_table_name)
         assert len(rows) >= 1, "There is no data in table"
 
     def test_3_create_job(self, test_org, add_admin_to_test_org):
@@ -129,7 +132,7 @@ class TestYarnAuthGateway:
             org_guid=test_org.guid, name=None, frequency_amount=self.JOB_FREQUENCY_AMOUNT,
             frequency_unit=self.JOB_FREQUENCY_UNIT, zone_id=self.ZONE_ID, check_column="", import_mode=self.IMPORT_MODE,
             db_hostname=psql_credentials["hostname"], db_name=psql_credentials["dbname"], port=psql_credentials["port"],
-            last_value="", password=psql_credentials["password"], table=self.TEST_TABLE_NAME, target_dir="",
+            last_value="", password=psql_credentials["password"], table=self.test_table_name, target_dir="",
             username=psql_credentials["username"], end_job_minutes_later=self.END_JOB_MINUTES_LATER)
         step("Check job is on the list")
         assertions.assert_in_with_retry(self.test_job, HdfsJob.api_get_list, test_org.guid)
