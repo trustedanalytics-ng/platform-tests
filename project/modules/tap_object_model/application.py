@@ -30,7 +30,6 @@ from ..test_names import generate_test_object_name
 
 
 class Application(object):
-
     STATUS = {"restage": "RESTAGING", "start": "STARTED", "stop": "STOPPED"}
 
     MANIFEST_NAME = "manifest.yml"
@@ -130,7 +129,8 @@ class Application(object):
         context.apps.append(application)
         return application
 
-    def api_request(self, path, method="GET", scheme="http", hostname=None, data=None, params=None, body=None):
+    def api_request(self, path, method="GET", scheme="http", hostname=None, data=None, params=None, body=None,
+                    raw=False):
         """Send a request to application api"""
         hostname = hostname or self.urls[0]
         request = self.request_session.prepare_request(requests.Request(
@@ -143,6 +143,8 @@ class Application(object):
         log_http_request(request, "")
         response = self.request_session.send(request)
         log_http_response(response)
+        if raw is True:
+            return response
         if not response.ok:
             raise UnexpectedResponseError(response.status_code, response.text)
         try:
@@ -264,6 +266,3 @@ class Application(object):
     def get_credentials(self, service_name, i=0):
         env = self.cf_api_env()
         return env["VCAP_SERVICES"][service_name][i]["credentials"]
-
-
-

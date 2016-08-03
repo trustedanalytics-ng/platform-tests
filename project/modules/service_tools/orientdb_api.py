@@ -53,7 +53,8 @@ class OrientDbApi(object):
 
     def class_delete(self):
         """Drop class."""
-        self._app.api_request(method="DELETE", path="{}/{}".format(self.PATH_TO_CLASSES, self.TEST_CLASS))
+        return self._app.api_request(method="DELETE", path="{}/{}".format(self.PATH_TO_CLASSES, self.TEST_CLASS),
+                                     raw=True)
 
     @staticmethod
     def record():

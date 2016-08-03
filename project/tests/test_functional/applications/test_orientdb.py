@@ -24,8 +24,7 @@ from modules.markers import priority
 from modules.service_tools.orientdb_api import OrientDbApi
 from modules.tap_object_model import Application, ServiceInstance, ServiceType
 from modules.test_names import generate_test_object_name
-from modules.constants import ServiceLabels, HttpStatus
-from tests.fixtures import assertions
+from modules.constants import ServiceLabels
 
 
 class TestOrientDB(object):
@@ -92,13 +91,9 @@ class TestOrientDB(object):
         self._API.database_create()
         self._API.class_create()
         # when
-        self._API.class_delete()
+        response = self._API.class_delete()
         # then
-        assertions.assert_raises_http_exception(
-            HttpStatus.CODE_INTERNAL_SERVER_ERROR,
-            HttpStatus.MSG_INTERNAL_SERVER_ERROR,
-            self._API.record_get_all
-        )
+        assert response.ok
 
     @priority.medium
     def test_create_record(self):
