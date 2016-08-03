@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import os
 import socket
 from unittest import TestCase, mock
 
@@ -99,6 +100,15 @@ class MockFailingItem:
 
 
 class TestReporter(TestCase):
+    EXPECTED_CONFIG_PARAMS = {
+        "teamcity.build.id": "12345",
+        "teamcity.serverurl": "https://server-url.com"
+    }
+
+    EXPECTED_ENV_VARIABLES = {
+        "env_val_a": "val_a",
+        "env_val_b": "val_b"
+    }
 
     @mock.patch.object(reporter, "DBClient", MockClient)
     def setUp(self):
@@ -133,7 +143,11 @@ class TestReporter(TestCase):
         result_collection = reporter.MongoReporter._test_result_collection_name
         return list(self.mongo_reporter._db_client.database[result_collection].find({}))
 
-    def start_run(self):
+    @mock.patch.object(reporter.MongoReporter, "get_tc_configuration_params")
+    @mock.patch.object(reporter.MongoReporter, "get_tc_env_variables")
+    def start_run(self, get_tc_env_variables_mock, get_tc_configuration_params_mock):
+        get_tc_env_variables_mock.return_value = self.EXPECTED_ENV_VARIABLES
+        get_tc_configuration_params_mock.return_value = self.EXPECTED_CONFIG_PARAMS
         expected_run_document = self.get_expected_run_document()
         self.mongo_reporter.on_run_start(
             expected_run_document["environment"],
@@ -219,6 +233,23 @@ class TestReporter(TestCase):
         self.assertEqual(len(result_documents), 2)
         self.assertEqual(run_documents[0]["result"], self.get_expected_run_document(fail_count=2)["result"])
 
+    @mock.patch.object(reporter.MongoReporter, "_from_teamcity_file")
+    @mock.patch("modules.mongo_reporter.reporter.is_running_under_teamcity")
+    def test_get_tc_configuration_params(self, mock_under_tc, from_teamcity_file_mock):
+        mock_under_tc.return_value = True
+        mock_files_content = [
+            {"teamcity.configuration.properties.file": "/some/fake/file/path.properties"},
+            {"teamcity.build.id": "12345", "teamcity.serverurl": "https://server-url.com"}
+        ]
+        from_teamcity_file_mock.side_effect = mock_files_content
+        config_params = self.mongo_reporter.get_tc_configuration_params()
+        assert self.EXPECTED_CONFIG_PARAMS == config_params
+
+    @mock.patch("modules.mongo_reporter.reporter.is_running_under_teamcity")
+    def test_get_tc_env_variables(self, mock_under_tc):
+        mock_under_tc.return_value = True
+        assert self.mongo_reporter.get_tc_env_variables() == os.environ
+
     def get_expected_test_document(self, run_id, test_name, duration, order, priority, components, defects,
                                    tags, status, stacktrace, log, test_type):
         return {
@@ -258,6 +289,12 @@ class TestReporter(TestCase):
             "test_type": reporter.TestRunType.API_FUNCTIONAL,
             "total_test_count": 0,
             "test_version": config.get_test_version(),
-			"environment_availability": environment_availability
+            "environment_availability": environment_availability,
+            "teamcity_build_id": 12345,
+            "teamcity_server_url": "https://server-url.com",
+            "parameters": {
+                "configuration_parameters": {k.replace(".", "_"): v for k, v in self.EXPECTED_CONFIG_PARAMS.items()},
+                "environment_variables": self.EXPECTED_ENV_VARIABLES,
+            }
         }
         return expected_run

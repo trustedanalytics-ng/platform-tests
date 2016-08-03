@@ -14,13 +14,19 @@
 # limitations under the License.
 #
 
+import configparser
 from datetime import datetime
+import os
 import socket
 
 from bson import ObjectId
+from teamcity import is_running_under_teamcity
 
 import config
 from .client import DBClient
+from modules.tap_logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TestResultType:
@@ -77,6 +83,8 @@ class MongoReporter(object):
 
     def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components,
                      components, environment_availability):
+        tc_config_params = self.get_tc_configuration_params()
+        tc_env_variables = self.get_tc_env_variables()
         mongo_run_document = {
             "environment": environment,
             "environment_version": environment_version,
@@ -87,7 +95,13 @@ class MongoReporter(object):
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "test_version": config.get_test_version(),
-            "environment_availability": environment_availability
+            "environment_availability": environment_availability,
+            "teamcity_build_id": int(tc_config_params.get("teamcity.build.id", -1)),
+            "teamcity_server_url": tc_config_params.get("teamcity.serverurl", None),
+            "parameters": {
+                "configuration_parameters": {k.replace(".", "_"): v for k, v in tc_config_params.items()},
+                "environment_variables": tc_env_variables,
+            },
         }
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
@@ -100,6 +114,42 @@ class MongoReporter(object):
         }
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
+
+    # Workaround for a config file without section header
+    @staticmethod
+    def _add_section(tc_file, section_name):
+        yield '[{}]\n'.format(section_name)
+        for line in tc_file:
+            yield line
+
+    def _from_teamcity_file(self, path):
+        section = "tc_file_section"
+        with open(path, "r") as f:
+            tc_config_file = configparser.ConfigParser(delimiters=("=", ))
+            tc_config_file.read_file(self._add_section(f, section))
+        return dict(tc_config_file[section])
+
+    def get_tc_configuration_params(self):
+        if is_running_under_teamcity():
+            tc_build_properties_file_path = os.environ.get("TEAMCITY_BUILD_PROPERTIES_FILE")
+            tc_build_properties = self._from_teamcity_file(tc_build_properties_file_path)
+            config_path = tc_build_properties["teamcity.configuration.properties.file"]
+            return self._from_teamcity_file(config_path)
+        return {}
+
+    @staticmethod
+    def get_tc_env_variables():
+        if is_running_under_teamcity():
+            return os.environ
+        return {}
+
+    def get_tap_components_from_item(self, item):
+        components = []
+        keywords = item.keywords.items()
+        for keyword in keywords:
+            if keyword[0] in self.TAP_COMPONENT_NAMES:
+                components.append(keyword[0])
+        return sorted(components)
 
     def log_report(self, report, item):
         doc, status = None, None
