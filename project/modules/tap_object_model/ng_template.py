@@ -16,14 +16,12 @@
 
 import functools
 import uuid
-
 import modules.http_calls.platform.template_repository as template_repository
 from fixtures.k8s_templates import template_example
 
 
 @functools.total_ordering
 class Template(object):
-
     def __init__(self, template_id: str, components: dict, hooks: dict):
         self.id = template_id
         self.components = components
@@ -44,15 +42,9 @@ class Template(object):
             template_id = str(uuid.uuid4())
         if body is None:
             body = template_example.ng_template_example_body
-        response = template_repository.create_template(template_id=template_id, template_body=body, hooks=hooks)
-        try:
-            new_template = cls._from_response(response)
-        except:
-            # If exception occurred, check whether template is on the list and if so, delete it.
-            template = next((t for t in cls.get_list() if t.id == template_id), None)
-            if template is not None:
-                template.cleanup()
-            raise
+        template_repository.create_template(template_id=template_id, template_body=body, hooks=hooks)
+        # POST returns empty body
+        new_template = cls.get(template_id=template_id)
         context.templates.append(new_template)
         return new_template
 
@@ -76,7 +68,7 @@ class Template(object):
         return templates
 
     def delete(self):
-        template_repository.delete_template(template_id=self.id)
+        template_repository.delete_template(self.id)
 
     def cleanup(self):
         self.delete()

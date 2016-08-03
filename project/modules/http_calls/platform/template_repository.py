@@ -14,28 +14,29 @@
 # limitations under the License.
 #
 
-from modules.constants import TapComponent
+import config
+from modules.constants import TapComponent, HttpStatus
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider
 
 
 def _get_client():
-    configuration = K8sServiceConfigurationProvider.get(TapComponent.template_repository.value, api_endpoint="api/v1")
+    configuration = K8sServiceConfigurationProvider.get(TapComponent.template_repository.value,
+                                                        api_endpoint="api/{}".format(config.ng_component_api_version))
     return HttpClientFactory.get(configuration)
 
 
 def get_templates():
     """ GET /templates """
-    return _get_client().request(HttpMethod.GET,
-                                 path="templates",
-                                 msg="TEMPLATE REPOSITORY: get template list")
+    return _get_client().request(HttpMethod.GET, path="templates", msg="TEMPLATE REPOSITORY: get template list")
 
 
 def get_template(template_id):
     """ GET /templates/{template_id} """
-    return _get_client().request(HttpMethod.GET,
-                                 path="templates/{}".format(template_id),
-                                 msg="TEMPLATE REPOSITORY: get template")
+    response = _get_client().request(HttpMethod.GET,
+                                     path="templates/{}".format(template_id),
+                                     msg="TEMPLATE REPOSITORY: get template")
+    return response
 
 
 def create_template(template_id, template_body, hooks):
@@ -45,11 +46,10 @@ def create_template(template_id, template_body, hooks):
         "body": template_body,
         "hooks": hooks
     }
-    response = _get_client().request(HttpMethod.POST,
+    return _get_client().request(HttpMethod.POST,
                                  path="templates",
                                  body=body,
                                  msg="TEMPLATE REPOSITORY: create template")
-    return response
 
 
 def get_parsed_template(template_id, service_id):
@@ -62,6 +62,8 @@ def get_parsed_template(template_id, service_id):
 
 def delete_template(template_id):
     """ DELETE /templates/{template_id} """
-    return _get_client().request(HttpMethod.DELETE,
-                                 path="templates/{}".format(template_id),
-                                 msg="TEMPLATE REPOSITORY: delete template")
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="templates/{}".format(template_id),
+                                     raw_response_with_exception=True,
+                                     msg="TEMPLATE REPOSITORY: delete template")
+    assert response.status_code == HttpStatus.CODE_NO_CONTENT

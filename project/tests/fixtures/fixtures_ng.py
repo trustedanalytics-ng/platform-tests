@@ -40,7 +40,7 @@ def centos_key_path(request):
     return path
 
 
-@retry(ConnectionRefusedError, tries=10, delay=1)
+@retry(ConnectionRefusedError, tries=20, delay=5)
 def _check_tunnel_established(host, port):
     sock = socket.create_connection((host, port))
     sock.close()

@@ -189,3 +189,9 @@ class ImageFactoryHttpStatus(HttpStatus):
 class BlobStoreHttpStatus(HttpStatus):
     MSG_BLOB_ID_ALREADY_IN_USE = "The specified Blob ID is already in use"
     MSG_BLOB_DOES_NOT_EXIST = "The specified blob does not exist"
+
+
+class TemplateRepositoryHttpStatus(HttpStatus):
+    MSG_TOO_SHORT_SERVICE_ID = "serviceId has to be longer than 15 characters!"
+    MSG_TEMPLATE_DOES_NOT_EXIST = "Template doesn't exist!"
+
