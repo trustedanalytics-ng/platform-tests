@@ -79,6 +79,10 @@ class TapComponent(Enum):
     dashboard = "dashboard"
     image_factory = "image-factory"
     template_repository = "template-repository"
+    message_queue = "queue"
+
+    # ---- TAP NG components - 3rd party ---- #
+    image_repository = "image-repository"
 
     @classmethod
     def names(cls):

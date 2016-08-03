@@ -46,9 +46,13 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
         service = next((s for s in cls._services if s.name == service_name), None)
         assert service is not None, "No service {}".format(service_name)
         credentials = config.ng_k8s_service_credentials()
+        if api_endpoint is None:
+            url = service.url
+        else:
+            url = "{}/{}".format(service.url, api_endpoint)
         return HttpClientConfiguration(
             client_type=HttpClientType.BROKER,
-            url="{}/{}".format(service.url, api_endpoint),
+            url=url,
             proxies=cls._get_proxies(),
             username=credentials[0],
             password=credentials[1]
