@@ -21,12 +21,11 @@ from modules.service_tools.seahorse import Seahorse
 
 
 @pytest.mark.skipif(not config.seahorse, reason="No seahorse on TAP")
-@pytest.mark.bugs("DPNG-9808 Seahorse - App Url is not redirecting to dashboard")
 class TestSeahorse:
     WORKFLOW_NAME = "Text Message Spam Detection"
 
     @pytest.fixture(scope="class")
-    def seahorse(self, class_context, request, admin_client, test_org, test_space):
+    def seahorse(self, class_context, request, admin_client, test_org, test_space, add_admin_to_test_org):
         seahorse = Seahorse(class_context, test_org.guid, test_space.guid, admin_client)
         request.addfinalizer(seahorse.cleanup)
         return seahorse
@@ -39,6 +38,7 @@ class TestSeahorse:
         some_workflow_id = seahorse.get_workflow_id_by_name(self.WORKFLOW_NAME)
         seahorse.clone_workflow(some_workflow_id)
 
+    @pytest.mark.bugs("DPNG-9916 Seahorse - status 500 when sending post request to /v1/sessions")
     def test_2_workflow_can_be_launched(self, seahorse):
         workflow_id_to_be_cloned = seahorse.get_workflow_id_by_name(self.WORKFLOW_NAME)
         cloned_workflow_id = seahorse.clone_workflow(workflow_id_to_be_cloned)

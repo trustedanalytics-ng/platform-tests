@@ -27,6 +27,7 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.http_client_type import HttpClientType
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceInstance
+from modules.test_names import generate_test_object_name
 
 
 logger = get_logger(__name__)
@@ -43,10 +44,12 @@ class Seahorse:
         self.service_instance = ServiceInstance.api_create_with_plan_name(
             context, org_uuid, space_uuid,
             ServiceLabels.SEAHORSE,
+            name=generate_test_object_name(short=True, prefix=ServiceLabels.SEAHORSE),
             service_plan_name=ServicePlan.FREE
         )
         self.service_instance.ensure_created()
-        self.seahorse_url = "{}-{}.{}".format(self.service_instance.name, self.service_instance.guid, self.tap_domain)
+        self.seahorse_url = "{}-{}.{}".format(self.service_instance.name.replace("_", "-"), self.service_instance.guid,
+                                              self.tap_domain)
 
         http_client_configuration = HttpClientConfiguration(
             client_type=HttpClientType.NO_AUTH,
