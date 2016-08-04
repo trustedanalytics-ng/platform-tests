@@ -17,6 +17,7 @@
 import functools
 import uuid
 
+import config
 import modules.http_calls.platform.blob_store as blob_store
 from modules.constants.urls import Urls
 
@@ -49,12 +50,12 @@ class Blob(object):
         return new_blob
 
     @classmethod
-    def get(cls, blob_id: str):
-        blob_store.get_blob(blob_id)
+    def get(cls, blob_id: str, api_version=config.ng_component_api_version):
+        blob_store.get_blob(blob_id, api_version)
         return cls(blob_id, None)
 
     def delete(self):
-        blob_store.delete_blob(blob_id=self.id)
+        blob_store.delete_blob(self.id)
 
     def cleanup(self):
         self.delete()

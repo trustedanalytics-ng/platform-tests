@@ -21,18 +21,18 @@ from modules.http_client.configuration_provider.k8s_service import K8sServiceCon
 from modules.constants import HttpStatus
 
 
-def _get_client():
+def _get_client(api_version=config.ng_component_api_version):
     configuration = K8sServiceConfigurationProvider.get(TapComponent.blob_store.value,
-                                                        api_endpoint="api/{}".format(config.ng_component_api_version))
+                                                        api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
 
 
-def get_blob(blob_id):
+def get_blob(blob_id, api_version=config.ng_component_api_version):
     """ GET /blobs/{blob_id} """
-    response = _get_client().request(HttpMethod.GET,
-                                     path="blobs/{}".format(blob_id),
-                                     raw_response_with_exception=True,
-                                     msg="BLOB-STORE: get blob")
+    response = _get_client(api_version).request(HttpMethod.GET,
+                                                path="blobs/{}".format(blob_id),
+                                                raw_response_with_exception=True,
+                                                msg="BLOB-STORE: get blob")
     assert response.status_code == HttpStatus.CODE_OK
     return response
 

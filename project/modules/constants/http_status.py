@@ -181,7 +181,11 @@ class PlatformTestsHttpStatus(HttpStatus):
     MSG_RUNNER_BUSY = "Runner is busy"
 
 
-
 class ImageFactoryHttpStatus(HttpStatus):
+    MSG_BLOB_ID_ALREADY_IN_USE = "The specified Blob ID is already in use"
+    MSG_BLOB_DOES_NOT_EXIST = "The specified blob does not exist"
+
+
+class BlobStoreHttpStatus(HttpStatus):
     MSG_BLOB_ID_ALREADY_IN_USE = "The specified Blob ID is already in use"
     MSG_BLOB_DOES_NOT_EXIST = "The specified blob does not exist"
