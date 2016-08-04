@@ -37,6 +37,8 @@ class OrientDbApi(object):
         """Create database."""
         body = {"database_name": self.TEST_DATABASE}
         self._app.api_request(method="POST", path=self.PATH_TO_DATABASES, body=body)
+        if "Details" in self.database_get():
+            return self.TEST_DATABASE
 
     def database_delete(self):
         """Drop database."""
@@ -50,6 +52,8 @@ class OrientDbApi(object):
         """Create class."""
         body = {"class_name": self.TEST_CLASS}
         self._app.api_request(method="POST", path=self.PATH_TO_CLASSES, body=body)
+        if "Records" in self.record_get_all():
+            return self.TEST_CLASS
 
     def class_delete(self):
         """Drop class."""

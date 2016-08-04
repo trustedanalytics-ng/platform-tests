@@ -78,6 +78,12 @@ def login_to_cf(test_org, test_space):
 
 
 @pytest.fixture(scope="class")
+def login_to_cf_core(core_org, core_space):
+     log_fixture("login_to_cf_core: Login to cf targeting core org and core space")
+     cf.cf_login(core_org.name, core_space.name)
+
+
+@pytest.fixture(scope="class")
 def sample_python_app(request, class_context, test_org, test_space):
     log_fixture("sample_python_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
@@ -237,6 +243,5 @@ def model_hdfs_path(request, session_context, test_org, add_admin_to_test_org):
     log_fixture("Create a transfer and get hdfs path")
     _, data_set = data_catalog.create_dataset_from_link(session_context, org=test_org, source=Urls.model_url)
     return data_set.target_uri
-
 
 
