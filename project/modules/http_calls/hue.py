@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import functools
+
 import config
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
@@ -25,11 +27,20 @@ client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=config.h
 client.session = console_client.session
 
 
-def login():
-    """Required to make requests with json-formatted response"""
-    client.request(method=HttpMethod.GET, path="", msg="login")
+def login_required(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        for _ in range(5):
+            response = func(*args, **kwargs)
+            if "login required" in response:
+                client.request(method=HttpMethod.GET, path="", msg="login")
+            else:
+                return response
+        raise AssertionError("Could not login to hue api")
+    return wrapper
 
 
+@login_required
 def get_databases():
     """GET metastore/databases"""
     return client.request(
@@ -40,6 +51,7 @@ def get_databases():
     )
 
 
+@login_required
 def get_tables(database_name):
     """GET metastore/tables/{database_name}"""
     return client.request(
@@ -49,6 +61,7 @@ def get_tables(database_name):
     )
 
 
+@login_required
 def get_table(database_name, table_name):
     """GET metastore/table/{database_name}/{table_name}"""
     return client.request(
@@ -58,6 +71,7 @@ def get_table(database_name, table_name):
     )
 
 
+@login_required
 def get_file_browser():
     """GET filebrowser"""
     return client.request(
@@ -68,6 +82,7 @@ def get_file_browser():
     )
 
 
+@login_required
 def get_job_browser():
     """GET jobbrowser"""
     return client.request(

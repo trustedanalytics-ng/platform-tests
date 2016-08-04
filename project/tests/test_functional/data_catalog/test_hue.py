@@ -45,7 +45,6 @@ class TestHue:
 
     def test_1_check_database(self, test_org):
         step("Check organization database is on the list of hive databases")
-        hue.login()
         self.__class__.database_name = escape_hive_name(test_org.guid)
         response = hue.get_databases()
         assert self.database_name in response["databases"]
