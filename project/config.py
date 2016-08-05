@@ -15,7 +15,7 @@
 #
 
 import os
-import re
+import configparser
 
 try:
     # In user_config.py, user might export custom environment variables
@@ -192,9 +192,10 @@ def kinit_password():
 
 def get_test_version():
     bumpversion_path = os.path.join(os.path.dirname(__file__), "..", ".bumpversion.cfg")
-    with open(bumpversion_path) as f:
-        output = re.search("\d+\.\d+\.\d+", f.read())
-        if output is None:
-            raise KeyError("Version not found in {}".format(bumpversion_path))
-    return output.group(0)
+    bump_version_file = configparser.ConfigParser()
+    bump_version_file.read(bumpversion_path)
+    version = bump_version_file["bumpversion"].get("current_version", None)
+    if version is None:
+        raise KeyError("Version not found in {}".format(bumpversion_path))
+    return version
 

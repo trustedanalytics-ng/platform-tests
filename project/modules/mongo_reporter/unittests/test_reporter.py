@@ -19,8 +19,8 @@ from unittest import TestCase, mock
 
 import mongomock
 
+import config
 from modules.mongo_reporter import reporter
-from config import get_test_version
 
 
 class MockClient(reporter.DBClient):
@@ -260,6 +260,6 @@ class TestReporter(TestCase):
             "test_count": test_count,
             "test_type": reporter.TestRunType.API_FUNCTIONAL,
             "total_test_count": 0,
-            "test_version": get_test_version()
+            "test_version": config.get_test_version()
         }
         return expected_run

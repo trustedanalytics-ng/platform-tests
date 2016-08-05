@@ -21,7 +21,7 @@ set -e
 VENDOR=vendor/
 SECRETS_PATH=./project/secrets/
 REQUIREMENTS_PATH=./requirements.txt
-ZIPPED_ITEMS="deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt"
+ZIPPED_ITEMS="deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt .bumpversion.cfg"
 DELETED_ITEMS="project/modules/remote_logger project/modules/cloudera_client.py project/modules/hdfs.py project/modules/hive.py project/modules/kerberos.py project/modules/ssh_client.py"
 
 # prepare dependencies

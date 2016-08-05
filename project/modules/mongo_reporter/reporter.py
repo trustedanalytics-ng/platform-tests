@@ -19,9 +19,9 @@ import socket
 
 from bson import ObjectId
 
+import config
 from .client import DBClient
 from modules.constants import TapComponent
-from config import get_test_version
 
 
 class TestResultType:
@@ -70,7 +70,7 @@ class MongoReporter(object):
                 "status": cls.PASS,
                 "test_count": 0,
                 "total_test_count": 0,
-                "test_version": get_test_version(),
+                "test_version": config.get_test_version(),
                 "test_type": test_run_type,
             }
             cls._instance._save_test_run()
@@ -88,7 +88,7 @@ class MongoReporter(object):
             "components": components,
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
-            "test_version": get_test_version()
+            "test_version": config.get_test_version(),
         }
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
