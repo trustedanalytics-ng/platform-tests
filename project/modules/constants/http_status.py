@@ -168,6 +168,7 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_SERVICE_INST_NOT_FOUND = "The service instance could not be found: {}"
     MSG_SERVICE_BINDING_NOT_FOUND = "The service binding could not be found: {}"
     MSG_NOT_AUTHORIZED = "You are not authorized"
+    MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE = "User not authorize to delete this service"
     MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE = "Can't remove service with existing instances from catalog"
 
 

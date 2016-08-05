@@ -50,7 +50,8 @@ def test_cannot_create_service_with_no_description(context, test_org, test_space
 
 
 @priority.high
-def test_create_and_delete_service(context, test_org, test_space, sample_python_app):
+@pytest.mark.parametrize("role", ["developer", "auditor", "manager", "admin"])
+def test_create_and_delete_service(context, test_org, test_space, sample_python_app, role, space_users_clients):
     step("Register in marketplace")
     service = ServiceType.register_app_in_marketplace(context, app_name=sample_python_app.name,
                                                       app_guid=sample_python_app.guid,
@@ -58,7 +59,7 @@ def test_create_and_delete_service(context, test_org, test_space, sample_python_
     step("Check that service is in marketplace")
     assert_in_with_retry(service, ServiceType.api_get_list_from_marketplace, test_space.guid)
     step("Delete service")
-    service.api_delete()
+    service.api_delete(client=space_users_clients[role])
     step("Check that service isn't in marketplace")
     assert_not_in_with_retry(service, ServiceType.api_get_list_from_marketplace, test_space.guid)
 
