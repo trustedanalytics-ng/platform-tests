@@ -55,9 +55,10 @@ class TestMongoDbClustered:
         mongodb = next((service for service in marketplace if service.label == self.MONGODB_SERVICE_LABEL), None)
         assert mongodb is not None, "{} not available".format(self.MONGODB_SERVICE_LABEL)
 
-    def test_1_create_mongodb_clustered_instance(self, test_org, test_space):
+    def test_1_create_mongodb_clustered_instance(self, class_context, test_org, test_space):
         step("Create new mongodb clustered service")
         self.__class__.mongodb_instance = ServiceInstance.api_create_with_plan_name(
+            context=class_context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
             service_label=self.MONGODB_SERVICE_LABEL,
@@ -105,8 +106,8 @@ class TestMongoDbClustered:
         step("Check collection was created properly")
         document = client.request(HttpMethod.GET, path="collections/{}/documents".format(self.TEST_COLLECTION_NAME),
                                   headers=self.JSON_HEADERS)["rows"][0]
-        assert all([x in document.items() for x in self.TEST_DATA.items()]), "Document: {}, expected: {}".format(document,
-                                                                                                                 self.TEST_DATA)
+        assert all([x in document.items() for x in self.TEST_DATA.items()]),\
+            "Document: {}, expected: {}".format(document, self.TEST_DATA)
 
     def test_7_delete_mongodb_clustered_key(self, test_space):
         step("Delete mongodb clustered service key")
@@ -119,7 +120,7 @@ class TestMongoDbClustered:
         step("Delete application")
         self.mongodb_app.api_delete()
         step("Check that application is not on the list")
-        apps = Application.cf_api_get_list_by_space(test_space.guid)
+        apps = Application.api_get_list(test_space.guid)
         assert self.mongodb_app not in apps
 
     def test_9_delete_mongodb_clustered_instance(self, test_space):
