@@ -20,3 +20,4 @@ class Urls(object):
     kafka2gearpump2hbase = "https://repo.gotapaas.eu/files/gearpump-app-0.6.0-jar-with-dependencies.jar"
     complexdag_app_url = "https://repo.gotapaas.eu/files/complexdag-2.11.5-0.7.1-SNAPSHOT-assembly.jar"
     nodejs_app_url = "https://repo.gotapaas.eu/files/test_blob"
+    hadoop_mapreduce_examples = "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-mapreduce-examples/2.2.0/hadoop-mapreduce-examples-2.2.0.jar"

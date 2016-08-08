@@ -1,0 +1,18 @@
+<workflow-app name="app_name" xmlns="uri:oozie:workflow:0.4">
+    <start to="app_name"/>
+    <action name="app_name">
+        <java>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <main-class></main-class>
+            <arg>target_uri</arg>
+            <arg>output_path</arg>
+        </java>
+        <ok to="end"/>
+        <error to="kill"/>
+    </action>
+    <kill name="kill">
+        <message>Action failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

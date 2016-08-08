@@ -31,3 +31,4 @@ class Path:
     data_set_dir = os.path.join(fixture_root_dir, "data_sets")
     shuttle_csv_file = os.path.join(data_set_dir, "shuttle_scale_cut_val.csv")
     shuttle_csv_file_truncated = os.path.join(data_set_dir, "shuttle_scale_cut_val-truncated.csv")
+    _2_kilobytes_csv_file = os.path.join(data_set_dir, "2_kilobytes.csv")

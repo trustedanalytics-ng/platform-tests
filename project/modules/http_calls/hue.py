@@ -91,3 +91,38 @@ def get_job_browser():
         params={"format": "json"},
         msg="HUE: get job browser"
     )
+
+
+@login_required
+def create_java_job_design(name, jar_path, main_class, args="", description=""):
+    """POST jobsub/designs/java/new"""
+
+    headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+               "X-CSRFToken": client.cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"
+               }
+
+    files = "node_type=java&files=[]&name={}&jar_path={}&job_properties=[]&prepares=[]&archives=[]&main_class={}" \
+            "&args={}&description={}&".format(name, jar_path, main_class, args, description)
+
+    return client.request(
+        method=HttpMethod.POST,
+        path="jobsub/designs/java/new",
+        files={(files, "")},
+        headers=headers,
+        msg="HUE: create java job design"
+    )
+
+
+@login_required
+def get_job_workflow(workflow_id):
+    """GET oozie/list_oozie_workflow/{workflow_id}/"""
+
+    headers = {"X-CSRFToken": client.cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"}
+
+    return client.request(
+        method=HttpMethod.GET,
+        path="oozie/list_oozie_workflow/{}/".format(workflow_id),
+        headers=headers,
+        params={"format": "json"},
+        msg="HUE: get job workflow"
+    )
