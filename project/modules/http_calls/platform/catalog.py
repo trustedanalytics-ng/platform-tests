@@ -14,14 +14,16 @@
 # limitations under the License.
 #
 
-import config
+from tap_ng_component_config import k8s_core_services
 from modules.constants import TapComponent
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider
 
 
-def _get_client(api_endpoint="api/{}".format(config.ng_component_api_version)):
-    configuration = K8sServiceConfigurationProvider.get(TapComponent.catalog.value, api_endpoint=api_endpoint)
+def _get_client():
+    api_version = k8s_core_services[TapComponent.catalog]["api_version"]
+    configuration = K8sServiceConfigurationProvider.get(TapComponent.catalog.value,
+                                                        api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
 
 
@@ -32,11 +34,11 @@ def get_images():
                                  msg="CATALOG: get images list")
 
 
-def get_image(image_id, api_endpoint="api/{}".format(config.ng_component_api_version)):
+def get_image(image_id):
     """ GET /images/{image_id} """
-    return _get_client(api_endpoint).request(HttpMethod.GET,
-                                             path="images/{}".format(image_id),
-                                             msg="CATALOG: get image")
+    return _get_client().request(HttpMethod.GET,
+                                 path="images/{}".format(image_id),
+                                 msg="CATALOG: get image")
 
 
 def create_image(image_type, state):

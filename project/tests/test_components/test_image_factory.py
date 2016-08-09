@@ -63,45 +63,39 @@ class TestImageFactory:
         image = CatalogImage.get(self.catalog_image.id)
         assert image.state == self.NODEJS_APP_STATE
 
-    def test_3_check_catalog_metadata_using_alias(self):
-        # TODO move this test to smoke tests
-        step("Check that metadata are available in catalog using alias")
-        image = CatalogImage.get(self.catalog_image.id, api_endpoint="api/{}".format(config.ng_component_api_version_alias))
-        assert image.state == self.NODEJS_APP_STATE
-
-    def test_4_create_artifact_blob_store(self, class_context, download_nodejs_example):
+    def test_3_create_artifact_blob_store(self, class_context, download_nodejs_example):
         step("Create artifact for application in blob-store")
         blob = Blob.create(class_context, self.catalog_image.id, "@/tmp/{}".format(self.NODEJS_APP_NAME))
         assert blob is not None
 
-    def test_5_create_artifact_blob_store_with_existing_id(self, class_context):
+    def test_4_create_artifact_blob_store_with_existing_id(self, class_context):
         step("Create artifact for application in blob-store once again")
         assert_raises_http_exception(ImageFactoryHttpStatus.CODE_CONFLICT,
                                      ImageFactoryHttpStatus.MSG_BLOB_ID_ALREADY_IN_USE,
                                      Blob.create, class_context, self.catalog_image.id,
                                      "@/tmp/{}".format(self.NODEJS_APP_NAME))
 
-    def test_6_check_blob_exists_in_blob_store(self):
+    def test_5_check_blob_exists_in_blob_store(self):
         step("Check whether blob exist in blob-store")
         blob = Blob.get(self.catalog_image.id)
         assert blob is not None
 
-    def test_7_create_image_factory(self, class_context):
+    def test_6_create_image_factory(self, class_context):
         step("Create image in image-factory")
         image = Image.create(class_context, self.catalog_image.id)
         assert image is not None
 
-    def test_8_check_blob_was_deleted(self):
+    def test_7_check_blob_was_deleted(self):
         step("Check whether blob was successfully removed from blob-store")
         assert_raises_http_exception(ImageFactoryHttpStatus.CODE_NOT_FOUND,
                                      ImageFactoryHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.get, self.catalog_image.id)
 
-    def test_9_check_image_exists(self):
+    def test_8_check_image_exists(self):
         step("Check whether image exist in image-repository")
         assert_in_with_retry(self.catalog_image.id, ImageRepository.get_repositories)
 
-    def test_10_check_application_state(self):
+    def test_9_check_application_state(self):
         step("Check state of application in catalog")
         self.catalog_image.ensure_ready()
         assert self.catalog_image.type == self.NODEJS_APP_TYPE

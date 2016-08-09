@@ -50,8 +50,8 @@ class Blob(object):
         return new_blob
 
     @classmethod
-    def get(cls, blob_id: str, api_version=config.ng_component_api_version):
-        blob_store.get_blob(blob_id, api_version)
+    def get(cls, blob_id: str):
+        blob_store.get_blob(blob_id)
         return cls(blob_id, None)
 
     def delete(self):

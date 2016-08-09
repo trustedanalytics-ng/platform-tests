@@ -56,8 +56,8 @@ class CatalogImage(object):
         return new_image
 
     @classmethod
-    def get(cls, image_id: str, api_endpoint="api/v1"):
-        response = catalog.get_image(image_id, api_endpoint)
+    def get(cls, image_id: str):
+        response = catalog.get_image(image_id)
         return cls._from_response(response)
 
     @classmethod

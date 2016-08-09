@@ -14,25 +14,25 @@
 # limitations under the License.
 #
 
-import config
-from modules.constants import TapComponent
+from tap_ng_component_config import k8s_core_services
+from modules.constants import HttpStatus, TapComponent
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider
-from modules.constants import HttpStatus
 
 
-def _get_client(api_version=config.ng_component_api_version):
+def _get_client():
+    api_version = k8s_core_services[TapComponent.blob_store]["api_version"]
     configuration = K8sServiceConfigurationProvider.get(TapComponent.blob_store.value,
                                                         api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
 
 
-def get_blob(blob_id, api_version=config.ng_component_api_version):
+def get_blob(blob_id):
     """ GET /blobs/{blob_id} """
-    response = _get_client(api_version).request(HttpMethod.GET,
-                                                path="blobs/{}".format(blob_id),
-                                                raw_response_with_exception=True,
-                                                msg="BLOB-STORE: get blob")
+    response = _get_client().request(HttpMethod.GET,
+                                     path="blobs/{}".format(blob_id),
+                                     raw_response_with_exception=True,
+                                     msg="BLOB-STORE: get blob")
     assert response.status_code == HttpStatus.CODE_OK
     return response
 
