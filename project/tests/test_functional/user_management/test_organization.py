@@ -100,7 +100,7 @@ class TestOrganization:
     def test_cannot_create_two_orgs_with_the_same_name(self, test_org, context):
         step("Attempt to create organization with the same name")
         error_message = UserManagementHttpStatus.MSG_ORGANIZATION_ALREADY_TAKEN.format(test_org.name)
-        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_CONFLICT, error_message,
+        assertions.assert_raises_http_exception(UserManagementHttpStatus.CODE_BAD_REQUEST, error_message,
                                                 Organization.api_create, context=context, name=test_org.name,
                                                 delete_on_fail=False)
 
