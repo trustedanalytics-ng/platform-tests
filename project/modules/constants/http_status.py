@@ -184,6 +184,7 @@ class PlatformTestsHttpStatus(HttpStatus):
 class ImageFactoryHttpStatus(HttpStatus):
     MSG_BLOB_ID_ALREADY_IN_USE = "The specified Blob ID is already in use"
     MSG_BLOB_DOES_NOT_EXIST = "The specified blob does not exist"
+    MSG_IMAGE_DOES_NOT_EXIST = "100: Key not found"
 
 
 class BlobStoreHttpStatus(HttpStatus):

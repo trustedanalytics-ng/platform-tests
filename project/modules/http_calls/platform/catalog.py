@@ -60,3 +60,16 @@ def delete_image(image_id):
                                      path="images/{}".format(image_id),
                                      msg="CATALOG: delete image")
     return response
+
+def update_image(image_id, field, value):
+    """ PATCH /images/{image_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="images/{}".format(image_id),
+                                     body=body,
+                                     msg="CATALOG: updating image")
+    return response

@@ -17,13 +17,17 @@
 import functools
 import uuid
 
-import modules.http_calls.platform.catalog as catalog
 from retry import retry
+
+import modules.http_calls.platform.catalog as catalog
 
 
 @functools.total_ordering
 class CatalogImage(object):
     STATE_READY = "READY"
+    STATE_PENDING = "PENDING"
+    TYPE_JAVA = "JAVA"
+    TYPE_GO = "GO"
 
     def __init__(self, image_id: str, image_type: str, state: str):
         self.id = image_id
@@ -84,3 +88,7 @@ class CatalogImage(object):
     @classmethod
     def _from_response(cls, response):
         return cls(image_id=response["id"], image_type=response["type"], state=response["state"])
+
+    def update(self, field, value):
+        setattr(self, field, value)
+        catalog.update_image(self.id, field, value)
