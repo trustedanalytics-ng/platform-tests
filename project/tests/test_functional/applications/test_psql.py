@@ -16,7 +16,6 @@
 
 import pytest
 
-import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
 from modules.markers import priority
@@ -56,11 +55,8 @@ class TestPsql(object):
     @pytest.fixture(scope="class", autouse=True)
     def setup_psql_api_app(cls, test_space, login_to_cf, postgres_instance, class_context):
         step("Get sql api app sources")
-        sql_api_sources = AppSources.from_github(
-            repo_name=TapGitHub.sql_api_example,
-            repo_owner=TapGitHub.intel_data,
-            gh_auth=config.github_credentials()
-        )
+        sql_api_sources = AppSources.get_repository(repo_name=TapGitHub.sql_api_example,
+                                                    repo_owner=TapGitHub.intel_data)
         step("Push psql api app to cf")
         cls.psql_app = Application.push(
             class_context,

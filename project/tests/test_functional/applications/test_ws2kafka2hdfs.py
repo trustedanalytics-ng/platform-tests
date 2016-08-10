@@ -30,7 +30,6 @@ from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
 from modules.webhdfs_tools import WebhdfsTools
 from modules.websocket_client import WebsocketClient
-from tests.fixtures import fixtures
 
 logged_components = (TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_hdfs, TAP.service_catalog)]
@@ -38,6 +37,7 @@ pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_hdfs, TAP.service_ca
 
 @incremental
 @priority.medium
+@pytest.mark.sample_apps_test
 class TestWs2kafka2hdfs:
 
     REPO_OWNER = TapGitHub.intel_data
@@ -87,9 +87,7 @@ class TestWs2kafka2hdfs:
     @pytest.mark.usefixtures("login_to_cf")
     def test_step_0_push_ws2kafka2hdfs(self, test_space, class_context):
         step("Clone and compile ingestion app sources")
-        github_auth = config.github_credentials()
-        ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=self.REPO_OWNER,
-                                                gh_auth=github_auth)
+        ingestion_repo = AppSources.get_repository(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=self.REPO_OWNER)
         ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
         kafka2hdfs_path = os.path.join(ingestion_repo.path, TapGitHub.kafka2hdfs)
         ingestion_repo.compile_gradle(working_directory=kafka2hdfs_path)

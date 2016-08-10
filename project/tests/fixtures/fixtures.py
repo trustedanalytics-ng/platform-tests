@@ -224,9 +224,7 @@ def psql_instance(session_context, test_org, test_space):
 
 @pytest.fixture(scope="session")
 def psql_app(psql_instance, session_context):
-    sql_api_sources = AppSources.from_github(repo_name=TapGitHub.sql_api_example,
-                                             repo_owner=TapGitHub.intel_data,
-                                             gh_auth=config.github_credentials())
+    sql_api_sources = AppSources.get_repository(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data)
     TestData.psql_app = Application.push(
         context=session_context,
         space_guid=TestData.test_space.guid,

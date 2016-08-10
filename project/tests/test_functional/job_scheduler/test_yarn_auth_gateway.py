@@ -99,8 +99,8 @@ class TestYarnAuthGateway:
 
     def test_1_push_app_to_cf(self, class_context, test_space, psql_instance, login_to_cf):
         step("Push application to cf")
-        sql_api_sources = AppSources.from_github(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data,
-                                                 gh_auth=config.github_credentials())
+        sql_api_sources = AppSources.get_repository(repo_name=TapGitHub.sql_api_example,
+                                                    repo_owner=TapGitHub.intel_data)
         self.__class__.psql_app = Application.push(context=class_context, source_directory=sql_api_sources.path,
                                                    space_guid=test_space.guid,
                                                    bound_services=(psql_instance.name, self.kerberos_instance.name))

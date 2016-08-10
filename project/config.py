@@ -80,6 +80,7 @@ seahorse = get_bool("PT_SEAHORSE", False)
 core_org_name = os.environ.get("PT_CORE_ORG_NAME", "trustedanalytics")
 core_space_name = os.environ.get("PT_CORE_SPACE_NAME", "platform")
 ssl_validation = get_bool("PT_SSL_VALIDATION", False)
+tap_repos_dir = os.environ.get("PT_TAP_REPOS_DIRECTORY")
 
 # TAP version provided by user
 tap_version = os.environ.get("PT_TAP_VERSION")

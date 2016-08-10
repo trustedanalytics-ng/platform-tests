@@ -151,3 +151,4 @@ cd /platform-test/project
 
 **Useful options:**
 * If you export `PT_LOCAL_APPSTACK_PATH`, this will be the appstack.yml used, and tests won't download it from GitHub. This will allow for running smoke tests without access to GitHub.
+* If you export `PT_TAP_REPOS_DIRECTORY`, all repositories will be retrieved from there, and tests won't download them from github.

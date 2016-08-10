@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 @pytest.mark.bugs("DPNG-7436 Internal Server Error (500) when trying to create a service at marketplace without a name or description")
 @priority.low
+@pytest.mark.sample_apps_test
 def test_cannot_create_service_with_no_name(context, test_org, test_space, sample_python_app):
     step("Attempt to create service with empty name")
     assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
@@ -40,6 +41,7 @@ def test_cannot_create_service_with_no_name(context, test_org, test_space, sampl
 @pytest.mark.bugs("DPNG-7436 Internal Server Error (500) "
                   "when trying to create a service at marketplace without a name or description")
 @priority.low
+@pytest.mark.sample_apps_test
 def test_cannot_create_service_with_no_description(context, test_org, test_space, sample_python_app):
     step("Attempt to create service with empty description")
     assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
@@ -50,6 +52,7 @@ def test_cannot_create_service_with_no_description(context, test_org, test_space
 
 
 @priority.high
+@pytest.mark.sample_apps_test
 @pytest.mark.parametrize("role", ["developer", "auditor", "manager", "admin"])
 def test_create_and_delete_service(context, test_org, test_space, sample_python_app, role, space_users_clients):
     step("Register in marketplace")
@@ -65,6 +68,7 @@ def test_create_and_delete_service(context, test_org, test_space, sample_python_
 
 
 @priority.medium
+@pytest.mark.sample_apps_test
 def test_create_service_with_icon(context, test_org, test_space, sample_python_app, example_image):
     step("Register in marketplace")
     service = ServiceType.register_app_in_marketplace(context, app_name=sample_python_app.name,
@@ -78,6 +82,7 @@ def test_create_service_with_icon(context, test_org, test_space, sample_python_a
 
 
 @priority.medium
+@pytest.mark.sample_apps_test
 def test_create_service_with_display_name(context, test_org, test_space, sample_python_app):
     display_name = generate_test_object_name()
     step("Register in marketplace")
@@ -92,6 +97,7 @@ def test_create_service_with_display_name(context, test_org, test_space, sample_
 
 
 @priority.medium
+@pytest.mark.sample_apps_test
 def test_create_service_with_tag(context, test_org, test_space, sample_python_app):
     tags = [generate_test_object_name(short=True)]
     step("Register in marketplace")

@@ -24,7 +24,7 @@ from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, User, ServiceType
 from modules.tap_object_model.flows import summaries
-from tests.fixtures import assertions, fixtures
+from tests.fixtures import assertions
 
 
 logged_components = (TAP.service_catalog, TAP.user_management)
@@ -151,6 +151,7 @@ class TestTapApp:
         assert instance not in cf_service_instances_list and test_app not in cf_apps_list
 
     @priority.medium
+    @pytest.mark.sample_apps_test
     def test_app_register_in_marketplace(self, context, test_org, test_space, sample_java_app):
         register_service = ServiceType.register_app_in_marketplace(context, sample_java_app.name, sample_java_app.guid,
                                                                    test_org.guid, test_space.guid)
@@ -158,6 +159,7 @@ class TestTapApp:
         assert register_service in services
 
     @priority.medium
+    @pytest.mark.sample_apps_test
     def test_delete_app(self, test_space, sample_java_app):
         sample_java_app.api_delete()
         cf_apps_list, _ = summaries.cf_api_get_space_summary(test_space.guid)

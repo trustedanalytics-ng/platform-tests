@@ -30,6 +30,7 @@ pytestmark = [pytest.mark.components(TAP.dataset_reader)]
 
 @incremental
 @priority.medium
+@pytest.mark.sample_apps_test
 class TestDatasetReader:
 
     HDFS_INSTANCE_NAME = "hdfs-instance"
@@ -84,7 +85,8 @@ class TestDatasetReader:
     def test_0_push_dataset_reader_app(self, test_space, dataset_target_uri, hdfs_instance, kerberos_instance,
                                        login_to_cf, class_context):
         step("Get app sources")
-        repo = AppSources.from_github(repo_name=TapGitHub.dataset_reader_sample, repo_owner=TapGitHub.trustedanalytics)
+        repo = AppSources.get_repository(repo_name=TapGitHub.dataset_reader_sample,
+                                         repo_owner=TapGitHub.trustedanalytics)
         repo.compile_mvn()
 
         step("Push dataset-reader app to cf")

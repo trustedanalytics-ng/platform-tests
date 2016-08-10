@@ -32,8 +32,7 @@ from modules.tap_logger import log_fixture
 def centos_key_path(request):
     path = config.ng_jump_key_path
     if path is None:
-        ilab_deploy = AppSources.from_github(repo_name=TapGitHub.ilab_deploy, repo_owner=TapGitHub.intel_data,
-                                             gh_auth=config.github_credentials())
+        ilab_deploy = AppSources.get_repository(repo_name=TapGitHub.ilab_deploy, repo_owner=TapGitHub.intel_data)
         path = os.path.join(ilab_deploy.path, RelativeRepositoryPaths.ilab_centos_key)
         request.addfinalizer(lambda: shutil.rmtree(ilab_deploy.path))
     subprocess.check_call(["chmod", "600", path])

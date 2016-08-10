@@ -38,6 +38,7 @@ pytestmark = [pytest.mark.components(TAP.hive_broker)]
 @incremental
 @priority.medium
 @pytest.mark.skipif(not config.kerberos, reason="No point to run without kerberos")
+@pytest.mark.sample_apps_test
 class TestHive:
     SSO_INSTANCE_NAME = "sso"
     TABLE_NAME = "table1"
@@ -110,8 +111,7 @@ class TestHive:
     def test_0_push_hdfs_hive_demo(self, test_space, dataset_target_uri, hdfs_instance, kerberos_instance,
                                    hive_instance, cups_sso_instance, login_to_cf, class_context):
         step("Get app sources")
-        repo = AppSources.from_github(repo_name=TapGitHub.hdfs_hive_demo, repo_owner=TapGitHub.intel_data,
-                                      gh_auth=config.github_credentials())
+        repo = AppSources.get_repository(repo_name=TapGitHub.hdfs_hive_demo, repo_owner=TapGitHub.intel_data)
         repo.compile_mvn()
         step("Push hdfs-hive-demo app to cf")
         self.__class__.hdfs_reader_app = Application.push(class_context, space_guid=test_space.guid,

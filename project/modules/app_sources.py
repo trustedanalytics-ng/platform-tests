@@ -22,9 +22,14 @@ import subprocess
 from git import Repo
 import requests
 
+import config
 from .tap_logger import log_command, get_logger, log_http_request, log_http_response
 
 logger = get_logger(__name__)
+
+
+class RepositoryNotFound(Exception):
+    pass
 
 
 class AppSources(object):
@@ -42,6 +47,8 @@ class AppSources(object):
 
     @classmethod
     def from_local_path(cls, sources_directory):
+        if not os.path.exists(sources_directory):
+            raise RepositoryNotFound("Repository not found {}".format(sources_directory))
         return cls(sources_directory=sources_directory)
 
     @classmethod
@@ -50,6 +57,15 @@ class AppSources(object):
             target_directory = os.path.join("/tmp", repo_owner, repo_name)
         cls._clone_or_pull(repo_name, repo_owner, target_directory, gh_auth)
         return cls(sources_directory=target_directory)
+
+    @classmethod
+    def get_repository(cls, repo_name, repo_owner, target_directory=None):
+        if config.tap_repos_dir is not None:
+            target_directory = os.path.join(config.tap_repos_dir, repo_name)
+            sources = cls.from_local_path(target_directory)
+        else:
+            sources = cls.from_github(repo_name, repo_owner, target_directory, config.github_credentials())
+        return sources
 
     @classmethod
     def _clone_or_pull(cls, repo_name, repo_owner, target_directory, gh_auth=None) -> str:

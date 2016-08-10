@@ -20,7 +20,6 @@ import re
 import pytest
 import requests
 
-import config
 from modules.app_sources import AppSources
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus, ServiceLabels, ServicePlan, TapGitHub, \
@@ -40,10 +39,9 @@ pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog, TA
 @pytest.fixture(scope="class")
 def space_shuttle_sources():
     step("Get space shuttle example app sources")
-    example_app_sources = AppSources.from_github(
+    example_app_sources = AppSources.get_repository(
         repo_name=TapGitHub.space_shuttle_demo,
-        repo_owner=TapGitHub.intel_data,
-        gh_auth=config.github_credentials()
+        repo_owner=TapGitHub.intel_data
     )
     return example_app_sources.path
 
@@ -82,6 +80,7 @@ def core_atk_app(core_space):
 @long
 @priority.high
 @incremental
+@pytest.mark.sample_apps_test
 class TestScoringEngineInstance:
     expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
     ATK_MODEL_NAME = "model_name"  # name is hardcoded in atk_model_generator.py - task for changing the name DPNG-8390
@@ -160,6 +159,7 @@ class TestScoringEngineInstance:
 
 
 @priority.low
+@pytest.mark.sample_apps_test
 class TestScoringEngineUnauthorizedUsers:
     unauthorized_roles = ("manager", "auditor")
 

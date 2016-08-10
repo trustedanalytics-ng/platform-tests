@@ -128,12 +128,14 @@ class TestBindingErrors:
 
         return instance
 
+    @pytest.mark.sample_apps_test
     def test_cannot_bind_not_existing_service_instance(self, sample_python_app):
         step("Try to create service binding to a non-existing service instance")
         expected_error_message = ServiceCatalogHttpStatus.MSG_SERVICE_INST_NOT_FOUND.format(self.NOT_EXISTING_GUID)
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
                                                 ServiceBinding.api_create, sample_python_app.guid, self.NOT_EXISTING_GUID)
 
+    @pytest.mark.sample_apps_test
     def test_cannot_bind_instance_with_incorrect_guid(self, sample_python_app):
         step("Try to create service binding with an incorrect service instance guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,

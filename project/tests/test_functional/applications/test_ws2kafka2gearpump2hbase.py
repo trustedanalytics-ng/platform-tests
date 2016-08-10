@@ -38,6 +38,7 @@ pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_gearpump_hbase, TAP.
 
 @incremental
 @priority.medium
+@pytest.mark.sample_apps_test
 class TestWs2kafka2gearpump2hbase:
 
     REPO_OWNER = TapGitHub.intel_data
@@ -87,13 +88,11 @@ class TestWs2kafka2gearpump2hbase:
     @pytest.fixture(scope="class", autouse=True)
     def push_apps(cls, test_org, test_space, login_to_cf, setup_required_instances, class_context):
         step("Get ws2kafka app sources")
-        ingestion_repo = AppSources.from_github(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER,
-                                                gh_auth=config.github_credentials())
+        ingestion_repo = AppSources.get_repository(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=cls.REPO_OWNER)
         ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
 
         step("Get hbase reader app sources")
-        hbase_reader_repo = AppSources.from_github(repo_name=TapGitHub.hbase_api_example, repo_owner=cls.REPO_OWNER,
-                                                   gh_auth=config.github_credentials())
+        hbase_reader_repo = AppSources.get_repository(repo_name=TapGitHub.hbase_api_example, repo_owner=cls.REPO_OWNER)
         hbase_reader_repo.compile_gradle()
 
         step("Push apps")
