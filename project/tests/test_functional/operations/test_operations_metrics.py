@@ -17,7 +17,6 @@
 import pytest
 
 from modules.constants import HttpStatus, TapComponent as TAP
-from modules.markers import components
 from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceType, \
     Space, User
 from modules.tap_logger import step
