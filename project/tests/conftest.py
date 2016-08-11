@@ -67,6 +67,15 @@ def pytest_sessionstart(session):
             raise
 
 
+def pytest_collection_modifyitems(items):
+    # support for running tests of component(s)
+    for item in items:
+        components = item.get_marker("components")
+        if components is not None:
+            for component in components.args:
+               item.add_marker(component.replace("-", "_"))
+
+
 def pytest_collection_finish(session):
     """Logs test statistics for all implemented tests, split by main directory."""
     if session.config.known_args_namespace.collectonly:

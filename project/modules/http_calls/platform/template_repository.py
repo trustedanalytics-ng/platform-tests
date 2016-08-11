@@ -22,7 +22,7 @@ from modules.http_client.configuration_provider.k8s_service import K8sServiceCon
 
 def _get_client():
     api_version = k8s_core_services[TapComponent.template_repository]["api_version"]
-    configuration = K8sServiceConfigurationProvider.get(TapComponent.template_repository.value,
+    configuration = K8sServiceConfigurationProvider.get(TapComponent.template_repository,
                                                         api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
 

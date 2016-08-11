@@ -28,10 +28,10 @@ from modules.constants import HttpStatus
 @priority.high
 @pytest.mark.usefixtures("open_tunnel")
 class TestSmoke:
-    k8s_core_service_params = sorted(k8s_core_services.items(), key=lambda x: x[0].name)
-    k8s_core_service_ids = sorted([c.name for c in k8s_core_services.keys()])
-    third_party_service_params = sorted(third_party_services.items(), key=lambda x: x[0].name)
-    third_party_service_ids = sorted([c.name for c in third_party_services.keys()])
+    k8s_core_service_params = sorted(k8s_core_services.items(), key=lambda x: x[0])
+    k8s_core_service_ids = sorted([c for c in k8s_core_services.keys()])
+    third_party_service_params = sorted(third_party_services.items(), key=lambda x: x[0])
+    third_party_service_ids = sorted([c for c in third_party_services.keys()])
 
     def get_client(self, service_name, endpoint=None):
         configuration = K8sServiceConfigurationProvider.get(service_name, api_endpoint=endpoint)
@@ -45,8 +45,8 @@ class TestSmoke:
     def test_k8s_component_health_check(self, service, service_params):
         if service_params["health_endpoint"] is None:
             pytest.skip("Service {} does not have health endpoint configured".format(service))
-        step("Check k8s component healtz endpoint for {}".format(service.value))
-        health_client = self.get_client(service.value)
+        step("Check k8s component healtz endpoint for {}".format(service))
+        health_client = self.get_client(service)
         response = health_client.request(HttpMethod.GET, path=service_params["health_endpoint"],
                                          raw_response_with_exception=True, msg="get healthz")
         assert response.status_code == HttpStatus.CODE_OK
@@ -55,8 +55,8 @@ class TestSmoke:
     def test_k8s_component_api_check_availability(self, service, service_params):
         if service_params["get_endpoint"] is None or service_params["api_version"] is None:
             pytest.skip("Service {} does not have get endpoint or api version configured".format(service))
-        step("Check k8s component api get endpoint for {}".format(service.value))
-        api_client = self.get_client(service.value, "api/{}".format(service_params["api_version"]))
+        step("Check k8s component api get endpoint for {}".format(service))
+        api_client = self.get_client(service, "api/{}".format(service_params["api_version"]))
         response = api_client.request(HttpMethod.GET, path=service_params["get_endpoint"],
                                       raw_response_with_exception=True, msg="get")
         assert response.status_code == HttpStatus.CODE_OK
@@ -65,8 +65,8 @@ class TestSmoke:
     def test_k8s_component_api_check_version_alias(self, service, service_params):
         if service_params["get_endpoint"] is None or service_params["api_version_alias"] is None:
             pytest.skip("Service {} does not have get endpoint or api version alias configured".format(service))
-        step("Check k8s component api get endpoint alias for {}".format(service.value))
-        api_client = self.get_client(service.value, "api/{}".format(service_params["api_version_alias"]))
+        step("Check k8s component api get endpoint alias for {}".format(service))
+        api_client = self.get_client(service, "api/{}".format(service_params["api_version_alias"]))
         response = api_client.request(HttpMethod.GET, path=service_params["get_endpoint"],
                                       raw_response_with_exception=True, msg="get using version alias")
         assert response.status_code == HttpStatus.CODE_OK
@@ -75,7 +75,7 @@ class TestSmoke:
     def test_3rd_party_component_health_check(self, service, service_params):
         if service_params["health_endpoint"] is None:
             pytest.skip("Service {} does not have health endpoint configured".format(service))
-        step("Check 3rd party component healtz endpoint for {}".format(service.value))
+        step("Check 3rd party component healtz endpoint for {}".format(service))
         health_client = self.get_proxied_client(service_params["url"])
         response = health_client.request(HttpMethod.GET, path=service_params["health_endpoint"],
                                          raw_response_with_exception=True, msg="get health")
@@ -85,7 +85,7 @@ class TestSmoke:
     def test_3rd_party_component_check_availability(self, service, service_params):
         if service_params["get_endpoint"] is None or service_params["api_version"] is None:
             pytest.skip("Service {} does not have get endpoint or api version configured".format(service))
-        step("Check 3rd party component get api endpoint for {}".format(service.value))
+        step("Check 3rd party component get api endpoint for {}".format(service))
         health_client = self.get_proxied_client("{}/{}".format(service_params["url"],
                                                                service_params["api_version"]))
         response = health_client.request(HttpMethod.GET, path=service_params["get_endpoint"],
