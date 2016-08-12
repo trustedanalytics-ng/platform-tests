@@ -33,11 +33,6 @@ logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_do
 pytestmark = [priority.high]
 
 
-def test_test_admin_can_login_to_platform():
-    """Admin Login"""
-    HttpClientFactory.get(ConsoleConfigurationProvider.get())
-
-
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_create_and_delete_organization(context):
     """Create and Delete Organization"""
