@@ -13,17 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import pytest
 
-from modules.file_utils import generate_csv_file
+import tests.fixtures.assertions as assertions
 from modules.constants import TapComponent as TAP, Urls
-from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
+from modules.file_utils import generate_csv_file
+from modules.http_client import HttpMethod
+from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, KubernetesCluster, Organization, ServiceInstance, Space, Transfer, User
 from modules.tap_object_model.flows import onboarding
-import tests.fixtures.assertions as assertions
+from tests.fixtures.fixtures import sample_python_app, sample_java_app
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
@@ -143,7 +146,8 @@ def test_add_and_delete_transfer_from_file(core_org, context):
     step("Generate a test csv file")
     file_path = generate_csv_file(column_count=10, row_count=100)
     step("Create a transfer by file upload")
-    transfer = Transfer.api_create_by_file_upload(context, category="health", org_guid=core_org.guid, file_path=file_path)
+    transfer = Transfer.api_create_by_file_upload(context, category="health", org_guid=core_org.guid,
+                                                  file_path=file_path)
     transfer_flow(transfer, core_org)
 
 
@@ -187,3 +191,15 @@ def test_create_and_delete_kubernetes_service_instances(core_org, core_space, co
     step("Check that the instance was deleted")
     instances = ServiceInstance.api_get_list(space_guid=core_space.guid, service_type_guid=service_type.guid)
     assert instance not in instances
+
+
+@pytest.mark.parametrize("sample_app", [sample_python_app, sample_java_app])
+def test_push_sample_app_and_check_response(context, test_org, test_space, sample_app):
+    """Push sample application and test http response"""
+    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app(class_context=context,
+                                                                                   test_org=test_org,
+                                                                                   test_space=test_space).urls[0]))
+    step("Check response for HTTP GET to the endpoint")
+    response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
+    assert response is not None
+    assert response.status_code == 200

@@ -82,7 +82,7 @@ def login_to_cf_core(core_org, core_space):
 
 
 @pytest.fixture(scope="class")
-def sample_python_app(request, class_context, test_org, test_space):
+def sample_python_app(class_context, test_org, test_space):
     log_fixture("sample_python_app: Push app to cf")
     cf.cf_login(test_org.name, test_space.name)
     app = Application.push(context=class_context, space_guid=test_space.guid,
@@ -93,7 +93,7 @@ def sample_python_app(request, class_context, test_org, test_space):
 
 
 @pytest.fixture(scope="class")
-def sample_java_app(request, class_context, test_org, test_space):
+def sample_java_app(class_context, test_org, test_space):
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
     log_fixture("sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()

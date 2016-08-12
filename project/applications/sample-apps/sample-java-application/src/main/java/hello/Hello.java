@@ -23,4 +23,7 @@ public class Hello {
         this.message = message;
     }
 
+     public String getMessage() {
+        return message;
+    }
 }

@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
 
     @RequestMapping("/")
-    public Hello greeting() {
-        return new Hello("hello world");
+    public String greeting() {
+        return new Hello("hello world").getMessage();
     }
 
 }
