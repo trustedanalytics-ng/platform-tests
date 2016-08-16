@@ -55,3 +55,7 @@ class NoSuchUserException(Exception):
 
     def __init__(self, message, *args, **kwargs):
         super().__init__("User: {} not exist".format(message), *args, **kwargs)
+
+
+class ModelNotFoundException(Exception):
+    pass

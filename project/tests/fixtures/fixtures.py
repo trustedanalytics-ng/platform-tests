@@ -23,8 +23,8 @@ from retry import retry
 
 import config
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub, Urls
-from modules.exceptions import UnexpectedResponseError
+from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub
+from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_calls import cloud_foundry as cf
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -235,9 +235,13 @@ def psql_app(psql_instance, session_context):
 
 
 @pytest.fixture(scope="session")
-def model_hdfs_path(request, session_context, test_org, add_admin_to_test_org):
-    log_fixture("Create a transfer and get hdfs path")
-    _, data_set = data_catalog.create_dataset_from_link(session_context, org=test_org, source=Urls.model_url)
-    return data_set.target_uri
+def model_hdfs_path(core_org):
+    log_fixture("Retrieve existing model hdfs path from platform")
+    model_dataset_name = "model_name"
+    dataset_list = data_catalog.DataSet.api_get_list([core_org])
+    model_dataset = next((ds for ds in dataset_list if ds.title == model_dataset_name), None)
+    if model_dataset is None:
+        raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
+    return model_dataset.target_uri
 
 
