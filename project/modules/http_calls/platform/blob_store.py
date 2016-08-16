@@ -31,7 +31,7 @@ def get_blob(blob_id):
     """ GET /blobs/{blob_id} """
     response = _get_client().request(HttpMethod.GET,
                                      path="blobs/{}".format(blob_id),
-                                     raw_response_with_exception=True,
+                                     raw_response=True, raise_exception=True,
                                      msg="BLOB-STORE: get blob")
     assert response.status_code == HttpStatus.CODE_OK
     return response
@@ -46,7 +46,7 @@ def create_blob(blob_id, file_path):
                                      path="blobs",
                                      params=params,
                                      files=file,
-                                     raw_response_with_exception=True,
+                                     raw_response=True, raise_exception=True,
                                      msg="BLOB-STORE: create blob")
     assert response.status_code == HttpStatus.CODE_CREATED
     return response

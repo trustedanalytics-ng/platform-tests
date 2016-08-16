@@ -47,8 +47,11 @@ class TestSmoke:
             pytest.skip("Service {} does not have health endpoint configured".format(service))
         step("Check k8s component healtz endpoint for {}".format(service))
         health_client = self.get_client(service)
-        response = health_client.request(HttpMethod.GET, path=service_params["health_endpoint"],
-                                         raw_response_with_exception=True, msg="get healthz")
+        response = health_client.request(HttpMethod.GET,
+                                         path=service_params["health_endpoint"],
+                                         raw_response=True,
+                                         raise_exception=True,
+                                         msg="get healthz")
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.parametrize("service,service_params", k8s_core_service_params, ids=k8s_core_service_ids)
@@ -57,8 +60,10 @@ class TestSmoke:
             pytest.skip("Service {} does not have get endpoint or api version configured".format(service))
         step("Check k8s component api get endpoint for {}".format(service))
         api_client = self.get_client(service, "api/{}".format(service_params["api_version"]))
-        response = api_client.request(HttpMethod.GET, path=service_params["get_endpoint"],
-                                      raw_response_with_exception=True, msg="get")
+        response = api_client.request(HttpMethod.GET,
+                                      path=service_params["get_endpoint"],
+                                      raw_response=True, raise_exception=True,
+                                      msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.parametrize("service,service_params", k8s_core_service_params, ids=k8s_core_service_ids)
@@ -67,8 +72,10 @@ class TestSmoke:
             pytest.skip("Service {} does not have get endpoint or api version alias configured".format(service))
         step("Check k8s component api get endpoint alias for {}".format(service))
         api_client = self.get_client(service, "api/{}".format(service_params["api_version_alias"]))
-        response = api_client.request(HttpMethod.GET, path=service_params["get_endpoint"],
-                                      raw_response_with_exception=True, msg="get using version alias")
+        response = api_client.request(HttpMethod.GET,
+                                      path=service_params["get_endpoint"],
+                                      raw_response=True, raise_exception=True,
+                                      msg="get using version alias")
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
@@ -77,8 +84,10 @@ class TestSmoke:
             pytest.skip("Service {} does not have health endpoint configured".format(service))
         step("Check 3rd party component healtz endpoint for {}".format(service))
         health_client = self.get_proxied_client(service_params["url"])
-        response = health_client.request(HttpMethod.GET, path=service_params["health_endpoint"],
-                                         raw_response_with_exception=True, msg="get health")
+        response = health_client.request(HttpMethod.GET,
+                                         path=service_params["health_endpoint"],
+                                         raw_response=True,
+                                         raise_exception=True, msg="get health")
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
@@ -88,6 +97,8 @@ class TestSmoke:
         step("Check 3rd party component get api endpoint for {}".format(service))
         health_client = self.get_proxied_client("{}/{}".format(service_params["url"],
                                                                service_params["api_version"]))
-        response = health_client.request(HttpMethod.GET, path=service_params["get_endpoint"],
-                                         raw_response_with_exception=True, msg="get")
+        response = health_client.request(HttpMethod.GET,
+                                         path=service_params["get_endpoint"],
+                                         raw_response=True,
+                                         raise_exception=True, msg="get")
         assert response.status_code == HttpStatus.CODE_OK

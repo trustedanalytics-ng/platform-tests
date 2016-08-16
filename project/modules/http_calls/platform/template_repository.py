@@ -65,6 +65,6 @@ def delete_template(template_id):
     """ DELETE /templates/{template_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="templates/{}".format(template_id),
-                                     raw_response_with_exception=True,
+                                     raw_response=True, raise_exception=True,
                                      msg="TEMPLATE REPOSITORY: delete template")
     assert response.status_code == HttpStatus.CODE_NO_CONTENT

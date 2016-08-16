@@ -36,7 +36,7 @@ def create_image(image_id):
     response = _get_client().request(HttpMethod.POST,
                                      path="image",
                                      body=body,
-                                     raw_response_with_exception=True,
+                                     raw_response=True, raise_exception=True,
                                      msg="IMAGE FACTORY: create image")
     assert response.status_code == HttpStatus.CODE_CREATED
     return response
@@ -46,7 +46,7 @@ def delete_image(image_id):
     """ DELETE /image/{image_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="image/{}".format(image_id),
-                                     raw_response_with_exception=True,
+                                     raw_response=True, raise_exception=True,
                                      msg="IMAGE FACTORY: delete image")
     return response
 

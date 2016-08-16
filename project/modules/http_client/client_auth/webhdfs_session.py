@@ -39,18 +39,21 @@ def counted(func):
 
 class WebhdfsSession(HttpSession):
 
-    def _request_perform(self, request: Request, raw_response: bool, timeout: int, raw_response_with_exception: bool):
+    def _request_perform(self, request: Request, raw_response: bool,
+                         timeout: int, raise_exception: bool):
         """Perform request and return response."""
         response = self._session.send(request, allow_redirects=False, timeout=timeout)
         log_http_response(response)
-        if raw_response is True:
-            return response
+
         if response.status_code == HttpStatus.CODE_TEMPORARY_REDIRECT:
             return response
-        if not response.ok:
+
+        if raise_exception and not response.ok:
             raise UnexpectedResponseError(response.status_code, response.text)
-        if raw_response_with_exception is True:
+
+        if raw_response is True:
             return response
+
         try:
             return json.loads(response.text)
         except ValueError:
