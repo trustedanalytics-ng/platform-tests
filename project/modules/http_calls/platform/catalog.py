@@ -26,7 +26,7 @@ def _get_client():
                                                         api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
 
-
+#region Images
 def get_images():
     """ GET /images """
     return _get_client().request(HttpMethod.GET,
@@ -61,6 +61,7 @@ def delete_image(image_id):
                                      msg="CATALOG: delete image")
     return response
 
+
 def update_image(image_id, field, value):
     """ PATCH /images/{image_id} """
     body = [{
@@ -73,3 +74,55 @@ def update_image(image_id, field, value):
                                      body=body,
                                      msg="CATALOG: updating image")
     return response
+#endregion
+
+
+#region Templates
+def get_templates():
+    """ GET /templates """
+    return _get_client().request(HttpMethod.GET,
+                                 path="templates",
+                                 msg="CATALOG: get templates list")
+
+
+def get_template(template_id):
+    """ GET /templates/{template_id} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="templates/{}".format(template_id),
+                                 msg="CATALOG: get template")
+
+
+def create_template(state):
+    """ POST /templates """
+    body = {
+        "templateId": "",
+        "state": state
+    }
+    response = _get_client().request(HttpMethod.POST,
+                                     path="templates",
+                                     body=body,
+                                     msg="CATALOG: create template")
+    return response
+
+
+def delete_template(template_id):
+    """ DELETE /templates/{template_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="templates/{}".format(template_id),
+                                     msg="CATALOG: delete template")
+    return response
+
+
+def update_template(template_id, field, value):
+    """ PATCH /templates/{template_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="templates/{}".format(template_id),
+                                     body=body,
+                                     msg="CATALOG: updating template")
+    return response
+#endregion
