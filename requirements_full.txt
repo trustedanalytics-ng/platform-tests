@@ -41,3 +41,4 @@ teamcity-messages==1.17
 uritemplate==0.6
 websockets==3.1
 Werkzeug==0.11.5
+jsondiff==0.2.0

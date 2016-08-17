@@ -47,3 +47,14 @@ def api_trigger_snapshots(client=None):
         path="rest/v1/snapshots/trigger",
         msg="PLATFORM: trigger snapshots"
     )
+
+
+def api_get_snapshots_diff(snapshot_0_number, snapshot_1_number, client=None):
+    """GET /rest/v1/snapshots/{snapshot_0_number}/diff/{snapshot_1_number}"""
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="rest/v1/snapshots/{}/diff/{}".format(snapshot_0_number, snapshot_1_number),
+        params={"aggregateBy": "type"},
+        msg="PLATFORM: get snapshots diff"
+    )
