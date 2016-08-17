@@ -17,11 +17,12 @@
 import pytest
 
 import config
-from modules.constants import TapComponent as TAP, ParametrizedService, ServiceLabels
+from modules.constants import TapComponent as TAP, ParametrizedService
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.markers import long, priority
 from modules.tap_logger import step
+from modules.tap_object_model import ServiceType
 from modules.tap_object_model.flows.services import create_instance, delete_instance
 from tests.fixtures.assertions import assert_no_errors
 
@@ -35,18 +36,14 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker
 
 class TestGoToDashboard:
 
-    MISSING_DASHBOARD_URL = [ServiceLabels.ATK, ServiceLabels.GATEWAY, ServiceLabels.GEARPUMP, ServiceLabels.HBASE,
-                             ServiceLabels.HDFS, ServiceLabels.HIVE, ServiceLabels.ORIENT_DB_DASHBOARD,
-                             ServiceLabels.SCORING_PIPELINES, ServiceLabels.YARN, ServiceLabels.ZOOKEEPER,
-                             ServiceLabels.H2O]
-    DASHBOARD_URL_NOT_YET_SUPPORTED = [ServiceLabels.ELASTICSEARCH17_MULTINODE, ServiceLabels.ELK_MULTINODE,
-                                       ServiceLabels.MONGO_DB_30_MULTINODE, ServiceLabels.MYSQL_MULTINODE,
-                                       ServiceLabels.PSQL94_MULTINODE, ServiceLabels.SEAHORSE]
+    @pytest.fixture(scope="class")
+    def global_offerings(self, test_marketplace):
+        return [s for s in test_marketplace if ServiceType.TEST_SERVICE_PREFIX not in s.label]
 
     @pytest.fixture(scope="class")
-    def non_parametrized_services(self, test_marketplace):
+    def non_parametrized_services(self, global_offerings):
         non_parametrized_services = []
-        for service_type in test_marketplace:
+        for service_type in global_offerings:
             for plan in service_type.service_plans:
                 if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
                     non_parametrized_services.append({"label": service_type.label, "plan": plan})
@@ -54,57 +51,29 @@ class TestGoToDashboard:
 
     @staticmethod
     def _go_to_dashboard(instance):
-        step("Go to dashboard")
-        assert instance.dashboard_url, "Missing dashboard url for {}".format(instance.service_label)
-        client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
-        url, path = instance.dashboard_url.split(config.tap_domain + "/", 1)
-        try:
-            client.url = url + config.tap_domain
-            response = client.request(method=HttpMethod.GET, path=path, msg="Go to dashboard", raw_response=True)
-            assert response.status_code // 100 == 2, "{} dashboard can't be reached".format(instance.service_label)
-        finally:
-            client.url = config.console_url
-
-    @staticmethod
-    def _assert_dashboard_url_is_none(instance):
-        step("Assert that dashboard url is 'None'")
-        assert instance.dashboard_url is None or instance.dashboard_url == '', "Dashboard url is not 'None'"
-
-    @staticmethod
-    def _test_service(context, org_guid, space_guid, tested_services, assertion_method):
-        errors = []
-        for service in tested_services:
+        step("Check if instance has a dashboard url")
+        if instance.dashboard_url:
+            step("Go to dashboard")
+            client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
+            url, path = instance.dashboard_url.split(config.tap_domain + "/", 1)
             try:
-                instance = create_instance(context=context, org_guid=org_guid, space_guid=space_guid,
+                client.url = url + config.tap_domain
+                response = client.request(method=HttpMethod.GET, path=path, msg="Go to dashboard", raw_response=True)
+                assert response.status_code // 100 == 2, "{} dashboard can't be reached".format(instance.service_label)
+            finally:
+                client.url = config.console_url
+
+    @long
+    @priority.low
+    def test_service_instance_dashboard(self, context, test_org, test_space, non_parametrized_services,
+                                        add_admin_to_test_org, add_admin_to_test_space):
+        errors = []
+        for service in non_parametrized_services:
+            try:
+                instance = create_instance(context=context, org_guid=test_org.guid, space_guid=test_space.guid,
                                            service_label=service["label"], plan_guid=service["plan"]["guid"])
-                assertion_method(instance)
-                delete_instance(instance, space_guid)
+                self._go_to_dashboard(instance)
+                delete_instance(instance, test_space.guid)
             except Exception as e:
                 errors.append("Service {} plan {}\n{}".format(service["label"], service["plan"]["name"], str(e)))
         assert_no_errors(errors)
-
-    @long
-    @priority.low
-    def test_go_to_service_instance_dashboard(self, context, test_org, test_space, non_parametrized_services,
-                                              add_admin_to_test_org, add_admin_to_test_space):
-        excluded_services = self.DASHBOARD_URL_NOT_YET_SUPPORTED + self.MISSING_DASHBOARD_URL
-        tested_services = [s for s in non_parametrized_services if s["label"] not in excluded_services]
-        self._test_service(context, test_org.guid, test_space.guid, tested_services,
-                           assertion_method=self._go_to_dashboard)
-
-    @long
-    @priority.low
-    def test_instances_without_dashboard_url(self, context, test_org, test_space, non_parametrized_services,
-                                             add_admin_to_test_org, add_admin_to_test_space):
-        tested_services = [s for s in non_parametrized_services if s["label"] in self.MISSING_DASHBOARD_URL]
-        self._test_service(context, test_org.guid, test_space.guid, tested_services,
-                           assertion_method=self._assert_dashboard_url_is_none)
-
-    @long
-    @priority.low
-    @pytest.mark.bugs("DPNG-9173 Not valid service instances dashboard urls")
-    def test_instances_with_incorrect_dashboard_url(self, context, test_org, test_space, non_parametrized_services,
-                                                    add_admin_to_test_org, add_admin_to_test_space):
-        tested_services = [s for s in non_parametrized_services if s["label"] in self.DASHBOARD_URL_NOT_YET_SUPPORTED]
-        self._test_service(context, test_org.guid, test_space.guid, tested_services,
-                           assertion_method=self._go_to_dashboard)

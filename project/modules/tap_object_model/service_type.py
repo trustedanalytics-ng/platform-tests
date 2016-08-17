@@ -26,6 +26,7 @@ from ..test_names import generate_test_object_name
 class ServiceType(object):
 
     COMPARABLE_ATTRIBUTES = ["label", "guid", "description", "space_guid"]
+    TEST_SERVICE_PREFIX = "test_service"
 
     def __init__(self, label, guid, description, space_guid, service_plans, tags=None, display_name=None, image=None):
         self.label = label
@@ -79,8 +80,10 @@ class ServiceType(object):
     @classmethod
     def register_app_in_marketplace(cls, context, app_name, app_guid, org_guid, space_guid, service_name=None,
                                     service_description=None, image=None, display_name=None, tags=None, client=None):
-        service_name = generate_test_object_name(short=True) if service_name is None else service_name
-        service_description = generate_test_object_name(short=True) if service_description is None else service_description
+        service_name = generate_test_object_name(short=True, prefix=cls.TEST_SERVICE_PREFIX) \
+            if service_name is None else service_name
+        service_description = generate_test_object_name(short=True) \
+            if service_description is None else service_description
         response = service_catalog.api_create_service(service_name, service_description, org_guid, app_name, app_guid,
                                                       image, display_name, tags, client)
         service = cls._from_details(space_guid, response)
