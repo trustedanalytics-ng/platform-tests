@@ -61,12 +61,12 @@ class TestMySQLClusteredService:
     plan_name = ServicePlan.CLUSTERED
 
     @pytest.mark.bugs("DPNG-9701 500 Internal Server Error while successful creating organization")
-    def test_0_create_mysql_clustered_service(self, test_org, test_space):
+    def test_0_create_mysql_clustered_service(self, class_context, test_org, test_space):
         marketplace = ServiceType.api_get_list_from_marketplace(space_guid=test_space.guid)
         self.__class__.k8s_service = next((s for s in marketplace if s.label == self.service_label), None)
         assert self.k8s_service is not None, "{} not available".format(self.service_label)
-        self.__class__.instance = ServiceInstance.api_create_with_plan_name(test_org.guid, test_space.guid,
-                                                                            self.service_label,
+        self.__class__.instance = ServiceInstance.api_create_with_plan_name(class_context, test_org.guid,
+                                                                            test_space.guid, self.service_label,
                                                                             service_plan_name=ServicePlan.CLUSTERED)
         self.instance.ensure_created()
 
