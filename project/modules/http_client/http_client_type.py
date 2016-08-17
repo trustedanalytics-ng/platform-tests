@@ -28,3 +28,4 @@ class HttpClientType(Enum):
     BROKER = "Broker"
     WEBHDFS = "Webhdfs"
     CLOUDERA = "Cloudera"
+    K8S_CS = "K8SConsoleService"

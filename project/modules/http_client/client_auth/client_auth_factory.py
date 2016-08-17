@@ -22,6 +22,7 @@ from .client_auth_base import ClientAuthBase
 from .client_auth_http_basic import ClientAuthHttpBasic
 from .client_auth_login_page import ClientAuthLoginPage
 from .client_auth_token import ClientAuthToken
+from .k8s_client_auth_token import K8sClientAuthToken
 from .client_auth_type import ClientAuthType
 from .client_auth_no_auth import ClientAuthNoAuth
 from .webhdfs_session import WebhdfsSession
@@ -45,6 +46,9 @@ class ClientAuthFactory(object):
 
         elif auth_type == ClientAuthType.HTTP_BASIC:
             return ClientAuthHttpBasic(ClientAuthFactory.EMPTY_URL, session)
+
+        if auth_type == ClientAuthType.TOKEN_K8S_CS:
+            return K8sClientAuthToken(config.ng_k8s_cs_oauth_token_url, session)
 
         elif auth_type == ClientAuthType.LOGIN_PAGE:
             return ClientAuthLoginPage(config.console_login_url, session)

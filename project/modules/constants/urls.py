@@ -21,3 +21,9 @@ class Urls(object):
     complexdag_app_url = "https://repo.gotapaas.eu/files/complexdag-2.11.5-0.7.1-SNAPSHOT-assembly.jar"
     nodejs_app_url = "https://repo.gotapaas.eu/files/test_blob"
     hadoop_mapreduce_examples = "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-mapreduce-examples/2.2.0/hadoop-mapreduce-examples-2.2.0.jar"
+
+    tapng_python_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-python-app.tar.gz"
+    tapng_go_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-go-app.tar.gz"
+    tapng_java_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-java-app.tar.gz"
+    tapng_nodejs_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-nodejs-app.tar.gz"
+    manifest_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/manifest.json"

@@ -48,13 +48,28 @@ def assert_raises_http_exception(status, error_message_phrase, callableObj, *arg
     with pytest.raises(UnexpectedResponseError) as e:
         callableObj(*args, **kwargs)
     status_correct = e.value.status == status
+    assert_http_status(error_message_phrase, status_correct, e, status)
+
+
+def assert_raises_http_exceptions(status_1, status_2, error_message_phrase, callableObj, *args, **kwargs):
+    with pytest.raises(UnexpectedResponseError) as e:
+        callableObj(*args, **kwargs)
+    status_correct = e.value.status == status_1 or e.value.status == status_2
+    assert_http_status(error_message_phrase, status_correct, e, status_1, status_2)
+
+
+def assert_http_status(error_message_phrase, status_correct, e, status_1, status_2=None):
     if error_message_phrase == "":
         error_message_contains_string = error_message_phrase == ""
     else:
         error_message_contains_string = error_message_phrase in e.value.error_message
+    if status_2 is None:
+        expected_status = status_1
+    else:
+        expected_status = "{} or {}".format(status_1, status_2)
     assert status_correct and error_message_contains_string, \
         "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.status, e.value.error_message,
-                                                            status, error_message_phrase)
+                                                            expected_status, error_message_phrase)
 
 
 def assert_user_not_in_org(user, org_guid):

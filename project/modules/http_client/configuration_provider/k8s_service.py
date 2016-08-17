@@ -18,6 +18,8 @@ import config
 
 from modules.tap_object_model import K8sService
 from .. import HttpClientConfiguration, HttpClientType
+from tap_ng_component_config import k8s_core_services
+from modules.constants import TapComponent
 
 
 class ProxiedConfigurationProvider(object):
@@ -56,4 +58,19 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
             proxies=cls._get_proxies(),
             username=credentials[0],
             password=credentials[1]
+        )
+
+
+class ConsoleServiceConfigurationProvider(ProxiedConfigurationProvider):
+    @classmethod
+    def get(cls):
+        api_version = k8s_core_services[TapComponent.console_service]["api_version"]
+        configuration = K8sServiceConfigurationProvider.get(TapComponent.console_service,
+                                                            api_endpoint="api/{}".format(api_version))
+        return HttpClientConfiguration(
+            client_type=HttpClientType.K8S_CS,
+            url=configuration.url,
+            proxies=cls._get_proxies(),
+            username=configuration.username,
+            password=configuration.password
         )

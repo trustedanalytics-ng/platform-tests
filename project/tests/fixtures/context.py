@@ -37,6 +37,7 @@ class Context(object):
         self.catalog = []
         self.blob_store = []
         self.image_factory = []
+        self.k8s_apps = []
 
     def _cleanup_test_objects(self, object_list: list):
         while len(object_list) > 0:
@@ -66,6 +67,7 @@ class Context(object):
         self._cleanup_test_objects(self.catalog)
         self._cleanup_test_objects(self.blob_store)
         self._cleanup_test_objects(self.image_factory)
+        self._cleanup_test_objects(self.k8s_apps)
 
 
 @pytest.fixture(scope="function")
