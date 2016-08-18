@@ -124,10 +124,10 @@ class JupyterNotebook(JupyterWSBase):
     def _get_frames_with_msg_type(self, msg_type):
         output = self.get_output()
         output = [json.loads(item) for item in output]
-        return [frame for frame in output if frame["msg_type"] == msg_type]
+        return (frame for frame in output if frame["msg_type"] == msg_type)
 
     def _get_frame_with_msg_type(self, msg_type):
-        return next(iter(self._get_frames_with_msg_type(msg_type)))
+        return next(self._get_frames_with_msg_type(msg_type))
 
     def get_command_result(self):
         result_frame = self._get_frame_with_msg_type("execute_request")
@@ -136,10 +136,7 @@ class JupyterNotebook(JupyterWSBase):
 
     def get_stream_result(self):
         stream_frame = self._get_frames_with_msg_type("stream")
-        content = []
-        for frame in stream_frame:
-            content.append(frame["content"]["text"])
-        return content
+        return [frame["content"]["text"] for frame in stream_frame]
 
     def check_command_status(self):
         reply_frame = self._get_frame_with_msg_type("execute_reply")
@@ -237,6 +234,17 @@ class Jupyter(object):
         origin = "https://{}".format(self.instance_url)
         headers = {"Cookie": self.cookie}
         return JupyterNotebook(uri, origin, headers, self.ws_sslopt, session_id, notebook_path)
+
+    def get_notebook_source(self, notebook_path):
+        notebook_model = self.get_client().request(
+            method=HttpMethod.GET,
+            path="api/contents/{}".format(notebook_path),
+            body={"type": "notebook"},
+            msg="Jupyter: get source from {}".format(notebook_path)
+        )
+        cells = notebook_model['content']['cells']
+        code_source = [c['source'] for c in cells if c['cell_type'] == "code" and len(c['source']) > 0]
+        return code_source
 
     @staticmethod
     def _get_ws_ssl_options():
