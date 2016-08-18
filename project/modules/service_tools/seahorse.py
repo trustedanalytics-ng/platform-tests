@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import re
 import signal
 
 from retry import retry
@@ -50,6 +51,7 @@ class Seahorse:
         self.service_instance.ensure_created()
         self.seahorse_url = "{}-{}.{}".format(self.service_instance.name.replace("_", "-"), self.service_instance.guid,
                                               self.tap_domain)
+        self.seahorse_http_url = "https://{}".format(self.seahorse_url)
 
         http_client_configuration = HttpClientConfiguration(
             client_type=HttpClientType.NO_AUTH,
@@ -61,10 +63,31 @@ class Seahorse:
         self.http_client.session = tap_http_client.session
 
         self._ensure_seahorse_accessible()
+        self._ensure_authorized()
         self._ensure_wm_accessible()
         self._ensure_sm_accessible()
 
         self._ws = None
+
+    def _ensure_authorized(self):
+        authorize_form = self.http_client.session.request("GET", self.seahorse_http_url, raw_response=True)
+        # check if application is not authorized (verify that "Application Authorization" dialog is present on page)
+        if "Application Authorization" in authorize_form.text:
+            self._authorize(authorize_form)
+
+    def _authorize(self, form):
+        application_scopes_regex = r'id=\"(.*)\".*value=\"(.*)\"'
+        csrf_value_regex = r"x-uaa-csrf.*value=\"(.*)\""
+        # Find authorization properties on a page
+        scopes_matches = re.findall(application_scopes_regex, form.text, re.IGNORECASE)
+        # Find csrf token on a page
+        csrf_match = re.search(csrf_value_regex, form.text, re.IGNORECASE)
+        # Prepare form data
+        form_data = dict((k, v) for k, v in scopes_matches[:2])
+        form_data.update({"X-Uaa-Csrf": csrf_match.group(1), "user_oauth_approval": True})
+        # give authorization to the application
+        self.http_client.session.request("POST", "http://login.{}/oauth/authorize".format(Seahorse.tap_domain),
+                                         data=form_data)
 
     def cleanup(self):
         self.service_instance.cleanup()
