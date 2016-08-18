@@ -56,8 +56,8 @@ class Context(object):
             data_sets = DataSet.api_get_matching_to_transfer_list(transfer_titles)
             self._cleanup_test_objects(data_sets)
             self._cleanup_test_objects(self.transfers)
-        self._cleanup_test_objects(self.service_instances)
         self._cleanup_test_objects(self.apps)
+        self._cleanup_test_objects(self.service_instances)
         self._cleanup_test_objects(self.service_offerings)
         self._cleanup_test_objects(self.orgs)
 

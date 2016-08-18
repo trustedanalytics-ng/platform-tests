@@ -42,8 +42,8 @@ class TestWs2kafka2hdfs:
 
     REPO_OWNER = TapGitHub.intel_data
     MESSAGE_COUNT = 10
-    KERBEROS_INSTANCE_NAME = "kerberos-service"
     ENDPOINT_APP_STATS = "status/stats"
+    KERBEROS_INSTANCE_NAME = "kerberos-service"
     KAFKA_INSTANCE_NAME = "kafka-inst"
     ZOOKEEPER_INSTANCE_NAME = "zookeeper-inst"
     HDFS_INSTANCE_NAME = "hdfs-inst"
@@ -53,7 +53,7 @@ class TestWs2kafka2hdfs:
     topic_name = None
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_test_services(self, class_context, request, test_org, test_space):
+    def setup_test_services(self, class_context, test_org, test_space):
         step("Create instances for kafka, zookeeper, hdfs and kerberos")
 
         ServiceInstance.api_create_with_plan_name(context=class_context,

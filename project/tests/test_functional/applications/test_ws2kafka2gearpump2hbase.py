@@ -59,7 +59,7 @@ class TestWs2kafka2gearpump2hbase:
     instances_credentials = {}
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_required_instances(self, class_context, request, test_org, test_space):
+    def setup_required_instances(self, class_context, test_org, test_space):
         step("Create instances of kafka, zookeeper, hbase and kerberos")
 
         kafka = ServiceInstance.api_create_with_plan_name(context=class_context,
