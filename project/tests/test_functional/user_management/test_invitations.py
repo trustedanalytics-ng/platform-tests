@@ -18,112 +18,106 @@ import pytest
 
 from modules import gmail_api
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority
+from modules.tap_logger import step
 from modules.tap_object_model import Invitation, User
 from modules.tap_object_model.flows import onboarding
-from tests.fixtures import test_data
-
+from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_retry, assert_user_in_org_and_roles, \
+    assert_raises_http_exception
 
 logged_components = (TAP.user_management,)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
-class PendingInvitations(TapTestCase):
-
-    @pytest.fixture(scope="function", autouse=True)
-    def cleanup(self, context):
-        # TODO move to methods when dependency on unittest is removed
-        self.context = context
+class TestPendingInvitations:
 
     @priority.high
-    def test_add_new_pending_invitation(self):
-        self.step("Invite new user")
-        invitation = Invitation.api_send(self.context)
-        self.step("Check that the user is in the pending invitation list")
-        self.assertInWithRetry(invitation, Invitation.api_get_list)
+    def test_add_new_pending_invitation(self, context):
+        step("Invite new user")
+        invitation = Invitation.api_send(context)
+        step("Check that the user is in the pending invitation list")
+        assert_in_with_retry(invitation, Invitation.api_get_list)
 
     @priority.medium
-    def test_accepting_invitation_deletes_it_from_pending_list(self):
-        self.step("Invite new user")
-        invitation = Invitation.api_send(self.context)
-        self.step("Register user with the received code")
-        onboarding.register(self.context, code=invitation.code, username=invitation.username)
-        self.step("Check that invitation is no longer present in pending invitation list")
-        self.assertNotInWithRetry(invitation, Invitation.api_get_list)
+    def test_accepting_invitation_deletes_it_from_pending_list(self, context):
+        step("Invite new user")
+        invitation = Invitation.api_send(context)
+        step("Register user with the received code")
+        onboarding.register(context, code=invitation.code, username=invitation.username)
+        step("Check that invitation is no longer present in pending invitation list")
+        assert_not_in_with_retry(invitation, Invitation.api_get_list)
 
     @priority.medium
-    def test_add_new_pending_invitation_twice_for_the_same_user(self):
-        self.step("Send invitation two times for a single user")
-        invitation = Invitation.api_send(self.context)
-        Invitation.api_send(self.context, username=invitation.username)
+    def test_add_new_pending_invitation_twice_for_the_same_user(self, context):
+        step("Send invitation two times for a single user")
+        invitation = Invitation.api_send(context)
+        Invitation.api_send(context, username=invitation.username)
         invited_users = [i.username for i in Invitation.api_get_list()]
-        self.step("Check that there is only one invitation for the user")
-        self.assertEqual(invited_users.count(invitation.username), 1, "More than one invitation for the user")
+        step("Check that there is only one invitation for the user")
+        assert invited_users.count(invitation.username) == 1, "More than one invitation for the user"
 
     @priority.medium
-    def test_resend_pending_invitation(self):
-        self.step("Invite new user")
-        invitation = Invitation.api_send(self.context)
-        self.step("Check that the user received the message")
+    def test_resend_pending_invitation(self, context):
+        step("Invite new user")
+        invitation = Invitation.api_send(context)
+        step("Check that the user received the message")
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=1)
-        self.assertEqual(len(messages), 1)
-        self.step("Resend invitation")
+        assert len(messages) == 1
+        step("Resend invitation")
         invitation.api_resend()
-        self.step("Check that the user received the new message")
+        step("Check that the user received the new message")
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=2)
-        self.assertEqual(len(messages), 2)
-        self.step("Register user with the received code")
-        user, org = onboarding.register(self.context, code=invitation.code, username=invitation.username)
-        self.assert_user_in_org_and_roles(user, org.guid, User.ORG_ROLES["manager"])
+        assert len(messages) == 2
+        step("Register user with the received code")
+        user, org = onboarding.register(context, code=invitation.code, username=invitation.username)
+        assert_user_in_org_and_roles(user, org.guid, User.ORG_ROLES["manager"])
 
     @priority.low
     def test_cannot_resend_not_existing_pending_invitation(self):
         username = "not_existing_user"
         invitation = Invitation(username=username)
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND,
-                                            HttpStatus.MSG_NO_PENDING_INVITATION_FOR.format(username),
-                                            invitation.api_resend)
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND,
+                                     HttpStatus.MSG_NO_PENDING_INVITATION_FOR.format(username),
+                                     invitation.api_resend)
 
     @priority.low
     def test_cannot_resend_invitation_providing_empty_name(self):
         invitation = Invitation(username="")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_METHOD_NOT_ALLOWED,
-                                            HttpStatus.MSG_METHOD_NOT_SUPPORTED.format("POST"),
-                                            invitation.api_resend)
+        assert_raises_http_exception(HttpStatus.CODE_METHOD_NOT_ALLOWED,
+                                     HttpStatus.MSG_METHOD_NOT_SUPPORTED.format("POST"),
+                                     invitation.api_resend)
 
     @priority.medium
-    def test_delete_pending_invitation(self):
-        self.step("Invite new user")
-        invitation = Invitation.api_send(self.context)
-        self.assertInWithRetry(invitation, Invitation.api_get_list)
-        self.step("Delete pending user invitation")
+    def test_delete_pending_invitation(self, context):
+        step("Invite new user")
+        invitation = Invitation.api_send(context)
+        assert_in_with_retry(invitation, Invitation.api_get_list)
+        step("Delete pending user invitation")
         invitation.api_delete()
-        self.assertNotInWithRetry(invitation, Invitation.api_get_list)
-        self.step("Check that the user cannot register after deletion of pending invitation")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                            onboarding.register, self.context, code=invitation.code,
-                                            username=invitation.username)
+        assert_not_in_with_retry(invitation, Invitation.api_get_list)
+        step("Check that the user cannot register after deletion of pending invitation")
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
+                                     onboarding.register, context, code=invitation.code,
+                                     username=invitation.username)
 
     @priority.low
     def test_cannot_delete_not_existing_pending_invitation(self):
-        self.step("Try to delete not existing invitation")
+        step("Try to delete not existing invitation")
         username = "not_existing_user"
         invitation = Invitation(username=username)
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND,
-                                            HttpStatus.MSG_NO_PENDING_INVITATION_FOR.format(username),
-                                            invitation.api_delete)
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND,
+                                     HttpStatus.MSG_NO_PENDING_INVITATION_FOR.format(username),
+                                     invitation.api_delete)
 
     @priority.low
     def test_cannot_delete_pending_invitation_providing_empty_name(self):
         invitation = Invitation(username="")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_METHOD_NOT_ALLOWED,
-                                            HttpStatus.MSG_METHOD_NOT_SUPPORTED.format("DELETE"),
-                                            invitation.api_delete)
+        assert_raises_http_exception(HttpStatus.CODE_METHOD_NOT_ALLOWED,
+                                     HttpStatus.MSG_METHOD_NOT_SUPPORTED.format("DELETE"),
+                                     invitation.api_delete)
 
     @priority.medium
-    @pytest.mark.usefixtures("test_org_manager_client")
-    def test_cannot_get_pending_invitations_as_non_admin_user(self):
-        self.step("As non admin user try to get pending invitations list")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_DENIED,
-                                            Invitation.api_get_list, test_data.TestData.test_org_manager_client)
+    def test_cannot_get_pending_invitations_as_non_admin_user(self, test_org_manager_client):
+        step("As non admin user try to get pending invitations list")
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_DENIED,
+                                     Invitation.api_get_list, test_org_manager_client)

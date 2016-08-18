@@ -17,9 +17,10 @@
 import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority
+from modules.tap_logger import step
 from modules.tap_object_model import Space, User
+from tests.fixtures.assertions import assert_raises_http_exception
 from tests.fixtures.test_data import TestData
 
 
@@ -27,7 +28,7 @@ logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
-class GetSpaceUsers(TapTestCase):
+class TestGetSpaceUsers:
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -37,19 +38,20 @@ class GetSpaceUsers(TapTestCase):
                           for _ in range(2)]
 
     def test_get_user_list_from_space(self):
-        self.step("Check that space is empty")
-        self.assertEqual([], User.api_get_list_via_space(self.test_space.guid), "List is not empty")
-        self.step("Add users to space")
+        # TODO: specify priority
+        step("Check that space is empty")
+        assert [] == User.api_get_list_via_space(self.test_space.guid), "List is not empty"
+        step("Add users to space")
         for user in self.test_users:
             user.api_add_to_space(self.test_space.guid, TestData.test_org.guid)
         space_user_list = User.api_get_list_via_space(self.test_space.guid)
-        self.assertListEqual(self.test_users, space_user_list)
+        assert sorted(self.test_users) == sorted(space_user_list)
 
     @priority.low
     def test_cannot_get_user_list_from_deleted_space(self):
-        self.step("Create and delete the space")
+        step("Create and delete the space")
         deleted_space = Space.api_create(TestData.test_org)
         deleted_space.cleanup()
-        self.step("Check that retrieving list of users in the deleted space returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
-                                            User.api_get_list_via_space, deleted_space.guid)
+        step("Check that retrieving list of users in the deleted space returns an error")
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
+                                     User.api_get_list_via_space, deleted_space.guid)

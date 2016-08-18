@@ -17,97 +17,80 @@
 import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority
-from modules.tap_object_model import Organization, User
+from modules.tap_logger import step
+from modules.tap_object_model import User
 from tests.fixtures import test_data
-
+from tests.fixtures.assertions import assert_user_not_in_org, assert_user_in_org_and_roles, assert_raises_http_exception
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
 
 
-class DeleteOrganizationUser(TapTestCase):
-
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def setup(cls, request, class_context):
-        cls.step("Create test org")
-        cls.test_org = Organization.api_create(class_context)
-
-    @pytest.fixture(scope="function", autouse=True)
-    def setup_context(self, context):
-        # TODO move to methods when dependency on unittest is removed
-        self.context = context
-
-    def _assert_user_not_in_org(self, user, org_guid):
-        # TODO refactor to fixtures.assertions
-        self.step("Check that the user is not in the organization.")
-        org_users = User.api_get_list_via_organization(org_guid)
-        self.assertNotIn(user, org_users, "User is among org users, although they shouldn't")
+class TestDeleteOrganizationUser:
 
     @priority.medium
-    def test_admin_deletes_non_manager(self):
-        self.step("Add a non-manager user to organization.")
-        user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
+    def test_admin_deletes_non_manager(self, context, test_org):
+        step("Add a non-manager user to organization.")
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
                                                          roles=User.ORG_ROLES["auditor"])
-        self.step("Remove the user from the organization")
-        user.api_delete_from_organization(self.test_org.guid)
-        self._assert_user_not_in_org(user, self.test_org.guid)
+        step("Remove the user from the organization")
+        user.api_delete_from_organization(test_org.guid)
+        step("Check that the user is not in the organization.")
+        assert_user_not_in_org(user, test_org.guid)
 
     @priority.low
-    def test_admin_can_delete_last_org_manager(self):
-        self.step("Add manager to the organization")
+    def test_admin_can_delete_last_org_manager(self, context, test_org):
+        step("Add manager to the organization")
         roles = User.ORG_ROLES["manager"]
-        user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid, roles=roles)
-        self.assert_user_in_org_and_roles(user, self.test_org.guid, roles)
-        self.step("Check that it's possible to remove last org manager")
-        user.api_delete_from_organization(org_guid=self.test_org.guid)
-        self._assert_user_not_in_org(user, self.test_org.guid)
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid, roles=roles)
+        assert_user_in_org_and_roles(user, test_org.guid, roles)
+        step("Check that it's possible to remove last org manager")
+        user.api_delete_from_organization(org_guid=test_org.guid)
+        step("Check that the user is not in the organization.")
+        assert_user_not_in_org(user, test_org.guid)
 
     @priority.low
-    def test_admin_cannot_delete_org_user_twice(self):
-        self.step("Add test user to organization")
-        user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
+    def test_admin_cannot_delete_org_user_twice(self, context, test_org):
+        step("Add test user to organization")
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
                                                          roles=User.ORG_ROLES["auditor"])
-        self.step("Delete test user from organization")
-        user.api_delete_from_organization(org_guid=self.test_org.guid)
-        self.step("Try to delete test user from organization second time")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY,
-                                            user.api_delete_from_organization, org_guid=self.test_org.guid)
+        step("Delete test user from organization")
+        user.api_delete_from_organization(org_guid=test_org.guid)
+        step("Try to delete test user from organization second time")
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY,
+                                     user.api_delete_from_organization, org_guid=test_org.guid)
 
     @priority.low
-    @pytest.mark.usefixtures("admin_user")
-    def test_admin_cannot_delete_non_existing_org_user(self):
-        self.step("Check that an attempt to delete user which is not in org returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY,
-                                            test_data.TestData.admin_user.api_delete_from_organization,
-                                            org_guid=self.test_org.guid)
+    def test_admin_cannot_delete_non_existing_org_user(self, test_org, admin_user):
+        step("Check that an attempt to delete user which is not in org returns an error")
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY,
+                                     admin_user.api_delete_from_organization, org_guid=test_org.guid)
 
     @priority.high
-    def test_org_manager_can_delete_another_user(self):
-        self.step("Add org manager to organization")
-        user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
+    def test_org_manager_can_delete_another_user(self, context, test_org):
+        step("Add org manager to organization")
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
                                                          roles=User.ORG_ROLES["manager"])
         user_client = user.login()
-        deleted_user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
+        deleted_user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
                                                                  roles=User.ORG_ROLES["manager"])
-        self.step("Org manager removes the user from the test org")
-        deleted_user.api_delete_from_organization(org_guid=self.test_org.guid, client=user_client)
-        self._assert_user_not_in_org(deleted_user, self.test_org.guid)
+        step("Org manager removes the user from the test org")
+        deleted_user.api_delete_from_organization(org_guid=test_org.guid, client=user_client)
+        step("Check that the user is not in the organization.")
+        assert_user_not_in_org(deleted_user, test_org.guid)
 
     @priority.low
-    def test_non_manager_cannot_delete_user(self):
-        self.step("Add org manager to organization")
-        user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
+    def test_non_manager_cannot_delete_user(self, context, test_org):
+        step("Add org manager to organization")
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
                                                          roles=User.ORG_ROLES["auditor"])
         user_client = user.login()
         deleted_user_roles = User.ORG_ROLES["billing_manager"]
-        deleted_user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
+        deleted_user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
                                                                  roles=deleted_user_roles)
-        self.step("Check that non-manager cannot delete user from org")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                            deleted_user.api_delete_from_organization, org_guid=self.test_org.guid,
-                                            client=user_client)
-        self.assert_user_in_org_and_roles(deleted_user, self.test_org.guid, deleted_user_roles)
-
+        step("Check that non-manager cannot delete user from org")
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                     deleted_user.api_delete_from_organization, org_guid=test_org.guid,
+                                     client=user_client)
+        assert_user_in_org_and_roles(deleted_user, test_org.guid, deleted_user_roles)

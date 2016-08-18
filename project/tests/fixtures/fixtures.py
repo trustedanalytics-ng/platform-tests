@@ -69,6 +69,38 @@ def test_org_manager_client(test_org_manager):
     return TestData.test_org_manager_client
 
 
+@pytest.fixture(scope="session")
+def test_org_auditor(request, session_context, test_org):
+    log_fixture("test_org_auditor: Add org auditor to test org")
+    test_org_auditor = User.api_create_by_adding_to_organization(session_context, org_guid=test_org.guid,
+                                                                 roles=User.ORG_ROLES["auditor"])
+    TestData.test_org_auditor = test_org_auditor
+    return test_org_auditor
+
+
+@pytest.fixture(scope="session")
+def test_org_auditor_client(test_org_auditor):
+    log_fixture("test_org_manager_client: Login as test org manager")
+    TestData.test_org_auditor_client = test_org_auditor.login()
+    return TestData.test_org_auditor_client
+
+
+@pytest.fixture(scope="session")
+def test_org_billing_manager(request, session_context, test_org):
+    log_fixture("test_org_manager: Add org billing manager to test org")
+    test_org_billing_manager = User.api_create_by_adding_to_organization(session_context, org_guid=test_org.guid,
+                                                                         roles=User.ORG_ROLES["billing_manager"])
+    TestData.test_org_billing_manager = test_org_billing_manager
+    return test_org_billing_manager
+
+
+@pytest.fixture(scope="session")
+def test_org_billing_manager_client(test_org_billing_manager):
+    log_fixture("test_org_manager_client: Login as test org manager")
+    TestData.test_org_billing_manager_client = test_org_billing_manager.login()
+    return TestData.test_org_billing_manager_client
+
+
 @pytest.fixture(scope="class")
 def login_to_cf(test_org, test_space):
     log_fixture("login_to_cf: Login to cf targeting test org and test space")

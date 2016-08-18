@@ -17,114 +17,96 @@
 import pytest
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority
+from modules.tap_logger import step
 from modules.tap_object_model import Organization, User
-
+from tests.fixtures.assertions import assert_user_in_org_and_roles, assert_raises_http_exception
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
 
 
-class AddNewUserToOrganization(TapTestCase):
+class TestAddNewUserToOrganization:
 
     ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
     NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
 
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def setup(cls, request, test_org_manager, test_org_manager_client, class_context):
-        cls.step("Create test org")
-        cls.test_org = Organization.api_create(class_context)
-        cls.step("Add org manager")
-        cls.org_manager = test_org_manager
-        cls.org_manager_client = test_org_manager_client
-        cls.org_manager.api_add_to_organization(org_guid=cls.test_org.guid)
-
-    @pytest.fixture(scope="function", autouse=True)
-    def setup_context(self, context):
-        # TODO move to methods when dependency on unittest is removed
-        self.context = context
-
     @priority.medium
-    def test_add_new_user_with_no_roles(self):
-        self.step("Create new user by adding to an organization with no roles")
+    def test_add_new_user_with_no_roles(self, context, test_org):
+        step("Create new user by adding to an organization with no roles")
         expected_roles = []
-        self.user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                              roles=expected_roles)
-        self.assert_user_in_org_and_roles(self.user, self.test_org.guid, expected_roles)
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
+                                                         roles=expected_roles)
+        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
 
     @priority.high
-    def test_admin_adds_new_user_one_role(self):
+    def test_admin_adds_new_user_one_role(self, context, test_org):
         # TODO parametrize
-        self.step("Create new user by adding to an organization with one role")
+        step("Create new user by adding to an organization with one role")
         expected_roles = User.ORG_ROLES["auditor"]
-        self.user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                              roles=expected_roles)
-        self.assert_user_in_org_and_roles(self.user, self.test_org.guid, expected_roles)
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
+                                                         roles=expected_roles)
+        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
 
     @priority.low
-    def test_admin_adds_new_user_all_roles(self):
-        self.step("Create new user by adding to an organization with all roles")
+    def test_admin_adds_new_user_all_roles(self, context, test_org):
+        step("Create new user by adding to an organization with all roles")
         expected_roles = self.ALL_ROLES
-        self.user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                              roles=expected_roles)
-        self.assert_user_in_org_and_roles(self.user, self.test_org.guid, expected_roles)
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
+                                                         roles=expected_roles)
+        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
 
     @priority.medium
-    def test_org_manager_adds_new_user(self):
-        self.step("Org manager adds a new user to an organization with")
-        inviting_client = self.org_manager_client
+    def test_org_manager_adds_new_user(self, context, test_org, test_org_manager_client):
+        step("Org manager adds a new user to an organization with")
+        inviting_client = test_org_manager_client
         expected_roles = User.ORG_ROLES["billing_manager"]
-        self.user = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                              roles=expected_roles, inviting_client=inviting_client)
-        self.assert_user_in_org_and_roles(self.user, self.test_org.guid, expected_roles)
+        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
+                                                         roles=expected_roles, inviting_client=inviting_client)
+        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
 
     @priority.medium
-    def test_non_manager_cannot_add_new_user_to_org(self):
-        self.step("Add a non-manager to the organization.")
-        non_manager = User.api_create_by_adding_to_organization(self.context, org_guid=self.test_org.guid,
-                                                                roles=User.ORG_ROLES["auditor"])
-        self.user = non_manager
-        non_manager_client = non_manager.login()
-        self.step("Check that user cannot be added to organization by non-manager")
-        org_users = User.api_get_list_via_organization(self.test_org.guid)
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                            User.api_create_by_adding_to_organization, self.context,
-                                            org_guid=self.test_org.guid, roles=User.ORG_ROLES["auditor"],
-                                            inviting_client=non_manager_client)
-        # assert user list did not change
-        self.assertListEqual(User.api_get_list_via_organization(self.test_org.guid), org_users)
+    def test_non_manager_cannot_add_new_user_to_org(self, context, test_org, test_org_auditor_client):
+        step("Add a non-manager to the organization.")
+        non_manager_client = test_org_auditor_client
+        step("Check that user cannot be added to organization by non-manager")
+        org_users = User.api_get_list_via_organization(test_org.guid)
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                     User.api_create_by_adding_to_organization, context,
+                                     org_guid=test_org.guid, roles=User.ORG_ROLES["auditor"],
+                                     inviting_client=non_manager_client)
+        users = User.api_get_list_via_organization(test_org.guid)
+        assert sorted(users) == sorted(org_users)
 
     @priority.low
     # not in existing users
-    def test_cannot_add_user_with_non_email_username(self):
-        self.step("Check that user with non valid username cannot be added to an organization")
+    def test_cannot_add_user_with_non_email_username(self, context, test_org):
+        step("Check that user with non valid username cannot be added to an organization")
         username = "non-valid-username"
         roles = self.ALL_ROLES
-        org_users = User.api_get_list_via_organization(self.test_org.guid)
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                            User.api_create_by_adding_to_organization, self.context,
-                                            org_guid=self.test_org.guid, username=username, roles=roles)
-        # assert user list did not change
-        self.assertListEqual(User.api_get_list_via_organization(self.test_org.guid), org_users)
+        org_users = User.api_get_list_via_organization(test_org.guid)
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
+                                     User.api_create_by_adding_to_organization, context,
+                                     org_guid=test_org.guid, username=username, roles=roles)
+        users = User.api_get_list_via_organization(test_org.guid)
+        assert sorted(users) == sorted(org_users)
 
     @priority.low
-    def test_cannot_add_new_user_to_non_existing_org(self):
+    def test_cannot_add_new_user_to_non_existing_org(self, context):
         org_guid = "this-org-guid-is-not-correct"
         roles = self.ALL_ROLES
-        self.step("Check that an error is raised when trying to add user using incorrect org guid")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                            User.api_create_by_adding_to_organization, self.context, org_guid=org_guid,
-                                            roles=roles)
+        step("Check that an error is raised when trying to add user using incorrect org guid")
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
+                                     User.api_create_by_adding_to_organization, context, org_guid=org_guid,
+                                     roles=roles)
 
     @priority.low
-    def test_cannot_add_new_user_incorrect_role(self):
-        self.step("Check that error is raised when trying to add user using incorrect roles")
+    def test_cannot_add_new_user_incorrect_role(self, context, test_org):
+        step("Check that error is raised when trying to add user using incorrect roles")
         roles = ["i-don't-exist"]
-        org_users = User.api_get_list_via_organization(self.test_org.guid)
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMPTY,
-                                            User.api_create_by_adding_to_organization, self.context,
-                                            org_guid=self.test_org.guid, roles=roles)
-        # assert user list did not change
-        self.assertListEqual(User.api_get_list_via_organization(self.test_org.guid), org_users)
+        org_users = User.api_get_list_via_organization(test_org.guid)
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMPTY,
+                                     User.api_create_by_adding_to_organization, context,
+                                     org_guid=test_org.guid, roles=roles)
+        users = User.api_get_list_via_organization(test_org.guid)
+        assert sorted(users) == sorted(org_users)

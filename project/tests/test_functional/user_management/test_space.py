@@ -16,89 +16,85 @@
 
 import pytest
 
+from config import kubernetes
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority
+from modules.tap_logger import step
 from modules.tap_object_model import Organization, Space, User
-
+from tests.fixtures.assertions import assert_not_in_with_retry, assert_raises_http_exception
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
-class TestSpace(TapTestCase):
-
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def organization(cls, test_org):
-        cls.test_org = test_org
-
-    @pytest.fixture(scope="function")
-    def setup_context(self, context):
-        # TODO no longer needed when this class removes unittest dependency
-        self.context = context
+class TestSpace:
 
     @priority.medium
-    @pytest.mark.usefixtures("setup_context")
-    def test_get_spaces_list_in_new_org(self):
-        self.step("Create new organization")
-        org = Organization.api_create(self.context)
-        self.step("Get list of spaces in the org and check that there are none")
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_get_spaces_list_in_new_org(self, context):
+        step("Create new organization")
+        org = Organization.api_create(context)
+        step("Get list of spaces in the org and check that there are none")
         spaces = Space.api_get_list_in_org(org_guid=org.guid)
-        self.assertEqual(len(spaces), 0, "There are spaces in a new organization")
+        assert len(spaces) == 0, "There are spaces in a new organization"
 
     @priority.high
-    def test_create_and_delete_space(self):
-        self.step("Create new space in the organization")
-        space = Space.api_create(org=self.test_org)
-        self.step("Check that the space is on the org space list")
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_create_and_delete_space(self, test_org):
+        step("Create new space in the organization")
+        space = Space.api_create(org=test_org)
+        step("Check that the space is on the org space list")
         spaces = Space.api_get_list()
-        self.assertIn(space, spaces)
-        self.step("Delete the test space")
+        assert space in spaces
+        step("Delete the test space")
         space.api_delete()
-        self.assertNotInWithRetry(space, Space.api_get_list)
+        assert_not_in_with_retry(space, Space.api_get_list)
 
     @priority.medium
-    def test_cannot_create_space_with_existing_name(self):
-        self.step("Create a space")
-        space = Space.api_create(org=self.test_org)
-        self.step("Check that attempt to create a space with the same name in the same org returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, Space.api_create,
-                                            org=self.test_org, name=space.name)
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_cannot_create_space_with_existing_name(self, test_org):
+        step("Create a space")
+        space = Space.api_create(org=test_org)
+        step("Check that attempt to create a space with the same name in the same org returns an error")
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, Space.api_create,
+                                     org=test_org, name=space.name)
 
     @priority.low
-    def test_create_space_with_long_name(self):
-        self.step("Create space with name 400 char long")
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_create_space_with_long_name(self, test_org):
+        step("Create space with name 400 char long")
         long_name = Space.NAME_PREFIX + "t" * 400
-        space = Space.api_create(org=self.test_org, name=long_name)
-        self.step("Check that the space with long name is present on space list")
+        space = Space.api_create(org=test_org, name=long_name)
+        step("Check that the space with long name is present on space list")
         spaces = Space.api_get_list()
-        self.assertIn(space, spaces)
+        assert space in spaces
 
     @priority.low
-    def test_create_space_with_empty_name(self):
-        self.step("Check that attempt to create space with empty name returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, Space.api_create,
-                                            name="", org=self.test_org)
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_create_space_with_empty_name(self, test_org):
+        step("Check that attempt to create space with empty name returns an error")
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, Space.api_create,
+                                     name="", org=test_org)
 
     @priority.low
-    def test_cannot_delete_not_existing_space(self):
-        self.step("Create a space")
-        space = Space.api_create(org=self.test_org)
-        self.step("Delete the space")
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_cannot_delete_not_existing_space(self, test_org):
+        step("Create a space")
+        space = Space.api_create(org=test_org)
+        step("Delete the space")
         space.api_delete()
-        self.assertNotInWithRetry(space, Space.api_get_list)
-        self.step("Check that attempt to delete the space again returns an error")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND, space.api_delete)
+        assert_not_in_with_retry(space, Space.api_get_list)
+        step("Check that attempt to delete the space again returns an error")
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND, space.api_delete)
 
     @priority.low
-    @pytest.mark.usefixtures("setup_context")
-    def test_cannot_delete_space_with_user(self):
-        self.step("Create a space")
-        space = Space.api_create(org=self.test_org)
-        self.step("Add new platform user to the space")
-        User.api_create_by_adding_to_space(self.context, org_guid=self.test_org.guid, space_guid=space.guid)
-        self.step("Delete the space")
+    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+    def test_cannot_delete_space_with_user(self, context, test_org):
+        step("Create a space")
+        space = Space.api_create(org=test_org)
+        step("Add new platform user to the space")
+        User.api_create_by_adding_to_space(context, org_guid=test_org.guid, space_guid=space.guid)
+        step("Delete the space")
         space.api_delete()
-        self.step("Check that the space is not on the space list")
-        self.assertNotInWithRetry(space, Space.api_get_list)
+        step("Check that the space is not on the space list")
+        assert_not_in_with_retry(space, Space.api_get_list)

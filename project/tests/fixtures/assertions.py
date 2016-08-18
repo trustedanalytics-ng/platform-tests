@@ -57,6 +57,11 @@ def assert_raises_http_exception(status, error_message_phrase, callableObj, *arg
                                                             status, error_message_phrase)
 
 
+def assert_user_not_in_org(user, org_guid):
+    org_users = User.api_get_list_via_organization(org_guid)
+    assert user not in org_users, "User unexpectedly found in organization"
+
+
 def assert_user_in_org_and_roles(invited_user, org_guid, expected_roles):
     step("Check that the user is in the organization with expected roles ({}).".format(expected_roles))
     org_users = User.api_get_list_via_organization(org_guid)
@@ -65,6 +70,17 @@ def assert_user_in_org_and_roles(invited_user, org_guid, expected_roles):
     org_user_roles = list(org_user.org_roles.get(org_guid, []))
     assert_unordered_list_equal(org_user_roles, list(expected_roles),
                                 "User's roles in org: {}, expected {}".format(org_user_roles, list(expected_roles)))
+
+
+def assert_user_in_space_with_roles(expected_user, space_guid):
+    step("Check that the user is on the list of space users")
+    space_users = User.api_get_list_via_space(space_guid)
+    assert expected_user in space_users
+    space_user = next(user for user in space_users if user.guid == expected_user.guid)
+    step("Check that the user has expected space roles")
+    space_user_roles = space_user.space_roles.get(space_guid)
+    expected_roles = expected_user.space_roles.get(space_guid)
+    assert sorted(space_user_roles) == sorted(expected_roles), "{} space roles are not equal".format(expected_user)
 
 
 @retry(AssertionError, tries=2, delay=360)

@@ -20,69 +20,70 @@ from modules import gmail_api, api_password
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.runner.tap_test_case import TapTestCase
 from modules.markers import priority
+from modules.tap_logger import step
 from modules.tap_object_model import User
+from tests.fixtures.assertions import assert_raises_http_exception
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
-class Password(TapTestCase):
+class TestPassword:
     NEW_PASSWORD = "NEW_PASSWORD"
 
     @pytest.fixture(scope="function", autouse=True)
     def user(self, request, test_org, context):
-        self.step("Create test user")
+        step("Create test user")
         self.test_user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
 
     @priority.high
     def test_reset_password(self):
-        self.step("Login to the platform")
+        step("Login to the platform")
         client = self.test_user.get_client()
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
 
-        self.step("Logout")
+        step("Logout")
         client.request(method=HttpMethod.GET, path="logout")
 
-        self.step("Enter your email and press  'SEND RESET PASSWORD LINK'")
+        step("Enter your email and press  'SEND RESET PASSWORD LINK'")
         pswd_api.reset_password()
 
-        self.step("Try to login with old credentials. User should still be able to login after pressing RESET")
+        step("Try to login with old credentials. User should still be able to login after pressing RESET")
         client.auth.authenticate()
 
-        self.step("Logout and go to email message and press 'reset your password' link.")
+        step("Logout and go to email message and press 'reset your password' link.")
         client.request(method=HttpMethod.GET, path="logout")
         code = gmail_api.get_reset_password_links(self.test_user.username)
 
-        self.step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
+        step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
         pswd_api.reset_password_set_new(code, self.NEW_PASSWORD)
 
-        self.step("Logout")
+        step("Logout")
         client.request(method=HttpMethod.GET, path="logout")
 
-        self.step("Try to login with old credentials.")
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
+        step("Try to login with old credentials.")
+        assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 
-        self.step("Login to the platform with new credentials.")
+        step("Login to the platform with new credentials.")
         self.test_user.password = self.NEW_PASSWORD
         self.test_user.login()
 
     @priority.high
     def test_change_password(self):
-        self.step("Login to the platform")
+        step("Login to the platform")
         client = self.test_user.get_client()
         self.test_user.login()
 
-        self.step("Change user password.")
+        step("Change user password.")
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
         pswd_api.change_password(self.test_user.password, self.NEW_PASSWORD)
 
-        self.step("Logout and try to login with old credentials.")
+        step("Logout and try to login with old credentials.")
         client.request(method=HttpMethod.GET, path="logout")
         HttpClientFactory.remove(self.test_user.client_configuration)
-        self.assertRaisesUnexpectedResponse(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
+        assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 
-        self.step("Login to the platform with new credentials.")
+        step("Login to the platform with new credentials.")
         self.test_user.password = self.NEW_PASSWORD
         self.test_user.login()
