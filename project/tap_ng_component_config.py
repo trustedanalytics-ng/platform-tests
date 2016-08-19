@@ -31,8 +31,8 @@ k8s_core_services = {
     TAP.template_repository: {"get_endpoint": "templates"},
     TAP.blob_store: {},
     TAP.console_service: {},
-    TAP.dashboard: {},
-    TAP.message_queue: {}
+    TAP.dashboard: {"health_endpoint": None},
+    TAP.message_queue: {"health_endpoint": None}
 }
 
 for item in k8s_core_services:
