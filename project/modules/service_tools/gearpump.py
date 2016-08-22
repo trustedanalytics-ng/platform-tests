@@ -55,11 +55,15 @@ class Gearpump(object):
     def go_to_dashboard(self):
         """Simulate going to gearpump dashboard"""
         self.client.url = "http://{}".format(self.instance.instance_url)
-        self.client.request(
-            method=HttpMethod.GET,
-            path="login/oauth2/cloudfoundryuaa/authorize",
-            msg="Go to dashboard"
-        )
+        try:
+            self.client.request(
+                method=HttpMethod.GET,
+                path="login/oauth2/cloudfoundryuaa/authorize",
+                msg="Go to dashboard"
+            )
+        except:
+            self.go_to_console()
+            raise
 
     def go_to_console(self):
         self.client.url = config.console_url
