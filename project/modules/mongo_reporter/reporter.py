@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-import configparser
 from datetime import datetime
 import os
 import socket
@@ -97,7 +96,7 @@ class MongoReporter(object):
             "test_version": config.get_test_version(),
             "environment_availability": environment_availability,
             "teamcity_build_id": int(tc_config_params.get("teamcity.build.id", -1)),
-            "teamcity_server_url": tc_config_params.get("teamcity.serverurl", None),
+            "teamcity_server_url": tc_config_params.get("teamcity.serverUrl", None),
             "parameters": {
                 "configuration_parameters": {k.replace(".", "_"): v for k, v in tc_config_params.items()},
                 "environment_variables": tc_env_variables,
@@ -115,19 +114,17 @@ class MongoReporter(object):
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()
 
-    # Workaround for a config file without section header
     @staticmethod
-    def _add_section(tc_file, section_name):
-        yield '[{}]\n'.format(section_name)
-        for line in tc_file:
-            yield line
-
-    def _from_teamcity_file(self, path):
-        section = "tc_file_section"
+    def _from_teamcity_file(path):
+        output_dict = {}
         with open(path, "r") as f:
-            tc_config_file = configparser.ConfigParser(delimiters=("=", ))
-            tc_config_file.read_file(self._add_section(f, section))
-        return dict(tc_config_file[section])
+            tc_file = f.read().splitlines()
+            for line in tc_file:
+                line = line.replace("\:", ":")
+                if "=" in line:
+                    key, val = line.split("=", 1)
+                    output_dict.update({key: val})
+        return output_dict
 
     def get_tc_configuration_params(self):
         if is_running_under_teamcity():
@@ -142,14 +139,6 @@ class MongoReporter(object):
         if is_running_under_teamcity():
             return os.environ
         return {}
-
-    def get_tap_components_from_item(self, item):
-        components = []
-        keywords = item.keywords.items()
-        for keyword in keywords:
-            if keyword[0] in self.TAP_COMPONENT_NAMES:
-                components.append(keyword[0])
-        return sorted(components)
 
     def log_report(self, report, item):
         doc, status = None, None

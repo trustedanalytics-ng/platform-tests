@@ -102,7 +102,7 @@ class MockFailingItem:
 class TestReporter(TestCase):
     EXPECTED_CONFIG_PARAMS = {
         "teamcity.build.id": "12345",
-        "teamcity.serverurl": "https://server-url.com"
+        "teamcity.serverUrl": "https://server-url.com"
     }
 
     EXPECTED_ENV_VARIABLES = {
@@ -239,7 +239,7 @@ class TestReporter(TestCase):
         mock_under_tc.return_value = True
         mock_files_content = [
             {"teamcity.configuration.properties.file": "/some/fake/file/path.properties"},
-            {"teamcity.build.id": "12345", "teamcity.serverurl": "https://server-url.com"}
+            {"teamcity.build.id": "12345", "teamcity.serverUrl": "https://server-url.com"}
         ]
         from_teamcity_file_mock.side_effect = mock_files_content
         config_params = self.mongo_reporter.get_tc_configuration_params()
