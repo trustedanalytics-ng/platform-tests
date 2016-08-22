@@ -255,6 +255,7 @@ class TestReporter(TestCase):
         return {
             "run_id": run_id,
             "name": test_name,
+            "docstring": None,
             "duration": duration,
             "order": order,
             "priority": priority,

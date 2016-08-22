@@ -157,8 +157,15 @@ class MongoReporter(object):
             self._update_status(doc, status)
 
     @staticmethod
-    def _test_name_from_report_or_item(report, item):
-        return item.obj.__doc__.strip() if item.obj.__doc__ else report.nodeid
+    def _get_test_name(report):
+        return report.nodeid
+
+    @staticmethod
+    def _get_test_docstring(item):
+        docstring = item.obj.__doc__
+        if docstring:
+            docstring = docstring.strip()
+        return docstring
 
     @staticmethod
     def _marker_args_from_item(item, marker_name):
@@ -202,10 +209,11 @@ class MongoReporter(object):
     def _on_test(self, report, item, log="", failed_by_setup=False):
         status = self.test_status_from_report(report)
         bugs = self._marker_args_from_item(item, "bugs")
-        name = self._test_name_from_report_or_item(report, item)
+        name = self._get_test_name(report)
         test_mongo_document = {
             "run_id": self._run_id,
             "name": name if not failed_by_setup else "{}: failed on setup".format(name),
+            "docstring": self._get_test_docstring(item),
             "duration": report.duration if not failed_by_setup else 0.0,
             "priority": self._priority_from_report(report),
             "components": self._marker_args_from_item(item, "components"),
@@ -222,7 +230,7 @@ class MongoReporter(object):
 
     def _on_fixture(self, report, item, reason, log=""):
         status = None
-        name = self._test_name_from_report_or_item(report, item)
+        name = self._get_test_name(report)
         if reason == "error":
             name = "{}: {} error".format(name, report.when)
             status = self.FAIL
@@ -232,6 +240,7 @@ class MongoReporter(object):
         fixture_mongo_document = {
             "run_id": self._run_id,
             "name": name,
+            "docstring": self._get_test_docstring(item),
             "stacktrace": self._stacktrace_from_report(report),
             "components": self._marker_args_from_item(item, "components"),
             "log": log,
