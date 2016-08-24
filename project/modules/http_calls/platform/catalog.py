@@ -126,3 +126,141 @@ def update_template(template_id, field, value):
                                      msg="CATALOG: updating template")
     return response
 #endregion
+
+
+#region Instances
+def get_instances():
+    """ GET /instances """
+    return _get_client().request(HttpMethod.GET,
+                                 path="instances",
+                                 msg="CATALOG: get instances list")
+
+
+def get_instance(instance_id):
+    """ GET /instances/{instance_id} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="instances/{}".format(instance_id),
+                                 msg="CATALOG: get instance")
+
+
+def delete_instance(instance_id):
+    """ DELETE /instances/{instance_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="instances/{}".format(instance_id),
+                                     msg="CATALOG: delete instance")
+    return response
+
+
+def update_instance(instance_id, field, value):
+    """ PATCH /instances/{instance_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="instances/{}".format(instance_id),
+                                     body=body,
+                                     msg="CATALOG: updating instance")
+    return response
+#endregion
+
+
+#region Services
+def get_services():
+    """ GET /services """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services",
+                                 msg="CATALOG: get services list")
+
+
+def get_service(service_id):
+    """ GET /services/{service_id} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services/{}".format(service_id),
+                                 msg="CATALOG: get service")
+
+
+def create_service(body):
+    """ POST /services """
+    response = _get_client().request(HttpMethod.POST,
+                                     path="services",
+                                     body=body,
+                                     msg="CATALOG: create service")
+    return response
+
+
+def delete_service(service_id):
+    """ DELETE /services/{service_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="services/{}".format(service_id),
+                                     msg="CATALOG: delete service")
+    return response
+
+
+def update_service(service_id, field, value):
+    """ PATCH /services/{service_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="services/{}".format(service_id),
+                                     body=body,
+                                     msg="CATALOG: updating service")
+    return response
+
+
+def create_service_instance(service_id, body):
+    """ POST /services/{service_id}/instances """
+    response = _get_client().request(HttpMethod.POST,
+                                     path="services/{}".format(service_id) + "/instances",
+                                     body=body,
+                                     msg="CATALOG: create service instance")
+    return response
+
+
+def get_all_services_instances():
+    """ GET /services/instances """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services/instances",
+                                 msg="CATALOG: get all services instances list")
+
+
+def get_service_instances(service_id):
+    """ GET /services/{serviceId}/instances """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services/{}".format(service_id) + "/instances",
+                                 msg="CATALOG: get instances list")
+
+
+def get_service_instance(service_id, instance_id):
+    """ GET /services/{serviceId}/instances/{instance_id} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services/{}".format(service_id) + "/instances/{}".format(instance_id),
+                                 msg="CATALOG: get instance")
+
+
+def update_service_instance(service_id, instance_id, field, value):
+    """ PATCH /services/{service_id}/instances/{instance_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="services/{}".format(service_id) + "/instances/{}".format(instance_id),
+                                     body=body,
+                                     msg="CATALOG: updating service")
+    return response
+
+
+def delete_service_instance(service_id, instance_id):
+    """ DELETE /services/{service_id}/instances/{instance_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="services/{}".format(service_id) + "/instances/{}".format(instance_id),
+                                     msg="CATALOG: delete service")
+    return response
+
+#endregion
