@@ -36,6 +36,7 @@ class TapGitHub:
 
     # TAP NG repositories
     ilab_deploy = "tapng-ilab-deploy"
+    tap_cli = "tapng-cli"
 
 
 class RelativeRepositoryPaths:
@@ -45,3 +46,4 @@ class RelativeRepositoryPaths:
 
     # Path to the private ssh key for TAP NG environments - in tapng-ilab-deploy repository
     ilab_centos_key = "id_rsa"
+    tap_cli = "tap"

@@ -18,6 +18,9 @@ import os
 import shutil
 import socket
 import subprocess
+import re
+import modules.command
+from distutils.version import StrictVersion
 
 import pytest
 from retry import retry
@@ -25,6 +28,7 @@ from retry import retry
 import config
 from modules.app_sources import AppSources
 from modules.constants import TapGitHub, RelativeRepositoryPaths
+from modules.tap_cli import TapCli
 from modules.tap_logger import log_fixture
 
 
@@ -45,12 +49,30 @@ def _check_tunnel_established(host, port):
     sock.close()
 
 
+@retry(subprocess.TimeoutExpired, tries=5, delay=2)
+def _check_if_proc_finished(proc, command):
+    if (None == proc.poll()):
+        raise subprocess.TimeoutExpired(command, "")
+
+
+def _get_latest_instance(centos_key_path):
+    rex = re.compile(r'TAP-[0-9]+[\.][0-9]+[\.][0-9]+$')
+    command = ["ssh", "-i", centos_key_path,
+               "-o StrictHostKeyChecking=no",
+               "{}@{}".format(config.ng_jump_username, config.ng_jump_ip),
+               "ls"]
+    result = modules.command.run(command, return_output=True)
+    files = [s for s in result if rex.match(s)]
+    assert len(files) > 0
+    return str(max([StrictVersion(i.split('-')[1]) for i in files]))
+
+
 @pytest.fixture(scope="session")
 def open_tunnel(request, centos_key_path):
     assert config.ng_jump_ip is not None
     command = ["ssh", "{}@{}".format(config.ng_jump_username, config.ng_jump_ip),
                "-N",
-               "-oStrictHostKeyChecking=no",
+               "-o StrictHostKeyChecking=no",
                "-i", centos_key_path,
                "-D", str(config.ng_socks_proxy_port)]
     log_fixture("Opening tunnel {}".format(" ".join(command)))
@@ -62,3 +84,34 @@ def open_tunnel(request, centos_key_path):
         tunnel.kill()
         raise
     request.addfinalizer(tunnel.kill)
+
+
+@pytest.fixture(scope="session")
+def tap_cli(centos_key_path):
+    assert config.ng_jump_username is not None
+    assert config.ng_jump_ip is not None
+
+    target_directory = "/tmp/"
+
+    ng_build_number = config.ng_build_number
+    if ng_build_number is None:
+        ng_build_number = _get_latest_instance(centos_key_path)
+
+    tap_binary = "TAP-" + ng_build_number + "/tap"
+
+    log_fixture("Download tap client")
+    command = ["scp", "-i", centos_key_path,
+               "-o StrictHostKeyChecking=no",
+               "{}@{}:{}".format(config.ng_jump_username, config.ng_jump_ip, tap_binary),
+               target_directory]
+
+    proc = subprocess.Popen(command)
+    try:
+        log_fixture("Waiting for tap client to download")
+        _check_if_proc_finished(proc, command)
+    except subprocess.TimeoutExpired:
+        log_fixture("Command timeout: " + " ".join(command))
+        proc.kill()
+        raise
+
+    return TapCli("/tmp/")

@@ -22,20 +22,25 @@ from .exceptions import CommandExecutionException
 from .tap_logger import get_logger
 
 
-def run(command):
+def run(command, return_output=False):
     """Run specified command in subprocess and log real time output"""
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     logger = get_logger(LoggerType.SHELL_COMMAND)
+    out = []
     while True:
-        output = process.stdout.readline().strip()
+        output = process.stdout.readline()
         if output == '' and process.poll() is not None:
             break
         if output != '':
-            logger.info(output)
+            logger.info(output.strip())
+            out.append(output.strip())
             sys.stdout.flush()
 
     return_code = process.poll()
     if return_code != 0:
         raise CommandExecutionException(return_code, " ".join(command))
 
-    return return_code
+    if return_output:
+        return out
+    else:
+        return return_code

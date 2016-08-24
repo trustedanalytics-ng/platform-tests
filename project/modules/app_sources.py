@@ -23,6 +23,7 @@ from git import Repo
 import requests
 
 import config
+from .exceptions import CommandExecutionException
 from .tap_logger import log_command, get_logger, log_http_request, log_http_response
 
 logger = get_logger(__name__)
@@ -90,14 +91,18 @@ class AppSources(object):
         logger.info("Compile with gradle")
         self.__compile(["./gradlew", "assemble"], working_directory=working_directory)
 
+    def compile_make(self, make_command, working_directory: str=None):
+        self.__compile(["make", make_command], working_directory=working_directory)
+
     def __compile(self, command: list, working_directory: str=None):
         if working_directory is None:
             working_directory = self.path
         current_path = os.getcwd()
         os.chdir(working_directory)
         log_command(command)
-        subprocess.call(command)
+        out = subprocess.check_output(command)
         os.chdir(current_path)
+        return out
 
     def checkout_commit(self, commit_id: str):
         """

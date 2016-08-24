@@ -173,7 +173,7 @@ ng_image_repository_url = os.environ.get("PT_NG_IMAGE_REPOSITORY_URL", "127.0.0.
 ng_k8s_cs_oauth_token_url = os.environ.get("PT_NG_CS_OAUTH_TOKEN_URL",
                                            "http://{}.{}/{}".format("api", tap_domain,
                                                                     "api/{}/login".format(ng_kubernetes_api_version)))
-
+ng_build_number = os.environ.get("PT_NG_BUILD_NUMBER")
 
 def ng_k8s_service_credentials() -> tuple:
     _assert_config_value_set("_ng_k8s_service_auth_password")
@@ -208,4 +208,3 @@ def get_test_version():
     if version is None:
         raise KeyError("Version not found in {}".format(bumpversion_path))
     return version
-
