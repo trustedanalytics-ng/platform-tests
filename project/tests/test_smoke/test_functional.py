@@ -16,6 +16,7 @@
 
 import pytest
 
+import config
 import tests.fixtures.assertions as assertions
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import generate_csv_file
@@ -23,8 +24,10 @@ from modules.http_client import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
+from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, KubernetesCluster, Organization, ServiceInstance, Space, Transfer, User
+from modules.tap_object_model import Application, DataSet, KubernetesCluster, Organization, ServiceInstance, Space, \
+    Transfer, User
 from modules.tap_object_model.flows import onboarding
 from tests.fixtures.fixtures import sample_python_app, sample_java_app
 
@@ -62,6 +65,7 @@ def test_onboarding(context):
     step("Check that organization is created")
     org_list = Organization.api_get_list()
     assert test_org in org_list
+
 
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
@@ -203,3 +207,41 @@ def test_push_sample_app_and_check_response(context, test_org, test_space, sampl
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
     assert response is not None
     assert response.status_code == 200
+
+
+@pytest.mark.components(TAP.atk)
+def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, core_space, test_space, test_org,
+                                                              admin_user):
+    step("Get atk app from core space")
+    atk_app = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
+                    if app.name == "atk"), None)
+    if atk_app is None:
+        raise AssertionError("Atk app not found in core space")
+    atk_url = atk_app.urls[0]
+    step("Add admin to test space")
+    admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid, roles=User.SPACE_ROLES["developer"])
+    step("Create instance of Jupyter service")
+    jupyter = Jupyter(context=context, org_guid=test_org.guid, space_guid=test_space.guid)
+    assertions.assert_in_with_retry(jupyter.instance, ServiceInstance.api_get_list, space_guid=test_space.guid)
+    step("Get credentials for the new jupyter service instance")
+    jupyter.get_credentials()
+    step("Login into Jupyter")
+    jupyter.login()
+    request.addfinalizer(lambda: jupyter.instance.api_delete())
+    step("Create new Jupyter notebook")
+    notebook = jupyter.create_notebook()
+    step("import atk client in the notebook")
+    notebook.send_input("import trustedanalytics as ta")
+    assert notebook.check_command_status() == "ok"
+    step("Create credentials file using atk client")
+    notebook.send_input("ta.create_credentials_file('./cred_file')")
+    assert "URI of the ATK server" in notebook.get_prompt_text()
+    notebook.send_input(atk_url, reply=True)
+    assert "User name" in notebook.get_prompt_text()
+    notebook.send_input(config.admin_username, reply=True)
+    assert "" in notebook.get_prompt_text()
+    notebook.send_input(config.admin_password, reply=True, obscure_from_log=True)
+    assert "Connect now?" in notebook.get_prompt_text()
+    notebook.send_input("y", reply=True)
+    assert "Connected." in str(notebook.get_stream_result())
+    notebook.ws.close()

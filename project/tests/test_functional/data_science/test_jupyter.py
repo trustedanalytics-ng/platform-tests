@@ -82,7 +82,7 @@ class TestJupyterConsole:
         notebook.ws.close()
 
     @priority.medium
-    def test_jupyter_connect_to_atk_client(self, terminal_index, core_space):
+    def test_connect_to_atk_from_jupyter_using_server_atk_client(self, terminal_index, core_space):
         step("Get atk app from core space")
         atk_app = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
                         if app.name == "atk"), None)
