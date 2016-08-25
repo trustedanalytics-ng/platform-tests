@@ -22,11 +22,15 @@ from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import User
 from tests.fixtures.assertions import assert_user_in_space_with_roles, assert_raises_http_exception
+from config import tap_type
+from config import TapType
+
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
+tap_ng = TapType.tap_ng.value
 
-
+@pytest.mark.skipif(tap_type == tap_ng, reason="Spaces are not predicted for TAP_NG")
 class TestUpdateSpaceUser:
 
     @priority.low

@@ -16,21 +16,22 @@
 
 import pytest
 
-from config import kubernetes
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Organization, Space, User
 from tests.fixtures.assertions import assert_not_in_with_retry, assert_raises_http_exception
+from config import tap_type
+from config import TapType
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
+tap_ng = TapType.tap_ng.value
 
-
+@pytest.mark.skipif(tap_type == tap_ng, reason="Spaces are not predicted for TAP_NG")
 class TestSpace:
 
     @priority.medium
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_get_spaces_list_in_new_org(self, context):
         step("Create new organization")
         org = Organization.api_create(context)
@@ -39,7 +40,6 @@ class TestSpace:
         assert len(spaces) == 0, "There are spaces in a new organization"
 
     @priority.high
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_create_and_delete_space(self, test_org):
         step("Create new space in the organization")
         space = Space.api_create(org=test_org)
@@ -51,7 +51,6 @@ class TestSpace:
         assert_not_in_with_retry(space, Space.api_get_list)
 
     @priority.medium
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_cannot_create_space_with_existing_name(self, test_org):
         step("Create a space")
         space = Space.api_create(org=test_org)
@@ -60,7 +59,6 @@ class TestSpace:
                                      org=test_org, name=space.name)
 
     @priority.low
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_create_space_with_long_name(self, test_org):
         step("Create space with name 400 char long")
         long_name = Space.NAME_PREFIX + "t" * 400
@@ -70,14 +68,12 @@ class TestSpace:
         assert space in spaces
 
     @priority.low
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_create_space_with_empty_name(self, test_org):
         step("Check that attempt to create space with empty name returns an error")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, Space.api_create,
                                      name="", org=test_org)
 
     @priority.low
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_cannot_delete_not_existing_space(self, test_org):
         step("Create a space")
         space = Space.api_create(org=test_org)
@@ -88,7 +84,6 @@ class TestSpace:
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND, space.api_delete)
 
     @priority.low
-    @pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
     def test_cannot_delete_space_with_user(self, context, test_org):
         step("Create a space")
         space = Space.api_create(org=test_org)

@@ -16,18 +16,20 @@
 
 import pytest
 
-from config import kubernetes
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import User
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception, assert_user_in_space_with_roles
+from config import tap_type
+from config import TapType
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+tap_ng = TapType.tap_ng.value
 
 
-@pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+@pytest.mark.skipif(tap_type == tap_ng, reason="Spaces are not predicted for TAP_NG")
 class TestAddNewUserToSpace:
     pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)]
     ALL_SPACE_ROLES = {role for role_set in User.SPACE_ROLES.values() for role in role_set}
@@ -81,7 +83,7 @@ class TestAddNewUserToSpace:
         assert_user_in_space_with_roles(test_org_manager, test_space.guid)
 
 
-@pytest.mark.skipif(kubernetes, reason="Spaces are not predicted for TAP_NG")
+@pytest.mark.skipif(tap_type == tap_ng, reason="Spaces are not predicted for TAP_NG")
 class TestAddUserToSpace:
     pytestmark = [pytest.mark.components(TAP.user_management)]
 

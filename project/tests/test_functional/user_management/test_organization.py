@@ -26,12 +26,15 @@ from modules.tap_object_model import Organization, Space, User
 from modules.tap_object_model.flows.onboarding import onboard
 from modules.test_names import escape_hive_name
 from tests.fixtures import assertions
+from config import tap_type
+from config import TapType
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)]
+tap_ng = TapType.tap_ng.value
 
-
+@pytest.mark.skipif(tap_type == tap_ng, reason="Manage organizations are not predicted for TAP NG First Phase")
 class TestOrganization:
 
     @priority.high
