@@ -19,6 +19,8 @@ import pytest
 import config
 import tests.fixtures.assertions as assertions
 from modules.constants import TapComponent as TAP, Urls
+from modules.constants.http_status import PlatformTestsHttpStatus
+from modules.exceptions import UnexpectedResponseError
 from modules.file_utils import generate_csv_file
 from modules.http_client import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
@@ -28,6 +30,7 @@ from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
 from modules.tap_object_model import Application, DataSet, KubernetesCluster, Organization, ServiceInstance, Space, \
     Transfer, User
+from modules.tap_object_model import TestSuite
 from modules.tap_object_model.flows import onboarding
 from tests.fixtures.fixtures import sample_python_app, sample_java_app
 
@@ -35,7 +38,7 @@ from tests.fixtures.fixtures import sample_python_app, sample_java_app
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker,
                      TAP.hbase_broker, TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
-                     TAP.zookeeper_broker, TAP.zookeeper_wssb_broker)
+                     TAP.zookeeper_broker, TAP.zookeeper_wssb_broker, TAP.platform_tests)
 pytestmark = [priority.high]
 
 
@@ -180,6 +183,7 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
 @long
 @pytest.mark.components(TAP.demiurge, TAP.kubernetes_broker)
 def test_create_and_delete_kubernetes_service_instances(core_org, core_space, context, kubernetes_marketplace):
+    """Create and Delete Kubernetes Service Instance"""
     service_type = kubernetes_marketplace[0]
     plan = kubernetes_marketplace[1]
 
@@ -199,7 +203,7 @@ def test_create_and_delete_kubernetes_service_instances(core_org, core_space, co
 
 @pytest.mark.parametrize("sample_app", [sample_python_app, sample_java_app])
 def test_push_sample_app_and_check_response(context, test_org, test_space, sample_app):
-    """Push sample application and test http response"""
+    """Push Sample Application and Test Http Response"""
     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app(class_context=context,
                                                                                    test_org=test_org,
                                                                                    test_space=test_space).urls[0]))
@@ -212,6 +216,7 @@ def test_push_sample_app_and_check_response(context, test_org, test_space, sampl
 @pytest.mark.components(TAP.atk)
 def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, core_space, test_space, test_org,
                                                               admin_user):
+    """Connect to Atk from Jupyter using Default Atk Client"""
     step("Get atk app from core space")
     atk_app = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
                     if app.name == "atk"), None)
@@ -245,3 +250,26 @@ def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, 
     notebook.send_input("y", reply=True)
     assert "Connected." in str(notebook.get_stream_result())
     notebook.ws.close()
+
+
+@pytest.mark.components(TAP.platform_tests)
+def test_start_tests_or_get_suite_in_progress():
+    """Start Tests or get Suite in Progress"""
+    step("Start tests")
+    try:
+        new_test = TestSuite.api_create()
+        step("New test suite has been started")
+        suite_id = new_test.suite_id
+        assert new_test.state == TestSuite.IN_PROGRESS, "New suite state is {}".format(new_test.state)
+    except UnexpectedResponseError as e:
+        step("Another suite is already in progress")
+        assert e.status == PlatformTestsHttpStatus.CODE_TOO_MANY_REQUESTS
+        assert PlatformTestsHttpStatus.MSG_RUNNER_BUSY in e.error_message
+        step("Get list of test suites and retrieve suite in progress")
+        tests = TestSuite.api_get_list()
+        test_in_progress = next((t for t in tests if t.state == TestSuite.IN_PROGRESS), None)
+        assert test_in_progress is not None, "Cannot create suite, although no other suite is in progress"
+        suite_id = test_in_progress.suite_id
+    step("Get suite details")
+    created_test_results = TestSuite.api_get_test_suite_results(suite_id)
+    assert created_test_results is not None
