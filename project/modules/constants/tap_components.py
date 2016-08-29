@@ -79,6 +79,7 @@ class TapComponent:
     nginx_ingress = "nginx-ingress"
     template_repository = "template-repository"
     uaa_client_register_job = "tap-uaa-client-register-job"
+    uaa = "uaa"
 
     # ---- TAP NG components - 3rd party ---- #
     image_repository = "image-repository"
