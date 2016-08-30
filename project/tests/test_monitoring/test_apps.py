@@ -54,7 +54,7 @@ class TestAppMonitoring(object):
         step("Send GET /health request to apps: {}".format(self.TESTED_APP_NAMES))
         for app in tested_apps:
             step("Testing app with name: {}".format(app.name))
-            HttpClientFactory.get(ApplicationConfigurationProvider.get()).request(
+            HttpClientFactory.get(ApplicationConfigurationProvider.get(app.urls[0])).request(
                 method=HttpMethod.GET,
                 path="health"
             )
