@@ -296,6 +296,7 @@ class TestReporter(TestCase):
             "parameters": {
                 "configuration_parameters": {k.replace(".", "_"): v for k, v in self.EXPECTED_CONFIG_PARAMS.items()},
                 "environment_variables": self.EXPECTED_ENV_VARIABLES,
-            }
+            },
+            "kerberos": False
         }
         return expected_run

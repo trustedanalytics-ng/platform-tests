@@ -74,7 +74,8 @@ class MongoReporter(object):
                 "total_test_count": 0,
                 "test_version": config.get_test_version(),
                 "test_type": test_run_type,
-                "environment_availability": False
+                "environment_availability": False,
+                "kerberos": config.kerberos
             }
             cls._instance._save_test_run()
             cls._instance._log = []
