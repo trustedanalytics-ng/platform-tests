@@ -37,6 +37,11 @@ class HdfsException(Exception):
 
 class CommandExecutionException(Exception):
     """Local and remote (ssh)"""
+    def __init__(self, return_code, output, command):
+        super().__init__()
+        self.return_code = return_code
+        self.output = output
+        self.command = command
 
 
 class YouMustBeJokingException(Exception):

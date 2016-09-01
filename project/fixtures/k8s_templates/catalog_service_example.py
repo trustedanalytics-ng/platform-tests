@@ -53,3 +53,23 @@ ng_catalog_service_plan = {
     "description": "plan-test",
     "cost": "free"
 }
+
+etcd_example = {
+    "name": "etcd",
+    "description": "Etcd key-value storage",
+    "metadata": [],
+    "bindable": True,
+    "tags": [
+        "etcd",
+        "keyvalue",
+        "etcd-0.4.6",
+        "k8s"
+    ],
+    "plans": [
+        {
+            "name": "free",
+            "description": "free",
+            "cost": "free"
+        }
+    ]
+}

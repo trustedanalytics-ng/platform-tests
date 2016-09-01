@@ -29,15 +29,15 @@ def is_test_object_name(name):
     return re.match(test_name_regex, name) is not None
 
 
-def generate_test_object_name(email=False, short=False, prefix=None):
+def generate_test_object_name(email=False, short=False, prefix=None, separator="_"):
     """Return string with hostname/prefix and date for use as name of test org, user, transfer, etc."""
     # TODO add global counter
-    str_format = "%Y%m%d_%H%M%S" if short else "%Y%m%d_%H%M%S_%f"
+    str_format = "%Y%m%d{}%H%M%S".format(separator) if short else "%Y%m%d{}%H%M%S{}%f".format(separator, separator)
     now = datetime.now().strftime(str_format)
-    name_format = config.test_user_email.replace('@', '+{}_{}@') if email else "{}_{}"
+    name_format = config.test_user_email.replace('@', '+{}{}{}@') if email else "{}{}{}"
     if prefix is None:
-        prefix = socket.gethostname().replace("-", "_").lower()
-    return name_format.format(prefix, now)
+        prefix = socket.gethostname().replace("-", separator).lower()
+    return name_format.format(prefix, separator, now)
 
 
 def escape_hive_name(string):

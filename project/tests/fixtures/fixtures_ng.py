@@ -61,7 +61,7 @@ def _get_latest_instance(centos_key_path):
                "-o StrictHostKeyChecking=no",
                "{}@{}".format(config.ng_jump_username, config.ng_jump_ip),
                "ls"]
-    result = modules.command.run(command, return_output=True)
+    result = modules.command.run(command)
     files = [s for s in result if rex.match(s)]
     assert len(files) > 0
     return str(max([StrictVersion(i.split('-')[1]) for i in files]))
@@ -115,6 +115,6 @@ def tap_cli(centos_key_path):
         raise
 
     command = ['chmod', '+x', '{}{}'.format(target_directory, 'tap')]
-    modules.command.run(command, return_output=True)
+    modules.command.run(command)
 
     return TapCli("/tmp/")

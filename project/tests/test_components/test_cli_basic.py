@@ -57,7 +57,7 @@ class TestCliBasicFlow:
     def test_cannot_login_with_incorrect_password(self, tap_cli, restore_login):
         step("Check that login with incorrect password returns Unauthorized")
         output = tap_cli.login(tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
-        assert "Unauthorized" in output
+        assert 'CODE: 401 BODY: {"message":"Bad response status: 401"}\nAuthentication failed' in output
 
     @pytest.mark.bugs("DPNG-10120 [TAP-NG] CLI - ./tap target should be enable only for console-service ip")
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):

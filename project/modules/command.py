@@ -24,7 +24,7 @@ from .tap_logger import get_logger
 logger = get_logger(LoggerType.SHELL_COMMAND)
 
 
-def run(command, return_output=False):
+def run(command):
     """Run specified command in subprocess and log real time output"""
     logger.info("Executing command: '{}'".format(" ".join(command)))
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
@@ -39,10 +39,8 @@ def run(command, return_output=False):
             sys.stdout.flush()
 
     return_code = process.poll()
-    if return_code != 0:
-        raise CommandExecutionException(return_code, " ".join(command))
 
-    if return_output:
-        return out
-    else:
-        return return_code
+    if return_code != 0:
+        raise CommandExecutionException(return_code, " ".join(out), " ".join(command))
+
+    return out

@@ -17,7 +17,7 @@
 import pytest
 from retry import retry
 
-from modules.exceptions import UnexpectedResponseError
+from modules.exceptions import UnexpectedResponseError, CommandExecutionException
 from modules.tap_logger import step
 from modules.tap_object_model import User
 from modules.tap_object_model.flows import data_catalog
@@ -139,3 +139,17 @@ def assert_instance_not_in_space(instance, space):
 def instance_in_space(instance, space):
     _, instances = cf_api_get_space_summary(space.guid)
     return any((i for i in instances if instance == i))
+
+
+def assert_raises_command_execution_exception(return_code, output, callable_obj, *args, **kwargs):
+    with pytest.raises(CommandExecutionException) as e:
+        callable_obj(*args, **kwargs)
+    return_code_correct = e.value.return_code == return_code
+    assert_command_execution(output, return_code_correct, e, return_code)
+
+
+def assert_command_execution(output, return_code_correct, e, return_code):
+    output_contains_string = output in e.value.output or output == ""
+    assert return_code_correct and output_contains_string, \
+        "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.return_code, e.value.output, return_code, output)
+

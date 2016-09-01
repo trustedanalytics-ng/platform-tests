@@ -168,3 +168,154 @@ ng_template_example_body = {
         }
     ]
 }
+
+etcd_template = {
+    "body": {
+        "componentType": "instance",
+        "persistentVolumeClaims": None,
+        "deployments": [
+            {
+                "kind": "Deployment",
+                "apiVersion": "extensions/v1beta1",
+                "metadata": {
+                    "name": "$idx_and_short_serviceid",
+                    "creationTimestamp": None,
+                    "labels": {
+                        "catalog_plan_id": "$catalog_plan_id",
+                        "catalog_service_id": "$catalog_service_id",
+                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                        "managed_by": "TAP",
+                        "org": "$org",
+                        "service_id": "$service_id",
+                        "space": "$space"
+                    }
+                },
+                "spec": {
+                    "replicas": 1,
+                    "selector": {
+                        "matchLabels": {
+                            "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                            "service_id": "$service_id"
+                        }
+                    },
+                    "template": {
+                        "metadata": {
+                            "creationTimestamp": None,
+                            "labels": {
+                                "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                                "managed_by": "TAP",
+                                "service_id": "$service_id"
+                            }
+                        },
+                        "spec": {
+                            "volumes": None,
+                            "containers": [
+                                {
+                                    "name": "k-etcd",
+                                    "image": "127.0.0.1:30000/coreos/etcd:v2.3.6",
+                                    "ports": [
+                                        {
+                                            "containerPort": 4001,
+                                            "protocol": "TCP"
+                                        },
+                                        {
+                                            "containerPort": 7001,
+                                            "protocol": "TCP"
+                                        }
+                                    ],
+                                    "env": [
+                                        {
+                                            "name": "MANAGED_BY",
+                                            "value": "TAP"
+                                        }
+                                    ],
+                                    "resources": {
+                                        "limits": {
+                                            "memory": "500M"
+                                        },
+                                        "requests": {
+                                            "memory": "100M"
+                                        }
+                                    },
+                                    "imagePullPolicy": "IfNotPresent"
+                                }
+                            ],
+                            "restartPolicy": "Always",
+                            "dnsPolicy": "ClusterFirst",
+                            "serviceAccountName": ""
+                        }
+                    },
+                    "strategy": {}
+                },
+                "status": {}
+            }
+        ],
+        "ingresses": None,
+        "services": [
+            {
+                "kind": "Service",
+                "apiVersion": "v1",
+                "metadata": {
+                    "name": "$idx_and_short_serviceid",
+                    "creationTimestamp": None,
+                    "labels": {
+                        "catalog_plan_id": "$catalog_plan_id",
+                        "catalog_service_id": "$catalog_service_id",
+                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                        "managed_by": "TAP",
+                        "org": "$org",
+                        "service_id": "$service_id",
+                        "space": "$space"
+                    }
+                },
+                "spec": {
+                    "type": "NodePort",
+                    "ports": [
+                        {
+                            "name": "rest",
+                            "protocol": "TCP",
+                            "port": 4001,
+                            "targetPort": 0,
+                            "nodePort": 0
+                        },
+                        {
+                            "name": "transport",
+                            "protocol": "TCP",
+                            "port": 7001,
+                            "targetPort": 0,
+                            "nodePort": 0
+                        }
+                    ],
+                    "selector": {
+                        "service_id": "$service_id"
+                    }
+                },
+                "status": {
+                    "loadBalancer": {}
+                }
+            }
+        ],
+        "serviceAccounts": [
+            {
+                "kind": "ServiceAccount",
+                "apiVersion": "v1",
+                "metadata": {
+                    "name": "$idx_and_short_serviceid",
+                    "creationTimestamp": None,
+                    "labels": {
+                        "catalog_plan_id": "$catalog_plan_id",
+                        "catalog_service_id": "$catalog_service_id",
+                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                        "managed_by": "TAP",
+                        "org": "$org",
+                        "service_id": "$service_id",
+                        "space": "$space"
+                    }
+                },
+                "secrets": None
+            }
+        ],
+        "secrets": None
+    },
+    "hooks": None
+}
