@@ -74,15 +74,14 @@ class MongoReporter(object):
                 "total_test_count": 0,
                 "test_version": config.get_test_version(),
                 "test_type": test_run_type,
-                "environment_availability": False,
-                "kerberos": config.kerberos
+                "environment_availability": False
             }
             cls._instance._save_test_run()
             cls._instance._log = []
         return cls._instance
 
     def on_run_start(self, environment, environment_version, infrastructure_type, appstack_version, platform_components,
-                     components, environment_availability):
+                     components, environment_availability, kerberos):
         tc_config_params = self.get_tc_configuration_params()
         tc_env_variables = self.get_tc_env_variables()
         mongo_run_document = {
@@ -102,6 +101,7 @@ class MongoReporter(object):
                 "configuration_parameters": {k.replace(".", "_"): v for k, v in tc_config_params.items()},
                 "environment_variables": tc_env_variables,
             },
+            "kerberos": kerberos
         }
         self._mongo_run_document.update(mongo_run_document)
         self._save_test_run()

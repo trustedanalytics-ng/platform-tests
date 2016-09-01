@@ -156,7 +156,8 @@ class TestReporter(TestCase):
             expected_run_document["appstack_version"],
             expected_run_document["platform_components"],
             expected_run_document["components"],
-            expected_run_document["environment_availability"]
+            expected_run_document["environment_availability"],
+            expected_run_document["kerberos"]
         )
         return expected_run_document
 

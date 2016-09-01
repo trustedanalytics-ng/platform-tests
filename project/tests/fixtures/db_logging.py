@@ -48,7 +48,8 @@ def log_test_run_in_database(request, test_type):
                                     appstack_version=config.appstack_version,
                                     platform_components=[],
                                     components=[] if request is None else get_tap_components_from_request(request),
-                                    environment_availability=False if request is None else True)
+                                    environment_availability=False if request is None else True,
+                                    kerberos=config.kerberos)
 
         def finalizer():
             mongo_reporter.on_run_end()
