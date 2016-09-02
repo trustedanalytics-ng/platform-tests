@@ -14,23 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""This is a basic python application. Upon entering '/' it will return
+   some text in your web browser."""
 
 
-import flask
 import os
+import flask
 
+APP = flask.Flask(__name__)
+VCAP_APP_PORT = "VCAP_APP_PORT"
+APP_PORT = int(os.environ.get(VCAP_APP_PORT, "80"))
+APP_HOST = "0.0.0.0"
+APP.debug = True
 
-app = flask.Flask(__name__)
-
-
-@app.route("/")
+@APP.route("/")
 def index():
+    """This is returned upon entering /
+    """
     return "Test app"
 
-
 if __name__ == "__main__":
-    VCAP_APP_PORT = "VCAP_APP_PORT"
-    app_port = int(os.environ.get(VCAP_APP_PORT, "8080"))
-    app_host = "0.0.0.0"
-    app.debug = True
-    app.run(host=app_host, port=app_port)
+    APP.run(host=APP_HOST, port=APP_PORT)

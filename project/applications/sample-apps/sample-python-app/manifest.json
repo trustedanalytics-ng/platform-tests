@@ -1,0 +1,5 @@
+{
+    "type": "PYTHON",
+    "name": "sample-python-app",
+    "instances": 1
+}
