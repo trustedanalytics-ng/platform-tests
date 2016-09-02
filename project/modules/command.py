@@ -21,11 +21,13 @@ from .constants.logger_type import LoggerType
 from .exceptions import CommandExecutionException
 from .tap_logger import get_logger
 
+logger = get_logger(LoggerType.SHELL_COMMAND)
+
 
 def run(command, return_output=False):
     """Run specified command in subprocess and log real time output"""
+    logger.info("Executing command: '{}'".format(" ".join(command)))
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    logger = get_logger(LoggerType.SHELL_COMMAND)
     out = []
     while True:
         output = process.stdout.readline()
