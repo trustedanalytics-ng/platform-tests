@@ -33,8 +33,8 @@ from modules.tap_object_model.k8s_application import K8sApplication
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception, assert_raises_http_exceptions
 
-logged_components = (TAP.console_service,)
-pytestmark = [pytest.mark.components(TAP.console_service)]
+logged_components = (TAP.api_service,)
+pytestmark = [pytest.mark.components(TAP.api_service)]
 
 
 @incremental
@@ -143,7 +143,7 @@ class TestPythonApplicationFlow:
 
     def test_11_scale_application_with_wrong_id(self):
         step("Scale application with wrong id")
-        assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR, "",
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, "",
                                      ConsoleService.scale_application, "wrong_id", 3)
 
     def test_12_scale_application_with_wrong_number(self):

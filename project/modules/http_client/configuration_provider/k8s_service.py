@@ -64,8 +64,8 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
 class ConsoleServiceConfigurationProvider(ProxiedConfigurationProvider):
     @classmethod
     def get(cls):
-        api_version = k8s_core_services[TapComponent.console_service]["api_version"]
-        configuration = K8sServiceConfigurationProvider.get(TapComponent.console_service,
+        api_version = k8s_core_services[TapComponent.api_service]["api_version"]
+        configuration = K8sServiceConfigurationProvider.get(TapComponent.api_service,
                                                             api_endpoint="api/{}".format(api_version))
         return HttpClientConfiguration(
             client_type=HttpClientType.K8S_CS,

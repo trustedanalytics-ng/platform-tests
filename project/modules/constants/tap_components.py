@@ -71,7 +71,7 @@ class TapComponent:
     # ---- TAP NG components ---- #
     blob_store = "blob-store"
     catalog = "catalog"
-    console_service = "console-service"
+    api_service = "api-service"
     container_broker = "container-broker"
     dashboard = "dashboard"
     image_factory = "image-factory"

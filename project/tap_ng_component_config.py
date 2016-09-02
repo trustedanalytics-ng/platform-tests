@@ -30,7 +30,7 @@ k8s_core_services = {
     TAP.image_factory: {},
     TAP.template_repository: {"get_endpoint": "templates"},
     TAP.blob_store: {},
-    TAP.console_service: {},
+    TAP.api_service: {},
     TAP.dashboard: {"health_endpoint": None},
     TAP.message_queue: {"health_endpoint": None}
 }
