@@ -114,4 +114,7 @@ def tap_cli(centos_key_path):
         proc.kill()
         raise
 
+    command = ['chmod', '+x', '{}{}'.format(target_directory, 'tap')]
+    modules.command.run(command, return_output=True)
+
     return TapCli("/tmp/")
