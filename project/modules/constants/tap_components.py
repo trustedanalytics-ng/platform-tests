@@ -73,7 +73,6 @@ class TapComponent:
     catalog = "catalog"
     api_service = "api-service"
     container_broker = "container-broker"
-    dashboard = "dashboard"
     image_factory = "image-factory"
     template_repository = "template-repository"
 

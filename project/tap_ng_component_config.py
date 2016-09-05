@@ -24,15 +24,20 @@ default = {
     "get_endpoint": None
 }
 
+api_service = {
+    TAP.api_service: {
+        "get_endpoint": "catalog",
+        "api_version": "v1",
+        "api_version_alias": None
+    }
+}
+
 k8s_core_services = {
     TAP.catalog: {"get_endpoint": "images"},
-    TAP.container_broker: {},
+    TAP.container_broker: {"get_endpoint": "secret/smtp"},
     TAP.image_factory: {},
     TAP.template_repository: {"get_endpoint": "templates"},
-    TAP.blob_store: {},
-    TAP.api_service: {},
-    TAP.dashboard: {"health_endpoint": None},
-    TAP.message_queue: {"health_endpoint": None}
+    TAP.blob_store: {}
 }
 
 for item in k8s_core_services:
@@ -47,5 +52,10 @@ third_party_services = {
         "api_version_alias": None,
         "health_endpoint": None,
         "get_endpoint": "_catalog"
+    },
+
+    TAP.message_queue: {
+        "health_endpoint": None,
+        "get_endpoint": None
     }
 }
