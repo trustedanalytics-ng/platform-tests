@@ -158,6 +158,9 @@ logging_level = os.environ.get("PT_LOGGING_LEVEL", "DEBUG")
 
 # -------------------------------------- TAP NG -------------------------------------- #
 
+api_version = os.environ.get("PT_API_VERSION", "v1")
+api_url = "api.{}".format(tap_domain)
+api_url_full = os.environ.get("PT_API_URL", "http://{}/api/{}".format(api_url, api_version))
 ng_disable_environment_check = get_bool("PT_DISABLE_ENVIRONMENT_CHECK", False)
 ng_jump_ip = os.environ.get("PT_NG_JUMP_IP")  # required for running component tests on TAP NG
 ng_jump_key_path = os.environ.get("PT_NG_JUMP_KEY_PATH")  # if not passed, key will be retrieved from GitHub

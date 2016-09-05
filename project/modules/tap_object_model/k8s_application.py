@@ -31,6 +31,7 @@ from tests.fixtures.assertions import assert_raises_http_exception, assert_retur
 class K8sApplication(object):
     STATE_RUNNING = "RUNNING"
     STATE_STOPPED = "STOPPED"
+    STATE_FAILURE = "FAILURE"
 
     url = None
 

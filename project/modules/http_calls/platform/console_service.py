@@ -16,11 +16,11 @@
 
 from modules.constants import HttpStatus
 from modules.http_client import HttpClientFactory, HttpMethod
-from modules.http_client.configuration_provider.k8s_service import ConsoleServiceConfigurationProvider
+from modules.http_client.configuration_provider.k8s_service import ApiServiceConfigurationProvider
 
 
 def _get_client():
-    configuration = ConsoleServiceConfigurationProvider.get()
+    configuration = ApiServiceConfigurationProvider.get()
     return HttpClientFactory.get(configuration)
 
 
@@ -30,7 +30,7 @@ def get(path):
                                      path=path,
                                      raise_exception=True,
                                      raw_response=True,
-                                     msg="CONSOLE-SERVICE: get /{}".format(path))
+                                     msg="API-SERVICE: get /{}".format(path))
     assert response.status_code == HttpStatus.CODE_OK
     return response
 
@@ -41,7 +41,7 @@ def post(path):
                                      path=path,
                                      raise_exception=True,
                                      raw_response=True,
-                                     msg="CONSOLE-SERVICE: post /{}".format(path))
+                                     msg="API-SERVICE: post /{}".format(path))
     return response
 
 
@@ -50,7 +50,7 @@ def put(path, body={}):
     response = _get_client().request(HttpMethod.PUT,
                                      path=path,
                                      body=body,
-                                     msg="CONSOLE-SERVICE: put /{}".format(path))
+                                     msg="API-SERVICE: put /{}".format(path))
     return response
 
 
@@ -63,7 +63,7 @@ def push_application(file_path, manifest_path):
                                      path="applications",
                                      files=files,
                                      raw_response=True,
-                                     msg="CONSOLE-SERVICE: push application")
+                                     msg="API-SERVICE: push application")
     assert response.status_code == HttpStatus.CODE_CREATED
     return response
 
@@ -90,7 +90,7 @@ def delete_application(id):
     """ DELETE /applications/{id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="applications/{}".format(id),
-                                     msg="CONSOLE-SERVICE: delete application")
+                                     msg="API-SERVICE: delete application")
     return response
 
 
