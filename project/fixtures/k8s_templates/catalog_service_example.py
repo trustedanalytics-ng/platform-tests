@@ -17,39 +17,13 @@
 ng_catalog_instance_correct_body = {
     "type": "service",
     "name": "instance-name-",
-    "state": "requested",
-    "metadata": [
-        {
-            "key": "nginx",
-            "value": "4"
-        }
-    ]
-}
-
-ng_catalog_instance_no_metadata_body = {
-    "id": "",
-    "name": "instance-name-",
-    "type": "service",
-    "classId": "90-830473249534-50294",
-    "state": "requested",
-    "metadata": [
-        {}
-    ],
-    "bindings": [
-        {}
-    ]
+    "state": "requested"
 }
 
 ng_catalog_instance_bad_name_body = {
     "type": "service",
     "name": "instance-name!#%-",
-    "state": "requested",
-    "metadata": [
-        {
-            "key": "nginx",
-            "value": "4"
-        }
-    ]
+    "state": "requested"
 }
 
 ng_catalog_service_correct_body = {
