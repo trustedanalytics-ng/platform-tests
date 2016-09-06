@@ -1,0 +1,5 @@
+{
+    "type": "JAVA",
+    "name": "sample-java-app",
+    "instances": 1
+}
