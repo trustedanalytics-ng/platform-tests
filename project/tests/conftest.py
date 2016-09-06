@@ -20,12 +20,11 @@ import pytest
 import requests
 
 import config
+import tests.fixtures.db_logging as db_logging
 from modules.constants import Path, ParametrizedService
 from modules.mongo_reporter.reporter import MongoReporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceType
-import tests.fixtures.db_logging as db_logging
-import tests.fixtures.fixtures as fixtures
 
 pytest_plugins = ["tests.fixtures.context",
                   "tests.fixtures.db_logging",
@@ -122,24 +121,17 @@ def _generate_test_cases(services):
     test_cases = []
     ids = []
     for service_type in services:
-        for plan in service_type.service_plans:
-            if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
-                test_cases.append((service_type, plan))
-                ids.append("{}_{}".format(service_type.label, plan["name"]))
+        if service_type.service_plans is not None:
+            for plan in service_type.service_plans:
+                if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
+                    test_cases.append((service_type, plan))
+                    ids.append("{}_{}".format(service_type.label, plan["name"]))
     return test_cases, ids
 
 
 def pytest_generate_tests(metafunc):
     """Parametrize marketplace fixture with tuples of ServiceType and plan dict."""
     if "non_parametrized_marketplace_services" in metafunc.funcargnames:
-        core_space = fixtures.core_space()
-        marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
-        non_k8s_services = [s for s in marketplace if "k8s" not in s.tags]
-        test_cases, ids = _generate_test_cases(non_k8s_services)
+        marketplace = ServiceType.api_get_catalog()
+        test_cases, ids = _generate_test_cases(marketplace)
         metafunc.parametrize("non_parametrized_marketplace_services", test_cases, ids=ids)
-    elif "kubernetes_marketplace" in metafunc.funcargnames:
-        core_space = fixtures.core_space()
-        marketplace = ServiceType.api_get_list_from_marketplace(space_guid=core_space.guid)
-        k8s_services = [s for s in marketplace if "k8s" in s.tags]
-        test_cases, ids = _generate_test_cases(k8s_services)
-        metafunc.parametrize("kubernetes_marketplace", test_cases, ids=ids)

@@ -107,7 +107,7 @@ jumpbox_key_path = os.environ.get("PT_JUMPBOX_KEY_PATH", os.path.expanduser(os.p
 cf_proxy = os.environ.get("PT_CF_PROXY")
 
 # Credentials - secrets are obligatory
-admin_username = os.environ.get("PT_ADMIN_USERNAME", "trusted.analytics.tester@gmail.com")  # Test user
+admin_username = os.environ.get("PT_ADMIN_USERNAME", "taptester")  # Test user
 admin_password = os.environ["PT_ADMIN_PASSWORD"]  # Secret
 github_user_username = os.environ.get("PT_GITHUB_USER_USERNAME", "inteldatatests")
 _github_user_password = os.environ.get("PT_GITHUB_USER_PASSWORD")  # Secret
@@ -133,9 +133,9 @@ cf_oauth_token_url = os.environ.get("PT_CF_OAUTH_TOKEN_URL", "https://login.{}/o
 uaa_url = os.environ.get("PT_UAA_URL", "http://uaa.{}".format(tap_domain))
 uaa_oauth_token_url = os.environ.get("PT_UAA_OAUTH_TOKEN_URL", "http://uaa.{}/oauth/token".format(tap_domain))
 login_do_scheme = os.environ.get("PT_LOGIN_DO_SCHEME", "http")
-console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://login.{}".format(login_do_scheme, tap_domain))
+console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://uaa.{}".format(login_do_scheme, tap_domain))
 # TAP services
-console_url = os.environ.get("PT_CONSOLE_URL", "https://console.{}".format(tap_domain))
+console_url = os.environ.get("PT_CONSOLE_URL", "http://console.{}".format(tap_domain))
 arcadia_url = os.environ.get("PT_ARCADIA_URL", "http://arcadia.{}".format(tap_domain))
 hue_url = os.environ.get("PT_HUE_URL", "http://hue.{}".format(tap_domain))
 application_broker_url = os.environ.get("PT_APPLICATION_BROKER_URL",

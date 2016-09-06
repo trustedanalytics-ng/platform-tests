@@ -55,7 +55,7 @@ class ServiceType(object):
         return [sp["guid"] for sp in self.service_plans]
 
     @classmethod
-    def _from_details(cls, space_guid, details):
+    def _from_details(cls, details, space_guid=None):
         metadata = details["metadata"]
         entity = details["entity"]
         service_plans = entity.get("service_plans")
@@ -68,14 +68,14 @@ class ServiceType(object):
                    display_name=extra.get("displayName"), image=extra.get("imageUrl"))
 
     @classmethod
-    def api_get_list_from_marketplace(cls, space_guid, client=None):
-        response = service_catalog.api_get_marketplace_services(space_guid=space_guid, client=client)
-        return [cls._from_details(space_guid, data) for data in response]
+    def api_get_catalog(cls, client=None):
+        response = service_catalog.api_get_catalog(client=client)
+        return [cls._from_details(data) for data in response]
 
     @classmethod
     def api_get(cls, space_guid, service_guid, client=None):
         response = service_catalog.api_get_service(service_guid=service_guid, client=client)
-        return cls._from_details(space_guid, response)
+        return cls._from_details(response, space_guid)
 
     @classmethod
     def register_app_in_marketplace(cls, context, app_name, app_guid, org_guid, space_guid, service_name=None,
@@ -86,7 +86,7 @@ class ServiceType(object):
             if service_description is None else service_description
         response = service_catalog.api_create_service(service_name, service_description, org_guid, app_name, app_guid,
                                                       image, display_name, tags, client)
-        service = cls._from_details(space_guid, response)
+        service = cls._from_details(response, space_guid)
         context.service_offerings.append(service)
         return service
 
@@ -112,7 +112,7 @@ class ServiceType(object):
     @classmethod
     def cf_api_get_list_from_marketplace_by_space(cls, space_guid):
         response = cf.cf_api_get_space_services(space_guid)
-        return [cls._from_details(space_guid, data) for data in response["resources"]]
+        return [cls._from_details(data, space_guid) for data in response["resources"]]
 
     @classmethod
     def cf_api_get_list(cls, name=None, get_plans=False):

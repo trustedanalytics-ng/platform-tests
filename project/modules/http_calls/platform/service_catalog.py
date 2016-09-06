@@ -19,14 +19,13 @@ from ...http_client.http_client_factory import HttpClientFactory
 from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
 
 
-def api_get_marketplace_services(space_guid, client=None):
-    """GET /rest/services"""
+def api_get_catalog(client=None):
+    """GET /rest/catalog"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/services",
-        params={"space": space_guid},
-        msg="PLATFORM: get marketplace service list"
+        path="rest/catalog",
+        msg="PLATFORM: get catalog list"
     )
 
 

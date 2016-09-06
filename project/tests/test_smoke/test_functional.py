@@ -28,8 +28,9 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import Application, DataSet, KubernetesCluster, Organization, ServiceInstance, Space, \
+from modules.tap_object_model import Application, DataSet, Organization, ServiceInstance, Space, \
     Transfer, User
+from modules.tap_object_model import ServiceType
 from modules.tap_object_model import TestSuite
 from modules.tap_object_model.flows import onboarding
 from tests.fixtures.fixtures import sample_python_app, sample_java_app
@@ -42,6 +43,11 @@ logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_do
 pytestmark = [priority.high]
 
 
+def test_login():
+    entities = ServiceType.api_get_catalog()
+    assert entities is not None
+
+
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_create_and_delete_organization(context):
     """Create and Delete Organization"""
@@ -50,7 +56,6 @@ def test_create_and_delete_organization(context):
     step("Check that organization is on the list")
     orgs = Organization.api_get_list()
     assert test_org in orgs
-
     step("Delete organization")
     test_org.api_delete()
     step("Check that the organization is not on the list")
@@ -122,7 +127,6 @@ def transfer_flow(transfer, core_org):
     step("Check that the transfer is on the list")
     transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])
     assert transfer in transfers
-
     step("Get data set matching to transfer")
     data_set = DataSet.api_get_matching_to_transfer(org=core_org, transfer_title=transfer.title)
 
@@ -171,27 +175,6 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
     step("Create instance {} {}".format(service_type.label, plan["name"]))
     instance = ServiceInstance.api_create(context=context, org_guid=core_org.guid, space_guid=core_space.guid,
                                           service_label=service_type.label, service_plan_guid=plan["guid"])
-    step("Check that the instance was created")
-    instance.ensure_created()
-    step("Delete the instance")
-    instance.api_delete()
-    step("Check that the instance was deleted")
-    instances = ServiceInstance.api_get_list(space_guid=core_space.guid, service_type_guid=service_type.guid)
-    assert instance not in instances
-
-
-@long
-@pytest.mark.components(TAP.demiurge, TAP.kubernetes_broker)
-def test_create_and_delete_kubernetes_service_instances(core_org, core_space, context, kubernetes_marketplace):
-    """Create and Delete Kubernetes Service Instance"""
-    service_type = kubernetes_marketplace[0]
-    plan = kubernetes_marketplace[1]
-
-    step("Create instance {} {}".format(service_type.label, plan["name"]))
-    instance = ServiceInstance.api_create(context=context, org_guid=core_org.guid, space_guid=core_space.guid,
-                                          service_label=service_type.label, service_plan_guid=plan["guid"])
-    step("Check that the cluster was created")
-    KubernetesCluster.demiurge_api_get(name=core_org.guid)
     step("Check that the instance was created")
     instance.ensure_created()
     step("Delete the instance")
