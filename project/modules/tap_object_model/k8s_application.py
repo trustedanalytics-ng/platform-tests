@@ -74,12 +74,12 @@ class K8sApplication(object):
         app = cls._from_response(response)
         return app
 
-    @retry(AssertionError, tries=6, delay=5)
+    @retry(AssertionError, tries=12, delay=5)
     def ensure_running(self):
         app = self.get(self.id)
         assert app.state == self.STATE_RUNNING
 
-    @retry(AssertionError, tries=6, delay=5)
+    @retry(AssertionError, tries=12, delay=5)
     def ensure_stopped(self):
         app = self.get(self.id)
         assert app.state == self.STATE_STOPPED
@@ -100,11 +100,11 @@ class K8sApplication(object):
         )
         return response
 
-    @retry(AssertionError, tries=6, delay=5)
+    @retry(AssertionError, tries=12, delay=5)
     def ensure_ready(self):
         assert_returns_http_success_with_retry(self.send_request)
 
-    @retry(AssertionError, tries=6, delay=5)
+    @retry(AssertionError, tries=12, delay=5)
     def ensure_is_down(self):
         assert_raises_http_exception(HttpStatus.CODE_GATEWAY_TIMEOUT, "",
                                      self.send_request)

@@ -31,7 +31,7 @@ from modules.tap_logger import step
 from modules.tap_object_model.console_service import ConsoleService
 from modules.tap_object_model.k8s_application import K8sApplication
 from modules.test_names import generate_test_object_name
-from tests.fixtures.assertions import assert_raises_http_exception, assert_raises_http_exceptions
+from tests.fixtures.assertions import assert_raises_http_exception
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
@@ -61,7 +61,8 @@ class TestPythonApplicationFlow:
         self.__class__.manifest_file_path = download_file(Urls.manifest_url, self.MANIFEST_NAME)
         return self.manifest_file_path
 
-    def change_json_file_param_value(self, file_path, manifest_params):
+    @staticmethod
+    def change_json_file_param_value(file_path, manifest_params):
         with codecs.open(file_path, 'r+', encoding='utf-8') as f:
             data = json.load(f)
             params = json.dumps(manifest_params)
@@ -84,7 +85,7 @@ class TestPythonApplicationFlow:
 
     def test_1_push_application_with_existing_name(self, class_context):
         step("Push the same application again")
-        assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR, "",
+        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
                                      K8sApplication.push, class_context, self.application_file_path,
                                      self.manifest_file_path)
 
@@ -95,45 +96,30 @@ class TestPythonApplicationFlow:
         self.application.url = "http://{}.{}".format(self.APP_NAME, config.tap_domain)
         self.application.ensure_ready()
 
-    def test_3_check_application_healthz(self):
-        step("Check application health")
-        response = self.application.check_healthz()
-        assert response.status_code == HttpStatus.CODE_OK
-
-    def test_4_stop_application(self):
+    def test_3_stop_application(self):
         step("Stop application")
         response = self.application.stop()
         assert response["message"] == "success"
         self.application.ensure_stopped()
-
-    def test_5_check_application_healthz_after_stop(self):
-        step("Check application health after stop")
         self.application.ensure_is_down()
-        assert_raises_http_exceptions(HttpStatus.CODE_GATEWAY_TIMEOUT, HttpStatus.CODE_BAD_GATEWAY, "",
-                                     self.application.check_healthz)
 
-    def test_6_start_application(self):
+    def test_4_start_application(self):
         step("Start application")
         response = self.application.start()
         assert response["message"] == "success"
-
-    def test_7_check_application_healthz_after_start(self):
-        step("Check application health after start")
         self.application.ensure_ready()
-        response = self.application.check_healthz()
-        assert response.status_code == HttpStatus.CODE_OK
 
-    def test_8_check_logs(self):
+    def test_5_check_logs(self):
         step("Check logs of application")
         response = self.application.get_logs()
         assert response.status_code == HttpStatus.CODE_OK
 
-    def test_9_scale_application(self):
+    def test_6_scale_application(self):
         step("Scale application")
         response = self.application.scale(3)
         assert response["message"] == "success"
 
-    def test_10_check_number_of_application_instances(self):
+    def test_7_check_number_of_application_instances(self):
         step("Check number of application instances")
         response = k8s_get_pods()
         pods_json = [i["metadata"] for i in response["items"]]
@@ -141,21 +127,21 @@ class TestPythonApplicationFlow:
         found_ids = [m.start() for m in re.finditer(self.application.id, labels.__str__())]
         assert len(found_ids) == 3
 
-    def test_11_scale_application_with_wrong_id(self):
+    def test_8_scale_application_with_wrong_id(self):
         step("Scale application with wrong id")
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, "",
                                      ConsoleService.scale_application, "wrong_id", 3)
 
-    def test_12_scale_application_with_wrong_number(self):
+    def test_9_scale_application_with_wrong_number(self):
         step("Scale application with wrong replicas number")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, "",
                                      ConsoleService.scale_application, 3, "wrong_number")
 
-    def test_13_delete_application(self):
+    def test_10_delete_application(self):
         step("Delete application")
         self.application.delete()
 
-    def test_14_check_application_url(self):
+    def test_11_check_application_url(self):
         step("Check if application url is unavailable")
         self.application.ensure_is_down()
 
