@@ -16,10 +16,9 @@
 
 import config
 
-from modules.tap_object_model import K8sService
-from .. import HttpClientConfiguration, HttpClientType
-from tap_ng_component_config import k8s_core_services
+from .. import HttpClientConfiguration, HttpClientType, HttpClientFactory, HttpMethod
 from modules.constants import TapComponent
+from tap_ng_component_config import k8s_core_services
 
 
 class ProxiedConfigurationProvider(object):
@@ -42,9 +41,28 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
     _services = None
 
     @classmethod
+    def get_service_info(cls):
+        socks_proxy = "socks5://localhost:{}".format(config.ng_socks_proxy_port)
+        client_configuration = HttpClientConfiguration(
+            client_type = HttpClientType.NO_AUTH,
+            url="http://localhost:{}/api/{}".format(config.ng_kubernetes_api_port, config.ng_kubernetes_api_version),
+            proxies={"http": socks_proxy, "https": socks_proxy})
+        client = HttpClientFactory.get(client_configuration)
+        response = client.request(
+            method=HttpMethod.GET,
+            path="namespaces/default/services",
+            msg="KUBERNETES: get services")
+        cls._services = {}
+        for item in response["items"]:
+            service_name = item["metadata"]["name"]
+            service_host = item["spec"]["clusterIP"]
+            service_port = item["spec"]["ports"][0]["port"]
+            cls._services[service_name] = "{}:{}".format(service_host, service_port)
+
+    @classmethod
     def get(cls, service_name=None, api_endpoint=None):
         if cls._services is None:
-            cls._services = K8sService.get_list()
+            cls._get_service_info()
         service = next((s for s in cls._services if s.name == service_name), None)
         assert service is not None, "No service {}".format(service_name)
         credentials = config.ng_k8s_service_credentials()

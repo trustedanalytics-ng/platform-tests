@@ -19,7 +19,6 @@ import os
 
 import requests
 from retry import retry
-import yaml
 
 import config
 from ..exceptions import UnexpectedResponseError
@@ -30,14 +29,35 @@ from ..test_names import generate_test_object_name
 
 
 class Application(object):
+    """Application represents application on TAP engine.
+
+    Application class allows pushing, deleting and getting responses from
+    applications.
+    """
     STATUS = {"restage": "RESTAGING", "start": "STARTED", "stop": "STOPPED"}
 
-    MANIFEST_NAME = "manifest.yml"
+    MANIFEST_NAME = "manifest.json"
+
+    APP_NAME = "name"
+    ENV = "env"
+    SERVICES = "services"
+
+    RUN_SCRIPT = "run.sh"
 
     COMPARABLE_ATTRIBUTES = ["name", "guid", "space_guid", "is_running", "is_started"]
 
-    def __init__(self, name, guid, space_guid, state, instances, urls):
-        """local_path - directory where application manifest is located"""
+    def __init__(self, name: str, guid: str, space_guid: str, state: str,
+                 instances: list, urls: list):
+        """Class initializer.
+
+        Args:
+            name: Name of the application
+            guid: Guid of the application
+            space_guid: Guid of the space where the application will reside
+            state: Current state of the application
+            instances: Instances that the application uses
+            urls: Urls that the application used
+        """
         self.name = name
         self.guid = guid
         self.space_guid = space_guid
@@ -45,6 +65,49 @@ class Application(object):
         self.instances = instances
         self.urls = tuple(urls)
         self.request_session = requests.session()
+
+    @classmethod
+    def update_manifest(cls, manifest: dict, app_name: str,
+                        bound_services: list, env: list) -> dict:
+        """Updates the name in manifest, replaces the required services
+        and appends user defined envs.
+
+        Args:
+            manifest: The manifest as a json object
+            app_name: The new application name to set
+            bound_services: Services to that should be already present. This
+                            will replace any services that were present in the
+                            manifest!
+            env: Envs to append.
+
+        Returns:
+            Updated manifest
+        """
+        manifest[cls.APP_NAME] = app_name
+
+        if bound_services != None:
+            if cls.SERVICES not in manifest:
+                manifest[cls.SERVICES] = []
+            manifest[cls.SERVICES] = bound_services
+        else:
+            if cls.SERVICES in manifest:
+                del manifest[cls.SERVICES]
+
+        if env != None:
+            if cls.ENV not in manifest:
+                manifest[cls.ENV] = {}
+            for par in env:
+                manifest[cls.ENV][par[0]] = par[1]
+
+        if config.cf_proxy != None:
+            if cls.ENV not in manifest:
+                manifest[cls.ENV] = {}
+            http_proxy = "http://{}:911".format(config.cf_proxy)
+            https_proxy = "https://{}:912".format(config.cf_proxy)
+            manifest[cls.ENV]["http_proxy"] = http_proxy
+            manifest[cls.ENV]["https_proxy"] = https_proxy
+
+        return manifest
 
     def __eq__(self, other):
         return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
@@ -71,25 +134,6 @@ class Application(object):
         if self.instances is None:
             return None
         return self.instances[0] > 0
-
-    @classmethod
-    def update_manifest(cls, manifest, app_name, bound_services, env):
-        manifest["applications"][0]["name"] = app_name
-        if bound_services is not None:
-            manifest["applications"][0]["services"] = list(bound_services)
-        else:
-            if "services" in manifest["applications"][0]:
-                del manifest["applications"][0]["services"]
-        app_env = manifest["applications"][0].get("env", {})
-        if env is not None:
-            app_env.update(env)
-        if config.cf_proxy is not None:
-            http_proxy = "http://{}:911".format(config.cf_proxy)
-            https_proxy = "https://{}:912".format(config.cf_proxy)
-            app_env.update({"http_proxy": http_proxy, "https_proxy": https_proxy})
-        if len(app_env) > 0:
-            manifest["applications"][0]["env"] = app_env
-        return manifest
 
     @classmethod
     def push(cls, context, space_guid, source_directory, name=None, bound_services=None, env=None):
