@@ -41,7 +41,7 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
     _services = None
 
     @classmethod
-    def get_service_info(cls):
+    def _get_service_info(cls):
         socks_proxy = "socks5://localhost:{}".format(config.ng_socks_proxy_port)
         client_configuration = HttpClientConfiguration(
             client_type = HttpClientType.NO_AUTH,
@@ -63,13 +63,12 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
     def get(cls, service_name=None, api_endpoint=None):
         if cls._services is None:
             cls._get_service_info()
-        service = next((s for s in cls._services if s.name == service_name), None)
-        assert service is not None, "No service {}".format(service_name)
+        assert service_name in cls._services, "No service {}".format(service_name)
         credentials = config.ng_k8s_service_credentials()
         if api_endpoint is None:
-            url = service.url
+            url = "http://{}".format(cls._services[service_name])
         else:
-            url = "{}/{}".format(service.url, api_endpoint)
+            url = "http://{}/{}".format(cls._services[service_name], api_endpoint)
         return HttpClientConfiguration(
             client_type=HttpClientType.BROKER,
             url=url,
