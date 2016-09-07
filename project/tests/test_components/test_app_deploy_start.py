@@ -28,7 +28,7 @@ from modules.file_utils import download_file
 from modules.http_calls.kubernetes import k8s_get_pods
 from modules.markers import incremental
 from modules.tap_logger import step
-from modules.tap_object_model.console_service import ConsoleService
+from modules.tap_object_model.api_service import ApiService
 from modules.tap_object_model.k8s_application import K8sApplication
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
@@ -130,12 +130,12 @@ class TestPythonApplicationFlow:
     def test_8_scale_application_with_wrong_id(self):
         step("Scale application with wrong id")
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, "",
-                                     ConsoleService.scale_application, "wrong_id", 3)
+                                     ApiService.scale_application, "wrong_id", 3)
 
     def test_9_scale_application_with_wrong_number(self):
         step("Scale application with wrong replicas number")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, "",
-                                     ConsoleService.scale_application, 3, "wrong_number")
+                                     ApiService.scale_application, 3, "wrong_number")
 
     def test_10_delete_application(self):
         step("Delete application")

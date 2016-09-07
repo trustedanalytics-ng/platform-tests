@@ -14,41 +14,41 @@
 # limitations under the License.
 #
 
-import modules.http_calls.platform.console_service as console_service
+import modules.http_calls.platform.api_service as api_service
 
 
-class ConsoleService(object):
+class ApiService(object):
 
     @classmethod
     def push_application(cls, file_path=None, manifest_path=None):
-        response = console_service.push_application(file_path, manifest_path)
+        response = api_service.push_application(file_path, manifest_path)
         return response
 
     @classmethod
     def delete_application(cls, id):
-        response = console_service.delete_application(id)
+        response = api_service.delete_application(id)
         return response
 
     @classmethod
     def get_applications(cls):
-        return console_service.get_applications()
+        return api_service.get_applications()
 
     @classmethod
     def get_application(cls, id):
-        return console_service.get_application(id)
+        return api_service.get_application(id)
 
     @classmethod
     def scale_application(cls, id, replicas):
-        return console_service.scale_application(id, replicas)
+        return api_service.scale_application(id, replicas)
 
     @classmethod
     def get_application_logs(cls, id):
-        return console_service.get_application_logs(id)
+        return api_service.get_application_logs(id)
 
     @classmethod
     def stop_application(cls, id):
-        return console_service.stop_application(id)
+        return api_service.stop_application(id)
 
     @classmethod
     def start_application(cls, id):
-        return console_service.start_application(id)
+        return api_service.start_application(id)

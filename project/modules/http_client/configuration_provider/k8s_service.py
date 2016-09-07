@@ -80,7 +80,7 @@ class ApiServiceConfigurationProvider():
     @classmethod
     def get(cls):
         return HttpClientConfiguration(
-            client_type=HttpClientType.K8S_CS,
+            client_type=HttpClientType.K8S_AS,
             url=config.api_url_full,
             username=config.admin_username,
             password=config.admin_password

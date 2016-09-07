@@ -19,11 +19,10 @@ import functools
 from retry import retry
 
 from modules.constants import HttpStatus
-from modules.constants.urls import Urls
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.tap_object_model.console_service import ConsoleService
+from modules.tap_object_model.api_service import ApiService
 from tests.fixtures.assertions import assert_raises_http_exception, assert_returns_http_success_with_retry
 
 
@@ -64,14 +63,14 @@ class K8sApplication(object):
     def push(cls, context, file_path, manifest_path):
         assert file_path is not None, "File path is not set"
         assert manifest_path is not None, "Manifest path is not set"
-        response = ConsoleService.push_application(file_path, manifest_path)
+        response = ApiService.push_application(file_path, manifest_path)
         new_app = cls._from_response(response)
         context.k8s_apps.append(new_app)
         return new_app
 
     @classmethod
     def get(cls, app_id: str):
-        response = ConsoleService.get_application(app_id)
+        response = ApiService.get_application(app_id)
         app = cls._from_response(response)
         return app
 
@@ -115,25 +114,25 @@ class K8sApplication(object):
         return response
 
     def delete(self):
-        ConsoleService.delete_application(self.id)
+        ApiService.delete_application(self.id)
 
     def cleanup(self):
         self.delete()
 
     def scale(self, replicas):
-        response = ConsoleService.scale_application(self.id, replicas)
+        response = ApiService.scale_application(self.id, replicas)
         return response
 
     def stop(self):
-        response = ConsoleService.stop_application(self.id)
+        response = ApiService.stop_application(self.id)
         return response
 
     def start(self):
-        response = ConsoleService.start_application(self.id)
+        response = ApiService.start_application(self.id)
         return response
 
     def get_logs(self):
-        response = ConsoleService.get_application_logs(self.id)
+        response = ApiService.get_application_logs(self.id)
         return response
 
     @classmethod

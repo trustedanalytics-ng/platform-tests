@@ -26,4 +26,4 @@ class ClientAuthType(Enum):
     HTTP_BASIC = "HttpBasic"
     WEBHDFS = "WebhdfsAuth"
     NO_AUTH = "NoAuth"
-    TOKEN_K8S_CS = "CSToken"
+    TOKEN_K8S_AS = "CSToken"

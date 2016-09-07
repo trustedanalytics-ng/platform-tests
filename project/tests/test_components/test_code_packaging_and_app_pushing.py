@@ -22,7 +22,7 @@ from modules.constants import TapComponent as TAP, Urls
 from modules.http_calls.platform.catalog import update_instance
 from modules.markers import priority, incremental
 from modules.tap_logger import step
-from modules.tap_object_model.console_service import ConsoleService
+from modules.tap_object_model.api_service import ApiService
 from modules.tap_object_model.k8s_application import K8sApplication
 from modules.test_names import generate_test_object_name
 
@@ -81,7 +81,7 @@ class TestCodePackagingAndAppPushing:
         step("Delete app")
         self.app.delete()
         step("Check if app is removed")
-        apps = ConsoleService.get_applications()
+        apps = ApiService.get_applications()
         assert self.APP_NAME not in apps.content.decode()
         step("Remove downloaded files")
         file_utils.tear_down_test_files()
