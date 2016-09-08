@@ -170,6 +170,8 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_NOT_AUTHORIZED = "You are not authorized"
     MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE = "User not authorize to delete this service"
     MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE = "Can't remove service with existing instances from catalog"
+    MSG_SERVICE_EXISTS = "service with name: {} already exists!"
+    MSG_SERVICE_DOES_NOT_EXIST = "100: Key not found"
 
 
 class KubernetesBrokerHttpStatus(HttpStatus):

@@ -18,15 +18,18 @@ import functools
 import uuid
 import fixtures.k8s_templates.catalog_service_example as service_body
 import modules.http_calls.platform.catalog as catalog
+from modules.test_names import generate_test_object_name
 
 
 @functools.total_ordering
 class CatalogService(object):
 
-    def __init__(self, service_id, instance_id=None, instance_name=None):
+    def __init__(self, service_id, name=None, description=None, instance_id=None, instance_name=None):
         self.id = service_id
         self.instance_id = instance_id
         self.instance_name = instance_name
+        self.description = description
+        self.name = name
 
     def __eq__(self, other):
         return self.id == other.id
@@ -38,9 +41,11 @@ class CatalogService(object):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, template_id):
-        body = service_body.ng_catalog_service_correct_body
-        body["name"] += uuid.uuid4().hex
+    def create(cls, context, template_id, name=None, body=service_body.ng_catalog_service_correct_body):
+        if name:
+            body["name"] = name
+        else:
+            body["name"] = generate_test_object_name().replace("_", "-")
         body["templateId"] = template_id
         response = catalog.create_service(body)
         new_service = cls._from_response(response)
@@ -69,7 +74,7 @@ class CatalogService(object):
 
     @classmethod
     def _from_response(cls, response):
-        return cls(service_id=response["id"])
+        return cls(service_id=response["id"], name=response["name"], description=response["description"])
 
     def update(self, field, value):
         setattr(self, field, value)

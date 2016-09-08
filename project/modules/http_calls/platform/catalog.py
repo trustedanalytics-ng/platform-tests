@@ -215,7 +215,7 @@ def update_service(service_id, field, value):
 def create_service_instance(service_id, body):
     """ POST /services/{service_id}/instances """
     response = _get_client().request(HttpMethod.POST,
-                                     path="services/{}".format(service_id) + "/instances",
+                                     path="services/{}/instances".format(service_id),
                                      body=body,
                                      msg="CATALOG: create service instance")
     return response
@@ -231,14 +231,14 @@ def get_all_services_instances():
 def get_service_instances(service_id):
     """ GET /services/{serviceId}/instances """
     return _get_client().request(HttpMethod.GET,
-                                 path="services/{}".format(service_id) + "/instances",
+                                 path="services/{}/instances".format(service_id),
                                  msg="CATALOG: get instances list")
 
 
 def get_service_instance(service_id, instance_id):
     """ GET /services/{serviceId}/instances/{instance_id} """
     return _get_client().request(HttpMethod.GET,
-                                 path="services/{}".format(service_id) + "/instances/{}".format(instance_id),
+                                 path="services/{}/instances/{}".format(service_id, instance_id),
                                  msg="CATALOG: get instance")
 
 
@@ -250,7 +250,7 @@ def update_service_instance(service_id, instance_id, field, value):
         "value": value
     }]
     response = _get_client().request(HttpMethod.PATCH,
-                                     path="services/{}".format(service_id) + "/instances/{}".format(instance_id),
+                                     path="services/{}/instances/{}".format(service_id, instance_id),
                                      body=body,
                                      msg="CATALOG: updating service")
     return response
@@ -259,8 +259,54 @@ def update_service_instance(service_id, instance_id, field, value):
 def delete_service_instance(service_id, instance_id):
     """ DELETE /services/{service_id}/instances/{instance_id} """
     response = _get_client().request(HttpMethod.DELETE,
-                                     path="services/{}".format(service_id) + "/instances/{}".format(instance_id),
+                                     path="services/{}/instances/{}".format(service_id, instance_id),
                                      msg="CATALOG: delete service")
     return response
+
+
+def get_service_plans(service_id):
+    """ GET /services/{serviceId}/plans """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services/{}/plans".format(service_id),
+                                 msg="CATALOG: get service plans list")
+
+
+def get_service_plan(service_id, plan_id):
+    """ GET /services/{serviceId}/plans/{planId} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="services/{}/plans/{}".format(service_id, plan_id),
+                                 msg="CATALOG: get service plan by Id")
+
+
+def delete_service_plan(service_id, plan_id):
+    """ DELETE /services/{serviceId}/plans/{planId} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="services/{}/plans/{}".format(service_id, plan_id),
+                                     msg="CATALOG: delete service plan")
+    return response
+
+
+def update_service_plan(service_id, plan_id, field, value):
+    """ PATCH /services/{serviceId}/plans/{planId} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="services/{}/plans/{}".format(service_id, plan_id),
+                                     body=body,
+                                     msg="CATALOG: updating service plan")
+    return response
+
+
+def create_service_plan(service_id, body):
+    """ POST /services/{service_id}/plans """
+    response = _get_client().request(HttpMethod.POST,
+                                     path="services/{}/plans".format(service_id),
+                                     body=body,
+                                     msg="CATALOG: create service plan")
+    return response
+
 
 #endregion
