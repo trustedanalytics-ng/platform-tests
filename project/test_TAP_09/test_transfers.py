@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
+from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP
 from modules.file_utils import generate_csv_file
 from modules.markers import priority
 from modules.tap_logger import step
@@ -32,16 +32,18 @@ class TestSubmitTransfer:
 
     DEFAULT_CATEGORY = "other"
 
-    def _create_transfer(self, context, org_guid, category):
+    def _create_transfer(self, context, org_guid, category, test_data_urls):
         step("Create new transfer and wait until it's finished")
-        transfer = Transfer.api_create(context, category=category, source=Urls.test_transfer_link, org_guid=org_guid)
+        transfer = Transfer.api_create(context, category=category, source=test_data_urls.test_transfer.url,
+                                       org_guid=org_guid)
         transfer.ensure_finished()
         return transfer
 
     @pytest.mark.skip(reason="OUT OF SCOPE FOR 0.8 - multiple orgs")
-    def test_transfer_and_dataset_are_not_visible_in_other_org(self, context, core_org, test_org):
+    def test_transfer_and_dataset_are_not_visible_in_other_org(self, context, core_org, test_org, test_data_urls):
         step("Create transfer and get dataset")
-        transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid)
+        transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid,
+                                         test_data_urls=test_data_urls)
         dataset = DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
         step("Check transfer is not visible on other organization")
         transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])

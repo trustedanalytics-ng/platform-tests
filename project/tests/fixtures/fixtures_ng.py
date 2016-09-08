@@ -24,6 +24,7 @@ import pytest
 
 import config
 from modules import file_utils
+from modules.file_utils import TMP_FILE_DIR
 from modules.ssh_lib import JumpClient, JumpTunnel
 from modules.tap_cli import TapCli
 from modules.tap_logger import log_fixture
@@ -81,23 +82,9 @@ def cli_login(tap_cli):
 
 
 @pytest.fixture(scope="class")
-def sample_app_path(request):
-    # NOTE: test class needs to have application source url specified as SAMPLE_APP_URL class variable
-    sample_app_url = getattr(request.cls, "SAMPLE_APP_URL")
-    sample_app_tar_name = sample_app_url.split("/")[-1]
-    log_fixture("Download sample app: {}".format(sample_app_url))
-    sample_app_path = file_utils.download_file(sample_app_url, sample_app_tar_name)
-    request.addfinalizer(lambda: file_utils.remove_if_exists(sample_app_path))
-    return sample_app_path
-
-
-@pytest.fixture(scope="class")
-def app_jar(request, sample_app_path):
-    # NOTE: test class needs to have application type specified as APP_TYPE class variable
-    app_type = getattr(request.cls, "APP_TYPE")
-    sample_app_source_dir = os.path.join(os.path.dirname(sample_app_path),
-                                         "sample_{}_app_source".format(app_type))
-    with tarfile.open(sample_app_path) as tar:
+def app_jar(test_data_urls):
+    sample_app_source_dir = os.path.join(TMP_FILE_DIR, "sample_java_app_source")
+    with tarfile.open(test_data_urls.tapng_java_app.filepath) as tar:
         tar.extractall(path=sample_app_source_dir)
         sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
     return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if ".jar" in name))

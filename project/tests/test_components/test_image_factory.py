@@ -17,7 +17,7 @@
 import pytest
 from retry import retry
 
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus, \
+from modules.constants import TapComponent as TAP, TapApplicationType, TapEntityState, ImageFactoryHttpStatus, \
     HttpStatus
 from modules.file_utils import download_file
 from modules.markers import priority
@@ -34,7 +34,6 @@ logged_components = (TAP.blob_store, TAP.catalog, TAP.image_factory, TAP.image_r
 class TestImageFactory:
 
     APP_TYPE = TapApplicationType.NODEJS
-    APP_URL = Urls.nodejs_app_url
     INITIAL_IMAGE_STATE = TapEntityState.PENDING
     BLOB_TYPE = "TARGZ"
     catalog_image = None
@@ -58,9 +57,10 @@ class TestImageFactory:
         return catalog_image
 
     @pytest.fixture(scope="function")
-    def blob_store_artifact(self, context, catalog_image, nodejs_example):
+    def blob_store_artifact(self, context, catalog_image, test_data_urls):
         log_fixture("BLOB-STORE: Create an artifact for application")
-        created_blob = Blob.create(context, blob_id=catalog_image.id, file_path="@{}".format(nodejs_example))
+        created_blob = Blob.create(context, blob_id=catalog_image.id,
+                                   file_path="@{}".format(test_data_urls.nodejs_app.filepath))
 
         log_fixture("BLOB-STORE Check that the blob exists")
         blob = Blob.get(blob_id=catalog_image.id)

@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import Guid, ServiceLabels, TapComponent as TAP, Urls
+from modules.constants import Guid, ServiceLabels, TapComponent as TAP
 from modules.constants.http_status import PlatformTestsHttpStatus
 from modules.constants.model_metadata import MODEL_METADATA
 from modules.exceptions import UnexpectedResponseError
@@ -186,7 +186,7 @@ def transfer_flow(transfer, core_org):
 
 
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.downloader, TAP.metadata_parser)
-def test_add_and_delete_transfer_from_link(core_org, context):
+def test_add_and_delete_transfer_from_link(core_org, context, test_data_urls):
     """
     <b>Description:</b>
     Checks if a file can be downloaded from a link to the platform.
@@ -208,7 +208,8 @@ def test_add_and_delete_transfer_from_link(core_org, context):
     5. Verify that transfer and dataset were removed from the platform.
     """
     step("Create a transfer")
-    transfer = Transfer.api_create(context, category="other", source=Urls.test_transfer_link, org_guid=core_org.guid)
+    transfer = Transfer.api_create(context, category="other", source=test_data_urls.test_transfer.url,
+                                   org_guid=core_org.guid)
     transfer_flow(transfer, core_org)
 
 

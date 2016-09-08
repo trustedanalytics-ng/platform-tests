@@ -17,7 +17,7 @@
 import pytest
 
 import config
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import TapComponent as TAP
 from modules.markers import incremental, priority
 from modules.service_tools.arcadia import Arcadia
 from modules.tap_logger import step
@@ -39,9 +39,9 @@ class ArcadiaTest:
 
     @classmethod
     @pytest.fixture(scope="class")
-    def dataset(cls, request, test_org, add_admin_to_test_org, class_context):
+    def dataset(cls, request, test_org, add_admin_to_test_org, class_context, test_data_urls):
         _, dataset = data_catalog.create_dataset_from_link(class_context, org_guid=test_org.guid,
-                                                           source=Urls.test_transfer_link)
+                                                           source=test_data_urls.test_transfer.url)
         return dataset
 
     @classmethod

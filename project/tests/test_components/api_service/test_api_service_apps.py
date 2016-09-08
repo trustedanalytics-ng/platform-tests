@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import ApiServiceHttpStatus, CatalogHttpStatus, TapApplicationType, Urls, TapEntityState, TapComponent as TAP
+from modules.constants import ApiServiceHttpStatus, CatalogHttpStatus, TapApplicationType, TapEntityState, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls.platform import api_service, catalog as catalog_api
 from modules.markers import priority
@@ -32,18 +32,17 @@ logged_components = (TAP.api_service, TAP.catalog)
 @pytest.mark.usefixtures("open_tunnel")
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestApiServiceApplication:
-    SAMPLE_APP_URL = Urls.tapng_python_app_url
     EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
 
     @pytest.fixture(scope="class")
-    def sample_app(self, class_context, sample_app_path, api_service_admin_client):
+    def sample_app(self, class_context, test_data_urls, api_service_admin_client):
         log_fixture("sample_application: update manifest")
-        p_a = PrepApp(sample_app_path)
+        p_a = PrepApp(test_data_urls.tapng_python_app.filepath)
         manifest_params = {"type" : TapApplicationType.PYTHON27}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         log_fixture("Push sample application")
-        application = Application.push(class_context, app_path=sample_app_path,
+        application = Application.push(class_context, app_path=test_data_urls.tapng_python_app.filepath,
                                        name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         application.ensure_running()
@@ -51,7 +50,7 @@ class TestApiServiceApplication:
 
     @priority.low
     @pytest.mark.components(TAP.api_service)
-    def test_cannot_push_application_twice(self, context, sample_app_path, sample_app,
+    def test_cannot_push_application_twice(self, context, test_data_urls, sample_app,
                                            api_service_admin_client):
         """
         <b>Description:</b>
@@ -70,13 +69,13 @@ class TestApiServiceApplication:
         """
         step("Check that pushing the same application again causes an error")
         log_fixture("sample_application: update manifest")
-        p_a = PrepApp(sample_app_path)
+        p_a = PrepApp(test_data_urls.tapng_python_app.filepath)
         manifest_params = {"type" : TapApplicationType.PYTHON27,
                            "name": sample_app.name}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         with pytest.raises(UnexpectedResponseError) as e:
-            Application.push(context, app_path=sample_app_path,
+            Application.push(context, app_path=test_data_urls.tapng_python_app.filepath,
                              name=sample_app.name, manifest_path=manifest_path,
                              client=api_service_admin_client)
         assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in str(e)
@@ -174,7 +173,7 @@ class TestApiServiceApplication:
                                                 sample_app.scale, replicas=-1, client=api_service_admin_client)
 
     def test_cannot_push_application_with_invalid_name(self, context, sample_app,
-                                                       sample_app_path,
+                                                       test_data_urls,
                                                        api_service_admin_client):
         """
         <b>Description:</b>
@@ -193,7 +192,7 @@ class TestApiServiceApplication:
         - Application with the changed name is pushed
         """
         step("Change the application name to invalid")
-        p_a = PrepApp(sample_app_path)
+        p_a = PrepApp(test_data_urls.tapng_python_app.filepath)
         app_name = "invalid_-application-_name"
         manifest_params = {"type" : TapApplicationType.PYTHON27,
                            "name": app_name}
@@ -201,7 +200,8 @@ class TestApiServiceApplication:
 
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 CatalogHttpStatus.MSG_APP_FORBIDDEN_CHARACTERS.format(app_name),
-                                                Application.push, context, app_path=sample_app_path,
+                                                Application.push, context,
+                                                app_path=test_data_urls.tapng_python_app.filepath,
                                                 name=app_name, manifest_path=manifest_path,
                                                 client=api_service_admin_client)
 
@@ -294,8 +294,7 @@ class TestApiServiceApplication:
 
     @priority.medium
     @pytest.mark.components(TAP.api_service, TAP.catalog)
-    def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path,
-                                                       api_service_admin_client):
+    def test_change_app_state_in_catalog_and_delete_it(self, context, test_data_urls, api_service_admin_client):
         """
         <b>Description:</b>
         Change the application state in catalog and later delete it
@@ -317,12 +316,12 @@ class TestApiServiceApplication:
         - Verify the application was removed
         """
         log_fixture("sample_application: update manifest")
-        p_a = PrepApp(sample_app_path)
+        p_a = PrepApp(test_data_urls.tapng_python_app.filepath)
         manifest_params = {"type" : TapApplicationType.PYTHON27}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         log_fixture("Push sample application and check it's running")
-        application = Application.push(context, app_path=sample_app_path,
+        application = Application.push(context, app_path=test_data_urls.tapng_python_app.filepath,
                                        name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         application.ensure_running()

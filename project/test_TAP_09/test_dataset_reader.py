@@ -19,7 +19,7 @@ import pytest
 
 from modules.file_utils import get_link_content
 from modules.app_sources import AppSources
-from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub, Urls
+from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub
 from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, Transfer, DataSet, User, Binding
@@ -65,11 +65,11 @@ class TestDatasetReader:
         return instance
 
     @pytest.fixture(scope="class")
-    def dataset_target_uri(self, test_org, test_space, class_context, admin_user):
+    def dataset_target_uri(self, test_org, test_space, class_context, admin_user, test_data_urls):
         step("Add admin to space with developer role")
         admin_user.api_add_to_space(test_space.guid, test_org.guid, User.SPACE_ROLES["developer"])
         step("Create transfer")
-        transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=Urls.test_transfer_link)
+        transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=test_data_urls.test_transfer.url)
         transfer.ensure_finished()
         step("Get dataset")
         dataset = DataSet.api_get_matching_to_transfer(transfer.title, test_org.guid)
@@ -98,9 +98,9 @@ class TestDatasetReader:
         step("Check dataset reader app has url")
         assert len(self.hdfs_reader_app.urls) == 1
 
-    def test_1_check_dataset_is_correct(self):
+    def test_1_check_dataset_is_correct(self, test_data_urls):
         step("Get content of the csv file submitted as transfer")
-        expected_transfer = get_link_content(Urls.test_transfer_link)
+        expected_transfer = open(test_data_urls.test_transfer.filepath).read()
         expected_transfer = [i.split(",") for i in expected_transfer.split("\n") if i]
 
         step("Get content of the transfer from dataset reader app")

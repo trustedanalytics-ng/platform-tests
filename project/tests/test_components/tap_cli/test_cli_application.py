@@ -20,14 +20,15 @@ import shutil
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapMessage, TapEntityState
+from modules.constants import TapComponent as TAP, TapApplicationType, TapMessage, TapEntityState
+from modules.file_utils import TMP_FILE_DIR
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
 from modules.tap_object_model.prep_app import PrepApp
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
-
+from tests.fixtures.data_repo import DataFileKeys
 
 pytestmark = [pytest.mark.components(TAP.cli)]
 
@@ -196,20 +197,17 @@ class TestCliCommandsWithNonExistingApplication:
 
 
 class TestAppBase:
-    SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_python_app_url
+    SAMPLE_APP_NAME = DataFileKeys.TAPNG_PYTHON_APP
     APP_TYPE = TapApplicationType.PYTHON27
     EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
     APP_URL_MESSAGE = "TEST APP v.1.0 READY"
 
     @pytest.yield_fixture(scope="class")
-    def sample_app_source_dir(self, sample_app_path):
+    def sample_app_source_dir(self, test_data_urls):
         """ Download and extract sample application. The archive may contain symbolic links. """
-        sample_app_path = os.path.abspath(sample_app_path)
-        sample_app_source_dir = os.path.join(os.path.dirname(sample_app_path),
-                                             "sample_{}_app_source".format(self.APP_TYPE))
+        sample_app_source_dir = os.path.join(TMP_FILE_DIR, test_data_urls[self.SAMPLE_APP_NAME].filename)
         step("Extract application archive")
-        with tarfile.open(sample_app_path) as tar:
+        with tarfile.open(test_data_urls[self.SAMPLE_APP_NAME].filepath) as tar:
             tar.extractall(path=sample_app_source_dir)
             sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
         step("Check content of the archive")
@@ -275,6 +273,7 @@ class TestAppBase:
         application.ensure_app_is_ready()
         return application
 
+
 class TestBadApplication(TestAppBase):
     def test_no_manifest(self, class_context, sample_app_target_directory, tap_cli):
         """Try to push an application, but don't provide the manifest"""
@@ -292,6 +291,7 @@ class TestBadApplication(TestAppBase):
                                                   app_path=sample_app_target_directory,
                                                   name=p_a.app_name,
                                                   instances=p_a.instances)
+
 
 @pytest.mark.usefixtures("cli_login")
 class TestPythonCliApp(TestAppBase):

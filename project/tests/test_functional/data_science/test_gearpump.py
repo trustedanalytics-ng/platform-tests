@@ -16,8 +16,7 @@
 
 import pytest
 
-from modules.constants import ServicePlan, TapComponent as TAP, Urls
-from modules.file_utils import download_file
+from modules.constants import ServicePlan, TapComponent as TAP
 from modules.markers import incremental
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
@@ -34,16 +33,9 @@ class TestGearpumpConsole:
 
     COMPLEXDAG_APP_NAME = "dag"
     PLAN_NAME = ServicePlan.SMALL
-    COMPLEXDAG_FILE_NAME = Urls.complexdag_app_url.split("/")[-1]
 
     gearpump = None
     dag_app = None
-
-    @classmethod
-    @pytest.fixture(scope="class")
-    def complexdag_app_path(cls):
-        step("Download file complexdag")
-        return download_file(url=Urls.complexdag_app_url, save_file_name=cls.COMPLEXDAG_FILE_NAME)
 
     @pytest.fixture(scope="function")
     def go_to_dashboard(self, request):
@@ -95,8 +87,7 @@ class TestGearpumpConsole:
         assert gearpump_ui_app is not None, "Gearpump ui application was not created"
         self.gearpump.get_credentials()
 
-    def test_2_submit_complexdag_app_to_gearpump_dashboard(self, go_to_dashboard,
-                                                           complexdag_app_path):
+    def test_2_submit_complexdag_app_to_gearpump_dashboard(self, go_to_dashboard, test_data_urls):
         """
         <b>Description:</b>
         Checks if submitted Application is RUNNING on gearpump dashboard.
@@ -112,7 +103,8 @@ class TestGearpumpConsole:
         2. Check if submitted application is RUNNING.
         """
         step("Submit application complexdag to gearpump dashboard")
-        self.__class__.dag_app = self.gearpump.submit_application_jar(complexdag_app_path, self.COMPLEXDAG_APP_NAME)
+        self.__class__.dag_app = self.gearpump.submit_application_jar(test_data_urls.complexdag_app.filepath,
+                                                                      self.COMPLEXDAG_APP_NAME)
         step("Check that submitted application is started")
         assert self.dag_app.is_started
 

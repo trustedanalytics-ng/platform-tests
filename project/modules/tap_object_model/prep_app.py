@@ -40,8 +40,10 @@ import random
 import tarfile
 
 from modules import test_names
+from modules.command import run
 
-class PrepApp():
+
+class PrepApp:
     """Prepares application, by packing in tar.gz format. It allows also
     to update manifest. After packing the application, it is added to the context
     so at the end of the test those gzipped applications can be removed from
@@ -49,6 +51,8 @@ class PrepApp():
     """
     MANIFEST_NAME = "manifest.json"
     RUN_SH_NAME = "run.sh"
+    BUILD_SH_NAME = "build.sh"
+
     def __init__(self, app_path=str):
         """Initializer
 
@@ -70,6 +74,9 @@ class PrepApp():
         Returns:
             Path to the gzipped application
         """
+        if os.path.exists(os.path.join(self.app_path, self.BUILD_SH_NAME)):
+            run("./" + self.BUILD_SH_NAME, cwd=self.app_path)
+
         self.tar_name = os.path.join(self.app_path, str(random.random()) + ".tar.gz")
         tar_file = tarfile.open(self.tar_name, "w:gz")
         tar_file.add(self.app_path, arcname="")
@@ -130,7 +137,6 @@ class PrepApp():
 
         return manifest_path
 
-
     @classmethod
     def set_run_sh_access(cls, *, app_path):
         """Applies proper right to run.sh
@@ -147,7 +153,6 @@ class PrepApp():
         run_sh_path = os.path.join(run_sh_dir, cls.RUN_SH_NAME)
         if os.path.isfile(run_sh_path):
             os.chmod(run_sh_path, 0o777)
-
 
     def cleanup(self):
         """Removes the previously compressed file"""

@@ -33,7 +33,9 @@ if [ -d $VENDOR ]; then
     rm -rf $VENDOR
 fi
 mkdir $VENDOR
-pip install --download $VENDOR -r $REQUIREMENTS_PATH
+python3 -m pip install --download $VENDOR -r $REQUIREMENTS_PATH
+# run script which downloads files for offline tests
+python3 project/tests/fixtures/data_repo.py
 
 deactivate
 

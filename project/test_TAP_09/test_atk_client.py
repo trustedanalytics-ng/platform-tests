@@ -19,7 +19,7 @@ import os
 import pytest
 
 from modules.application_stack_validator import ApplicationStackValidator
-from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, Urls
+from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan
 from modules.markers import incremental, long, priority
 from modules.service_tools.atk import ATKtools
 from modules.tap_object_model import DataSet, ServiceInstance, ServiceOffering, Transfer
@@ -84,9 +84,9 @@ class TestAtk:
         self.atk_virtualenv.run_atk_script(atk_test_script_path, self.atk_url)
 
     @pytest.mark.bugs("DPNG-2010 Cannot get JDBC connection when publishing dataset to Hive")
-    def test_3_create_data_set_and_publish_it_in_hive(self, class_context, test_org):
+    def test_3_create_data_set_and_publish_it_in_hive(self, class_context, test_org, test_data_urls):
         step("Create transfer and check it's finished")
-        transfer = Transfer.api_create(class_context, source=Urls.test_transfer_link, org_guid=test_org.guid,
+        transfer = Transfer.api_create(class_context, source=test_data_urls.test_transfer.url, org_guid=test_org.guid,
                                        title=self.transfer_title)
         transfer.ensure_finished()
         step("Publish in hive the data set created based on the submitted transfer")

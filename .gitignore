@@ -17,3 +17,4 @@
 project/target/*
 target/*
 *user_config*
+/project/applications/data-repo/files

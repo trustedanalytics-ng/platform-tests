@@ -19,8 +19,8 @@ from datetime import datetime
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls
-from modules.file_utils import download_file, get_csv_first_row, get_csv_record_count
+from modules.constants import TapComponent as TAP
+from modules.file_utils import get_csv_data, get_csv_record_count, get_csv_first_row
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, DataSet, DatasetAccess as Access, Transfer
@@ -54,18 +54,9 @@ class TestCreateDataSets(object):
 
     @classmethod
     @pytest.fixture(scope="class")
-    def file_source(cls):
-        return Urls.test_transfer_link
-
-    @classmethod
-    @pytest.fixture(scope="class")
-    def local_file_path(cls, file_source):
-        return download_file(file_source)
-
-    @pytest.fixture(scope="class")
-    def transfer(self, class_context, test_org, file_source):
+    def transfer(cls, class_context, test_org, test_data_urls):
         step("Create transfer by providing a csv from url")
-        transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=file_source)
+        transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=test_data_urls.test_transfer.url)
         transfer.ensure_finished()
         return transfer
 
@@ -75,17 +66,17 @@ class TestCreateDataSets(object):
         return DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
 
     @pytest.fixture(scope="class")
-    def expected_dataset_details(self, test_org, file_source, local_file_path, transfer):
+    def expected_dataset_details(self, test_org, test_data_urls, transfer):
         return {
             'accessibility': Access.PRIVATE.name,
             'title': transfer.title,
             'category': transfer.category,
-            'recordCount': get_csv_record_count(local_file_path),
-            'sourceUri': file_source,
-            'size': os.path.getsize(local_file_path),
+            'recordCount': get_csv_record_count(test_data_urls.test_transfer.filepath),
+            'sourceUri': test_data_urls.test_transfer.url,
+            'size': os.path.getsize(test_data_urls.test_transfer.filepath),
             'orgUUID': test_org.guid,
             'format': "CSV",
-            'dataSample': ",".join(get_csv_first_row(local_file_path)),
+            'dataSample': ",".join(get_csv_first_row(test_data_urls.test_transfer.filepath)),
             'isPublic': Access.PRIVATE.value,
             'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
         }
@@ -116,7 +107,7 @@ class TestCreateDataSets(object):
         assert expected_dataset_details[key] == dataset.get_details()[key]
 
     @priority.medium
-    def test_create_dataset_recordcount(self, dataset, local_file_path):
+    def test_create_dataset_recordcount(self, dataset, test_data_urls):
         """
         <b>Description:</b>
         Check that dataset record count is the same as in the source file.
@@ -133,41 +124,31 @@ class TestCreateDataSets(object):
         2. Compare dataset record count with source file record count.
         """
         step("Check that record count is valid")
-        assert dataset.record_count == get_csv_record_count(local_file_path)
+        assert dataset.record_count == get_csv_record_count(test_data_urls.test_transfer.filepath)
 
 
 class TestCreateDataSetsFromFile(TestCreateDataSets):
 
-    @classmethod
     @pytest.fixture(scope="class")
-    def file_source(cls):
-        source = Urls.test_transfer_link
-        return download_file(source)
-
-    @classmethod
-    @pytest.fixture(scope="class")
-    def local_file_path(cls, file_source):
-        return file_source
-
-    @pytest.fixture(scope="class")
-    def expected_dataset_details(self, test_org, file_source, local_file_path, transfer):
+    def expected_dataset_details(self, test_org, test_data_urls, transfer):
         return {
             'accessibility': Access.PRIVATE.name,
             'title': transfer.title,
             'category': transfer.category,
-            'recordCount': get_csv_record_count(local_file_path),
-            'sourceUri': os.path.split(local_file_path)[1],
-            'size': os.path.getsize(local_file_path),
+            'recordCount': get_csv_record_count(test_data_urls.test_transfer.filepath),
+            'sourceUri': os.path.split(test_data_urls.test_transfer.filepath)[1],
+            'size': os.path.getsize(test_data_urls.test_transfer.filepath),
             'orgUUID': test_org.guid,
             'format': "CSV",
-            'dataSample': ",".join(get_csv_first_row(local_file_path)),
+            'dataSample': ",".join(get_csv_first_row(test_data_urls.test_transfer.filepath)),
             'isPublic': Access.PRIVATE.value,
             'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
         }
 
     @pytest.fixture(scope="class")
-    def transfer(self, class_context, test_org, file_source):
+    def transfer(self, class_context, test_org, test_data_urls):
         step("Create transfer by uploading csv file")
-        transfer = Transfer.api_create_by_file_upload(class_context, test_org.guid, file_path=file_source)
+        transfer = Transfer.api_create_by_file_upload(class_context, test_org.guid,
+                                                      file_path=test_data_urls.test_transfer.filepath)
         transfer.ensure_finished()
         return transfer

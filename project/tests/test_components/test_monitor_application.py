@@ -20,35 +20,34 @@ import tarfile
 
 import pytest
 
-from modules.constants import TapComponent
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType
+from modules.constants import TapComponent as TAP, TapApplicationType
+from modules.file_utils import TMP_FILE_DIR
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
 from modules.tap_object_model.prep_app import PrepApp
 from modules.http_calls.kubernetes import k8s_get_pods, k8s_logs
+from tests.fixtures.data_repo import DataFileKeys
 
 pytestmark = [pytest.mark.components(TAP.cli, TAP.monitor)]
 
 
 @pytest.mark.usefixtures("cli_login")
 class TestMonitorApplication:
-    SAMPLE_APP_URL = Urls.tapng_python_app_url
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     APP_TYPE = TapApplicationType.PYTHON27
     EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
-    POD_APP_NAME = TapComponent.container_broker
+    POD_APP_NAME = TAP.container_broker
     LOG_TIME_SEC = 600
 
     @pytest.fixture(scope="class")
-    def sample_app_target_directory(self, sample_app_path):
-        sample_app_path = os.path.abspath(sample_app_path)
-        return os.path.join(os.path.dirname(sample_app_path), "sample_{}_app".format(self.APP_TYPE))
+    def sample_app_target_directory(self, test_data_urls):
+        return os.path.join(TMP_FILE_DIR, test_data_urls[DataFileKeys.TAPNG_PYTHON_APP].filename)
 
     @pytest.fixture(scope="class")
-    def sample_app_tar_content(self, request, sample_app_path, sample_app_target_directory):
+    def sample_app_tar_content(self, request, test_data_urls, sample_app_target_directory):
         step("Extract application archive")
 
-        with tarfile.open(sample_app_path) as tar:
+        with tarfile.open(test_data_urls[DataFileKeys.TAPNG_PYTHON_APP].filepath) as tar:
             tar.extractall(path=sample_app_target_directory)
             file_list = [name.replace("./", "", 1) for name in tar.getnames()]
 

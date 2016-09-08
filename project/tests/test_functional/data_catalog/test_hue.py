@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import TapComponent as TAP
 from modules.file_utils import download_file, get_csv_data
 from modules.hive import Hive
 from modules.http_calls import hue
@@ -32,9 +32,7 @@ pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 @priority.medium
 @incremental
 class TestHue:
-    TRANSFER_SOURCE = Urls.test_transfer_link
-
-    def test_0_create_transfer_and_dataset_with_csv_link(self, class_context, test_org):
+    def test_0_create_transfer_and_dataset_with_csv_link(self, class_context, test_org, test_data_urls):
         """
         <b>Description:</b>
         Create transfer and dataset from an url and publish created dataset in hue.
@@ -51,7 +49,7 @@ class TestHue:
         """
         step("Create new transfer and dataset")
         self.__class__.transfer, dataset = create_dataset_from_link(context=class_context, org_guid=test_org.guid,
-                                                                    source=self.TRANSFER_SOURCE)
+                                                                    source=test_data_urls.test_transfer.url)
         step("Publish dataset in HUE")
         dataset.api_publish()
 

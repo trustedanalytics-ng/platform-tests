@@ -14,7 +14,25 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.625'
+import os
+
+import flask
 
 
+app = flask.Flask(__name__)
+
+
+@app.route("/files/<path:filename>")
+def download_file(filename):
+    return flask.send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'files'),
+        filename,
+        as_attachment=True
+    )
+
+
+if __name__ == "__main__":
+    app_port = int(os.environ.get("PORT", "80"))
+    app_host = "0.0.0.0"
+    app.debug = True
+    app.run(host=app_host, port=app_port)

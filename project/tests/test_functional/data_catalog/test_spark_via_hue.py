@@ -25,7 +25,6 @@ import config
 from modules import kerberos
 from modules.constants import TapComponent as TAP
 from modules.constants.project_paths import Path
-from modules.constants.urls import Urls
 from modules.http_calls import hue
 from modules.http_client import HttpClientFactory
 from modules.http_client.configuration_provider.uaa import UaaConfigurationProvider
@@ -97,7 +96,7 @@ class TestSparkViaHue:
         self.__class__.csv_hdfs_path = dataset.target_uri.replace("hdfs://nameservice1", "")
 
     def test_1_create_transfer_and_dataset_from_hadoop_mapreduce_examples(self, class_context, test_org,
-                                                                          add_admin_to_test_org):
+                                                                          add_admin_to_test_org, test_data_urls):
         """
         <b>Description:</b>
         Create transfer and dataset from hadoop mapreduce examples.
@@ -116,7 +115,7 @@ class TestSparkViaHue:
         """
         step("Create dataset from hadoop mapreduce examples jar")
         _, dataset = create_dataset_from_link(context=class_context, org_guid=test_org.guid,
-                                              source=Urls.hadoop_mapreduce_examples)
+                                              source=test_data_urls.hadoop_mapreduce_examples.url)
         step("Create jar path")
         self.__class__.jar_path = dataset.target_uri.replace("hdfs://nameservice1", "")
 

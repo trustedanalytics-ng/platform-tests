@@ -17,7 +17,7 @@
 import pytest
 
 import config
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import TapComponent as TAP
 from modules.file_utils import generate_csv_file
 from modules.markers import incremental, priority
 from modules.tap_object_model import Organization, ServiceInstance, User
@@ -106,9 +106,10 @@ class TestAuthGateway:
         self._assert_directory_in_hdfs(org_hdfs_user_dirs, name=self.test_org_manager.guid,
                                        owner=self.test_org_manager.guid, group=self.test_org.guid)
 
-    def test_2_create_dataset(self, class_context, core_hdfs_instance):
+    def test_2_create_dataset(self, class_context, core_hdfs_instance, test_data_urls):
         step("Create dataset from url")
-        _, self.__class__.dataset = create_dataset_from_link(class_context, self.test_org.guid, Urls.test_transfer_link,
+        _, self.__class__.dataset = create_dataset_from_link(class_context, self.test_org.guid,
+                                                             test_data_urls.test_transfer.url,
                                                              client=self.test_org_manager_client)
         step("Check dataset directory in hdfs")
         hdfs_dirs = self._list_hdfs_directories(self.USERSPACE_PATH.format(self.test_org.guid, core_hdfs_instance.guid))

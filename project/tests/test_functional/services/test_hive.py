@@ -19,7 +19,7 @@ import pytest
 import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceCatalogHttpStatus as HttpStatus, TapComponent as TAP, ServiceLabels, ServicePlan,\
-    TapGitHub, Urls
+    TapGitHub
 from modules.file_utils import get_link_content
 from modules.http_client.configuration_provider.cloud_foundry import CloudFoundryConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -99,14 +99,14 @@ class TestHive:
         return instance
 
     @pytest.fixture(scope="class")
-    def dataset_target_uri(self, test_org, class_context, add_admin_to_test_org):
-        _, dataset = create_dataset_from_link(class_context, test_org.guid, Urls.test_transfer_link)
+    def dataset_target_uri(self, test_org, class_context, add_admin_to_test_org, test_data_urls):
+        _, dataset = create_dataset_from_link(class_context, test_org.guid, test_data_urls.test_transfer.url)
         return dataset.target_uri
 
     @pytest.fixture(scope="class")
-    def expected_transfer_content(self):
-        expected_transfer = get_link_content(Urls.test_transfer_link)
-        expected_transfer = [i.split(",") for i in expected_transfer.split("\n") if i]
+    def expected_transfer_content(self, test_data_urls):
+        with open(test_data_urls.test_transfer.filepath) as f:
+            expected_transfer = [i.split(",") for i in f.read().split("\n") if i]
         return expected_transfer
 
     def test_0_push_hdfs_hive_demo(self, dataset_target_uri, hdfs_instance, kerberos_instance, hive_instance,

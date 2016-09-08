@@ -17,7 +17,7 @@
 import pytest
 
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, TapApplicationType, TapComponent as TAP, Urls
+from modules.constants import ApplicationPath, TapApplicationType, TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
@@ -29,7 +29,6 @@ pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
 class TestTapApp:
-    SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_TYPE = "JAVA"
 
     @pytest.fixture(scope="function")

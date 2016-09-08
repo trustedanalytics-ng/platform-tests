@@ -16,11 +16,12 @@
 
 import pytest
 
-from modules.constants import Urls, TapApplicationType, TapEntityState
+from modules.constants import TapApplicationType, TapEntityState
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
 from modules.tap_object_model.prep_app import PrepApp
+from tests.fixtures.data_repo import DataFileKeys
 from tests.test_components.tap_cli.test_cli_application import TestAppBase
 
 
@@ -206,8 +207,7 @@ class TestPythonCliApp(TestAppBase):
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestGoCliApp(TestPythonCliApp):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_go_app_url
+    SAMPLE_APP_NAME = DataFileKeys.TAPNG_GO_APP
     APP_TYPE = TapApplicationType.GO
     EXPECTED_FILE_LIST = ["main", "run.sh"]
     APP_URL_MESSAGE = "OK"
@@ -215,8 +215,7 @@ class TestGoCliApp(TestPythonCliApp):
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestJavaCliApp(TestPythonCliApp):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_java_app_url
+    SAMPLE_APP_NAME = DataFileKeys.TAPNG_JAVA_APP
     APP_TYPE = TapApplicationType.JAVA
     EXPECTED_FILE_LIST = ["tapng-java-sample-app-0.1.0.jar", "run.sh"]
     APP_URL_MESSAGE = "OK"
@@ -224,8 +223,7 @@ class TestJavaCliApp(TestPythonCliApp):
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestNodeJsCliApp(TestPythonCliApp):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
+    SAMPLE_APP_NAME = DataFileKeys.TAPNG_NODEJS_APP
     APP_TYPE = TapApplicationType.NODEJS
     EXPECTED_FILE_LIST = ["server.js", "run.sh", "public", "views", "app", "node_modules", "manifest.yml",
                           "package.json", "README.md"]

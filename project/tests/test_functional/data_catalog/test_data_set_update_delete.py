@@ -17,7 +17,7 @@
 import pytest
 from retry import retry
 
-from modules.constants import HttpStatus, TapComponent as TAP, Urls
+from modules.constants import HttpStatus, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.markers import priority
 from modules.tap_logger import step
@@ -29,7 +29,6 @@ pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.downloader, 
 
 
 class TestUpdateDeleteDataSet:
-    TEST_FILE_URL = Urls.test_transfer_link
 
     @retry(AssertionError, tries=10, delay=3)
     def _assert_updated(self, data_set_id, updated_attribute_name, expected_value):
@@ -38,10 +37,10 @@ class TestUpdateDeleteDataSet:
         assert updated_value == expected_value, "Data set was not updated"
 
     @pytest.fixture(scope="function")
-    def dataset(self, test_org, context):
+    def dataset(self, test_org, context, test_data_urls):
         step("Create data set")
         _, dataset = data_catalog.create_dataset_from_link(context, org_guid=test_org.guid,
-                                                           source=self.TEST_FILE_URL)
+                                                           source=test_data_urls.test_transfer.url)
         return dataset
 
     @priority.high

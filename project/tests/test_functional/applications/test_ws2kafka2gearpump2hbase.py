@@ -20,7 +20,8 @@ import pytest
 from retry import retry
 
 import config
-from modules.constants import TapComponent as TAP, Urls, ServicePlan
+from modules.app_sources import AppSources
+from modules.constants import TapComponent as TAP, ServiceLabels, TapGitHub, ServicePlan
 from modules.file_utils import download_file
 from modules.hbase_client import HbaseClient
 from modules.markers import incremental, priority
@@ -130,7 +131,8 @@ class TestWs2kafka2gearpump2hbase:
         assert self.db_and_table_name in hbase_tables, "No pipeline table"
 
     @pytest.mark.bugs("DPNG-13583 Nginx image doesn't support websocket protocol for TAP-NG apps")
-    def test_3_submit_kafka2hbase_app_to_gearpump_dashboard(self, go_to_dashboard, ws2kafka_app, kafka2hdfs_app):
+    def test_3_submit_kafka2hbase_app_to_gearpump_dashboard(self, go_to_dashboard, ws2kafka_app, kafka2hdfs_app,
+                                                            test_data_urls):
         """
         <b>Description:</b>
         Checks if Kafka2hbase application can be submited to gearpump dashboard.
@@ -151,13 +153,12 @@ class TestWs2kafka2gearpump2hbase:
         self._send_messages(ws2kafka_app.urls[0], ["init_message"], self.TOPIC_IN)
         self._send_messages(ws2kafka_app.urls[0], ["init_message"], self.TOPIC_OUT)
         step("Download file kafka2hbase")
-        kafka2hbase_app_path = download_file(url=Urls.kafka2gearpump2hbase,
-                                             save_file_name=Urls.kafka2gearpump2hbase.split("/")[-1])
         step("Submit application kafka2hbase to gearpump dashboard")
         extra_params = {"inputTopic": self.TOPIC_IN, "outputTopic": self.TOPIC_OUT, "tableName": self.db_and_table_name,
                         "columnFamily": self.HBASE_COLUMN_FAMILY, "hbaseUser": "cf"}
-        kafka2hbase_app = self.gearpump.submit_application_jar(kafka2hbase_app_path, kafka2hdfs_app.name,
-                                                               extra_params, self.instances_credentials, timeout=180)
+        kafka2hbase_app = self.gearpump.submit_application_jar(test_data_urls.kafka2gearpump2hbase.filename,
+                                                               kafka2hdfs_app.name, extra_params,
+                                                               self.instances_credentials, timeout=180)
         step("Check that submitted application is started")
         assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 

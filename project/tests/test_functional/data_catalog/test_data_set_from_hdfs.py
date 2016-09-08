@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import TapComponent as TAP
 from modules.tap_logger import step
 from modules.markers import priority
 from modules.tap_object_model.flows import data_catalog
@@ -28,10 +28,8 @@ pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.downloader, 
 
 class TestDataSetFromHdfs(object):
 
-    TEST_FILE_URL = Urls.test_transfer_link
-
     @priority.medium
-    def test_create_dataset_from_hdfs_uri(self, context, test_org):
+    def test_create_dataset_from_hdfs_uri(self, context, test_org, test_data_urls):
         """
         <b>Description:</b>
         Check that dataset can be created by passing hdfs uri as source.
@@ -49,7 +47,7 @@ class TestDataSetFromHdfs(object):
         4. Compare second dataset source_uri is the same as first dataset target_uri.
         """
         step("Create source dataset")
-        _, source_dataset = data_catalog.create_dataset_from_link(context, test_org.guid, self.TEST_FILE_URL)
+        _, source_dataset = data_catalog.create_dataset_from_link(context, test_org.guid, test_data_urls.test_transfer.url)
         step("Create dataset from hdfs uri")
         _, dataset = data_catalog.create_dataset_from_link(context, test_org.guid, source_dataset.target_uri)
         assert dataset.source_uri == source_dataset.target_uri

@@ -18,7 +18,7 @@ import time
 
 import pytest
 
-from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
+from modules.constants import DataCatalogHttpStatus as HttpStatus, TapComponent as TAP
 from modules.file_utils import generate_csv_file
 from modules.http_calls.platform import das, hdfs_uploader
 from modules.markers import priority
@@ -36,11 +36,15 @@ class TestSubmitTransfer:
 
     DEFAULT_CATEGORY = "other"
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
-    TEST_FILE_URL = Urls.test_transfer_link
+
+    @classmethod
+    @pytest.fixture(scope="class", autouse=True)
+    def transfer_url(cls, test_data_urls):
+        cls.transfer_url = test_data_urls.test_transfer.url
 
     def _create_transfer(self, context, org_guid, category):
         step("Create new transfer and wait until it's finished")
-        transfer = Transfer.api_create(context, category=category, source=self.TEST_FILE_URL, org_guid=org_guid)
+        transfer = Transfer.api_create(context, category=category, source=self.transfer_url, org_guid=org_guid)
         transfer.ensure_finished()
         return transfer
 
@@ -183,7 +187,7 @@ class TestSubmitTransfer:
         """
         step("Create new transfer and check that 'token' field was not returned in response")
         response = das.api_create_transfer(
-            source=self.TEST_FILE_URL,
+            source=self.transfer_url,
             title=generate_test_object_name(),
             is_public=False,
             org_guid=test_org.guid,

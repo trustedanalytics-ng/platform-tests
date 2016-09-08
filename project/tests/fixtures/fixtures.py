@@ -36,6 +36,7 @@ from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
 from modules.test_names import generate_test_object_name
 from tap_component_config import api_service
+from .data_repo import Urls, DATA_REPO_PATH
 
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables
@@ -584,3 +585,29 @@ def model_hdfs_path(core_org):
     if model_dataset is None:
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
     return model_dataset.target_uri
+
+
+@pytest.fixture(scope="session")
+def test_data_urls(session_context, api_service_admin_client):
+    """ Fixture with files from tests/fixtures/data_repo.py::DATA_FILES.
+        They are accessible by url or filepath.
+        Eg.:
+            test_data_urls.test_transfer.url
+            test_data_urls['test_transfer'].url
+            test_data_urls.test_transfer.filepath
+    """
+    log_fixture("data_repo: package sample application")
+    p_a = PrepApp(DATA_REPO_PATH)
+    gzipped_app_path = p_a.package_app(session_context)
+
+    log_fixture("data_repo: update manifest")
+    manifest_path = p_a.update_manifest(params={})
+
+    log_fixture("data_repo: Push data_repo application")
+    app = Application.push(context=session_context, app_path=gzipped_app_path, name=p_a.app_name,
+                           manifest_path=manifest_path, client=api_service_admin_client)
+
+    log_fixture("data_repo: Check application is running")
+    app.ensure_running()
+
+    return Urls(app.urls[0])

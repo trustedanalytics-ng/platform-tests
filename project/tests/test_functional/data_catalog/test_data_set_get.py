@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Transfer
@@ -28,19 +28,18 @@ pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.downloader, 
 class TestGetDataSets(object):
 
     data_sample = ["COL_0", "COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6", "COL_7"]
-    TEST_FILE_URL = Urls.test_transfer_link
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_test_data_sets(cls, request, test_org, class_context):
+    def create_test_data_sets(cls, request, test_org, class_context, test_data_urls):
         step("Create new transfer for each category")
         cls.transfers = []
         for category in DataSet.CATEGORIES:
             cls.transfers.append(Transfer.api_create(class_context, category, is_public=False, org_guid=test_org.guid,
-                                                     source=cls.TEST_FILE_URL))
+                                                     source=test_data_urls.test_transfer.url))
         for category in DataSet.CATEGORIES:
             cls.transfers.append(Transfer.api_create(class_context, category, is_public=True, org_guid=test_org.guid,
-                                                     source=cls.TEST_FILE_URL))
+                                                     source=test_data_urls.test_transfer.url))
         step("Ensure that transfers are finished")
         for transfer in cls.transfers:
             transfer.ensure_finished()
@@ -254,7 +253,7 @@ class TestGetDataSets(object):
         assert sorted(filtered_datasets) == sorted(expected_datasets)
 
     @priority.medium
-    def test_get_datasets_by_keyword_source_uri(self, test_org):
+    def test_get_datasets_by_keyword_source_uri(self, test_org, test_data_urls):
         """
         <b>Description:</b>
         Check that dataset can be retrieved by source uri.
@@ -271,7 +270,7 @@ class TestGetDataSets(object):
         2. Check that retrieved dataset is correct.
         """
         step("Retrieve datasets by source uri keyword")
-        filtered_datasets = self._filter_datasets(test_org, query=self.TEST_FILE_URL)
+        filtered_datasets = self._filter_datasets(test_org, query=test_data_urls.test_transfer.url)
         assert sorted(filtered_datasets) == sorted(self.datasets)
 
     @priority.medium
