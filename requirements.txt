@@ -41,3 +41,5 @@ uritemplate==0.6
 websockets==3.1
 Werkzeug==0.11.10
 jsondiff==0.2.0
+# until Python3 support is officially released, locust needs to be installed from GitHub
+git+https://github.com/locustio/locust.git@84cb7839ff6e11c9195c443d3bad7b2a33c0f372

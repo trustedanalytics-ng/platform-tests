@@ -1,6 +1,5 @@
-#!/bin/bash
 #
-# Copyright (c) 2015-2016 Intel Corporation
+# Copyright (c) 2016 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +14,10 @@
 # limitations under the License.
 #
 
-REQUIREMENTS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )/requirements.txt"
-PYVENV=${1:-~/virtualenvs/pyvenv_api_tests}
+import sys
 
-python3 -m venv --without-pip $PYVENV &&
-source $PYVENV/bin/activate &&
-curl https://bootstrap.pypa.io/get-pip.py | python &&
-$PYVENV/bin/pip install -r $REQUIREMENTS &&
-deactivate
-
+# Locust wraps stderr and stdout with custom wrappers missing implementation of the methods below
+# which causes exceptions when they are called from pytest
+sys.stderr.flush = lambda: None
+sys.stdout.flush = lambda: None
+sys.stdout.isatty = lambda: False

@@ -25,6 +25,7 @@ class Path:
         "test_smoke": os.path.join(test_root_directory, "test_smoke"),
         "test_monitoring": os.path.join(test_root_directory, "test_monitoring"),
         "test_performance": os.path.join(test_root_directory, "test_performance"),
+        "stress_scenarios": os.path.join(test_root_directory, "stress_scenarios")
     }
 
     bumpversion_file = os.path.abspath(os.path.join("..", ".bumpversion.cfg"))

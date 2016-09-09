@@ -22,13 +22,20 @@ VENDOR=vendor/
 SECRETS_PATH=./project/secrets/
 REQUIREMENTS_PATH=./requirements.txt
 ZIPPED_ITEMS="deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt .bumpversion.cfg"
+VIRTUALENV_PATH=~/virtualenvs/pyvenv_api_tests
+
+# workaround for pip's issues with finding package dependencies
+./deploy/create_virtualenv.sh $VIRTUALENV_PATH
+source $VIRTUALENV_PATH/bin/activate
 
 # prepare dependencies
 if [ -d $VENDOR ]; then
     rm -rf $VENDOR
 fi
 mkdir $VENDOR
-python3 -m pip install --download $VENDOR -r $REQUIREMENTS_PATH
+pip install --download $VENDOR -r $REQUIREMENTS_PATH
+
+deactivate
 
 # remove secrets
 rm -rf $SECRETS_PATH

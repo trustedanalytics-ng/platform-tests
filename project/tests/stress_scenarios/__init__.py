@@ -1,6 +1,5 @@
-#!/bin/bash
 #
-# Copyright (c) 2015-2016 Intel Corporation
+# Copyright (c) 2016 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-REQUIREMENTS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )/requirements.txt"
-PYVENV=${1:-~/virtualenvs/pyvenv_api_tests}
-
-python3 -m venv --without-pip $PYVENV &&
-source $PYVENV/bin/activate &&
-curl https://bootstrap.pypa.io/get-pip.py | python &&
-$PYVENV/bin/pip install -r $REQUIREMENTS &&
-deactivate
-
