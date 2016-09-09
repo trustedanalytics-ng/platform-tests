@@ -23,11 +23,6 @@ from modules.tap_logger import step
 
 
 class TestCliBasicFlow:
-
-    @pytest.fixture(scope="class")
-    def cli_login(self, tap_cli):
-        tap_cli.login()
-
     @pytest.fixture(scope="function")
     def restore_login(self, request, tap_cli):
         request.addfinalizer(tap_cli.login)

@@ -30,10 +30,6 @@ class TestCliCatalogOffering:
     short = False
 
     @pytest.fixture(scope="class")
-    def cli_login(self, tap_cli):
-        tap_cli.login()
-
-    @pytest.fixture(scope="class")
     def example_offer(self):
         assert self.OFFERING_NAME is not None
         assert self.PLAN_NAME is not None

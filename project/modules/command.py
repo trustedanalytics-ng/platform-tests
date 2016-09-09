@@ -24,10 +24,11 @@ from .tap_logger import get_logger
 logger = get_logger(LoggerType.SHELL_COMMAND)
 
 
-def run(command):
+def run(command, cwd=None):
     """Run specified command in subprocess and log real time output"""
     logger.info("Executing command: '{}'".format(" ".join(command)))
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,
+                               cwd=cwd)
     out = []
     while True:
         output = process.stdout.readline()

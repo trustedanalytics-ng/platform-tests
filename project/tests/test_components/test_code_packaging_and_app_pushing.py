@@ -16,7 +16,6 @@
 
 import pytest
 
-import tests.test_components.test_app_deploy_start as tads
 from modules import file_utils
 from modules.constants import TapComponent as TAP, Urls
 from modules.http_calls.platform.catalog import update_instance
@@ -34,33 +33,22 @@ pytestmark = [pytest.mark.components(TAP.api_service, TAP.catalog)]
 @priority.medium
 @pytest.mark.usefixtures("open_tunnel")
 class TestCodePackagingAndAppPushing:
-    MANIFEST_NAME = "manifest.json"
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     APP_NAME = generate_test_object_name(prefix="samplepythonapp").replace('_', '')
     file_utils.TMP_FILE_DIR = "{}{}".format(file_utils.TMP_FILE_DIR, generate_test_object_name(prefix="/"))
     SAMPLE_APP_URL = Urls.tapng_python_app_url
 
-    @pytest.fixture(scope="class")
-    def python_app_path(self):
-        self.__class__.application_file_path = file_utils.download_file(self.SAMPLE_APP_URL, self.SAMPLE_APP_TAR_NAME)
-        return self.application_file_path
-
-    @pytest.fixture(scope="class")
-    def manifest_path(self):
-        self.__class__.manifest_file_path = file_utils.download_file(Urls.manifest_url, self.MANIFEST_NAME)
-        return self.manifest_file_path
-
-    def test_0_push_application(self, class_context, python_app_path, manifest_path):
+    def test_0_push_application(self, class_context, sample_app_path, sample_app_manifest_path):
         step("Change manifest.json params")
         manifest_params = {
             'instances': 1,
             'name': self.APP_NAME,
             'type': "PYTHON"
         }
-        tads.TestPythonApplicationFlow.change_json_file_param_value(file_path=self.manifest_file_path,
-                                                                    manifest_params=manifest_params)
+        K8sApplication.change_json_file_param_value(file_path=self.manifest_file_path,
+                                                    manifest_params=manifest_params)
         step("Push application")
-        self.__class__.app = K8sApplication.push(class_context, python_app_path, manifest_path)
+        self.__class__.app = K8sApplication.push(class_context, sample_app_path, sample_app_manifest_path)
         step("Ensure application is running")
         self.app.ensure_running()
         step("Get application")

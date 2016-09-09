@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import codecs
 import functools
+import json
 
 from retry import retry
 
@@ -34,7 +35,7 @@ class K8sApplication(object):
 
     url = None
 
-    def __init__(self, app_id: str, name: str, app_type: str, class_id: str, bindings, metadata,  state: str,
+    def __init__(self, app_id: str, name: str, app_type: str, class_id: str, bindings, metadata, state: str,
                  created_on, created_by, last_updated_on, last_update_by, replication, image_state):
         self.id = app_id
         self.name = name
@@ -145,3 +146,14 @@ class K8sApplication(object):
                    last_updated_on=response["auditTrail"]["lastUpdatedOn"],
                    last_update_by=response["auditTrail"]["lastUpdateBy"], replication=response["replication"],
                    image_state=response["imageState"])
+
+    @staticmethod
+    def change_json_file_param_value(file_path, manifest_params):
+        with codecs.open(file_path, 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+            params = json.dumps(manifest_params)
+            params = json.loads(params)
+            for key in params:
+                data[key] = params[key]
+            f.seek(0)
+            json.dump(data, f, indent=4)

@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-import codecs
-import json
 import re
 
 import pytest
@@ -24,7 +22,6 @@ import config
 from modules.constants import HttpStatus
 from modules.constants import TapComponent as TAP
 from modules.constants.urls import Urls
-from modules.file_utils import download_file
 from modules.http_calls.kubernetes import k8s_get_pods
 from modules.markers import incremental
 from modules.tap_logger import step
@@ -46,42 +43,20 @@ class TestPythonApplicationFlow:
     APP_TYPE = "PYTHON"
 
     APP_INSTANCES = 1
-    MANIFEST_NAME = "manifest.json"
     application = None
     application_file_path = None
     manifest_file_path = None
 
-    @pytest.fixture(scope="class")
-    def python_app_path(self):
-        self.__class__.application_file_path = download_file(self.SAMPLE_APP_URL, self.SAMPLE_APP_TAR_NAME)
-        return self.application_file_path
-
-    @pytest.fixture(scope="class")
-    def manifest_path(self):
-        self.__class__.manifest_file_path = download_file(Urls.manifest_url, self.MANIFEST_NAME)
-        return self.manifest_file_path
-
-    @staticmethod
-    def change_json_file_param_value(file_path, manifest_params):
-        with codecs.open(file_path, 'r+', encoding='utf-8') as f:
-            data = json.load(f)
-            params = json.dumps(manifest_params)
-            params = json.loads(params)
-            for key in params:
-                data[key] = params[key]
-            f.seek(0)
-            json.dump(data, f, indent=4)
-
-    def test_0_push_application(self, class_context, python_app_path, manifest_path):
+    def test_0_push_application(self, class_context, sample_app_path, sample_app_manifest_path):
         step("Prepare manifest with parameters")
         manifest_params = {
             'instances': self.APP_INSTANCES,
             'name': self.APP_NAME,
             'type': self.APP_TYPE
         }
-        self.change_json_file_param_value(manifest_path, manifest_params)
+        K8sApplication.change_json_file_param_value(sample_app_manifest_path, manifest_params)
         step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
-        self.__class__.application = K8sApplication.push(class_context, python_app_path, manifest_path)
+        self.__class__.application = K8sApplication.push(class_context, sample_app_path, sample_app_manifest_path)
 
     def test_1_push_application_with_existing_name(self, class_context):
         step("Push the same application again")

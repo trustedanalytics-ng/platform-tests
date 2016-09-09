@@ -14,14 +14,17 @@
 # limitations under the License.
 #
 
-import os
 import json
+import os
 
 from retry import retry
 
 import config
-from modules.constants import RelativeRepositoryPaths
 from modules import command
+from modules.constants import HttpStatus, RelativeRepositoryPaths
+from modules.http_client import HttpClientFactory
+from modules.http_client.client_auth.http_method import HttpMethod
+from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 
 
 class TapCli:
@@ -36,13 +39,21 @@ class TapCli:
     SERVICES = "services", "svcs"
     SERVICE = "service", "s"
     LOGS = "logs", "log"
+    PUSH = "push"
+    APP = "application"
+    APPS = "applications"
+    START = "start"
+    STOP = "stop"
+    SCALE = "scale"
+    DELETE = "delete"
+    PUSH_HELP = [PUSH, "--help"]
 
     def __init__(self, cli_app_path):
         self.command = os.path.join(cli_app_path, RelativeRepositoryPaths.tap_cli)
 
-    def _run_command(self, cmd: list):
+    def _run_command(self, cmd: list, cwd=None):
         cmd = [self.command] + cmd
-        output = command.run(cmd)
+        output = command.run(cmd, cwd=cwd)
         return "\n".join(output)
 
     def login(self, login_domain=config.cf_api_url, tap_auth=None):
@@ -93,3 +104,62 @@ class TapCli:
         assert service is not None, "service {} does not exist".format(service_name)
         assert service["state"] == state, "expected state '{}' but was '{}'".format(state, service['state'])
 
+    def push(self, app_dir_path):
+        return self._run_command([self.PUSH], cwd=app_dir_path)
+
+    def apps(self):
+        return self._run_command([self.APPS])
+
+    def app(self, application_name):
+        output = self._run_command([self.APP, application_name])
+        try:
+            app_json = output.split(sep="BODY:")[2].split(sep="\n")[0]
+        except IndexError:
+            return None
+        app = json.loads(app_json)
+        assert app['name'] == application_name
+        return app
+
+    def start_app(self, application_name):
+        return self._run_command([self.START, application_name])
+
+    def stop_app(self, application_name):
+        return self._run_command([self.STOP, application_name])
+
+    def scale_app(self, application_name, instances):
+        return self._run_command([self.SCALE, application_name, instances])
+
+    def app_logs(self, application_name):
+        return self._run_command([self.LOGS[1], application_name])
+
+    def delete_app(self, application_name):
+        return self._run_command([self.DELETE, application_name])
+
+    def push_help(self):
+        return self._run_command(self.PUSH_HELP)
+
+    @retry(AssertionError, tries=12, delay=5)
+    def ensure_app_availability_on_the_list(self, application_name, should_be_on_the_list: bool):
+        apps = self.apps()
+        if should_be_on_the_list:
+            assert application_name in apps, "App '{}' is not on the list of apps".format(application_name)
+        else:
+            assert application_name not in apps, "App '{}' is still on the list of apps".format(application_name)
+
+    @retry(AssertionError, tries=12, delay=5)
+    def ensure_app_state(self, application_name, state):
+        app = self.app(application_name=application_name)
+        assert app is not None, "App {} does not exist".format(app)
+        assert app["state"] == state, "Expected state '{}' but was '{}'".format(state, app['state'])
+
+    @retry(AssertionError, tries=12, delay=5)
+    def ensure_app_is_ready(self, application_url):
+        client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=application_url))
+        response = client.request(
+            method=HttpMethod.GET,
+            path="",
+            raw_response=True,
+            raise_exception=True,
+            msg="Application: get /{}".format("")
+        )
+        assert response.status_code == HttpStatus.CODE_OK
