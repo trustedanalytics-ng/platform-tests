@@ -54,8 +54,10 @@ class Template(object):
         return cls._from_response(response)
 
     @classmethod
-    def get_parsed(cls, template_id: str, service_id: str):
-        response = template_repository.get_parsed_template(template_id, service_id)
+    def get_parsed(cls, template_id: str, service_id: str, optional_params={}):
+        params = {"serviceId": service_id }
+        params.update(optional_params)
+        response = template_repository.get_parsed_template(template_id, params)
         return cls._from_response(response)
 
     @classmethod

@@ -53,11 +53,11 @@ def create_template(template_id, template_body, hooks):
                                  msg="TEMPLATE REPOSITORY: create template")
 
 
-def get_parsed_template(template_id, service_id):
-    """ GET /parsed_template/{template_id} """
+def get_parsed_template(template_id, params):
+    """ GET /parsed_template/{template_id}?param1=value1&param2=value2 """
     return _get_client().request(HttpMethod.GET,
                                  path="parsed_template/{}".format(template_id),
-                                 params={"serviceId": service_id},
+                                 params=params,
                                  msg="TEMPLATE REPOSITORY: get parsed template")
 
 

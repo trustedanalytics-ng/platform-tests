@@ -21,12 +21,12 @@ from modules.tap_logger import step
 from modules.tap_object_model import Template
 from modules.markers import incremental
 from tests.fixtures.assertions import assert_raises_http_exception
+from modules.http_calls.kubernetes import k8s_get_configmap
 
 
 @incremental
 @pytest.mark.usefixtures("open_tunnel")
 class TestTemplateRepository:
-
     def test_0_create_template(self, class_context):
         step("Create template")
         self.__class__.test_template = Template.create(class_context)
@@ -47,7 +47,7 @@ class TestTemplateRepository:
         step("Check if template is correctly parsed")
         template = Template.get_parsed(template_id=self.test_template.id,
                                        service_id="1fef0dfe-16a7-11e6-bde5-00155d3d8812")
-        assert '$' not in template.components
+        assert '$' not in str(template.components)
 
     def test_4_cannot_get_parsed_template_with_invalid_service_id(self):
         step("Check service id")
@@ -65,3 +65,22 @@ class TestTemplateRepository:
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND,
                                      TemplateRepositoryHttpStatus.MSG_TEMPLATE_DOES_NOT_EXIST,
                                      Template.get, template_id=self.test_template.id)
+
+    def test_7_get_parsed_template_generic_user_prov_application(self):
+        step("Get generic application template id")
+        response = k8s_get_configmap("template-repository")
+        self.__class__.generic_application_template_id = response['data']['generic-application-template-id']
+        step("Get parsed template for generic user-provided application")
+        template = Template.get_parsed(template_id=self.generic_application_template_id,
+                                       service_id="asdf12343sffs321342dsda",
+                                       optional_params={"image": "testImage",
+                                                        "hostname": "testHostname"})
+        assert '$' not in str(template.components)
+
+    def test_8_get_parsed_template_empty_params(self):
+        step("Get parsed template for query with empty image and hostname params")
+        template = Template.get_parsed(template_id=self.generic_application_template_id,
+                                       service_id="asdf12343sffs321342dsda",
+                                       optional_params={"image": "",
+                                                        "hostname": ""})
+        assert '$' not in str(template.components)

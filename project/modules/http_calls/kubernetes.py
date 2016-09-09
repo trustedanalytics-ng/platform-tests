@@ -55,3 +55,12 @@ def k8s_get_service(service_name):
         msg="KUBERNETES: get service {}".format(service_name)
     )
 
+
+def k8s_get_configmap(configmap_name):
+    """GET /namespaces/{namespace}/configmaps/{configmap_name}"""
+    return client.request(
+        method=HttpMethod.GET,
+        path="namespaces/{}/configmaps/{}".format(default_namespace, configmap_name),
+        msg="KUBERNETES: get configmap {}".format(configmap_name)
+    )
+
