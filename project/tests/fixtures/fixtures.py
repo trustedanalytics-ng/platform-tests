@@ -19,7 +19,6 @@ import io
 import os
 
 import pytest
-from retry import retry
 
 import config
 from modules.app_sources import AppSources
@@ -39,66 +38,45 @@ from .test_data import TestData
 
 
 @pytest.fixture(scope="session")
-@retry(UnexpectedResponseError, tries=3, delay=15)
-def test_org(request, session_context):
-    log_fixture("test_org: Create test organization")
-    test_org = Organization.api_create(session_context)
-    TestData.test_org = test_org
-    return test_org
+def test_org(request, core_org):
+    # Workaround due to limited functionality of TAP NG v1
+    log_fixture("test_org: Returns core org")
+    TestData.test_org = core_org
+    return core_org
 
 
 @pytest.fixture(scope="session")
-def test_space(request, test_org):
-    log_fixture("test_space: Create test space")
-    TestData.test_space = Space.api_create(test_org)
-    return TestData.test_space
+def test_org_user(request, session_context, test_org):
+    log_fixture("test_org_user: Add user to test org")
+    test_org_user = User.create_by_adding_to_organization(session_context, org_guid=test_org.guid,
+                                                          role=User.ORG_ROLE["user"])
+    TestData.test_org_user = test_org_user
+    return test_org_user
 
 
 @pytest.fixture(scope="session")
-def test_org_manager(request, session_context, test_org):
-    log_fixture("test_org_manager: Add org manager to test org")
-    test_org_manager = User.api_create_by_adding_to_organization(session_context, org_guid=test_org.guid)
-    TestData.test_org_manager = test_org_manager
-    return test_org_manager
+def test_org_user_client(test_org_user):
+    log_fixture("test_org_user_client: Login as test org user")
+    test_org_user_client = test_org_user.login()
+    TestData.test_org_user_ng_client = test_org_user_client
+    return test_org_user_client
 
 
 @pytest.fixture(scope="session")
-def test_org_manager_client(test_org_manager):
-    log_fixture("test_org_manager_client: Login as test org manager")
-    TestData.test_org_manager_client = test_org_manager.login()
-    return TestData.test_org_manager_client
+def test_org_admin(request, session_context, test_org):
+    log_fixture("test_org_user: Add admin to test org")
+    test_org_admin = User.create_by_adding_to_organization(session_context, org_guid=test_org.guid,
+                                                           role=User.ORG_ROLE["admin"])
+    TestData.test_org_user = test_org_admin
+    return test_org_admin
 
 
 @pytest.fixture(scope="session")
-def test_org_auditor(request, session_context, test_org):
-    log_fixture("test_org_auditor: Add org auditor to test org")
-    test_org_auditor = User.api_create_by_adding_to_organization(session_context, org_guid=test_org.guid,
-                                                                 roles=User.ORG_ROLES["auditor"])
-    TestData.test_org_auditor = test_org_auditor
-    return test_org_auditor
-
-
-@pytest.fixture(scope="session")
-def test_org_auditor_client(test_org_auditor):
-    log_fixture("test_org_manager_client: Login as test org manager")
-    TestData.test_org_auditor_client = test_org_auditor.login()
-    return TestData.test_org_auditor_client
-
-
-@pytest.fixture(scope="session")
-def test_org_billing_manager(request, session_context, test_org):
-    log_fixture("test_org_manager: Add org billing manager to test org")
-    test_org_billing_manager = User.api_create_by_adding_to_organization(session_context, org_guid=test_org.guid,
-                                                                         roles=User.ORG_ROLES["billing_manager"])
-    TestData.test_org_billing_manager = test_org_billing_manager
-    return test_org_billing_manager
-
-
-@pytest.fixture(scope="session")
-def test_org_billing_manager_client(test_org_billing_manager):
-    log_fixture("test_org_manager_client: Login as test org manager")
-    TestData.test_org_billing_manager_client = test_org_billing_manager.login()
-    return TestData.test_org_billing_manager_client
+def test_org_admin_client(test_org_admin):
+    log_fixture("test_org_admin_client: Login as test org admin")
+    test_org_admin_client = test_org_admin.login()
+    TestData.test_org_admin_client = test_org_admin_client
+    return test_org_admin_client
 
 
 @pytest.fixture(scope="class")
@@ -154,7 +132,7 @@ def sample_service(class_context, request, test_org, test_space, sample_python_a
 @pytest.fixture(scope="session")
 def admin_user():
     log_fixture("admin_user: Retrieve admin user")
-    admin_user = User.cf_api_get_user(config.admin_username)
+    admin_user = User.get_user(config.admin_username)
     admin_user.password = config.admin_password
     TestData.admin_user = admin_user
     return admin_user
@@ -194,7 +172,7 @@ def add_admin_to_test_space(test_org, test_space, admin_user):
 def core_org():
     log_fixture("core_org: Create object for core org")
     ref_org_name = config.core_org_name
-    orgs = Organization.cf_api_get_list()
+    orgs = Organization.get_list()
     TestData.core_org = next(o for o in orgs if o.name == ref_org_name)
     return TestData.core_org
 

@@ -14,17 +14,16 @@
 # limitations under the License.
 #
 
-from .. import Invitation, Organization, User
+from .. import Invitation, User
 from ... import gmail_api
 from ...constants import HttpStatus
 from ...exceptions import UnexpectedResponseError
 from ...http_calls.platform import user_management as api
 from ...http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
 from ...http_client.http_client_factory import HttpClientFactory
-from ...test_names import generate_test_object_name
 
 
-def onboard(context, username=None, password=None, org_name=None, inviting_client=None, check_email=True):
+def onboard(context, test_org, username=None, password=None, inviting_client=None, check_email=True):
     """
     Onboard new user. Check email for registration code and register.
     Returns objects for newly created user and org.
@@ -35,32 +34,25 @@ def onboard(context, username=None, password=None, org_name=None, inviting_clien
         code = gmail_api.get_invitation_code_for_user(username=invitation.username)
     else:
         code = invitation.code
-    return register(context, code, invitation.username, password, org_name)
+    return register(context, test_org, code, invitation.username, password)
 
 
-def register(context, code, username, password=None, org_name=None):
+def register(context, test_org, code, username, password=None):
     """
-    Set password for new user and select name for their organization.
-    Returns objects for newly created user and org.
+    Set password for new user. Returns objects for newly created user.
     """
     password = User.generate_password() if password is None else password
-    org_name = generate_test_object_name() if org_name is None else org_name
     client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
     try:
-        response = api.api_register_new_user(code, password, org_name, client=client)
+        response = api.api_register_new_user(code, password, client=client)
     except UnexpectedResponseError as e:
         # If exception occurred, other than conflict, check whether org and user are on the list and if so, delete it.
         if e.status != HttpStatus.CODE_CONFLICT:
-            user = next((u for u in User.cf_api_get_all_users() if u.username == username), None)
+            user = next((u for u in User.get_all_users(test_org.guid) if u.username == username), None)
             if user is not None:
                 user.cleanup()
-            org = next((o for o in Organization.api_get_list() if o.name == org_name), None)
-            if org is not None:
-                org.cleanup()
         raise
-    new_org = Organization(name=response["org"], guid=response["orgGuid"])
     new_user = User(guid=response["userGuid"], username=username, password=response["password"],
-                    org_roles={new_org.guid: ["managers"]})  # user is an org manager in the organization they create
-    context.orgs.append(new_org)
+                    org_role={test_org.guid: User.ORG_ROLE["admin"]})
     context.users.append(new_user)
-    return new_user, new_org
+    return new_user

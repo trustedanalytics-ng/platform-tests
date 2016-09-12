@@ -18,12 +18,10 @@
 class TestData:
     test_org = None
     test_space = None
-    test_org_manager = None
-    test_org_manager_client = None
-    test_org_auditor = None
-    test_org_auditor_client = None
-    test_org_billing_manager = None
-    test_org_billing_manager_client = None
+    test_org_user = None
+    test_org_user_client = None
+    test_org_admin = None
+    test_org_admin_client = None
     admin_user = None
     admin_client = None
     core_org = None

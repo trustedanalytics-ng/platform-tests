@@ -41,13 +41,13 @@ class ClientAuthFactory(object):
         if auth_type == ClientAuthType.TOKEN_CF:
             return ClientAuthToken(config.cf_oauth_token_url, session)
 
-        if auth_type == ClientAuthType.TOKEN_UAA:
+        elif auth_type == ClientAuthType.TOKEN_UAA:
             return ClientAuthToken(config.uaa_oauth_token_url, session)
 
         elif auth_type == ClientAuthType.HTTP_BASIC:
             return ClientAuthHttpBasic(ClientAuthFactory.EMPTY_URL, session)
 
-        if auth_type == ClientAuthType.TOKEN_K8S_AS:
+        elif auth_type == ClientAuthType.TOKEN_K8S_AS:
             return K8sClientAuthToken(config.ng_k8s_as_oauth_token_url, session)
 
         elif auth_type == ClientAuthType.LOGIN_PAGE:

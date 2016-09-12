@@ -48,79 +48,48 @@ def test_login():
     assert entities is not None
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_create_and_delete_organization(context):
     """Create and Delete Organization"""
     step("Create organization")
-    test_org = Organization.api_create(context)
+    test_org = Organization.create(context)
     step("Check that organization is on the list")
-    orgs = Organization.api_get_list()
+    orgs = Organization.get_list()
     assert test_org in orgs
     step("Delete organization")
-    test_org.api_delete()
+    test_org.delete()
     step("Check that the organization is not on the list")
     assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
 
 
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-def test_onboarding(context):
+def test_onboarding(context, core_org):
     """Test Onboarding"""
     step("Onboard new user")
-    test_user, test_org = onboarding.onboard(context, check_email=False)
+    test_user = onboarding.onboard(context, core_org, check_email=False)
     step("Check that user is created")
-    users = User.cf_api_get_all_users()
+    users = User.get_all_users(core_org.guid)
     assert test_user in users
-    step("Check that organization is created")
-    org_list = Organization.api_get_list()
-    assert test_org in org_list
 
 
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """Add New User to and Delete from Organization"""
     step("Add new user to organization")
-    test_user, test_org = onboarding.onboard(context, check_email=False)
-    test_user.api_add_to_organization(core_org.guid, roles=User.ORG_ROLES["manager"],)
+    test_user = onboarding.onboard(context, core_org, check_email=False)
+    test_user.add_to_organization(core_org.guid, role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
-    users = User.api_get_list_via_organization(org_guid=core_org.guid)
+    users = User.get_list_via_organization(org_guid=core_org.guid)
     assert test_user in users
     step("Delete the user from the organization")
-    test_user.api_delete_from_organization(org_guid=core_org.guid)
+    test_user.delete_from_organization(org_guid=core_org.guid)
     step("Check that the user is in the organization")
-    users = User.api_get_list_via_organization(org_guid=core_org.guid)
+    users = User.get_list_via_organization(org_guid=core_org.guid)
     assert test_user not in users
 
 
-@pytest.mark.components(TAP.user_management)
-def test_create_and_delete_space(core_org):
-    """Create and Delete Space"""
-    step("Create new space")
-    test_space = Space.api_create(org=core_org)
-    step("Check that the space was created")
-    spaces = Space.api_get_list()
-    assert test_space in spaces
-    step("Delete the space")
-    test_space.api_delete()
-    step("Check that the space was deleted")
-    assertions.assert_not_in_with_retry(test_space, Space.api_get_list)
-
-
-@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-def test_add_new_user_to_and_delete_from_space(core_org, core_space, context):
-    """Add New User to and Delete from Space"""
-    step("Add new user to space")
-    test_user, test_org = onboarding.onboard(context, check_email=False)
-    test_user.api_add_to_space(core_space.guid, core_org.guid, roles=User.SPACE_ROLES["manager"])
-    step("Check that the user is added")
-    users = User.api_get_list_via_space(space_guid=core_space.guid)
-    assert test_user in users
-    step("Remove the user from space")
-    test_user.api_delete_from_space(space_guid=core_space.guid)
-    step("Check that the user was deleted")
-    users = User.api_get_list_via_space(space_guid=core_space.guid)
-    assert test_user not in users
-
-
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 def transfer_flow(transfer, core_org):
     step("Check that the transfer is finished")
     transfer.ensure_finished()
@@ -143,6 +112,7 @@ def transfer_flow(transfer, core_org):
     assert transfer not in transfers
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_link(core_org, context):
     """Create and Delete Transfer from Link"""
@@ -151,6 +121,7 @@ def test_add_and_delete_transfer_from_link(core_org, context):
     transfer_flow(transfer, core_org)
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_file(core_org, context):
     """Create and Delete Transfer from File"""
@@ -163,6 +134,7 @@ def test_add_and_delete_transfer_from_file(core_org, context):
 
 
 @long
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
@@ -184,6 +156,7 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
     assert instance not in instances
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.parametrize("sample_app", [sample_python_app, sample_java_app])
 def test_push_sample_app_and_check_response(context, test_org, test_space, sample_app):
     """Push Sample Application and Test Http Response"""
@@ -196,6 +169,7 @@ def test_push_sample_app_and_check_response(context, test_org, test_space, sampl
     assert response.status_code == 200
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.atk)
 def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, core_space, test_space, test_org,
                                                               admin_user):
@@ -235,6 +209,7 @@ def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, 
     notebook.ws.close()
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.platform_tests)
 def test_start_tests_or_get_suite_in_progress():
     """Start Tests or get Suite in Progress"""

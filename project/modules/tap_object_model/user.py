@@ -21,12 +21,12 @@ import string
 import config
 from .. import gmail_api
 from ..exceptions import NoSuchUserException
-from ..http_calls import cloud_foundry as cf
-from ..http_calls.platform import user_management
+from ..http_calls.platform import user_management as um
 from ..http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
 from ..http_client.http_client_factory import HttpClientFactory
 from ..http_client.configuration_provider.console import ConsoleConfigurationProvider
 from ..test_names import generate_test_object_name
+from ..constants import Guid
 
 
 @functools.total_ordering
@@ -34,23 +34,16 @@ class User(object):
 
     __ADMIN = None
 
-    ORG_ROLES = {
-        "manager": {"managers"},
-        "auditor": {"auditors"},
-        "billing_manager": {"billing_managers"}
-    }
-    SPACE_ROLES = {
-        "manager": {"managers"},
-        "auditor": {"auditors"},
-        "developer": {"developers"}
+    ORG_ROLE = {
+        "admin": "ADMIN",
+        "user": "USER",
     }
 
-    def __init__(self, guid=None, username=None, password=None, org_roles=None, space_roles=None):
+    def __init__(self, guid=None, username=None, password=None, org_role=None):
         self.guid = guid
         self.username = username
         self.password = password
-        self.org_roles = org_roles or {}
-        self.space_roles = space_roles or {}
+        self.org_role = org_role or {}
         self.client = None
         self.client_configuration = None
 
@@ -72,14 +65,14 @@ class User(object):
         return "".join([random.choice(base) for _ in range(length)])
 
     @classmethod
-    def api_create_by_adding_to_organization(cls, context, org_guid, username=None, password=None,
-                                             roles=ORG_ROLES["manager"], inviting_client=None):
+    def create_by_adding_to_organization(cls, context, org_guid, username=None, password=None, role=ORG_ROLE["user"],
+                                         inviting_client=None):
         username = generate_test_object_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
-        user_management.api_add_organization_user(org_guid, username, roles, client=inviting_client)
+        um.api_add_organization_user(org_guid, username, role, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
-        user_management.api_register_new_user(code, password, client=client)
+        um.api_register_new_user(code, password, client=client)
         org_users = cls.api_get_list_via_organization(org_guid=org_guid)
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
@@ -89,37 +82,12 @@ class User(object):
         return new_user
 
     @classmethod
-    def api_create_by_adding_to_space(cls, context, org_guid, space_guid, username=None, password=None,
-                                      roles=SPACE_ROLES["manager"], inviting_client=None):
-        username = generate_test_object_name(email=True) if username is None else username
-        password = cls.generate_password() if password is None else password
-        user_management.api_add_space_user(org_guid, space_guid, username, roles, inviting_client)
-        code = gmail_api.get_invitation_code_for_user(username)
-        client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
-        user_management.api_register_new_user(code, password, client=client)
-        space_users = cls.api_get_list_via_space(space_guid)
-        new_user = next((user for user in space_users if user.username == username), None)
-        context.users.append(new_user)
-        new_user.password = password
-        return new_user
-
-    @classmethod
-    def api_get_list_via_organization(cls, org_guid, client=None):
-        response = user_management.api_get_organization_users(org_guid, client=client)
+    def get_list_via_organization(cls, org_guid, client=None):
+        response = um.api_get_organization_users(org_guid, client=client)
         users = []
         for user_data in response:
             user = cls(guid=user_data["guid"], username=user_data["username"])
-            user.org_roles[org_guid] = user_data["roles"]
-            users.append(user)
-        return users
-
-    @classmethod
-    def api_get_list_via_space(cls, space_guid, client=None):
-        response = user_management.api_get_space_users(space_guid, client=client)
-        users = []
-        for user_data in response:
-            user = cls(guid=user_data["guid"], username=user_data["username"])
-            user.space_roles[space_guid] = user_data["roles"]
+            user.org_role[org_guid] = user_data["role"]
             users.append(user)
         return users
 
@@ -135,63 +103,50 @@ class User(object):
             return self.client
         return HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(self.username))
 
-    def api_add_to_organization(self, org_guid, roles=ORG_ROLES["manager"], client=None):
-        user_management.api_add_organization_user(org_guid, self.username, roles, client=client)
-        self.org_roles[org_guid] = list(set(self.org_roles.get(org_guid, set())) | set(roles))
+    def add_to_organization(self, org_guid, role=ORG_ROLE["user"], client=None):
+        um.api_add_organization_user(org_guid, self.username, role, client=client)
+        self.org_role[org_guid] = list(set(self.org_role.get(org_guid, set())) | set(role))
 
-    def api_add_to_space(self, space_guid, org_guid, roles=SPACE_ROLES["manager"], client=None):
-        user_management.api_add_space_user(org_guid=org_guid, space_guid=space_guid, username=self.username,
-                               roles=roles, client=client)
-        self.space_roles[space_guid] = list(roles)
+    def update_org_role(self, org_guid, new_role=None, client=None):
+        um.api_update_org_user_role(org_guid, self.guid, new_role, client=client)
+        self.org_role[org_guid] = list(new_role)
 
-    def api_update_org_roles(self, org_guid, new_roles=None, client=None):
-        user_management.api_update_org_user_roles(org_guid, self.guid, new_roles, client=client)
-        self.org_roles[org_guid] = list(new_roles)
-
-    def api_update_space_roles(self, space_guid, new_roles=None, client=None):
-        user_management.api_update_space_user_roles(space_guid, self.guid, new_roles, client=client)
-        if new_roles is not None:
-            self.space_roles[space_guid] = list(new_roles)
-
-    def api_delete_from_organization(self, org_guid, client=None):
-        user_management.api_delete_organization_user(org_guid, self.guid, client=client)
-
-    def api_delete_from_space(self, space_guid, client=None):
-        user_management.api_delete_space_user(space_guid, self.guid, client=client)
+    def delete_from_organization(self, org_guid, client=None):
+        um.api_delete_organization_user(org_guid, self.guid, client=client)
 
     @classmethod
     def get_admin(cls):
         """Return User object for admin user"""
         if cls.__ADMIN is None:
-            cls.__ADMIN = cls.cf_api_get_user(config.admin_username)
+            cls.__ADMIN = cls.api_get_user(config.admin_username)
             cls.__ADMIN.password = config.admin_password
         return cls.__ADMIN
 
     @classmethod
-    def _get_user_list_from_cf_api_response(cls, response):
+    def _get_user_list_from_api_response(cls, response):
         users = []
         for user_data in response:
-            user = cls(username=user_data["entity"].get("username"), guid=user_data["metadata"].get("guid"))
+            user = cls(username=user_data["username"], guid=user_data["guid"])
             users.append(user)
         return users
 
     @classmethod
-    def cf_api_get_all_users(cls):
-        response = cf.cf_api_get_users()
-        return cls._get_user_list_from_cf_api_response(response)
+    def get_all_users(cls, org_guid):
+        # For now we have only one org
+        return cls.get_list_in_organization(org_guid=org_guid)
 
     @classmethod
-    def cf_api_get_user(cls, username):
-        users = User.cf_api_get_all_users()
+    def get_user(cls, username, org_guid):
+        users = User.get_all_users(org_guid)
         user = next((user for user in users if user.username == username), None)
         if not user:
             raise NoSuchUserException(username)
         return user
 
     @classmethod
-    def cf_api_get_list_in_organization(cls, org_guid, space_guid=None):
-        response = cf.cf_api_get_org_users(org_guid=org_guid, space_guid=space_guid)
-        return cls._get_user_list_from_cf_api_response(response)
+    def get_list_in_organization(cls, org_guid):
+        response = um.api_get_organization_users(org_guid=org_guid)
+        return cls._get_user_list_from_api_response(response)
 
     def cleanup(self):
-        cf.cf_api_delete_user(self.guid)
+        um.api_delete_organization_user(org_guid=Guid.CORE_ORG_GUID, user_guid=self.guid)

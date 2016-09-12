@@ -69,7 +69,7 @@ if __name__ == "__main__":
     log_deleted_objects(test_invitations, "invitation")
     fixtures.tear_down_test_objects(test_invitations)
 
-    all_orgs = Organization.cf_api_get_list()
+    all_orgs = Organization.get_list()
     test_orgs = [x for x in all_orgs if is_test_object_name(x.name)]
     log_deleted_objects(test_orgs, "organization")
     fixtures.tear_down_test_objects(test_orgs,)

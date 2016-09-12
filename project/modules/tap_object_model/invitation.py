@@ -21,7 +21,6 @@ from ..http_calls.platform import user_management as api
 from ..test_names import generate_test_object_name
 from ..tap_logger import get_logger
 
-
 logger = get_logger(__name__)
 
 

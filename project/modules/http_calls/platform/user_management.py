@@ -103,67 +103,17 @@ def api_delete_organization_user(org_guid, user_guid, client=None):
     )
 
 
-def api_update_org_user_roles(org_guid, user_guid, new_roles=None, client=None):
+def api_update_org_user_role(org_guid, user_guid, new_role=None, client=None):
     """POST /rest/orgs/{organization_guid}/users/{user_guid}"""
     body = {}
-    if new_roles is not None:
-        body["roles"] = list(new_roles)
+    if new_role is not None:
+        body["roles"] = list(new_role)
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
         path="rest/orgs/{}/users/{}".format(org_guid, user_guid),
         body=body,
         msg="PLATFORM: update user roles in org"
-    )
-
-
-def api_add_space_user(org_guid, space_guid, username, roles=(), client=None):
-    """POST /rest/spaces/{space_guid}/users"""
-    body = {
-        "username": username,
-        "org_guid": org_guid,
-        "roles": list(roles)
-    }
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.POST,
-        path="rest/spaces/{}/users".format(space_guid),
-        body=body,
-        msg="PLATFORM: Add user to space"
-    )
-
-
-def api_get_space_users(space_guid, client=None):
-    """GET /rest/spaces/{space_guid}/users"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.GET,
-        path="rest/spaces/{}/users".format(space_guid),
-        msg="PLATFORM: get space users"
-    )
-
-
-def api_delete_space_user(space_guid, user_guid, client=None):
-    """DELETE /rest/spaces/{space_guid}/users/{user_guid}"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.DELETE,
-        path="rest/spaces/{}/users/{}".format(space_guid, user_guid),
-        msg="PLATFORM: delete user from space"
-    )
-
-
-def api_update_space_user_roles(space_guid, user_guid, new_roles=None, client=None):
-    """POST /rest/spaces/{space_guid}/users/{user_guid}"""
-    body = {}
-    if new_roles is not None:
-        body["roles"] = list(new_roles)
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.POST,
-        path="rest/spaces/{}/users/{}".format(space_guid, user_guid),
-        body=body,
-        msg="PLATFORM: update user roles in space"
     )
 
 
@@ -225,51 +175,4 @@ def api_register_new_user(code, password=None, org_name=None, client=None):
         params={"code": code},
         body=body,
         msg=msg
-    )
-
-
-def api_get_spaces_in_org(org_guid, client=None):
-    """GET /rest/orgs/{org}/spaces"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.GET,
-        path="rest/orgs/{}/spaces".format(org_guid),
-        msg="PLATFORM: get list of spaces in org"
-    )
-
-
-def api_get_spaces(client=None):
-    """GET /rest/spaces"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.GET,
-        path="rest/spaces",
-        msg="PLATFORM: get list of all spaces"
-    )
-
-
-def api_create_space(org_guid, name, client=None):
-    """POST /rest/spaces"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    response = client.request(
-        method=HttpMethod.POST,
-        path="rest/spaces",
-        body={"name": name, "org_guid": org_guid},
-        msg="PLATFORM: create a space"
-    )
-    if response == "":
-        raise AssertionError("Response to POST rest/spaces did not return space guid.")
-    return response
-
-
-def api_delete_space(space_guid, client=None):
-    """DELETE /rest/spaces/{space}"""
-    _, ref_space_guid = cf.cf_get_ref_org_and_space_guids()
-    if space_guid == ref_space_guid:
-        raise YouMustBeJokingException("You're trying to delete the reference space")
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    client.request(
-        method=HttpMethod.DELETE,
-        path="rest/spaces/{}".format(space_guid),
-        msg="PLATFORM: delete space"
     )

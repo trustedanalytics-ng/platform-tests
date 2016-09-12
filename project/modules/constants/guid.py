@@ -14,16 +14,8 @@
 # limitations under the License.
 #
 
-from enum import Enum
 
+class Guid(object):
 
-class ClientAuthType(Enum):
-    """Client authentication types."""
+    CORE_ORG_GUID = '00000000-0000-0000-0000-000000000000'
 
-    LOGIN_PAGE = "LoginPage"
-    TOKEN_CF = "CFToken"
-    TOKEN_UAA = "UaaToken"
-    HTTP_BASIC = "HttpBasic"
-    WEBHDFS = "WebhdfsAuth"
-    NO_AUTH = "NoAuth"
-    TOKEN_K8S_AS = "ASToken"

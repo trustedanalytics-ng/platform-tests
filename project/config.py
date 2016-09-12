@@ -17,7 +17,6 @@
 import os
 import configparser
 
-from enum import Enum
 
 try:
     # In user_config.py, user might export custom environment variables
@@ -25,9 +24,6 @@ try:
 except ImportError:
     pass
 
-class TapType(Enum):
-    tap_classic = "TAP_CLASSIC"
-    tap_ng = "TAP_NG"
 
 def get_bool(key_name, fallback=None):
     value = os.environ.get(key_name, fallback)
@@ -82,11 +78,10 @@ tap_domain = os.environ["PT_TAP_DOMAIN"]
 kerberos = get_bool("PT_KERBEROS", False)
 kubernetes = get_bool("PT_KUBERNETES", True)
 seahorse = get_bool("PT_SEAHORSE", False)
-core_org_name = os.environ.get("PT_CORE_ORG_NAME", "trustedanalytics")
+core_org_name = os.environ.get("PT_CORE_ORG_NAME", "default")
 core_space_name = os.environ.get("PT_CORE_SPACE_NAME", "platform")
 ssl_validation = get_bool("PT_SSL_VALIDATION", False)
 tap_repos_dir = os.environ.get("PT_TAP_REPOS_DIRECTORY")
-tap_type = os.environ.get("PT_TAP_TYPE", TapType.tap_classic.value)
 
 # TAP version provided by user
 tap_version = os.environ.get("PT_TAP_VERSION")

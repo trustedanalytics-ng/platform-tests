@@ -16,12 +16,9 @@
 
 import functools
 
-from retry import retry
-
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf
-from ..http_calls.platform import metrics_provider, user_management
 from ..test_names import generate_test_object_name
+from ..http_calls.platform import metrics_provider, user_management
 
 
 @functools.total_ordering
@@ -42,7 +39,7 @@ class Organization(object):
         return self.guid < other.guid
 
     @classmethod
-    def api_create(cls, context, name=None, client=None, delete_on_fail=True):
+    def create(cls, context, name=None, client=None, delete_on_fail=True):
         if name is None:
             name = generate_test_object_name()
         try:
@@ -50,7 +47,7 @@ class Organization(object):
         except UnexpectedResponseError as e:
             # If exception occurred, check whether org is on the list and if so, delete it.
             if delete_on_fail:
-                org = next((o for o in cls.api_get_list() if o.name == name), None)
+                org = next((o for o in cls.get_list() if o.name == name), None)
                 if org is not None:
                     org.cleanup()
             raise
@@ -59,7 +56,7 @@ class Organization(object):
         return org
 
     @classmethod
-    def api_get_list(cls, client=None):
+    def get_list(cls, client=None):
         response = user_management.api_get_organizations(client=client)
         organizations = []
         for organization_data in response:
@@ -71,23 +68,13 @@ class Organization(object):
         self.name = new_name
         return user_management.api_rename_organization(self.guid, new_name, client=client)
 
-    def api_delete(self, client=None):
+    def delete(self, client=None):
         user_management.api_delete_organization(self.guid, client=client)
 
-    def api_get_metrics(self, client=None):
+    def get_metrics(self, client=None):
         self.metrics = metrics_provider.api_get_org_metrics(self.guid, client=client)
 
-    @classmethod
-    def cf_api_get_list(cls):
-        response = cf.cf_api_get_orgs()
-        org_list = []
-        for org_info in response:
-            org_list.append(cls(name=org_info["entity"]["name"], guid=org_info["metadata"]["guid"]))
-        return org_list
-
-    @retry(UnexpectedResponseError, tries=2, delay=5)
-    def cf_api_delete(self):
-        cf.cf_api_delete_org(self.guid)
-
     def cleanup(self):
-        self.cf_api_delete()
+        # Only one org in TAP NG v1,
+        # we shouldn't delete it
+        pass
