@@ -61,6 +61,7 @@ def push_application(file_path, manifest_path):
     response = _get_client().request(HttpMethod.POST,
                                      path="applications",
                                      files=files,
+                                     raw_response=True,
                                      msg="API-SERVICE: push application")
     assert response.status_code == HttpStatus.CODE_CREATED
     return response
