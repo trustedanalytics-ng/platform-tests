@@ -36,20 +36,20 @@ pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog, TA
 class TestScoringEngineInstance:
     expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
 
-    def test_0_create_instance(self, model_hdfs_path, test_org, test_space, space_users_clients, class_context):
-        self.__class__.client = space_users_clients["developer"]
+    def test_0_create_instance(self, model_hdfs_path, core_org, core_space, space_users_clients_core, class_context):
+        self.__class__.client = space_users_clients_core["developer"]
         step("Create scoring engine instance")
         self.__class__.instance = ServiceInstance.api_create_with_plan_name(
             context=class_context,
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
+            org_guid=core_org.guid,
+            space_guid=core_space.guid,
             service_label=ServiceLabels.SCORING_ENGINE,
             service_plan_name=ServicePlan.SIMPLE_ATK,
             params={"uri": model_hdfs_path},
             client=self.client
         )
         step("Check instance is on the instance list")
-        instances_list = ServiceInstance.api_get_list(test_space.guid, client=self.client)
+        instances_list = ServiceInstance.api_get_list(core_space.guid, client=self.client)
         assert self.instance in instances_list, "Scoring Engine was not found on the instance list"
 
     def test_1_check_service_bindings(self):
@@ -65,26 +65,26 @@ class TestScoringEngineInstance:
         response = requests.post(url, data="", headers=headers)
         assert response.text == "-1.0", "Scoring engine response was wrong"
 
-    def test_3_create_service_key(self, test_space):
+    def test_3_create_service_key(self, core_space):
         step("Check that the instance exists in summary and has no keys")
-        summary = ServiceInstance.api_get_keys(test_space.guid, client=self.client)
+        summary = ServiceInstance.api_get_keys(core_space.guid, client=self.client)
         assert self.instance in summary, "Instance not found in summary"
         assert summary[self.instance] == [], "There are keys for the instance"
         step("Create a key for the scoring engine instance and check it")
         self.__class__.instance_key = ServiceKey.api_create(self.instance.guid, client=self.client)
-        summary = ServiceInstance.api_get_keys(test_space.guid)
+        summary = ServiceInstance.api_get_keys(core_space.guid)
         assert self.instance_key in summary[self.instance], "Key not found"
 
-    def test_4_delete_service_key(self, test_space):
+    def test_4_delete_service_key(self, core_space):
         step("Delete service key")
         self.instance_key.api_delete(client=self.client)
         step("Check the key is no longer in summary")
-        summary = ServiceInstance.api_get_keys(test_space.guid, client=self.client)
+        summary = ServiceInstance.api_get_keys(core_space.guid, client=self.client)
         assert summary[self.instance] == [], "There are keys for the instance"
 
-    def test_5_delete_instance(self, test_space):
+    def test_5_delete_instance(self, core_space):
         self.instance.api_delete(client=self.client)
-        instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
+        instances = ServiceInstance.api_get_list(space_guid=core_space.guid)
         assert self.instance not in instances, "Scoring engine instance was not deleted"
 
 

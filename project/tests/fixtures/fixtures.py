@@ -157,6 +157,17 @@ def space_users_clients(request, session_context, test_org, test_space, admin_cl
 
 
 @pytest.fixture(scope="session")
+def space_users_clients_core(request, session_context, core_org, core_space, admin_client):
+    log_fixture("clients: Create clients")
+    clients = {}
+    for role, value in User.SPACE_ROLES.items():
+        clients[role] = User.api_create_by_adding_to_space(session_context, org_guid=core_org.guid, space_guid=core_space.guid,
+                                                           roles=value).login()
+    clients["admin"] = admin_client
+    return clients
+
+
+@pytest.fixture(scope="session")
 def add_admin_to_test_org(test_org, admin_user):
     log_fixture("add_admin_to_test_org")
     admin_user.api_add_to_organization(org_guid=test_org.guid)
@@ -247,7 +258,7 @@ def psql_app(psql_instance, session_context):
 @pytest.fixture(scope="session")
 def model_hdfs_path(core_org):
     log_fixture("Retrieve existing model hdfs path from platform")
-    model_dataset_name = "model_name"
+    model_dataset_name = "model"
     dataset_list = data_catalog.DataSet.api_get_list(org_guid_list=[core_org.guid])
     model_dataset = next((ds for ds in dataset_list if ds.title == model_dataset_name), None)
     if model_dataset is None:
