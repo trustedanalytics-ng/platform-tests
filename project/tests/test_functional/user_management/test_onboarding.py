@@ -21,14 +21,14 @@ import pytest
 
 import config
 from modules import gmail_api
-from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
+from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus, Guid
 from modules.http_calls.platform import user_management
 from modules.tap_logger import step
 from modules.markers import priority
-from modules.tap_object_model import Invitation, Organization, User
+from modules.tap_object_model import Invitation, User
 from modules.tap_object_model.flows import onboarding
 from modules.test_names import generate_test_object_name
-from tests.fixtures.assertions import assert_raises_http_exception, assert_user_in_org_and_roles
+from tests.fixtures.assertions import assert_raises_http_exception, assert_user_in_org_and_role
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
@@ -74,7 +74,7 @@ class TestOnboarding:
         else:
             messages = gmail_api.wait_for_messages_to(recipient=username, messages_number=number_of_messages)
             assert len(messages) == number_of_messages, "There are {} messages for {}. Expected: {}" \
-                             .format(len(messages), username, number_of_messages)
+                .format(len(messages), username, number_of_messages)
             for message in messages:
                 self._assert_message_correct(message["subject"], message["content"], message["sender"])
 
@@ -87,28 +87,27 @@ class TestOnboarding:
         message = messages[0]
         self._assert_message_correct(message["subject"], message["content"], message["sender"])
         step("Register the new user")
-        user, org = onboarding.register(context, code=invitation.code, username=invitation.username)
+        user = onboarding.register(context, code=invitation.code, username=invitation.username)
         step("Check that the user and their organization exist")
-        organizations = Organization.api_get_list()
-        assert org in organizations, "New organization was not found"
-        assert_user_in_org_and_roles(user, org.guid, User.ORG_ROLES["manager"])
+        assert_user_in_org_and_role(user, Guid.CORE_ORG_GUID, User.ORG_ROLE["user"])
 
     @priority.medium
-    def test_cannot_invite_existing_user(self, context, test_org_manager):
+    def test_cannot_invite_existing_user(self, context, test_org_user):
         step("Check that sending invitation to the same user causes an error.")
         assert_raises_http_exception(HttpStatus.CODE_CONFLICT,
-                                     HttpStatus.MSG_USER_ALREADY_EXISTS.format(test_org_manager.username),
+                                     HttpStatus.MSG_USER_ALREADY_EXISTS.format(test_org_user.username),
                                      Invitation.api_send, context,
-                                     username=test_org_manager.username)
+                                     username=test_org_user.username)
 
     @priority.high
     def test_non_admin_user_cannot_invite_another_user(self, context, test_org):
         step("Create a test user")
-        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
+        user = User.create_by_adding_to_organization(context, org_guid=test_org.guid,
+                                                     role=User.ORG_ROLE["user"])
         non_admin_user_client = user.login()
         step("Check an error is returned when non-admin tries to onboard another user")
         username = generate_test_object_name(email=True)
-        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_DENIED,
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_IS_DENIED,
                                      Invitation.api_send, context, username=username,
                                      inviting_client=non_admin_user_client)
         self._assert_user_received_messages(username, 0)
@@ -118,8 +117,8 @@ class TestOnboarding:
         step("An error is returned when user registers with invalid code")
         username = generate_test_object_name(email=True)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                     onboarding.register, context,
-                                     code="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", username=username)
+                                     onboarding.register, context, code="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                                     username=username)
 
     @priority.medium
     def test_cannot_use_the_same_activation_code_twice(self, context):
@@ -148,10 +147,11 @@ class TestOnboarding:
                                      user_management.api_register_new_user, code=invitation.code,
                                      org_name=generate_test_object_name())
         step("Check that the user was not created")
-        username_list = [user.username for user in User.cf_api_get_all_users()]
+        username_list = [user.username for user in User.get_all_users()]
         assert invitation.username not in username_list, "User was created"
 
     @priority.medium
+    @pytest.mark.skip(reason="Onboarding with org creation not implemented for TAP NG yet")
     def test_user_cannot_register_already_existing_organization(self, context, test_org):
         step("Invite a new user")
         invitation = Invitation.api_send(context)
@@ -161,10 +161,11 @@ class TestOnboarding:
                                      onboarding.register, context, code=invitation.code,
                                      username=invitation.username, org_name=test_org.name)
         step("Check that the user was not created")
-        username_list = [user.username for user in User.cf_api_get_all_users()]
+        username_list = [user.username for user in User.get_all_users()]
         assert invitation.username not in username_list, "User was created"
 
     @priority.low
+    @pytest.mark.skip(reason="Onboarding with org creation not implemented for TAP NG yet")
     def test_user_cannot_register_with_no_organization_name(self, context):
         step("Invite a new user")
         invitation = Invitation.api_send(context)
@@ -174,6 +175,6 @@ class TestOnboarding:
                                      user_management.api_register_new_user, code=invitation.code,
                                      password=User.generate_password())
         step("Check that the user was not created")
-        username_list = [user.username for user in User.cf_api_get_all_users()]
+        username_list = [user.username for user in User.get_all_users()]
         assert invitation.username not in username_list, "User was created"
 

@@ -42,7 +42,7 @@ class HttpClientFactory(object):
         elif client_type == HttpClientType.NO_AUTH:
             return cls._get_instance(configuration, ClientAuthType.NO_AUTH)
 
-        elif client_type == HttpClientType.K8S_AS:
+        elif client_type == HttpClientType.K8S_SERVICE:
             return cls._get_instance(configuration, ClientAuthType.TOKEN_K8S_AS)
 
         elif client_type == HttpClientType.APPLICATION:

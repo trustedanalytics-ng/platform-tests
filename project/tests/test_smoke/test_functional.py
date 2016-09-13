@@ -63,12 +63,12 @@ def test_create_and_delete_organization(context):
 
 
 @pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
-def test_onboarding(context, core_org):
+def test_onboarding(context):
     """Test Onboarding"""
     step("Onboard new user")
-    test_user = onboarding.onboard(context, core_org, check_email=False)
+    test_user = onboarding.onboard(context, check_email=False)
     step("Check that user is created")
-    users = User.get_all_users(core_org.guid)
+    users = User.get_all_users()
     assert test_user in users
 
 
@@ -76,7 +76,7 @@ def test_onboarding(context, core_org):
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """Add New User to and Delete from Organization"""
     step("Add new user to organization")
-    test_user = onboarding.onboard(context, core_org, check_email=False)
+    test_user = onboarding.onboard(context, check_email=False)
     test_user.add_to_organization(core_org.guid, role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
     users = User.get_list_via_organization(org_guid=core_org.guid)

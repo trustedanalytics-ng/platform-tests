@@ -21,9 +21,10 @@ from ...exceptions import UnexpectedResponseError
 from ...http_calls.platform import user_management as api
 from ...http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
 from ...http_client.http_client_factory import HttpClientFactory
+from ...constants import Guid
 
 
-def onboard(context, test_org, username=None, password=None, inviting_client=None, check_email=True):
+def onboard(context, username=None, password=None, inviting_client=None, check_email=True):
     """
     Onboard new user. Check email for registration code and register.
     Returns objects for newly created user and org.
@@ -34,10 +35,10 @@ def onboard(context, test_org, username=None, password=None, inviting_client=Non
         code = gmail_api.get_invitation_code_for_user(username=invitation.username)
     else:
         code = invitation.code
-    return register(context, test_org, code, invitation.username, password)
+    return register(context, code, invitation.username, password)
 
 
-def register(context, test_org, code, username, password=None):
+def register(context, code, username, password=None):
     """
     Set password for new user. Returns objects for newly created user.
     """
@@ -48,11 +49,11 @@ def register(context, test_org, code, username, password=None):
     except UnexpectedResponseError as e:
         # If exception occurred, other than conflict, check whether org and user are on the list and if so, delete it.
         if e.status != HttpStatus.CODE_CONFLICT:
-            user = next((u for u in User.get_all_users(test_org.guid) if u.username == username), None)
+            user = next((u for u in User.get_all_users() if u.username == username), None)
             if user is not None:
                 user.cleanup()
         raise
     new_user = User(guid=response["userGuid"], username=username, password=response["password"],
-                    org_role={test_org.guid: User.ORG_ROLE["admin"]})
+                    org_role={Guid.CORE_ORG_GUID: User.ORG_ROLE["admin"]})
     context.users.append(new_user)
     return new_user

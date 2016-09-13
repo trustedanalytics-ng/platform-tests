@@ -35,7 +35,7 @@ class TestPassword:
     @pytest.fixture(scope="function", autouse=True)
     def user(self, request, test_org, context):
         step("Create test user")
-        self.test_user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid)
+        self.test_user = User.create_by_adding_to_organization(context, org_guid=test_org.guid)
 
     @priority.high
     def test_reset_password(self):

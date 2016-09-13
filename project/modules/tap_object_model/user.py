@@ -65,15 +65,15 @@ class User(object):
         return "".join([random.choice(base) for _ in range(length)])
 
     @classmethod
-    def create_by_adding_to_organization(cls, context, org_guid, username=None, password=None, role=ORG_ROLE["user"],
-                                         inviting_client=None):
+    def create_by_adding_to_organization(cls, context, org_guid, username=None, password=None,
+                                         role=ORG_ROLE["user"], inviting_client=None):
         username = generate_test_object_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
         um.api_add_organization_user(org_guid, username, role, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
         um.api_register_new_user(code, password, client=client)
-        org_users = cls.api_get_list_via_organization(org_guid=org_guid)
+        org_users = cls.get_list_via_organization(org_guid=org_guid)
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
             raise AssertionError("New user was not found in the organization")
@@ -131,13 +131,13 @@ class User(object):
         return users
 
     @classmethod
-    def get_all_users(cls, org_guid):
-        # For now we have only one org
-        return cls.get_list_in_organization(org_guid=org_guid)
+    def get_all_users(cls):
+        # TODO: For now we have only one org. To be changed in Tap NG v2.
+        return cls.get_list_in_organization(org_guid=Guid.CORE_ORG_GUID)
 
     @classmethod
-    def get_user(cls, username, org_guid):
-        users = User.get_all_users(org_guid)
+    def get_user(cls, username):
+        users = User.get_all_users()
         user = next((user for user in users if user.username == username), None)
         if not user:
             raise NoSuchUserException(username)

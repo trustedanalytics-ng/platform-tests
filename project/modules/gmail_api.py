@@ -161,7 +161,7 @@ def get_reset_password_links(username):
     messages = wait_for_messages_matching_query(query, messages_number=2)
 
     code = extract_code_from_message(messages[0]["content"])
-    logger.debug("Extracted reset password code {}", code)
+    logger.debug("Extracted reset password code {}".format(code))
 
     return code
 

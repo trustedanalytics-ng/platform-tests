@@ -20,7 +20,7 @@ from bs4 import BeautifulSoup
 
 import config
 from modules.http_client.client_auth.http_method import HttpMethod
-from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
+from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 
@@ -29,7 +29,7 @@ class PasswordAPI(object):
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.client = HttpClientFactory.get(ApplicationConfigurationProvider.get(
+        self.client = HttpClientFactory.get(ServiceConfigurationProvider.get(
             url=config.console_login_url,
             username=self.username,
             password=self.password

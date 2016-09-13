@@ -16,13 +16,15 @@
 
 import pytest
 
+from modules.constants import Guid
 from modules import gmail_api
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import Invitation, User
+from modules.tap_object_model.invitation import Invitation
+from modules.tap_object_model.user import User
 from modules.tap_object_model.flows import onboarding
-from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_retry, assert_user_in_org_and_roles, \
+from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_retry, assert_user_in_org_and_role, \
     assert_raises_http_exception
 
 logged_components = (TAP.user_management,)
@@ -69,8 +71,8 @@ class TestPendingInvitations:
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=2)
         assert len(messages) == 2
         step("Register user with the received code")
-        user, org = onboarding.register(context, code=invitation.code, username=invitation.username)
-        assert_user_in_org_and_roles(user, org.guid, User.ORG_ROLES["manager"])
+        user = onboarding.register(context, code=invitation.code, username=invitation.username)
+        assert_user_in_org_and_role(user, Guid.CORE_ORG_GUID, User.ORG_ROLE["user"])
 
     @priority.low
     def test_cannot_resend_not_existing_pending_invitation(self):
@@ -117,7 +119,7 @@ class TestPendingInvitations:
                                      invitation.api_delete)
 
     @priority.medium
-    def test_cannot_get_pending_invitations_as_non_admin_user(self, test_org_manager_client):
+    def test_cannot_get_pending_invitations_as_non_admin_user(self, test_org_user_client):
         step("As non admin user try to get pending invitations list")
-        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_DENIED,
-                                     Invitation.api_get_list, test_org_manager_client)
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_IS_DENIED,
+                                     Invitation.api_get_list, test_org_user_client)

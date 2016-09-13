@@ -67,12 +67,12 @@ def api_rename_organization(org_guid, new_name, client=None):
     )
 
 
-def api_add_organization_user(org_guid, username, roles=(), client=None):
+def api_add_organization_user(org_guid, username, role=None, client=None):
     """POST /rest/orgs/{organization_guid}/users"""
     body = {
         "username": username,
         "org_guid": org_guid,
-        "roles": list(roles)
+        "role": role
     }
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -107,7 +107,7 @@ def api_update_org_user_role(org_guid, user_guid, new_role=None, client=None):
     """POST /rest/orgs/{organization_guid}/users/{user_guid}"""
     body = {}
     if new_role is not None:
-        body["roles"] = list(new_role)
+        body["role"] = new_role
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,

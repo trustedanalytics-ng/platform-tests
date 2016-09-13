@@ -20,7 +20,7 @@ from modules.constants import HttpStatus
 from modules.constants import TapComponent as TAP
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider, \
-    ProxiedConfigurationProvider, ApiServiceConfigurationProvider
+    ProxiedConfigurationProvider, ServiceConfigurationProvider
 from modules.markers import priority
 from modules.tap_logger import step
 from tap_ng_component_config import k8s_core_services, third_party_services, api_service
@@ -57,7 +57,7 @@ class TestSmoke:
 
     def test_api_service_check_availability(self):
         step("Check api get endpoint for {}".format(TAP.api_service))
-        api_client = HttpClientFactory.get(ApiServiceConfigurationProvider.get())
+        api_client = HttpClientFactory.get(ServiceConfigurationProvider.get())
         response = api_client.request(HttpMethod.GET,
                                       path=api_service[TAP.api_service]["get_endpoint"],
                                       raw_response=True, raise_exception=True,

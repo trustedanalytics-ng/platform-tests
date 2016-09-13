@@ -17,6 +17,10 @@
 import config
 
 from .. import HttpClientConfiguration, HttpClientType, HttpClientFactory, HttpMethod
+from modules.tap_object_model.k8s_service import K8sService
+from .. import HttpClientConfiguration, HttpClientType
+from tap_ng_component_config import k8s_core_services
+from modules.constants import TapComponent
 
 
 class ProxiedConfigurationProvider(object):
@@ -76,12 +80,12 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
         )
 
 
-class ApiServiceConfigurationProvider():
+class ServiceConfigurationProvider:
     @classmethod
-    def get(cls):
+    def get(cls, url=config.api_url_full, username=config.admin_username, password=config.admin_password):
         return HttpClientConfiguration(
-            client_type=HttpClientType.K8S_AS,
-            url=config.api_url_full,
-            username=config.admin_username,
-            password=config.admin_password
+            client_type=HttpClientType.K8S_SERVICE,
+            url=url,
+            username=username,
+            password=password
         )

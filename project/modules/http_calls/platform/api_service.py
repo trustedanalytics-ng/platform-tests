@@ -17,11 +17,11 @@
 from modules.constants import HttpStatus
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.http_client import HttpClient
-from modules.http_client.configuration_provider.k8s_service import ApiServiceConfigurationProvider
+from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
 
 
 def _get_client():
-    configuration = ApiServiceConfigurationProvider.get()
+    configuration = ServiceConfigurationProvider.get()
     return HttpClientFactory.get(configuration)
 
 
