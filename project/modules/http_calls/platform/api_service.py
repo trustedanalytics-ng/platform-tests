@@ -16,6 +16,7 @@
 
 from modules.constants import HttpStatus
 from modules.http_client import HttpClientFactory, HttpMethod
+from modules.http_client.http_client import HttpClient
 from modules.http_client.configuration_provider.k8s_service import ApiServiceConfigurationProvider
 
 
@@ -28,7 +29,6 @@ def get(path):
     """ GET /{path} """
     response = _get_client().request(HttpMethod.GET,
                                      path=path,
-                                     raise_exception=True,
                                      raw_response=True,
                                      msg="API-SERVICE: get /{}".format(path))
     assert response.status_code == HttpStatus.CODE_OK
@@ -39,7 +39,6 @@ def post(path):
     """ POST /{path} """
     response = _get_client().request(HttpMethod.POST,
                                      path=path,
-                                     raise_exception=True,
                                      raw_response=True,
                                      msg="API-SERVICE: post /{}".format(path))
     return response
@@ -62,16 +61,36 @@ def push_application(file_path, manifest_path):
     response = _get_client().request(HttpMethod.POST,
                                      path="applications",
                                      files=files,
-                                     raw_response=True,
                                      msg="API-SERVICE: push application")
     assert response.status_code == HttpStatus.CODE_CREATED
     return response
 
 
-def get_applications():
-    """ GET /applications """
-    response = get("applications")
+def get_applications(client: HttpClient, org_id: str=None):
+    """Retrieves list of applications using REST call
+    GET /applications
+
+    Args:
+        client: HttpClient to use
+        org_id: Optional organization id
+
+    Returns:
+        Response containing list of apps.
+    """
+    query_params = {}
+    path = "applications"
+    if org_id is not None:
+        query_params["org_id"] = org_id
+
+    response = _get_client().request(HttpMethod.GET,
+                                     path=path,
+                                     params=query_params,
+                                     raw_response=True,
+                                     msg="Get application list")
+    assert response.status_code == HttpStatus.CODE_OK
     return response
+
+
 
 
 def get_application(id):
@@ -86,11 +105,20 @@ def get_application_logs(id):
     return response
 
 
-def delete_application(id):
-    """ DELETE /applications/{id} """
+def delete_application(client: HttpClient, app_id: str):
+    """Deletes an application with provided id using REST call
+    DELETE /applications/{app_id}
+
+    Args:
+        client: HttpClient to use
+        app_id: Id of the application
+
+    Returns:
+        Raw response of the apperation
+    """
     response = _get_client().request(HttpMethod.DELETE,
-                                     path="applications/{}".format(id),
-                                     msg="API-SERVICE: delete application")
+                                     path="applications/{}".format(app_id),
+                                     msg="Delete application")
     return response
 
 

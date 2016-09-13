@@ -21,12 +21,13 @@ import requests
 from retry import retry
 
 import config
+from ..http_client.http_client import HttpClient
 from ..exceptions import UnexpectedResponseError
+from ..tap_cli import TapCli
 from ..http_calls import cloud_foundry as cf
-from ..http_calls.platform import service_catalog
+from ..http_calls.platform import service_catalog, api_service
 from ..tap_logger import log_http_request, log_http_response
 from ..test_names import generate_test_object_name
-
 
 class Application(object):
     """Application represents application on TAP engine.
@@ -34,7 +35,11 @@ class Application(object):
     Application class allows pushing, deleting and getting responses from
     applications.
     """
-    STATUS = {"restage": "RESTAGING", "start": "STARTED", "stop": "STOPPED"}
+    STATUS = {"failure": "FAILURE",
+              "stopped": "STOPPED",
+              "stopping": "STOPPING",
+              "starting": "STARTING",
+              "running": "RUNNING"}
 
     MANIFEST_NAME = "manifest.json"
 
@@ -44,23 +49,23 @@ class Application(object):
 
     RUN_SCRIPT = "run.sh"
 
-    COMPARABLE_ATTRIBUTES = ["name", "guid", "space_guid", "is_running", "is_started"]
+    COMPARABLE_ATTRIBUTES = ["name", "app_id", "is_running", "is_started"]
 
-    def __init__(self, name: str, guid: str, space_guid: str, state: str,
-                 instances: list, urls: list):
+    def __init__(self, name: str, app_id: str, state: str,
+                 instances: list, urls: list, org_id: str=None):
         """Class initializer.
 
         Args:
             name: Name of the application
-            guid: Guid of the application
-            space_guid: Guid of the space where the application will reside
+            app_id: Id of the application
             state: Current state of the application
             instances: Instances that the application uses
             urls: Urls that the application used
+            org_id: In which organization the application resides
         """
         self.name = name
-        self.guid = guid
-        self.space_guid = space_guid
+        self.app_id = app_id
+        self.org_id = org_id
         self._state = state
         self.instances = instances
         self.urls = tuple(urls)
@@ -109,6 +114,60 @@ class Application(object):
 
         return manifest
 
+    @classmethod
+    def push(cls, context, source_directory: str, name: str=None,
+             org_id: str=None, bound_services: list=None, env: dict=None):
+        """Pushes the application from source directory with provided name,
+        services and envs.
+
+        Args:
+            context: context object that will store created applications. It is
+                     used later to perform a cleanup
+            source_directory: dir with application, manifest and run script
+            name: Name of the application. If None, name will be generated
+            org_id: To which organization the application should be pushed
+            bound_services: iterable with bound service names to be included
+                            in manifest the manifest
+            env: dict with app's env values to be added to manifest
+
+        Returns:
+            Created application object
+        """
+        # Generate a name for the application
+        name = generate_test_object_name(short=True) if name is None else name
+        # Read the manifest and modify it with name, services and envs
+        manifest_path = os.path.normpath(os.path.join(source_directory,
+                                                      cls.MANIFEST_NAME))
+        with open(manifest_path, "r") as f:
+            manifest = json.load(f)
+
+        manifest = cls.update_manifest(manifest, app_name=name,
+                                       bound_services=bound_services, env=env)
+
+        with open(manifest_path, "w") as f:
+            json.dump(manifest, f)
+
+        # Push the application
+        try:
+            # Assume we are already logged in
+            TapCli(source_directory).push()
+        except:
+            apps = Application.api_get_list(org_id)
+            application = next((app for app in apps if app.name == name), None)
+            if application is not None:
+                application.cleanup()
+            raise
+
+        # retrieve the application - check that push succeeded
+        apps = Application.api_get_list(org_id)
+        application = next((app for app in apps if app.name == name), None)
+
+        if application is None:
+            raise AssertionError("App {} has not been created on the Platform".format(name))
+
+        context.apps.append(application)
+        return application
+
     def __eq__(self, other):
         return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
 
@@ -123,55 +182,17 @@ class Application(object):
 
     @property
     def is_started(self):
-        return self._state.upper() == self.STATUS["start"]
+        """Returns true if application has started."""
+        return self._state == self.STATUS["running"]
 
     @property
     def is_stopped(self):
-        return self._state.upper() == self.STATUS["stop"]
+        return self._state.upper() == self.STATUS["stopped"]
 
     @property
     def is_running(self):
-        if self.instances is None:
-            return None
-        return self.instances[0] > 0
-
-    @classmethod
-    def push(cls, context, space_guid, source_directory, name=None, bound_services=None, env=None):
-        """
-        Application which will later be pushed to cf.
-        source_directory -- where manifest.yml is located
-        name -- name of pushed app (will be changed in manifest)
-        bound_services -- iterable with bound service names to be included in manifest
-        env -- dict with app's env values to be added to manifest
-        """
-        name = generate_test_object_name(short=True) if name is None else name
-        # read manifest
-        manifest_path = os.path.normpath(os.path.join(source_directory, cls.MANIFEST_NAME))
-        jar_path = source_directory
-        with open(manifest_path) as f:
-            manifest = yaml.load(f.read())
-        if "path" in manifest["applications"][0]:
-            jar_path = os.path.join(jar_path, manifest["applications"][0]["path"])
-
-        manifest = cls.update_manifest(manifest, app_name=name, bound_services=bound_services, env=env)
-        with open(manifest_path, "w") as f:
-            f.write(yaml.dump(manifest))
-
-        try:
-            # push application
-            cf.cf_push(source_directory, jar_path, name)
-        except:
-            application = next((app for app in Application.api_get_list(space_guid) if app.name == name), None)
-            if application is not None:
-                application.cleanup()
-            raise
-
-        # retrieve the application - check that push succeeded
-        application = next((app for app in Application.api_get_list(space_guid) if app.name == name), None)
-        if application is None:
-            raise AssertionError("App {} has not been created on the Platform".format(name))
-        context.apps.append(application)
-        return application
+        """Returns true if any of the application instances are running."""
+        return self._state == self.STATUS["running"]
 
     def api_request(self, path, method="GET", scheme="http", hostname=None, data=None, params=None, body=None,
                     raw=False):
@@ -214,13 +235,15 @@ class Application(object):
     # -------------------------------- platform api -------------------------------- #
 
     @classmethod
-    def api_get_list(cls, space_guid, service_label=None, client=None):
+    def api_get_list(cls, org_id: str=None, client: HttpClient=None):
         """Get list of applications from Console / service-catalog API"""
-        response = service_catalog.api_get_filtered_applications(space_guid, service_label, client=client)
+        response = api_service.get_applications(client=client,
+                                                org_id=org_id).json()
         applications = []
         for app in response:
-            application = cls(name=app["name"], space_guid=space_guid, guid=app["guid"], state=app["state"],
-                              urls=app["urls"], instances=(app["running_instances"],))
+            application = cls(name=app["name"], app_id=app["id"],
+                              org_id=app.get("org_id"), state=app["state"],
+                              urls=app["urls"], instances=(app["running_instances"]))
             applications.append(application)
         return applications
 
@@ -228,8 +251,13 @@ class Application(object):
         response = service_catalog.api_get_app_summary(self.guid, client=client)
         return self._get_details_from_response(response)
 
-    def api_delete(self, cascade=False, client=None):
-        service_catalog.api_delete_app(self.guid, cascade=cascade, client=client)
+    def api_delete(self, client: HttpClient=None):
+        """Deletes the application from tap
+
+        Args:
+            client: HttpClient to use
+        """
+        api_service.delete_application(app_id=self.app_id, client=client)
 
     def cleanup(self):
         self.api_delete()

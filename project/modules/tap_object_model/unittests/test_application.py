@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#from modules.tap_object_model.application import Application
-import json
+"""Unit tests for Application class"""
 import copy
+from unittest.mock import MagicMock, patch, mock_open
 
 import pytest
-from unittest.mock import patch
-from unittest.mock import MagicMock
 
 from modules.tap_object_model.application import Application
+from tests.fixtures.context import Context
+
 
 APP_TYPE = 'JAVA'
 OLD_APP_NAME = 'app'
@@ -157,3 +157,135 @@ def test_update_manifest_no_env_with_proxy():
     assert j["env"][NEW_ENV_02] == NEW_ENV_02_VAL
     assert j["env"]["http_proxy"] == "http://" + HTTP_PROXY + ":911"
     assert j["env"]["https_proxy"] == "https://" + HTTP_PROXY + ":912"
+
+SOURCE_DIR = "/tmp/intel/app/dir"
+APP_NAME = "el_generico"
+APP_ID = "f59649a1-5f29-4de3-6dcd-5a34ac58def4"
+APP_STATE = "RUNNING"
+APP_INSTANCES = 1
+APP_URLS = [
+    "http://thelonganduselesswebaddressthatnoonewillremember.com",
+    "http://ashortandfriendlywebaddressthatseasytorememeber.com"
+]
+BOUND_SERVICES = ["service_01", "service_02"]
+ENV = {"env_01" : "env_01_val", "env_02" : "env_02_val"}
+
+class DummyResponse():
+    def __init__(self, data):
+        self.data = data
+
+    def json(self):
+        return self.data
+
+GET_APP_RESPONSE = DummyResponse([{
+    "id": APP_ID,
+    "name": APP_NAME,
+    "type": "",
+    "classId": "",
+    "bindings": "",
+    "metadata": [{
+        "key": "APPLICATION_IMAGE_ID",
+        "value": "127.0.0.1:30000/3486ecac-1bd8-45f7-6ec1-1307f1bcf208"
+    }],
+    "state": APP_STATE,
+    "auditTrail": {
+        "createdOn": 1473330276,
+        "createdBy": "admin",
+        "lastUpdatedOn": 1473330276,
+        "lastUpdateBy": "admin"
+    },
+    "replication": 1,
+    "imageState": "READY",
+    "urls": APP_URLS,
+    "imageType": "PYTHON",
+    "memory": "256MB",
+    "disk_quota": "1024MB",
+    "running_instances": APP_INSTANCES
+}])
+
+GET_APP_BAD_RESPONSE = DummyResponse([{
+    "id": APP_ID,
+    "name": "non-existing-name",
+    "type": "",
+    "classId": "",
+    "bindings": "",
+    "metadata": [{
+        "key": "APPLICATION_IMAGE_ID",
+        "value": "127.0.0.1:30000/3486ecac-1bd8-45f7-6ec1-1307f1bcf208"
+    }],
+    "state": APP_STATE,
+    "auditTrail": {
+        "createdOn": 1473330276,
+        "createdBy": "admin",
+        "lastUpdatedOn": 1473330276,
+        "lastUpdateBy": "admin"
+    },
+    "replication": 1,
+    "imageState": "READY",
+    "urls": APP_URLS,
+    "imageType": "PYTHON",
+    "memory": "256MB",
+    "disk_quota": "1024MB",
+    "running_instances": APP_INSTANCES
+}])
+
+mock_open = mock_open()
+mock_json = MagicMock()
+mock_tap_cli = MagicMock()
+mock_tap_cli_exception = MagicMock()
+mock_api_service = MagicMock()
+mock_api_service_bad = MagicMock()
+
+@patch("builtins.open", mock_open)
+@patch("modules.tap_object_model.application.json", mock_json)
+@patch("modules.tap_object_model.application.TapCli", mock_tap_cli)
+@patch("modules.tap_object_model.application.api_service", mock_api_service)
+def test_push():
+    """Tests standard push command"""
+    ctx = Context()
+
+    # Force the return of fake service
+    mock_api_service.get_applications.return_value = GET_APP_RESPONSE
+
+    a = Application.push(ctx, SOURCE_DIR, APP_NAME, BOUND_SERVICES,
+                         ENV)
+    assert a == Application(APP_NAME, APP_ID, APP_STATE, APP_INSTANCES,
+                            APP_URLS)
+
+@patch("builtins.open", mock_open)
+@patch("modules.tap_object_model.application.json", mock_json)
+@patch("modules.tap_object_model.application.TapCli", mock_tap_cli)
+@patch("modules.tap_object_model.application.api_service", mock_api_service_bad)
+def test_push_fail():
+    """Try pushing the app, but it doesn't appear in the response"""
+    ctx = Context()
+
+    # Force the return of fake service
+    mock_api_service_bad.api_get_app_list.return_value = GET_APP_BAD_RESPONSE
+
+    with pytest.raises(AssertionError):
+        a = Application.push(ctx, SOURCE_DIR, APP_NAME, BOUND_SERVICES,
+                             ENV)
+
+@patch("builtins.open", mock_open)
+@patch("modules.tap_object_model.application.json", mock_json)
+@patch("modules.tap_object_model.application.TapCli", mock_tap_cli_exception)
+@patch("modules.tap_object_model.application.api_service", mock_api_service)
+def test_push_tap_exception():
+    """Try pushing the app, but exception was raised by TapCli"""
+    ctx = Context()
+
+    # Force the return of fake service
+    mock_api_service.api_get_app_list.return_value = GET_APP_RESPONSE
+
+    # Force the exception raising
+    mock_TapCli = MagicMock()
+    mock_TapCli.push.side_effect = Exception("Bang, bang!")
+    mock_tap_cli_exception.return_value = mock_TapCli
+
+    with pytest.raises(Exception):
+        a = Application.push(ctx, SOURCE_DIR, APP_NAME, BOUND_SERVICES,
+                             ENV)
+
+    mock_api_service.delete_application.assert_called_once_with(app_id=APP_ID,
+                                                                client=None)
