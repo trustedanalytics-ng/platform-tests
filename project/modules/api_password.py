@@ -89,11 +89,11 @@ class PasswordAPI(object):
             "oldPassword": old_password,
             "password": new_password,
         }
-        HttpClientFactory.get(ConsoleConfigurationProvider.get(
-            self._username, old_password
-        )).request(
+        client = HttpClientFactory.get(ConsoleConfigurationProvider.get(
+            self._username, old_password))
+        client.request(
             method=HttpMethod.PUT,
-            path="rest/users/current/password",
+            path="users/current/password",
             data=json.dumps(data),
             headers={"Accept": "application/json", "Content-Type": "application/json;charset=UTF-8"},
             msg="Change password"

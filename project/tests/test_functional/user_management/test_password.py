@@ -16,6 +16,7 @@
 
 import pytest
 
+from config import console_login_url
 from modules import gmail_api, api_password
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_client.client_auth.http_method import HttpMethod
@@ -42,6 +43,7 @@ class TestPassword:
     def test_reset_password(self):
         step("Login to the platform")
         client = self.test_user.get_client()
+        client.url = console_login_url
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
 
         step("Logout")
@@ -75,6 +77,7 @@ class TestPassword:
     def test_change_password(self):
         step("Login to the platform")
         client = self.test_user.get_client()
+        client.url = console_login_url
         self.test_user.login()
 
         step("Change user password.")

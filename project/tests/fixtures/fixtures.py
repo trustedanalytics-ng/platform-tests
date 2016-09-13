@@ -29,6 +29,7 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, Space, User
 from modules.tap_object_model.flows import data_catalog
+from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from .test_data import TestData
 
 
@@ -82,6 +83,12 @@ def test_org_admin_client(test_org_admin):
     TestData.test_org_admin_client = test_org_admin_client
     return test_org_admin_client
 
+
+@pytest.fixture(scope="function")
+def sample_model(request, context, core_org):
+    log_fixture("test_model: Create test model")
+    return ScoringEngineModel.create(context, org_guid=core_org.guid, name="test-model", description="Test model",
+                                     revision="revision", algorithm="algorithm", creation_tool="creationTool")
 
 @pytest.fixture(scope="class")
 def login_to_cf(test_org, test_space):

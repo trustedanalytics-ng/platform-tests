@@ -143,7 +143,7 @@ class UserManagementHttpStatus(HttpStatus):
     MSG_CANNOT_PERFORM_REQ_WITHOUT_ROLES = "You cannot perform request without specified roles"
     MSG_USER_NOT_EXIST_IN_ORGANIZATION = "User {} does not exist in organization {}."
     MSG_USER_ALREADY_EXISTS = "User {} already exists"
-    MSG_USER_IS_NOT_IN_GIVEN_SPACE = "The user is not in given space"
+    MSG_USER_NOT_EXIST = "The user does not exist"
     MSG_ACCESS_IS_DENIED = "Access is denied"
     MSG_ACCESS_DENIED = "access_denied"
     MSG_PASSWORD_CANNOT_BE_EMPTY = "Password cannot be empty"
@@ -214,3 +214,7 @@ class ApiServiceHttpStatus(HttpStatus):
     MSG_KEY_NOT_FOUND = "Key not found"
     MSG_CANNOT_FETCH_INSTANCE = "Cannot fetch instance {} from Catalog"
     MSG_INCORRECT_TYPE = "json: cannot unmarshal string into Go value of type int"
+
+
+class ModelCatalogHttpStatus(HttpStatus):
+    MSG_MODEL_NOT_FOUND = "Model with given id not found"

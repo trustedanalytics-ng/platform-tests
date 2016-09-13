@@ -38,6 +38,7 @@ class Context(object):
         self.blob_store = []
         self.image_factory = []
         self.k8s_apps = []
+        self.models = []
         self.cli_applications = []
         self.cli_services = []
         self.cli_offerings = []
@@ -71,6 +72,7 @@ class Context(object):
         self._cleanup_test_objects(self.blob_store)
         self._cleanup_test_objects(self.image_factory)
         self._cleanup_test_objects(self.k8s_apps)
+        self._cleanup_test_objects(self.models)
         self._cleanup_test_objects(self.cli_applications)
         self._cleanup_test_objects(self.cli_offerings)
         self._cleanup_test_objects(self.cli_services)

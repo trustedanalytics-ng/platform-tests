@@ -17,7 +17,7 @@
 import pytest
 
 import config
-from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
+from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus, Guid
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import User
@@ -55,8 +55,8 @@ class TestDeleteOrganizationUser:
     @priority.low
     def test_admin_cannot_delete_non_existing_org_user(self, context, test_org):
         step("Check that an attempt to delete user which is not in org causes an error")
-        non_existing_user = User(guid='xxxxxxxxx-xxxx-xxxxx-xxxx-xxxxxxxxxxxxx', username='non-existing-user')
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
+        non_existing_user = User(guid=Guid.NON_EXISTING_GUID, username='non-existing-user')
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_USER_NOT_EXIST,
                                      non_existing_user.delete_from_organization, org_guid=test_org.guid)
 
     @priority.low
