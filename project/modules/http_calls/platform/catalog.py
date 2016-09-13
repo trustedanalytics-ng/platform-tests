@@ -310,3 +310,107 @@ def create_service_plan(service_id, body):
 
 
 #endregion
+
+
+#region Applications
+def create_application(template_id, image_id):
+    """ POST /applications """
+    body = {
+        "imageId": image_id,
+        "templateId": template_id,
+        "replication": 0
+    }
+    response = _get_client().request(HttpMethod.POST,
+                                     path="applications",
+                                     body=body,
+                                     msg="CATALOG: create application")
+    return response
+
+
+def get_applications():
+    """ GET /applications """
+    return _get_client().request(HttpMethod.GET,
+                                 path="applications",
+                                 msg="CATALOG: get applications list")
+
+
+def get_application(application_id):
+    """ GET /applications/{application_id} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="applications/{}".format(application_id),
+                                 msg="CATALOG: get application")
+
+
+def delete_application(application_id):
+    """ DELETE /applications/{application_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="applications/{}".format(application_id),
+                                     msg="CATALOG: delete application")
+    return response
+
+
+def update_application(application_id, field, value):
+    """ PATCH /applications/{application_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="applications/{}".format(application_id),
+                                     body=body,
+                                     msg="CATALOG: updating application")
+    return response
+
+
+def create_application_instance(application_id, body):
+    """ POST /applications/{application_id}/instances """
+    response = _get_client().request(HttpMethod.POST,
+                                     path="applications/{}/instances".format(application_id),
+                                     body=body,
+                                     msg="CATALOG: create application instance")
+    return response
+
+
+def get_all_applications_instances():
+    """ GET /applications/instances """
+    return _get_client().request(HttpMethod.GET,
+                                 path="applications/instances",
+                                 msg="CATALOG: get all applications instances list")
+
+
+def get_application_instances(application_id):
+    """ GET /applications/{application_id}/instances """
+    return _get_client().request(HttpMethod.GET,
+                                 path="applications/{}/instances".format(application_id),
+                                 msg="CATALOG: get application instances list")
+
+
+def get_application_instance(application_id, instance_id):
+    """ GET /applications/{application_id}/instances/{instance_id} """
+    return _get_client().request(HttpMethod.GET,
+                                 path="applications/{}/instances/{}".format(application_id, instance_id),
+                                 msg="CATALOG: get application instance")
+
+
+def delete_application_instance(application_id, instance_id):
+    """ DELETE /applications/{application_id}/instances/{instance_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="applications/{}/instances/{}".format(application_id, instance_id),
+                                     msg="CATALOG: delete application instance")
+    return response
+
+
+def update_application_instance(application_id, instance_id, field, value):
+    """ PATCH /applications/{application_id}/instances/{instance_id} """
+    body = [{
+        "op": "Update",
+        "field": field,
+        "value": value
+    }]
+    response = _get_client().request(HttpMethod.PATCH,
+                                     path="applications/{}/instances/{}".format(application_id, instance_id),
+                                     body=body,
+                                     msg="CATALOG: updating application instance")
+    return response
+#endregion
