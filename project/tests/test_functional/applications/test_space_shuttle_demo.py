@@ -71,7 +71,8 @@ class TestSpaceShuttleDemo:
 
     def test_2_check_app_model_dataset_title_and_uri(self, core_org):
         step('Check model title is as expected')
-        model = next((d for d in DataSet.api_get_list([core_org]) if d.title == self.MODEL_TITLE), None)
+        dataset_list = DataSet.api_get_list(org_guid_list=[core_org.guid])
+        model = next((d for d in dataset_list if d.title == self.MODEL_TITLE), None)
         assert model is not None, 'Model dataset is not present'
         step('Check model uri is as expected')
         assert self.MODEL_SOURCE_FILE_NAME == model.source_uri, 'Model source file name is not as expected'

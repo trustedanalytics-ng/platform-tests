@@ -74,14 +74,15 @@ class TestSparkViaHue:
 
     def test_0_create_transfer_and_dataset_with_csv(self, class_context, test_org, add_admin_to_test_org):
         step("Create dataset from csv link")
-        _, dataset = create_dataset_from_file(context=class_context, org=test_org, file_path=self.CSV_FILE_PATH)
+        _, dataset = create_dataset_from_file(context=class_context, org_guid=test_org.guid,
+                                              file_path=self.CSV_FILE_PATH)
         step("Create csv hdfs path")
         self.__class__.csv_hdfs_path = dataset.target_uri.replace("hdfs://nameservice1", "")
 
     def test_1_create_transfer_and_dataset_from_hadoop_mapreduce_examples(self, class_context, test_org,
                                                                           add_admin_to_test_org):
         step("Create dataset from hadoop mapreduce examples jar")
-        _, dataset = create_dataset_from_link(context=class_context, org=test_org,
+        _, dataset = create_dataset_from_link(context=class_context, org_guid=test_org.guid,
                                               source=Urls.hadoop_mapreduce_examples)
         step("Create jar path")
         self.__class__.jar_path = dataset.target_uri.replace("hdfs://nameservice1", "")
@@ -101,7 +102,7 @@ class TestSparkViaHue:
                                                      description="hadoop-mapreduce-examples")
         assert self.job_name == java_job_design["name"], "Java job design in Hue has wrong name"
 
-    def test_3_submit_java_job_design(self, admin_user, core_space):
+    def test_3_submit_java_job_design(self, admin_user):
         step("Create application hdfs path name")
         app_hdfs_path = generate_test_object_name(prefix="hdfs://nameservice1/user/hue/oozie/workspaces/_{}_-oozie-".
                                                   format(admin_user.guid))
@@ -111,8 +112,7 @@ class TestSparkViaHue:
         properties_path = "/tmp/{}".format(datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
         step("Get oozie url")
         app_name = TAP.cdh_broker
-        cdh_broker = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
-                           if app_name == app.name), None)
+        cdh_broker = next((app for app in Application.cf_api_get_list() if app_name == app.name), None)
         assert cdh_broker is not None, "{} not available".format(app_name)
         oozie_url = str(json.loads(cdh_broker.cf_api_env()["ENVIRONMENT_JSON"]["CREDENTIALS"])["resource_manager"]). \
             replace("8088", "11000/oozie")

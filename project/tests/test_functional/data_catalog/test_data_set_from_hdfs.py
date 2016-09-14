@@ -35,9 +35,9 @@ class TestDataSetFromHdfs(object):
     @priority.medium
     def test_create_dataset_from_hdfs_uri(self, context, test_org):
         step("Create source dataset")
-        _, source_dataset = data_catalog.create_dataset_from_link(context, test_org, Urls.test_transfer_link)
+        _, source_dataset = data_catalog.create_dataset_from_link(context, test_org.guid, Urls.test_transfer_link)
         step("Create dataset from hdfs uri")
-        _, dataset = data_catalog.create_dataset_from_link(context, test_org, source_dataset.target_uri)
+        _, dataset = data_catalog.create_dataset_from_link(context, test_org.guid, source_dataset.target_uri)
         assert dataset.source_uri == source_dataset.target_uri
 
     @classmethod
@@ -47,20 +47,21 @@ class TestDataSetFromHdfs(object):
         request.addfinalizer(lambda: atk_virtualenv.teardown(org=test_org))
 
     @pytest.fixture(scope="function")
-    def initial_dataset(request, context, test_org):
+    def initial_dataset(self, request, context, test_org):
         step("Create data set from model file")
         model_path = os.path.join("fixtures", "data_sets", "lda.csv")
-        _, initial_dataset = data_catalog.create_dataset_from_file(context, org=test_org, file_path=model_path)
+        _, initial_dataset = data_catalog.create_dataset_from_file(context, org_guid=test_org.guid,
+                                                                   file_path=model_path)
         return initial_dataset
 
     @priority.low
     @pytest.mark.usefixtures("atk_virtualenv")
     @pytest.mark.skip("We don't know how this should work")
-    def test_create_transfer_from_atk_model_file(self, context, test_org, ref_space, atk_virtualenv, initial_dataset):
-        step("Get atk app from core space")
-        atk_app = next((app for app in Application.cf_api_get_list_by_space(ref_space.guid) if app.name == "atk"), None)
+    def test_create_transfer_from_atk_model_file(self, context, test_org, atk_virtualenv, initial_dataset):
+        step("Get atk app")
+        atk_app = next((app for app in Application.cf_api_get_list() if app.name == "atk"), None)
         if atk_app is None:
-            raise AssertionError("Atk app not found in core space")
+            raise AssertionError("Atk app not found")
 
         step("Install atk client package in virtualenv")
         atk_virtualenv.create()
@@ -75,5 +76,5 @@ class TestDataSetFromHdfs(object):
         hdfs_model_path = response.split("hdfs_model_path: ", 1)[1]
 
         step("Create dataset by providing retrieved model file path")
-        _, ds = data_catalog.create_dataset_from_link(context, org=test_org, source=hdfs_model_path)
+        _, ds = data_catalog.create_dataset_from_link(context, org_guid=test_org.guid, source=hdfs_model_path)
         assert ds.source_uri == hdfs_model_path

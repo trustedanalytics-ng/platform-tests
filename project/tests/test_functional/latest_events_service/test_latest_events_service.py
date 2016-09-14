@@ -56,7 +56,7 @@ class TestLatestEventsService:
         transfer = Transfer.api_create(context, org_guid=org.guid, source=Urls.test_transfer_link)
         transfer.ensure_finished()
         step("Ensure that a dataset has been created")
-        data_set = DataSet.api_get_matching_to_transfer(transfer_title=transfer.title, org=org)
+        data_set = DataSet.api_get_matching_to_transfer(transfer_title=transfer.title, org_guid=org.guid)
         step("Retrieve latest events. Check that there is one new event related to dataset creation.")
         events_after_create = LatestEvent.api_get_latest_events(org_guid=org.guid)
         assert len(events_after_create) == len(events_before) + 1

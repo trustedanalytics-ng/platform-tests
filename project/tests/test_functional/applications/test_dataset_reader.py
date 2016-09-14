@@ -71,7 +71,7 @@ class TestDatasetReader:
         transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=Urls.test_transfer_link)
         transfer.ensure_finished()
         step("Get dataset")
-        dataset = DataSet.api_get_matching_to_transfer(transfer.title, test_org)
+        dataset = DataSet.api_get_matching_to_transfer(transfer.title, test_org.guid)
         return dataset.target_uri
 
     @pytest.fixture(scope="class", autouse=True)

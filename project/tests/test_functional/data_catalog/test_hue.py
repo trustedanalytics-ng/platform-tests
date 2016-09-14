@@ -39,7 +39,7 @@ class TestHue:
 
     def test_0_create_transfer_and_dataset_with_csv_link(self, class_context, test_org, add_admin_to_test_org):
         step("Create new transfer and dataset")
-        self.__class__.transfer, dataset = create_dataset_from_link(context=class_context, org=test_org,
+        self.__class__.transfer, dataset = create_dataset_from_link(context=class_context, org_guid=test_org.guid,
                                                                     source=self.TRANSFER_SOURCE)
         step("Publish dataset")
         dataset.api_publish()

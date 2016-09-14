@@ -39,7 +39,8 @@ class TestUpdateDeleteDataSet:
     @pytest.fixture(scope="function")
     def dataset(self, test_org, add_admin_to_test_org, context):
         step("Create data set")
-        _, dataset = data_catalog.create_dataset_from_link(context, org=test_org, source=Urls.test_transfer_link)
+        _, dataset = data_catalog.create_dataset_from_link(context, org_guid=test_org.guid,
+                                                           source=Urls.test_transfer_link)
         return dataset
 
     @priority.high
@@ -47,7 +48,7 @@ class TestUpdateDeleteDataSet:
         step("Delete the data set")
         dataset.api_delete()
         step("Get data set list and check the deleted one is not on it")
-        datasets = DataSet.api_get_list(org_list=[test_org])
+        datasets = DataSet.api_get_list(org_guid_list=[test_org.guid])
         assert dataset not in datasets
 
     @priority.low

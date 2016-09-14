@@ -248,7 +248,7 @@ def psql_app(psql_instance, session_context):
 def model_hdfs_path(core_org):
     log_fixture("Retrieve existing model hdfs path from platform")
     model_dataset_name = "model_name"
-    dataset_list = data_catalog.DataSet.api_get_list([core_org])
+    dataset_list = data_catalog.DataSet.api_get_list(org_guid_list=[core_org.guid])
     model_dataset = next((ds for ds in dataset_list if ds.title == model_dataset_name), None)
     if model_dataset is None:
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))

@@ -17,26 +17,26 @@
 from .. import DataSet, Transfer
 
 
-def create_dataset_from_link(context, org, source, is_public=False, category=DataSet.CATEGORIES[0],
+def create_dataset_from_link(context, org_guid, source, is_public=False, category=DataSet.CATEGORIES[0],
                              client=None) -> tuple:
-    transfer = Transfer.api_create(context, org_guid=org.guid, source=source, category=category, is_public=is_public,
+    transfer = Transfer.api_create(context, org_guid=org_guid, source=source, category=category, is_public=is_public,
                                    client=client)
     transfer.ensure_finished()
-    data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title, client=client)
+    data_set = DataSet.api_get_matching_to_transfer(org_guid=org_guid, transfer_title=transfer.title, client=client)
     return transfer, data_set
 
 
-def create_dataset_from_file(context, org, file_path, client=None, category=None) -> tuple:
-    transfer = Transfer.api_create_by_file_upload(context, org_guid=org.guid, file_path=file_path, category=category,
+def create_dataset_from_file(context, org_guid, file_path, client=None, category=None) -> tuple:
+    transfer = Transfer.api_create_by_file_upload(context, org_guid=org_guid, file_path=file_path, category=category,
                                                   client=client)
     transfer.ensure_finished()
-    data_set = DataSet.api_get_matching_to_transfer(org=org, transfer_title=transfer.title, client=client)
+    data_set = DataSet.api_get_matching_to_transfer(org_guid=org_guid, transfer_title=transfer.title, client=client)
     return transfer, data_set
 
 
-def create_datasets_from_links(context, org, source_list, client=None):
+def create_datasets_from_links(context, org_guid, source_list, client=None):
     datasets = []
     for source in source_list:
-        _, dataset = create_dataset_from_link(context, org, source, client=client)
+        _, dataset = create_dataset_from_link(context, org_guid, source, client=client)
         datasets.append(dataset)
     return datasets

@@ -48,9 +48,9 @@ class TestCreateDataSets(object):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def target_uri(cls, test_org, add_admin_to_test_org, core_space):
+    def target_uri(cls, test_org, add_admin_to_test_org):
         step("Get target uri from hdfs instance")
-        hdfs = next(app for app in Application.cf_api_get_list_by_space(core_space.guid)
+        hdfs = next(app for app in Application.cf_api_get_list()
                     if "hdfs-downloader" in app.name)
         cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri']
         cls.target_uri = cls.target_uri.replace("%{organization}", test_org.guid)
@@ -77,18 +77,18 @@ class TestCreateDataSets(object):
             'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
         }
 
-    def _get_transfer_and_dataset(self, test_org, file_source, access, context):
+    def _get_transfer_and_dataset(self, org_guid, file_source, access, context):
         step("Create transfer by providing a csv from url")
-        transfer = Transfer.api_create(context, DataSet.CATEGORIES[0], access.value, test_org.guid, file_source)
+        transfer = Transfer.api_create(context, DataSet.CATEGORIES[0], access.value, org_guid, file_source)
         transfer.ensure_finished()
         step("Get data set matching to transfer {}".format(transfer.title))
-        data_set = DataSet.api_get_matching_to_transfer(org=test_org, transfer_title=transfer.title)
+        data_set = DataSet.api_get_matching_to_transfer(org_guid=org_guid, transfer_title=transfer.title)
         return transfer, data_set
 
-    def _get_dataset_current_and_expected_details(self, test_org, access, context):
-        transfer, dataset = self._get_transfer_and_dataset(test_org, Urls.test_transfer_link, access, context)
+    def _get_dataset_current_and_expected_details(self, org_guid, access, context):
+        transfer, dataset = self._get_transfer_and_dataset(org_guid, Urls.test_transfer_link, access, context)
         step("Generate expected dataset summary and get real dataset summary")
-        expected_details = self._get_expected_dataset_details(test_org.guid, "CSV", access, self.file_path, transfer,
+        expected_details = self._get_expected_dataset_details(org_guid, "CSV", access, self.file_path, transfer,
                                                               from_file=self.FROM_FILE)
         ds_details = dataset.get_details()
         return ds_details, expected_details
@@ -96,7 +96,8 @@ class TestCreateDataSets(object):
     @priority.medium
     @pytest.mark.parametrize("key", DETAILS_TO_COMPARE)
     def test_create_private_dataset(self, key, context, test_org):
-        ds_details, expected_details = self._get_dataset_current_and_expected_details(test_org, Access.PRIVATE, context)
+        ds_details, expected_details = self._get_dataset_current_and_expected_details(test_org.guid, Access.PRIVATE,
+                                                                                      context)
         step("Compare private dataset details with expected values")
         assert expected_details[key] == ds_details[key]
 
@@ -104,14 +105,16 @@ class TestCreateDataSets(object):
     @pytest.mark.public_dataset
     @pytest.mark.parametrize("key", DETAILS_TO_COMPARE)
     def test_create_public_dataset(self, key, context, test_org):
-        ds_details, expected_details = self._get_dataset_current_and_expected_details(test_org, Access.PUBLIC, context)
+        ds_details, expected_details = self._get_dataset_current_and_expected_details(test_org.guid, Access.PUBLIC,
+                                                                                      context)
         step("Compare public dataset details with expected values")
         assert expected_details[key] == ds_details[key]
 
     @priority.medium
     @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
     def test_create_private_dataset_recordcount(self, context, test_org):
-        transfer, dataset = self._get_transfer_and_dataset(test_org, Urls.test_transfer_link, Access.PRIVATE, context)
+        transfer, dataset = self._get_transfer_and_dataset(test_org.guid, Urls.test_transfer_link, Access.PRIVATE,
+                                                           context)
         step("Check that record count is valid")
         assert dataset.record_count == get_csv_record_count(self.file_path)
 
@@ -119,6 +122,7 @@ class TestCreateDataSets(object):
     @pytest.mark.public_dataset
     @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
     def test_create_public_dataset_recordcount(self, context, test_org):
-        transfer, dataset = self._get_transfer_and_dataset(test_org, Urls.test_transfer_link, Access.PUBLIC, context)
+        transfer, dataset = self._get_transfer_and_dataset(test_org.guid, Urls.test_transfer_link, Access.PUBLIC,
+                                                           context)
         step("Check that record count is valid")
         assert dataset.record_count == get_csv_record_count(self.file_path)

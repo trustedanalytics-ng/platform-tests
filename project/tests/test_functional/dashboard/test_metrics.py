@@ -99,7 +99,7 @@ class TestMetrics(object):
         step("Get datasets and check datasetCount, privateDatasets, publicDatasets metrics are correct")
         public_datasets = []
         private_datasets = []
-        datasets = DataSet.api_get_list([core_org])
+        datasets = DataSet.api_get_list(org_guid_list=[core_org.guid])
         for table in datasets:
             if table.is_public:
                 public_datasets.append(table)

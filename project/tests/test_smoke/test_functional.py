@@ -28,8 +28,7 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import Application, DataSet, Organization, ServiceInstance, Space, \
-    Transfer, User
+from modules.tap_object_model import Application, DataSet, Organization, ServiceInstance, Transfer, User
 from modules.tap_object_model import ServiceType
 from modules.tap_object_model import TestSuite
 from modules.tap_object_model.flows import onboarding
@@ -97,12 +96,12 @@ def transfer_flow(transfer, core_org):
     transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])
     assert transfer in transfers
     step("Get data set matching to transfer")
-    data_set = DataSet.api_get_matching_to_transfer(org=core_org, transfer_title=transfer.title)
+    data_set = DataSet.api_get_matching_to_transfer(org_guid=core_org.guid, transfer_title=transfer.title)
 
     step("Delete the data set")
     data_set.api_delete()
     step("Check that the data set was deleted")
-    data_sets = DataSet.api_get_list(org_list=[core_org])
+    data_sets = DataSet.api_get_list(org_guid_list=[core_org.guid])
     assert data_set not in data_sets
 
     step("Delete the transfer")

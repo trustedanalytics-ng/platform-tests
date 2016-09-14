@@ -98,8 +98,8 @@ class TestHive:
         return instance
 
     @pytest.fixture(scope="class")
-    def dataset_target_uri(self, test_org, test_space, class_context, add_admin_to_test_org, add_admin_to_test_space):
-        _, dataset = create_dataset_from_link(class_context, test_org, Urls.test_transfer_link)
+    def dataset_target_uri(self, test_org, class_context, add_admin_to_test_org):
+        _, dataset = create_dataset_from_link(class_context, test_org.guid, Urls.test_transfer_link)
         return dataset.target_uri
 
     @pytest.fixture(scope="class")
@@ -108,16 +108,15 @@ class TestHive:
         expected_transfer = [i.split(",") for i in expected_transfer.split("\n") if i]
         return expected_transfer
 
-    def test_0_push_hdfs_hive_demo(self, test_space, dataset_target_uri, hdfs_instance, kerberos_instance,
-                                   hive_instance, cups_sso_instance, login_to_cf, class_context):
+    def test_0_push_hdfs_hive_demo(self, dataset_target_uri, hdfs_instance, kerberos_instance, hive_instance,
+                                   cups_sso_instance, login_to_cf, class_context):
         step("Get app sources")
         repo = AppSources.get_repository(repo_name=TapGitHub.hdfs_hive_demo, repo_owner=TapGitHub.intel_data)
         repo.compile_mvn()
         step("Push hdfs-hive-demo app to cf")
-        self.__class__.hdfs_reader_app = Application.push(class_context, space_guid=test_space.guid,
-                                                          source_directory=repo.path,
-                                                          bound_services=(hdfs_instance.name, kerberos_instance.name,
-                                                                          hive_instance.name, cups_sso_instance.name))
+        self.__class__.hdfs_reader_app = Application.push(class_context,  source_directory=repo.path,
+                                                          bound_services=[hdfs_instance.name, kerberos_instance.name,
+                                                                          hive_instance.name, cups_sso_instance.name])
         step("Check hdfs-hive-demo app has url")
         assert len(self.hdfs_reader_app.urls) == 1
 

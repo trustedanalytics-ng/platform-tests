@@ -40,7 +40,8 @@ class ArcadiaTest:
     @classmethod
     @pytest.fixture(scope="class")
     def dataset(cls, request, test_org, add_admin_to_test_org, class_context):
-        _, dataset = data_catalog.create_dataset_from_link(class_context, org=test_org, source=Urls.test_transfer_link)
+        _, dataset = data_catalog.create_dataset_from_link(class_context, org_guid=test_org.guid,
+                                                           source=Urls.test_transfer_link)
         return dataset
 
     @classmethod

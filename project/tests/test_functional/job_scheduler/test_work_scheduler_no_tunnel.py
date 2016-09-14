@@ -95,17 +95,17 @@ class TestJobSchedulerNoTunnelIncremental:
 
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_1_check_dataset_from_HDFS(self, test_org):
-        datasets = data_catalog.create_datasets_from_links(self.context, test_org, [self.HDFS_CONFIG_DIR +
+        datasets = data_catalog.create_datasets_from_links(self.context, test_org.guid, [self.HDFS_CONFIG_DIR +
                                                            source for source in self.HDFS_CONFIG_FILES])
         assertions.assert_datasets_not_empty(datasets)
 
         _, self.__class__.TEST_DATASET = data_catalog.create_dataset_from_link(
-            self.context, test_org, self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[0])
+            self.context, test_org.guid, self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[0])
         assert self.TEST_DATASET.size > 0
 
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_2_check_new_dataset_from_HDFS(self, test_org, psql_app):
         PsqlRow.post(psql_app, self.test_table_name, self.TEST_ROWS)
-        assertions.assert_dataset_greater_with_retry(self.TEST_DATASET.size, self.context, test_org,
+        assertions.assert_dataset_greater_with_retry(self.TEST_DATASET.size, self.context, test_org.guid,
                                                      self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[1])
 

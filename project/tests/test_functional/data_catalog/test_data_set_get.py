@@ -37,16 +37,20 @@ class TestGetDataSets(object):
         for category in DataSet.CATEGORIES:
             cls.transfers.append(Transfer.api_create(class_context, category, is_public=False, org_guid=test_org.guid,
                                                      source=Urls.test_transfer_link))
+        for category in DataSet.CATEGORIES:
+            cls.transfers.append(Transfer.api_create(class_context, category, is_public=True, org_guid=test_org.guid,
+                                                     source=Urls.test_transfer_link))
         step("Ensure that transfers are finished")
         for transfer in cls.transfers:
             transfer.ensure_finished()
         step("Get all data sets in the test org")
         cls.transfer_titles = [t.title for t in cls.transfers]
-        cls.datasets = [d for d in DataSet.api_get_list(org_list=[test_org]) if d.title in cls.transfer_titles]
+        dataset_list = DataSet.api_get_list(org_guid_list=[test_org.guid])
+        cls.datasets = [d for d in dataset_list if d.title in cls.transfer_titles]
 
     def _filter_datasets(self, org, filters=(), only_private=False, only_public=False, query=""):
-        ds_list = DataSet.api_get_list(org_list=[org], query=query, filters=filters, only_private=only_private,
-                                       only_public=only_public)
+        ds_list = DataSet.api_get_list(org_guid_list=[org.guid], query=query, filters=filters,
+                                       only_private=only_private, only_public=only_public)
         return [d for d in ds_list if d in self.datasets]
 
     @priority.high
@@ -125,13 +129,13 @@ class TestGetDataSets(object):
         step("Retrieve datasets from the new org")
         public_datasets = [ds for ds in self.datasets if ds.is_public]
         private_datasets = [ds for ds in self.datasets if not ds.is_public]
-        datasets = [ds for ds in DataSet.api_get_list(org_list=[org])]
+        datasets = [ds for ds in DataSet.api_get_list(org_guid_list=[org.guid])]
         step("Check that no private data sets are visible in another org")
-        self.found_private_ds = [ds for ds in private_datasets if ds in datasets]
-        assert self.found_private_ds == [], "Private datasets from another org returned"
+        found_private_ds = [ds for ds in private_datasets if ds in datasets]
+        assert found_private_ds == [], "Private datasets from another org returned"
         step("Check that all public data sets are visible in another org")
-        self.missing_public_ds = [ds for ds in public_datasets if ds not in datasets]
-        assert self.missing_public_ds == [], "Not all public data sets from another org returned"
+        missing_public_ds = [ds for ds in public_datasets if ds not in datasets]
+        assert missing_public_ds == [], "Not all public data sets from another org returned"
 
     @priority.medium
     def test_get_datasets_by_keyword_title(self, test_org):

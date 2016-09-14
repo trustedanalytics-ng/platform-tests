@@ -63,13 +63,10 @@ class DataSet(object):
             return None
 
     @classmethod
-    def api_get_list(cls, org_list=None, query="", filters=(), size=100, time_from=0, only_private=False,
+    def api_get_list(cls, org_guid_list=None, query="", filters=(), size=100, time_from=0, only_private=False,
                      only_public=False, client=None):
-        org_guids = None
-        if org_list is not None:
-            org_guids = [org.guid for org in org_list]
-        response = data_catalog.api_get_datasets(org_guids, query, filters, size, time_from, only_private, only_public,
-                                                 client=client)
+        response = data_catalog.api_get_datasets(org_guid_list, query, filters, size, time_from, only_private,
+                                                 only_public, client=client)
         data_sets = []
         for data in response["hits"]:
             data_set = cls(id=data["id"], category=data["category"], title=data["title"], format=data["format"],
@@ -80,16 +77,16 @@ class DataSet(object):
         return data_sets
 
     @classmethod
-    def api_get_matching_to_transfer_list(cls, transfer_title_list, org_list=None, client=None):
+    def api_get_matching_to_transfer_list(cls, transfer_title_list, org_guid_list=None, client=None):
         """Return datasets whose title is in transfer_title_list."""
-        datasets = cls.api_get_list(org_list=org_list, client=client)
+        datasets = cls.api_get_list(org_guid_list=org_guid_list, client=client)
         return [ds for ds in datasets if ds.title in transfer_title_list]
 
     @classmethod
     @retry(AssertionError, tries=15, delay=2)
-    def api_get_matching_to_transfer(cls, transfer_title, org, client=None):
+    def api_get_matching_to_transfer(cls, transfer_title, org_guid, client=None):
         """Return dataset whose title matches transfer_title or raise AssertionError if such dataset is not found."""
-        datasets = cls.api_get_matching_to_transfer_list(transfer_title_list=[transfer_title], org_list=[org],
+        datasets = cls.api_get_matching_to_transfer_list(transfer_title_list=[transfer_title], org_guid_list=[org_guid],
                                                          client=client)
         dataset = next(iter(datasets), None)
         if dataset is None:
@@ -116,8 +113,8 @@ class DataSet(object):
     def api_update(self, creation_time=None, target_uri=None, category=None, format=None, record_count=None,
                    is_public=None, org_guid=None, source_uri=None, size=None, data_sample=None, title=None,
                    client=None):
-        data_catalog.api_update_dataset(self.id, creation_time, target_uri, category, format, record_count,
-                                        is_public, org_guid, source_uri, size, data_sample, title, client)
+        data_catalog.api_update_dataset(self.id, creation_time, target_uri, category, format, record_count, is_public,
+                                        org_guid, source_uri, size, data_sample, title, client)
 
     def api_delete(self, client=None):
         data_catalog.api_delete_dataset(self.id, client)

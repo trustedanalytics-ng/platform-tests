@@ -27,6 +27,7 @@ class TransferState(object):
     FINISHED = "FINISHED"
     NEW = "NEW"
     VALIDATED = "VALIDATED"
+    DOWNLOADED = "DOWNLOADED"
 
 
 class TransferError(Exception):
