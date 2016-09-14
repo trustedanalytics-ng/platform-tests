@@ -39,7 +39,7 @@ from .test_data import TestData
 
 @pytest.fixture(scope="session")
 def test_org(request, core_org):
-    # Workaround due to limited functionality of TAP NG v1
+    # Workaround due to limited org management in TAP v0.8
     log_fixture("test_org: Returns core org")
     TestData.test_org = core_org
     return core_org
@@ -52,6 +52,11 @@ def test_org_user(request, session_context, test_org):
                                                           role=User.ORG_ROLE["user"])
     TestData.test_org_user = test_org_user
     return test_org_user
+
+
+@pytest.fixture(scope="session")
+def test_space(request, test_org):
+    raise NotImplementedError("Test needs refactoring. Spaces are no longer supported on TAP")
 
 
 @pytest.fixture(scope="session")
@@ -81,14 +86,12 @@ def test_org_admin_client(test_org_admin):
 
 @pytest.fixture(scope="class")
 def login_to_cf(test_org, test_space):
-    log_fixture("login_to_cf: Login to cf targeting test org and test space")
-    cf.cf_login(test_org.name, test_space.name)
+    raise NotImplementedError("Test needs refactoring. CF is no longer a part of TAP")
 
 
 @pytest.fixture(scope="class")
 def login_to_cf_core(core_org, core_space):
-     log_fixture("login_to_cf_core: Login to cf targeting core org and core space")
-     cf.cf_login(core_org.name, core_space.name)
+    raise NotImplementedError("Test needs refactoring. CF is no longer a part of TAP")
 
 
 @pytest.fixture(scope="class")
@@ -147,24 +150,12 @@ def admin_client():
 
 @pytest.fixture(scope="session")
 def space_users_clients(request, session_context, test_org, test_space, admin_client):
-    log_fixture("clients: Create clients")
-    clients = {}
-    for role, value in User.SPACE_ROLES.items():
-        clients[role] = User.api_create_by_adding_to_space(session_context, org_guid=test_org.guid, space_guid=test_space.guid,
-                                                           roles=value).login()
-    clients["admin"] = admin_client
-    return clients
+    raise NotImplementedError("Test needs refactoring. Spaces are no longer supported on TAP")
 
 
 @pytest.fixture(scope="session")
 def space_users_clients_core(request, session_context, core_org, core_space, admin_client):
-    log_fixture("clients: Create clients")
-    clients = {}
-    for role, value in User.SPACE_ROLES.items():
-        clients[role] = User.api_create_by_adding_to_space(session_context, org_guid=core_org.guid, space_guid=core_space.guid,
-                                                           roles=value).login()
-    clients["admin"] = admin_client
-    return clients
+    raise NotImplementedError("Test needs refactoring. Spaces are no longer supported on TAP")
 
 
 @pytest.fixture(scope="session")
@@ -175,8 +166,7 @@ def add_admin_to_test_org(test_org, admin_user):
 
 @pytest.fixture(scope="session")
 def add_admin_to_test_space(test_org, test_space, admin_user):
-    log_fixture("add_admin_to_test_space")
-    admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid, roles=User.SPACE_ROLES["developer"])
+    raise NotImplementedError("Test needs refactoring. Spaces are no longer supported on TAP")
 
 
 @pytest.fixture(scope="session")
@@ -190,11 +180,7 @@ def core_org():
 
 @pytest.fixture(scope="session")
 def core_space():
-    log_fixture("core_space: Create object for core space")
-    ref_space_name = config.core_space_name
-    spaces = Space.cf_api_get_list()
-    TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
-    return TestData.core_space
+    raise NotImplementedError("Test needs refactoring. Spaces are no longer supported on TAP")
 
 
 @pytest.fixture(scope="function")
