@@ -21,7 +21,6 @@ from modules.constants import TapComponent as TAP, Urls
 from modules.http_calls.platform.catalog import update_instance
 from modules.markers import priority, incremental
 from modules.tap_logger import step
-from modules.tap_object_model.api_service import ApiService
 from modules.tap_object_model.k8s_application import K8sApplication
 from modules.test_names import generate_test_object_name
 
@@ -37,24 +36,23 @@ class TestCodePackagingAndAppPushing:
     APP_NAME = generate_test_object_name(prefix="samplepythonapp").replace('_', '')
     file_utils.TMP_FILE_DIR = "{}{}".format(file_utils.TMP_FILE_DIR, generate_test_object_name(prefix="/"))
     SAMPLE_APP_URL = Urls.tapng_python_app_url
+    MANIFEST_PARAMS = {
+        'instances': 1,
+        'name': APP_NAME,
+        'type': "PYTHON"
+    }
 
-    def test_0_push_application(self, class_context, sample_app_path, sample_app_manifest_path):
+    def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
         step("Change manifest.json params")
-        manifest_params = {
-            'instances': 1,
-            'name': self.APP_NAME,
-            'type': "PYTHON"
-        }
-        K8sApplication.change_json_file_param_value(file_path=self.manifest_file_path,
-                                                    manifest_params=manifest_params)
+        K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
         step("Push application")
-        self.__class__.app = K8sApplication.push(class_context, sample_app_path, sample_app_manifest_path)
+        self.__class__.app = K8sApplication.push(class_context, sample_app_path, sample_manifest_path)
         step("Ensure application is running")
         self.app.ensure_running()
         step("Get application")
-        app = K8sApplication.get(app_id=self.app.id)
+        app = K8sApplication.get(self.app.id)
         step("Check application parameters")
-        assert app.name == self.APP_NAME, "Application has inproper name"
+        assert app.name == self.APP_NAME, "Application has incorrect name"
         assert app.state == K8sApplication.STATE_RUNNING, "Application is not running"
         assert app.replication is 1, "Application replication is incorrect"
         assert app.image_state == "READY", "Application image state is incorrect"
@@ -63,13 +61,10 @@ class TestCodePackagingAndAppPushing:
         step("Update app state")
         update_instance(instance_id=self.app.id, field="state", value=K8sApplication.STATE_FAILURE)
         step("Check app state")
-        app = K8sApplication.get(app_id=self.app.id)
-        assert app.state == K8sApplication.STATE_FAILURE, "Application is not in {} state".format(
-            K8sApplication.STATE_FAILURE)
+        app = K8sApplication.get(self.app.id)
+        assert app.state == K8sApplication.STATE_FAILURE, "Application is not in the expected state"
         step("Delete app")
         self.app.delete()
         step("Check if app is removed")
-        apps = ApiService.get_applications()
-        assert self.APP_NAME not in apps.content.decode()
-        step("Remove downloaded files")
-        file_utils.tear_down_test_files()
+        apps = K8sApplication.get_list()
+        assert self.app not in apps

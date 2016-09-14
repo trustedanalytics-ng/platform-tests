@@ -81,14 +81,14 @@ class TestPythonApplicationCliFlow:
     FILES_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
     APP_URL_MESSAGE = "TEST APP v.1.0 READY"
 
-    def test_0_push_app(self, cli_login, download_unpack_and_check_sample_app, sample_app_manifest_path, tap_cli):
+    def test_0_push_app(self, cli_login, download_unpack_and_check_sample_app, sample_manifest_path, tap_cli):
         step("Prepare manifest with parameters")
         manifest_params = {
             'instances': APP_INSTANCES,
             'name': self.APP_NAME,
             'type': self.APP_TYPE
         }
-        K8sApplication.change_json_file_param_value(sample_app_manifest_path, manifest_params)
+        K8sApplication.change_json_file_param_value(sample_manifest_path, manifest_params)
         step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
         push = tap_cli.push(app_dir_path=file_utils.TMP_FILE_DIR)
         step("Check headers")

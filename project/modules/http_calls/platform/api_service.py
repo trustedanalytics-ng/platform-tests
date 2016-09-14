@@ -63,11 +63,11 @@ def push_application(file_path, manifest_path):
                                      files=files,
                                      raw_response=True,
                                      msg="API-SERVICE: push application")
-    assert response.status_code == HttpStatus.CODE_CREATED
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response
 
 
-def get_applications(client: HttpClient, org_id: str=None):
+def get_applications(client: HttpClient=None, org_id: str=None):
     """Retrieves list of applications using REST call
     GET /applications
 
@@ -78,16 +78,18 @@ def get_applications(client: HttpClient, org_id: str=None):
     Returns:
         Response containing list of apps.
     """
+
+    client = client or _get_client()
     query_params = {}
     path = "applications"
     if org_id is not None:
         query_params["org_id"] = org_id
 
-    response = _get_client().request(HttpMethod.GET,
-                                     path=path,
-                                     params=query_params,
-                                     raw_response=True,
-                                     msg="Get application list")
+    response = client.request(HttpMethod.GET,
+                              path=path,
+                              params=query_params,
+                              raw_response=True,
+                              msg="Get application list")
     assert response.status_code == HttpStatus.CODE_OK
     return response
 
@@ -106,7 +108,7 @@ def get_application_logs(id):
     return response
 
 
-def delete_application(client: HttpClient, app_id: str):
+def delete_application(app_id: str, client: HttpClient=None):
     """Deletes an application with provided id using REST call
     DELETE /applications/{app_id}
 
@@ -117,9 +119,10 @@ def delete_application(client: HttpClient, app_id: str):
     Returns:
         Raw response of the apperation
     """
-    response = _get_client().request(HttpMethod.DELETE,
-                                     path="applications/{}".format(app_id),
-                                     msg="Delete application")
+    client = client or _get_client()
+    response = client.request(HttpMethod.DELETE,
+                              path="applications/{}".format(app_id),
+                              msg="Delete application")
     return response
 
 

@@ -128,40 +128,36 @@ def cli_login(tap_cli):
     tap_cli.login()
 
 
-@pytest.fixture(scope="function")
-def sample_app_manifest_path(request):
-    log_fixture("Download and return path to manifest.json")
-    request.cls.manifest_file_path = file_utils.download_file(Urls.manifest_url, "manifest.json")
-    return request.cls.manifest_file_path
+@pytest.fixture(scope="class")
+def sample_manifest_path(request):
+    log_fixture("Download sample manifest.json")
+    sample_manifest_path = file_utils.download_file(Urls.manifest_url, "manifest.json")
+    request.addfinalizer(lambda: os.remove(sample_manifest_path))
+    return sample_manifest_path
 
 
 @pytest.fixture(scope="class")
 def sample_app_path(request):
-    log_fixture("Download and return path to sample app")
+    # NOTE: test class needs to have application source url specified as SAMPLE_APP_URL class variable
     sample_app_url = getattr(request.cls, "SAMPLE_APP_URL")
-    sample_app_tar_name = getattr(request.cls, "SAMPLE_APP_TAR_NAME")
-    request.cls.application_file_path = file_utils.download_file(sample_app_url, sample_app_tar_name)
-    return request.cls.application_file_path
+    sample_app_tar_name = sample_app_url.split("/")[-1]
+    log_fixture("Download sample app: {}".format(sample_app_url))
+    sample_app_path = file_utils.download_file(sample_app_url, sample_app_tar_name)
+    request.addfinalizer(lambda: os.remove(sample_app_path))
+    return sample_app_path
 
 
 @pytest.fixture(scope="class")
-def remove_tmp_file_dir():
-    log_fixture("Remove '{}' directory if exists".format(file_utils.TMP_FILE_DIR))
-    if os.path.exists(file_utils.TMP_FILE_DIR):
-        shutil.rmtree(file_utils.TMP_FILE_DIR)
-
-
-@pytest.fixture(scope="class")
-def download_unpack_and_check_sample_app(request, remove_tmp_file_dir, sample_app_path):
+def download_unpack_and_check_sample_app(request, sample_app_path):
     log_fixture("Unpack and check content of sample app")
-    sample_app_tar_name = getattr(request.cls, "SAMPLE_APP_TAR_NAME")
     step("Extract application archive")
-    modules.command.run(["tar", "zxvf", sample_app_tar_name], cwd=file_utils.TMP_FILE_DIR)
+    modules.command.run(["tar", "zxvf", sample_app_path], cwd=file_utils.TMP_FILE_DIR)
     step("Remove archive file")
-    modules.command.run(["rm", sample_app_tar_name], cwd=file_utils.TMP_FILE_DIR)
+    modules.command.run(["rm", sample_app_path], cwd=file_utils.TMP_FILE_DIR)
     step("Check application content")
     ls = modules.command.run(["ls"], cwd=file_utils.TMP_FILE_DIR)
-    files_list = getattr(request.cls, "FILES_LIST")
-    global app_file
-    assert all(app_file in ls for app_file in files_list), "{} is missing".format(
-        app_file)
+    file_list = getattr(request.cls, "FILES_LIST")
+    missing_files = [app_file for app_file in file_list if app_file not in ls]
+    assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
+
+

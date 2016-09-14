@@ -38,7 +38,7 @@ def create_image(image_id):
                                      body=body,
                                      raw_response=True, raise_exception=True,
                                      msg="IMAGE FACTORY: create image")
-    assert response.status_code == HttpStatus.CODE_CREATED
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response
 
 

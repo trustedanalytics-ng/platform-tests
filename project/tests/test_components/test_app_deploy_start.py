@@ -13,16 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import re
-
 import pytest
 
-import config
-from modules.constants import HttpStatus
+from modules.constants import ApiServiceHttpStatus
 from modules.constants import TapComponent as TAP
 from modules.constants.urls import Urls
-from modules.http_calls.kubernetes import k8s_get_pods
 from modules.markers import incremental
 from modules.tap_logger import step
 from modules.tap_object_model.api_service import ApiService
@@ -37,93 +32,63 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 @incremental
 @pytest.mark.usefixtures("open_tunnel")
 class TestPythonApplicationFlow:
-    SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_NAME = "samplepythonapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = "PYTHON"
 
-    APP_INSTANCES = 1
-    application = None
-    application_file_path = None
-    manifest_file_path = None
-
-    def test_0_push_application(self, class_context, sample_app_path, sample_app_manifest_path):
-        step("Prepare manifest with parameters")
-        manifest_params = {
-            'instances': self.APP_INSTANCES,
+    @property
+    def manifest_params(self):
+        return {
+            'instances': 1,
             'name': self.APP_NAME,
             'type': self.APP_TYPE
         }
-        K8sApplication.change_json_file_param_value(sample_app_manifest_path, manifest_params)
-        step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
-        self.__class__.application = K8sApplication.push(class_context, sample_app_path, sample_app_manifest_path)
 
-    def test_1_push_application_with_existing_name(self, class_context):
-        step("Push the same application again")
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
-                                     K8sApplication.push, class_context, self.application_file_path,
-                                     self.manifest_file_path)
-
-    def test_2_check_application_url(self):
-        step("Check application state")
+    def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
+        step("Prepare manifest with parameters")
+        K8sApplication.update_manifest(sample_manifest_path, self.manifest_params)
+        step("Push sample application")
+        self.__class__.application = K8sApplication.push(class_context, sample_app_path, sample_manifest_path)
+        step("Check application is running")
         self.application.ensure_running()
-        step("Check application url")
-        self.application.url = "http://{}.{}".format(self.APP_NAME, config.tap_domain)
+        step("Check application is ready")
         self.application.ensure_ready()
 
-    def test_3_stop_application(self):
+    def test_1_stop_application(self):
         step("Stop application")
-        response = self.application.stop()
-        assert response["message"] == "success"
+        self.application.stop()
+        step("Check that the application is stopped")
         self.application.ensure_stopped()
         self.application.ensure_is_down()
 
-    def test_4_start_application(self):
+    def test_2_start_application(self):
         step("Start application")
-        response = self.application.start()
-        assert response["message"] == "success"
+        self.application.start()
+        step("Check application is ready")
         self.application.ensure_ready()
 
-    def test_5_check_logs(self):
-        step("Check logs of application")
+    def test_3_check_logs(self):
+        step("Check that getting application logs returns no error")
         response = self.application.get_logs()
-        assert response.status_code == HttpStatus.CODE_OK
+        assert response.status_code == ApiServiceHttpStatus.CODE_OK
 
-    def test_6_scale_application(self):
+    def test_4_scale_application(self):
         step("Scale application")
-        response = self.application.scale(3)
-        assert response["message"] == "success"
-
-    def test_7_check_number_of_application_instances(self):
+        replicas_number = 3
+        self.application.scale(replicas_number)
         step("Check number of application instances")
-        response = k8s_get_pods()
-        pods_json = [i["metadata"] for i in response["items"]]
-        labels = [i["labels"] for i in pods_json]
-        found_ids = [m.start() for m in re.finditer(self.application.id, labels.__str__())]
-        assert len(found_ids) == 3
+        app_pods = self.application.get_pods()
+        assert len(app_pods) == replicas_number
 
-    def test_8_scale_application_with_wrong_id(self):
-        step("Scale application with wrong id")
-        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, "",
-                                     ApiService.scale_application, "wrong_id", 3)
-
-    def test_9_scale_application_with_wrong_number(self):
-        step("Scale application with wrong replicas number")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, "",
-                                     ApiService.scale_application, 3, "wrong_number")
-
-    def test_10_delete_application(self):
+    def test_5_delete_application(self):
         step("Delete application")
         self.application.delete()
-
-    def test_11_check_application_url(self):
-        step("Check if application url is unavailable")
+        step("Check that application url is unavailable")
         self.application.ensure_is_down()
 
 
 @incremental
 class TestNodeJsApplicationFlow(TestPythonApplicationFlow):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
     APP_NAME = "samplenodejsapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = "NODEJS"
@@ -131,7 +96,6 @@ class TestNodeJsApplicationFlow(TestPythonApplicationFlow):
 
 @incremental
 class TestGoApplicationFlow(TestPythonApplicationFlow):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_go_app_url
     APP_NAME = "samplegoapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = "GO"
@@ -139,7 +103,47 @@ class TestGoApplicationFlow(TestPythonApplicationFlow):
 
 @incremental
 class TestJavaApplicationFlow(TestPythonApplicationFlow):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_NAME = "samplejavaapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = "JAVA"
+
+
+class TestSampleApp:
+    SAMPLE_APP_URL = Urls.tapng_python_app_url
+    APP_NAME = "sampleapp{}".format(generate_test_object_name().replace('_', ''))
+    APP_TYPE = "PYTHON"
+
+    MANIFEST_PARAMS = {
+        'instances': 1,
+        'name': APP_NAME,
+        'type': APP_TYPE
+    }
+
+    @pytest.fixture(scope="class", autouse=True)
+    def sample_app(self, class_context, sample_app_path, sample_manifest_path):
+        step("Prepare manifest with parameters")
+        K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
+        step("Push sample application")
+        application = K8sApplication.push(class_context, sample_app_path, sample_manifest_path)
+        step("Check application is running")
+        application.ensure_running()
+        step("Check application is ready")
+        application.ensure_ready()
+
+    def test_cannot_push_application_twice(self, class_context, sample_app_path, sample_manifest_path):
+        step("Check that pushing the same application again causes an error")
+        K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
+        assert_raises_http_exception(ApiServiceHttpStatus.CODE_CONFLICT, "",
+                                     K8sApplication.push, class_context, sample_app_path, sample_manifest_path)
+
+    def test_cannot_scale_application_with_incorrect_id(self):
+        step("Scale application with incorrect id")
+        incorrect_id = "wrong_id"
+        expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(incorrect_id)
+        assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
+                                     ApiService.scale_application, incorrect_id, 3)
+
+    def test_cannot_scale_application_with_incorrect_instance_number(self):
+        step("Scale application with incorrect replicas number")
+        assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
+                                     ApiService.scale_application, 3, "wrong_number")
