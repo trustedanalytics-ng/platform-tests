@@ -79,12 +79,12 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     test_user = onboarding.onboard(context, check_email=False)
     test_user.add_to_organization(core_org.guid, role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
-    users = User.get_list_via_organization(org_guid=core_org.guid)
+    users = User.get_list_in_organization(org_guid=core_org.guid)
     assert test_user in users
     step("Delete the user from the organization")
     test_user.delete_from_organization(org_guid=core_org.guid)
     step("Check that the user is in the organization")
-    users = User.get_list_via_organization(org_guid=core_org.guid)
+    users = User.get_list_in_organization(org_guid=core_org.guid)
     assert test_user not in users
 
 

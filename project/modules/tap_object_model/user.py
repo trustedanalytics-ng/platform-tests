@@ -20,7 +20,6 @@ import string
 
 import config
 from .. import gmail_api
-from ..exceptions import NoSuchUserException
 from ..http_calls.platform import user_management as um
 from ..http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
 from ..http_client.http_client_factory import HttpClientFactory
@@ -65,15 +64,15 @@ class User(object):
         return "".join([random.choice(base) for _ in range(length)])
 
     @classmethod
-    def create_by_adding_to_organization(cls, context, org_guid, username=None, password=None,
-                                         role=ORG_ROLE["user"], inviting_client=None):
+    def create_by_adding_to_organization(cls, context, org_guid, username=None, password=None, role=None,
+                                         inviting_client=None):
         username = generate_test_object_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
         um.api_add_organization_user(org_guid, username, role, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
         client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
         um.api_register_new_user(code, password, client=client)
-        org_users = cls.get_list_via_organization(org_guid=org_guid)
+        org_users = cls.get_list_in_organization(org_guid=org_guid)
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
             raise AssertionError("New user was not found in the organization")
@@ -82,7 +81,7 @@ class User(object):
         return new_user
 
     @classmethod
-    def get_list_via_organization(cls, org_guid, client=None):
+    def get_list_in_organization(cls, org_guid, client=None):
         response = um.api_get_organization_users(org_guid, client=client)
         users = []
         for user_data in response:
@@ -117,36 +116,16 @@ class User(object):
     @classmethod
     def get_admin(cls):
         """Return User object for admin user"""
-        if cls.__ADMIN is None:
-            cls.__ADMIN = cls.api_get_user(config.admin_username)
-            cls.__ADMIN.password = config.admin_password
-        return cls.__ADMIN
-
-    @classmethod
-    def _get_user_list_from_api_response(cls, response):
-        users = []
-        for user_data in response:
-            user = cls(username=user_data["username"], guid=user_data["guid"])
-            users.append(user)
-        return users
+        users = User.get_all_users()
+        admin = next((user for user in users if user.username == config.admin_username), None)
+        if admin is None:
+            raise AssertionError("Admin with username {} not found".format(config.admin_username))
+        return admin
 
     @classmethod
     def get_all_users(cls):
-        # TODO: For now we have only one org. To be changed in Tap NG v2.
+        # TODO: For now we have only one org. To be changed in Tap v0.9
         return cls.get_list_in_organization(org_guid=Guid.CORE_ORG_GUID)
 
-    @classmethod
-    def get_user(cls, username):
-        users = User.get_all_users()
-        user = next((user for user in users if user.username == username), None)
-        if not user:
-            raise NoSuchUserException(username)
-        return user
-
-    @classmethod
-    def get_list_in_organization(cls, org_guid):
-        response = um.api_get_organization_users(org_guid=org_guid)
-        return cls._get_user_list_from_api_response(response)
-
     def cleanup(self):
-        um.api_delete_organization_user(org_guid=Guid.CORE_ORG_GUID, user_guid=self.guid)
+        self.delete_from_organization(org_guid=Guid.CORE_ORG_GUID)

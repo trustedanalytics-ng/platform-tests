@@ -132,7 +132,7 @@ def sample_service(class_context, request, test_org, test_space, sample_python_a
 @pytest.fixture(scope="session")
 def admin_user():
     log_fixture("admin_user: Retrieve admin user")
-    admin_user = User.get_user(config.admin_username)
+    admin_user = User.get_admin()
     admin_user.password = config.admin_password
     TestData.admin_user = admin_user
     return admin_user
@@ -195,6 +195,18 @@ def core_space():
     spaces = Space.cf_api_get_list()
     TestData.core_space = next(s for s in spaces if s.name == ref_space_name)
     return TestData.core_space
+
+
+@pytest.fixture(scope="function")
+def remove_admin_from_test_org(admin_user, test_org):
+    # TODO: uncomment when multiple organizations are supported
+    # log_fixture("Make sure platform admin is not in the organization")
+    # try:
+    #     admin_user.delete_from_organization(org_guid=test_org.guid)
+    # except UnexpectedResponseError as e:
+    #     if e.status_code != HttpStatus.CODE_NOT_FOUND:
+    #         raise
+    return
 
 
 @pytest.fixture(scope="session")

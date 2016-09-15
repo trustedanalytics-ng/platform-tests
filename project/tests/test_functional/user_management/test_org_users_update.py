@@ -21,130 +21,150 @@ from modules.http_calls.platform import user_management
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Organization, User
-from tests.fixtures.assertions import assert_user_in_org_and_roles, assert_raises_http_exception
+from tests.fixtures.assertions import assert_user_in_org_and_role, assert_raises_http_exception
 
 logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
+@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 class TestUpdateOrganizationUser:
 
-    ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
-    NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
-    ROLES_WITHOUT_MANAGER = [(name, user_role) for name, user_role in User.ORG_ROLES.items() if name is not "manager"]
-
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def users(cls, test_org_manager, test_org_manager_client, class_context):
-        step("Create test organization")
-        cls.test_org = Organization.api_create(class_context)
-        step("Create users for tests")
-        cls.manager = User.api_create_by_adding_to_organization(class_context, org_guid=cls.test_org.guid,
-                                                                roles=User.ORG_ROLES["manager"])
-        cls.manager_client = cls.manager.login()
-        cls.updated_user = User.api_create_by_adding_to_organization(class_context, org_guid=cls.test_org.guid, roles=[])
-
-        cls.user_not_in_test_org = test_org_manager
-        cls.client_not_in_test_org = test_org_manager_client
+    @pytest.fixture(scope="class")
+    def update_test_cases(self, class_context, test_org):
+        step("Create users to be updated")
+        roles_to_update = {
+            "admin_to_user": {
+                "before": User.ORG_ROLE["admin"],
+                "after": User.ORG_ROLE["user"],
+                "expected": User.ORG_ROLE["user"]
+            },
+            "admin_to_None": {
+                "before": User.ORG_ROLE["admin"],
+                "after": None,
+                "expected": User.ORG_ROLE["user"]
+            },
+            "user_to_admin": {
+                "before": User.ORG_ROLE["user"],
+                "after": User.ORG_ROLE["admin"],
+                "expected": User.ORG_ROLE["admin"]
+            },
+            "user_to_None": {
+                "before": User.ORG_ROLE["user"],
+                "after": None,
+                "expected": User.ORG_ROLE["user"]
+            }
+        }
+        for key, val in roles_to_update.items():
+            val["user"] = User.create_by_adding_to_organization(class_context, test_org.guid, role=val["before"])
+        return roles_to_update
 
     @pytest.fixture(scope="function")
-    def reset_updated_user(self, request):
-        def fin():
-            self.updated_user.api_update_org_roles(org_guid=self.test_org.guid, new_roles=[])
-            self.manager.api_update_org_roles(org_guid=self.test_org.guid, new_roles=User.ORG_ROLES["manager"])
-        request.addfinalizer(fin)
+    def updated_user(self, context, test_org):
+        step("Create test user in test org")
+        return User.create_by_adding_to_organization(context, test_org.guid)
 
     @priority.high
-    def test_update_org_user_roles(self, reset_updated_user):
-        step("Add new role to the user, change it, and then remove")
-        for updated_roles in [User.ORG_ROLES["auditor"], User.ORG_ROLES["billing_manager"], []]:
-            self.updated_user.api_update_org_roles(self.test_org.guid, new_roles=updated_roles)
-            assert_user_in_org_and_roles(self.updated_user, self.test_org.guid, updated_roles)
+    @pytest.mark.parametrize("test_case_name", ("admin_to_user", "admin_to_None", "user_to_admin", "user_to_None"))
+    def test_update_org_role(self, test_org, test_case_name, update_test_cases):
+        # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
+        role_before = update_test_cases["test_case_name"]["before"]
+        role_after = update_test_cases["test_case_name"]["after"]
+        role_expected = update_test_cases["test_case_name"]["expected"]
+        updated_user = update_test_cases["test_case_name"]["user"]
+
+        step("Update user from {} to {}".format(role_before, role_after))
+        updated_user.update_org_role(test_org.guid, new_role=role_after)
+        step("Check that user's new role is {}".format(role_expected))
+        assert_user_in_org_and_role(updated_user, test_org.guid, role_expected)
 
     @priority.low
-    def test_remove_org_manager_role_from_the_only_org_manager(self):
-        non_manager_roles = User.ORG_ROLES["auditor"]
-        step("Remove manager role from the manager")
-        self.manager.api_update_org_roles(org_guid=self.test_org.guid, new_roles=non_manager_roles)
-        assert_user_in_org_and_roles(self.manager, self.test_org.guid, non_manager_roles)
+    def test_cannot_remove_org_admin_role_from_the_last_org_admin(self, test_org, test_org_admin):
+        test_org_users = User.get_list_in_organization(org_guid=test_org.guid)
+        admins = [u for u in test_org_users
+                  if u.org_role[test_org.guid] == User.ORG_ROLE["admin"] and u.guid != test_org_admin.guid]
+        for admin in admins:
+            admin.update_org_role(test_org.guid, new_role=User.ORG_ROLE["user"])
+        step("Remove admin role from the last admin")
+        test_org_admin.update_org_role(org_guid=test_org.guid, new_role=User.ORG_ROLE["user"])
+        assert_user_in_org_and_role(test_org_admin, test_org.guid, User.ORG_ROLE["admin"])
 
     @priority.low
-    def test_cannot_update_user_with_invalid_guid(self):
+    def test_cannot_update_user_with_invalid_guid(self, test_org):
         # TODO implement non-existing guid
-        step("Check that updating user which is not in an organization returns an error")
+        step("Check that updating user which invalid user guid returns an error")
         invalid_guid = "invalid-user-guid"
-        org_users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
+        org_users = User.get_list_in_organization(org_guid=test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                     user_management.api_update_org_user_roles, org_guid=self.test_org.guid,
-                                     user_guid=invalid_guid, new_roles=User.ORG_ROLES["billing_manager"])
-        users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
+                                     user_management.api_update_org_user_role, org_guid=test_org.guid,
+                                     user_guid=invalid_guid, new_role=User.ORG_ROLE["user"])
+        step("Check that user org list did not change")
+        users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
     @priority.low
-    def test_cannot_update_org_user_in_invalid_org_guid(self):
+    def test_cannot_update_org_user_with_invalid_org_guid(self, updated_user):
         # TODO implement non-existing guid
         invalid_guid = "invalid-org-guid"
         step("Check that updating user using invalid org guid returns an error")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                     user_management.api_update_org_user_roles, org_guid=invalid_guid,
-                                     user_guid=self.updated_user.guid,
-                                     new_roles=User.ORG_ROLES["billing_manager"])
+                                     user_management.api_update_org_user_role, org_guid=invalid_guid,
+                                     user_guid=updated_user.guid, new_role=User.ORG_ROLE["user"])
 
     @priority.low
-    def test_send_org_role_update_request_with_empty_body(self):
-        step("Send request with empty body")
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, HttpStatus.MSG_CANNOT_PERFORM_REQ_WITHOUT_ROLES,
-                                     user_management.api_update_org_user_roles, self.test_org.guid,
-                                     self.updated_user.guid)
-
-    @priority.low
-    def test_cannot_update_org_user_with_incorrect_role(self, reset_updated_user):
-        initial_roles = self.updated_user.org_roles.get(self.test_org.guid)
-        invalid_roles = ["invalid role"]
+    def test_cannot_update_org_user_with_incorrect_role(self, test_org, updated_user):
+        initial_role = updated_user.ORG_ROLE.get(test_org.guid)
+        invalid_role = "invalid role"
         step("Check that updating user using invalid role returns an error")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     self.updated_user.api_update_org_roles, org_guid=self.test_org.guid,
-                                     new_roles=invalid_roles)
-        assert_user_in_org_and_roles(self.updated_user, self.test_org.guid, initial_roles)
+                                     updated_user.update_org_role, org_guid=test_org.guid, new_role=invalid_role)
+        step("Check that user roles did not change")
+        assert_user_in_org_and_role(updated_user, test_org.guid, initial_role)
 
     @priority.medium
-    def test_manager_can_update_org_user(self, reset_updated_user):
-        step("Check that org manager can update another user's roles")
-        expected_roles = User.ORG_ROLES["manager"]
-        self.updated_user.api_update_org_roles(org_guid=self.test_org.guid, new_roles=expected_roles,
-                                               client=self.manager_client)
-        assert_user_in_org_and_roles(self.updated_user, self.test_org.guid, expected_roles)
-
-    @priority.medium
-    def test_non_manager_cannot_update_org_user(self, context, reset_updated_user):
-        step("Check that non-manager cannot update another user's roles")
-        non_manager = User.api_create_by_adding_to_organization(context, org_guid=self.test_org.guid,
-                                                                roles=self.NON_MANAGER_ROLES)
-        non_manager_client = non_manager.login()
-        org_users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
+    def test_user_cannot_update_org_user(self, context, test_org, test_org_user_client, updated_user):
+        step("Check that non-admin cannot update another user's roles")
+        org_users = User.get_list_in_organization(org_guid=test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                     self.updated_user.api_update_org_roles, self.test_org.guid,
-                                     new_roles=User.ORG_ROLES["auditor"], client=non_manager_client)
-        users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
+                                     updated_user.update_org_role, test_org.guid, new_role=User.ORG_ROLE["admin"],
+                                     client=test_org_user_client)
+        step("Check that updated user's roles did not change")
+        users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
+    @pytest.mark.fixture(scope="class")
+    def another_org(self, context):
+        step("Create test organization")
+        return Organization.create(context)
+
+    @pytest.mark.fixture(scope="class")
+    def another_org_user(self, context, another_org):
+        step("Add users to the organization")
+        User.create_by_adding_to_organization(context, org_guid=another_org.guid, role=User.ORG_ROLE["admin"])
+        return User.create_by_adding_to_organization(context, org_guid=another_org.guid, role=User.ORG_ROLE["user"])
+
     @priority.low
-    def test_user_cannot_update_user_in_org_where_they_are_not_added(self, reset_updated_user):
+    @pytest.mark.skip(reason="Multiple orgs are not supported")
+    def test_org_admin_cannot_update_user_in_another_org(self, context, another_org, another_org_user,
+                                                         test_org_admin_client):
         step("Check that user not in org cannot update another user")
-        expected_roles = self.updated_user.org_roles.get(self.test_org.guid, [])
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                     self.updated_user.api_update_org_roles, self.test_org.guid,
-                                     new_roles=User.ORG_ROLES["auditor"], client=self.client_not_in_test_org)
-        assert_user_in_org_and_roles(self.updated_user, self.test_org.guid, expected_roles)
+                                     another_org_user.update_org_role, another_org.guid,
+                                     new_role=User.ORG_ROLE["admin"], client=test_org_admin_client)
+        assert_user_in_org_and_role(another_org_user, another_org.guid, User.ORG_ROLE["user"])
 
     @priority.low
-    def test_cannot_update_user_which_is_not_in_org(self):
+    def test_cannot_update_user_which_is_not_in_org(self, test_org, another_org, another_org_user):
         step("Check that user not in org cannot be updated")
-        org_users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
-        expected_message = HttpStatus.MSG_USER_NOT_EXIST_IN_ORGANIZATION.format(self.user_not_in_test_org.guid,
-                                                                                self.test_org.guid)
+        # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
+        test_org_users_before = User.get_list_in_organization(org_guid=test_org.guid)
+        another_org_users_before = User.get_list_in_organization(org_guid=another_org.guid)
+        expected_message = HttpStatus.MSG_USER_NOT_EXIST_IN_ORGANIZATION.format(another_org_user.guid, test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, expected_message,
-                                     self.user_not_in_test_org.api_update_org_roles, org_guid=self.test_org.guid,
-                                     new_roles=User.ORG_ROLES["auditor"])
-        users = User.api_get_list_via_organization(org_guid=self.test_org.guid)
-        assert sorted(users) == sorted(org_users)
+                                     another_org_user.update_org_role, org_guid=test_org.guid,
+                                     new_role=User.ORG_ROLE["admin"])
+        step("Check that users in either organization did not change")
+        test_org_users_after = User.get_list_in_organization(org_guid=test_org.guid)
+        another_org_users_after = User.get_list_in_organization(org_guid=another_org.guid)
+        assert sorted(another_org_users_after) == sorted(another_org_users_before)
+        assert sorted(test_org_users_after) == sorted(test_org_users_before)

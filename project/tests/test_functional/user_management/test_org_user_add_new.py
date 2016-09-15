@@ -19,8 +19,8 @@ import pytest
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import Organization, User
-from tests.fixtures.assertions import assert_user_in_org_and_roles, assert_raises_http_exception
+from modules.tap_object_model import User
+from tests.fixtures.assertions import assert_user_in_org_and_role, assert_raises_http_exception
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
 pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
@@ -28,85 +28,88 @@ pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.
 
 class TestAddNewUserToOrganization:
 
-    ALL_ROLES = {role for role_set in User.ORG_ROLES.values() for role in role_set}
-    NON_MANAGER_ROLES = ALL_ROLES - User.ORG_ROLES["manager"]
+    @pytest.fixture(scope="class")
+    def add_user_test_cases(self):
+        return {
+            "add_admin": {"sent": User.ORG_ROLE["admin"], "expected": User.ORG_ROLE["admin"]},
+            "add_user": {"sent": User.ORG_ROLE["user"], "expected": User.ORG_ROLE["user"]},
+            "add_None": {"sent": None, "expected": User.ORG_ROLE["user"]}
+        }
 
     @priority.medium
-    def test_add_new_user_with_no_roles(self, context, test_org):
-        step("Create new user by adding to an organization with no roles")
-        expected_roles = []
-        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
-                                                         roles=expected_roles)
-        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
+    @pytest.mark.bugs(reason="DPNG-10987 User-management is not able to add admin user")
+    @pytest.mark.parametrize("test_case", ("add_admin", "add_user", "add_None"))
+    def test_add_new_user_with_no_roles(self, context, test_org, test_case, add_user_test_cases):
+        # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
+        role_sent = add_user_test_cases[test_case]["sent"]
+        role_expected = add_user_test_cases[test_case]["expected"]
+        step("Create new user by adding to an organization with role {}".format(role_sent))
+        user = User.create_by_adding_to_organization(context, org_guid=test_org.guid, role=role_sent)
+        step("Check that the user was added with role {}".format(role_expected))
+        assert_user_in_org_and_role(user, test_org.guid, role_expected)
 
     @priority.high
-    def test_admin_adds_new_user_one_role(self, context, test_org):
-        # TODO parametrize
-        step("Create new user by adding to an organization with one role")
-        expected_roles = User.ORG_ROLES["auditor"]
-        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
-                                                         roles=expected_roles)
-        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
+    @pytest.mark.bugs(reason="DPNG-10987 User-management is not able to add admin user")
+    @pytest.mark.parametrize("test_case", ("add_admin", "add_user", "add_None"))
+    def test_platform_admin_adds_new_user_in_org_where_they_are_not_added(self, context, admin_user, test_org,
+                                                                          test_case, add_user_test_cases,
+                                                                          remove_admin_from_test_org):
+        # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
+        role_sent = add_user_test_cases[test_case]["sent"]
+        role_expected = add_user_test_cases[test_case]["expected"]
+        step("Create new user by adding them to an organization with user role")
+        new_user = User.create_by_adding_to_organization(context, org_guid=test_org.guid, role=role_sent)
+        step("Check that the user was added with user role")
+        assert_user_in_org_and_role(new_user, test_org.guid, role_expected)
 
     @priority.low
-    def test_admin_adds_new_user_all_roles(self, context, test_org):
-        step("Create new user by adding to an organization with all roles")
-        expected_roles = self.ALL_ROLES
-        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
-                                                         roles=expected_roles)
-        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
-
-    @priority.medium
-    def test_org_manager_adds_new_user(self, context, test_org, test_org_manager_client):
-        step("Org manager adds a new user to an organization with")
-        inviting_client = test_org_manager_client
-        expected_roles = User.ORG_ROLES["billing_manager"]
-        user = User.api_create_by_adding_to_organization(context, org_guid=test_org.guid,
-                                                         roles=expected_roles, inviting_client=inviting_client)
-        assert_user_in_org_and_roles(user, test_org.guid, expected_roles)
-
-    @priority.medium
-    def test_non_manager_cannot_add_new_user_to_org(self, context, test_org, test_org_auditor_client):
-        step("Add a non-manager to the organization.")
-        non_manager_client = test_org_auditor_client
-        step("Check that user cannot be added to organization by non-manager")
-        org_users = User.api_get_list_via_organization(test_org.guid)
-        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                     User.api_create_by_adding_to_organization, context,
-                                     org_guid=test_org.guid, roles=User.ORG_ROLES["auditor"],
-                                     inviting_client=non_manager_client)
-        users = User.api_get_list_via_organization(test_org.guid)
-        assert sorted(users) == sorted(org_users)
-
-    @priority.low
-    # not in existing users
     def test_cannot_add_user_with_non_email_username(self, context, test_org):
-        step("Check that user with non valid username cannot be added to an organization")
+        step("Try to add user with invalid username to an organization")
         username = "non-valid-username"
-        roles = self.ALL_ROLES
-        org_users = User.api_get_list_via_organization(test_org.guid)
+        org_users = User.get_list_in_organization(test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                     User.api_create_by_adding_to_organization, context,
-                                     org_guid=test_org.guid, username=username, roles=roles)
-        users = User.api_get_list_via_organization(test_org.guid)
+                                     User.create_by_adding_to_organization, context, org_guid=test_org.guid,
+                                     username=username, role=User.ORG_ROLE["user"])
+        step("Check that no new user was added to the organization")
+        users = User.get_list_in_organization(test_org.guid)
         assert sorted(users) == sorted(org_users)
 
     @priority.low
     def test_cannot_add_new_user_to_non_existing_org(self, context):
         org_guid = "this-org-guid-is-not-correct"
-        roles = self.ALL_ROLES
         step("Check that an error is raised when trying to add user using incorrect org guid")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
-                                     User.api_create_by_adding_to_organization, context, org_guid=org_guid,
-                                     roles=roles)
+                                     User.create_by_adding_to_organization, context, org_guid=org_guid,
+                                     role=User.ORG_ROLE["user"])
+
+    @priority.medium
+    def test_non_admin_cannot_add_new_user_to_org(self, context, test_org_user_client, test_org):
+        step("Try to add user to an organization using non-admin user")
+        org_users = User.get_list_in_organization(test_org.guid)
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
+                                     User.create_by_adding_to_organization, context, org_guid=test_org.guid,
+                                     role=User.ORG_ROLE["user"], inviting_client=test_org_user_client)
+        step("Check that no new user was added to the organization")
+        users = User.get_list_in_organization(test_org.guid)
+        assert sorted(users) == sorted(org_users)
 
     @priority.low
-    def test_cannot_add_new_user_incorrect_role(self, context, test_org):
+    def test_cannot_add_new_user_with_incorrect_role(self, context, test_org):
         step("Check that error is raised when trying to add user using incorrect roles")
-        roles = ["i-don't-exist"]
-        org_users = User.api_get_list_via_organization(test_org.guid)
+        role = "i-don't-exist"
+        org_users = User.get_list_in_organization(test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMPTY,
-                                     User.api_create_by_adding_to_organization, context,
-                                     org_guid=test_org.guid, roles=roles)
-        users = User.api_get_list_via_organization(test_org.guid)
+                                     User.create_by_adding_to_organization, context, org_guid=test_org.guid, role=role)
+        step("Check that no new user was added to the organization")
+        users = User.get_list_in_organization(test_org.guid)
         assert sorted(users) == sorted(org_users)
+
+    @pytest.mark.skip(reason="DPNG-10987 User-management is not able to add admin user (blocked prerequisite)")
+    @priority.medium
+    def test_org_admin_adds_new_user(self, context, test_org, test_org_admin_client):
+        step("Org admin adds a new user to an organization")
+        expected_role = User.ORG_ROLE["user"]
+        user = User.create_by_adding_to_organization(context, org_guid=test_org.guid, role=expected_role,
+                                                     inviting_client=test_org_admin_client)
+        step("Check that the user was added correctly")
+        assert_user_in_org_and_role(user, test_org.guid, expected_role)
