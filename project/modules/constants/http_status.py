@@ -210,5 +210,7 @@ class InstanceFactoryHttpStatus(HttpStatus):
 
 
 class ApiServiceHttpStatus(HttpStatus):
+    MSG_SERVICE_ALREADY_EXISTS = "service with name: {} already exists!"
+    MSG_KEY_NOT_FOUND = "Key not found"
     MSG_CANNOT_FETCH_INSTANCE = "Cannot fetch instance {} from Catalog"
     MSG_INCORRECT_TYPE = "json: cannot unmarshal string into Go value of type int"

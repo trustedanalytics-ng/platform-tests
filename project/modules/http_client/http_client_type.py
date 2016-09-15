@@ -20,6 +20,7 @@ from enum import Enum
 class HttpClientType(Enum):
     """Http client types."""
 
+    BASIC_AUTH = "BasicAuth"
     UAA = "UserAccountAndAuthentication"
     CONSOLE = "Console"
     NO_AUTH = "No Auth"

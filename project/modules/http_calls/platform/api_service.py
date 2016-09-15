@@ -206,3 +206,44 @@ def stop_application(app_id: str, client: HttpClient=None):
                               msg="Stop application")
     assert response.status_code == HttpStatus.CODE_OK
     return response
+
+
+def get_catalog(client: HttpClient):
+    """ GET /catalog """
+    return client.request(HttpMethod.GET, path="catalog")
+
+
+def get_offering(client: HttpClient, offering_id):
+    """ GET /catalog/:offering_id """
+    return client.request(HttpMethod.GET, path="catalog/{}".format(offering_id))
+
+
+def create_offering(client: HttpClient, template_body: dict, service_name: str, description: str, bindable: bool,
+                    tags: list, plans: list):
+    """ POST /offering """
+    body = {
+        "template": {
+            "body": template_body,
+            "hooks": None
+        },
+        "services": [{
+            "name": service_name,
+            "description": description,
+            "bindable": bindable,
+            "tags": tags,
+            "plans": plans,
+            "metadata": []
+        }]
+    }
+    response = client.request(HttpMethod.POST, path="offering", body=body, raw_response=True)
+    assert response.status_code == HttpStatus.CODE_CREATED
+    return response.json()
+
+
+def delete_offering(client: HttpClient, offering_id):
+    """ DELETE /catalog/:offering_id """
+    # TODO verify path, endpoint not documented
+    response = client.request(HttpMethod.DELETE, path="catalog/{}".format(offering_id), raw_response=True)
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
+    return response.json()
+

@@ -35,12 +35,12 @@ SERVICE_NAME = 'basic_service'
 ENV_NAME = "env_name"
 ENV_VAL = "env_value"
 MANIFEST = {
-    "type" : APP_TYPE,
-    "name" : OLD_APP_NAME,
-    "instances" : NO_INSTANCES,
-    "services" : [SERVICE_NAME],
-    "env" : {
-        ENV_NAME : ENV_VAL
+    "type": APP_TYPE,
+    "name": OLD_APP_NAME,
+    "instances": NO_INSTANCES,
+    "services": [SERVICE_NAME],
+    "env": {
+        ENV_NAME: ENV_VAL
     }
 }
 

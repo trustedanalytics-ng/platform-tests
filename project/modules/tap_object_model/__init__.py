@@ -34,6 +34,8 @@ from .service_binding import ServiceBinding
 from .service_broker import ServiceBroker
 from .service_key import ServiceKey
 from .service_instance import AtkInstance, ServiceInstance
+from .service_plan import ServicePlan
+from .service_offering import ServiceOffering
 from .service_type import ServiceType
 from .space import Space
 from .transfer import Transfer
