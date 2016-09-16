@@ -25,16 +25,6 @@ def _get_client():
     return HttpClientFactory.get(configuration)
 
 
-def get(path):
-    """ GET /{path} """
-    response = _get_client().request(HttpMethod.GET,
-                                     path=path,
-                                     raw_response=True,
-                                     msg="API-SERVICE: get /{}".format(path))
-    assert response.status_code == HttpStatus.CODE_OK
-    return response
-
-
 def post(path):
     """ POST /{path} """
     response = _get_client().request(HttpMethod.POST,
@@ -49,6 +39,7 @@ def put(path, body={}):
     response = _get_client().request(HttpMethod.PUT,
                                      path=path,
                                      body=body,
+                                     raw_response=True,
                                      msg="API-SERVICE: put /{}".format(path))
     return response
 
@@ -67,7 +58,7 @@ def push_application(file_path, manifest_path):
     return response
 
 
-def get_applications(client: HttpClient=None, org_id: str=None):
+def get_applications(org_id: str=None, client: HttpClient=None):
     """Retrieves list of applications using REST call
     GET /applications
 
@@ -78,8 +69,9 @@ def get_applications(client: HttpClient=None, org_id: str=None):
     Returns:
         Response containing list of apps.
     """
+    if client is None:
+        client = _get_client()
 
-    client = client or _get_client()
     query_params = {}
     path = "applications"
     if org_id is not None:
@@ -96,15 +88,49 @@ def get_applications(client: HttpClient=None, org_id: str=None):
 
 
 
-def get_application(id):
-    """ GET /applications/{id} """
-    response = get("applications/{}".format(id))
+def get_application(app_id: str, client: HttpClient=None):
+    """Retrieves the application details using REST call
+    GET /applications/{app_id}
+
+    Args:
+        client: Http client to use
+        app_id: Id of the application
+
+    Returns:
+        Raw response to the call
+    """
+    if client is None:
+        client = _get_client()
+
+    path = "applications/{}".format(app_id)
+    response = client.request(HttpMethod.GET,
+                              path=path,
+                              raw_response=True,
+                              msg="Get application details")
+    assert response.status_code == HttpStatus.CODE_OK
     return response
 
 
-def get_application_logs(id):
-    """ GET /logs/{id} """
-    response = get("logs/{}".format(id))
+def get_application_logs(app_id: str, client: HttpClient=None):
+    """Attempts to retrieve application logs using REST call
+    GET /logs/{app_id}
+
+    Args:
+        client: Http client to use
+        app_id: Id of the application
+
+    Returns:
+        Raw response to the call
+    """
+    if client is None:
+        client = _get_client()
+
+    path = "logs/{}".format(app_id)
+    response = client.request(HttpMethod.GET,
+                              path=path,
+                              raw_response=True,
+                              msg="Get application logs")
+    assert response.status_code == HttpStatus.CODE_OK
     return response
 
 
@@ -117,9 +143,11 @@ def delete_application(app_id: str, client: HttpClient=None):
         app_id: Id of the application
 
     Returns:
-        Raw response of the apperation
+        Raw response of the operation
     """
-    client = client or _get_client()
+    if client is None:
+        client = _get_client()
+
     response = client.request(HttpMethod.DELETE,
                               path="applications/{}".format(app_id),
                               msg="Delete application")
@@ -134,15 +162,47 @@ def scale_application(id, replicas):
     return response
 
 
-def start_application(id):
-    """ PUT /applications/{id}/start """
-    path = "applications/{}/start".format(id)
-    response = put(path)
+def start_application(app_id: str, client: HttpClient=None):
+    """Attempts to start application with a provided client using REST call
+    PUT applications/{app_id}/start
+
+    Args:
+        client: Http client to use
+        app_id: Id of application to start
+
+    Returns:
+        Raw response to the request
+    """
+    if client is None:
+        client = _get_client()
+
+    path = "applications/{}/start".format(app_id)
+    response = client.request(HttpMethod.PUT,
+                              path=path,
+                              raw_response=True,
+                              msg="Start application")
+    assert response.status_code == HttpStatus.CODE_OK
     return response
 
 
-def stop_application(id):
-    """ PUT /applications/{id}/stop """
-    path = "applications/{}/stop".format(id)
-    response = put(path)
+def stop_application(app_id: str, client: HttpClient=None):
+    """Attempts to stop application with a provided client using REST call
+    PUT applications/{app_id}/stop
+
+    Args:
+        client: Http client to use
+        app_id: Id of application to stop
+
+    Returns:
+        Raw response to the request
+    """
+    if client is None:
+        client = _get_client()
+
+    path = "applications/{}/stop".format(app_id)
+    response = client.request(HttpMethod.PUT,
+                              path=path,
+                              raw_response=True,
+                              msg="Stop application")
+    assert response.status_code == HttpStatus.CODE_OK
     return response

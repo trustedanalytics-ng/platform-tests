@@ -132,7 +132,10 @@ class K8sApplication(object):
 
     @retry(AssertionError, tries=20, delay=5)
     def ensure_ready(self):
-        assert_returns_http_success_with_retry(self.send_request)
+        try:
+            self.send_request()
+        except UnexpectedResponseError as e:
+            raise AssertionError("Application responded with status: {}".format(e.status))
 
     @retry(AssertionError, tries=20, delay=5)
     def ensure_is_down(self):
@@ -152,15 +155,15 @@ class K8sApplication(object):
         self.delete()
 
     def scale(self, replicas):
-        response = ApiService.scale_application(self.id, replicas)
+        response = ApiService.scale_application(self.id, replicas).json()
         assert response["message"] == "success"
 
     def stop(self):
-        response = ApiService.stop_application(self.id)
+        response = ApiService.stop_application(self.id).json()
         assert response["message"] == "success"
 
     def start(self):
-        response = ApiService.start_application(self.id)
+        response = ApiService.start_application(self.id).json()
         assert response["message"] == "success"
 
     def get_logs(self):
