@@ -48,10 +48,9 @@ class TestCreateDataSets(object):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def target_uri(cls, test_org, add_admin_to_test_org):
+    def target_uri(cls, test_org):
         step("Get target uri from hdfs instance")
-        hdfs = next(app for app in Application.cf_api_get_list()
-                    if "hdfs-downloader" in app.name)
+        hdfs = next(app for app in Application.api_get_list() if "hdfs-downloader" in app.name)
         cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri']
         cls.target_uri = cls.target_uri.replace("%{organization}", test_org.guid)
 
@@ -111,7 +110,6 @@ class TestCreateDataSets(object):
         assert expected_details[key] == ds_details[key]
 
     @priority.medium
-    @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
     def test_create_private_dataset_recordcount(self, context, test_org):
         transfer, dataset = self._get_transfer_and_dataset(test_org.guid, Urls.test_transfer_link, Access.PRIVATE,
                                                            context)
@@ -120,7 +118,6 @@ class TestCreateDataSets(object):
 
     @priority.medium
     @pytest.mark.public_dataset
-    @pytest.mark.bugs("DPNG-3656 Wrong record count for csv file in dataset details")
     def test_create_public_dataset_recordcount(self, context, test_org):
         transfer, dataset = self._get_transfer_and_dataset(test_org.guid, Urls.test_transfer_link, Access.PUBLIC,
                                                            context)
