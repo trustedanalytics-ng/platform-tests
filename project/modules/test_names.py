@@ -25,14 +25,18 @@ def is_test_object_name(name):
     """Return True if object's name matches pattern for test names, False otherwise."""
     if name is None:
         return False  # there are users with username=None
-    test_name_regex = "^.+[0-9]{8}_[0-9]{6}_{0,1}[0-9]{0,6}(@gmail.com){0,1}$"
+    test_name_regex = "^.+[0-9]{8}_{0,1}[0-9]{6}_{0,1}[0-9]{0,6}(@gmail.com){0,1}$"
     return re.match(test_name_regex, name) is not None
 
 
 def generate_test_object_name(email=False, short=False, prefix=None, separator="_"):
-    """Return string with hostname/prefix and date for use as name of test org, user, transfer, etc."""
+    """Return string with hostname/prefix and date for use as name of test org, user, transfer, etc.
+       Long version: ubuntuit_dp2_06_20160822_131159_728113.
+       Short version: ubuntuitdp20620160822131159
+    """
     # TODO add global counter
-    str_format = "%Y%m%d{}%H%M%S".format(separator) if short else "%Y%m%d{}%H%M%S{}%f".format(separator, separator)
+    separator = "" if short else separator
+    str_format = "%Y%m%d{0}%H%M%S".format(separator) if short else "%Y%m%d{0}%H%M%S{0}%f".format(separator)
     now = datetime.now().strftime(str_format)
     name_format = config.test_user_email.replace('@', '+{}{}{}@') if email else "{}{}{}"
     if prefix is None:

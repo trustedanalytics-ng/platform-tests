@@ -24,6 +24,7 @@ from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceType
 from modules.tap_object_model.flows.services import create_instance, delete_instance
+from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_no_errors
 
 logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
@@ -70,8 +71,9 @@ class TestGoToDashboard:
         errors = []
         for service in non_parametrized_services:
             try:
+                name = generate_test_object_name(separator="")
                 instance = create_instance(context=context, org_guid=test_org.guid, space_guid=test_space.guid,
-                                           service_label=service["label"], plan_guid=service["plan"]["guid"])
+                                           service_label=service["label"], plan_guid=service["plan"]["guid"], name=name)
                 self._go_to_dashboard(instance)
                 delete_instance(instance, test_space.guid)
             except Exception as e:
