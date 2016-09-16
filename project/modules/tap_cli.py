@@ -35,6 +35,7 @@ class TapCli:
     VERSION = "--version", "-v"
     LOGIN = "login"
     CREATE_OFFERING = "create-offering", "co"
+    DELETE_OFFERING = "delete-offering", "do"
     CATALOG = "catalog"
     CREATE_SERVICE = "create-service", "cs"
     DELETE_SERVICE = "delete-service", "ds"
@@ -49,6 +50,9 @@ class TapCli:
     SCALE = "scale"
     DELETE = "delete"
     PUSH_HELP = [PUSH, "--help"]
+    BINDINGS = "bindings"
+    BIND = "bind-instance", "bind"
+    UNBIND = "unbind-instance", "unbind"
     INVITE = "invite"
     DELETE_USER = "delete-user", "du"
 
@@ -80,6 +84,9 @@ class TapCli:
     def create_offering(self, cmd: list, short=False):
         return self._run_command([self.CREATE_OFFERING[1] if short else self.CREATE_OFFERING[0]] + cmd)
 
+    def delete_offering(self, cmd: list, short=False):
+        return self._run_command([self.DELETE_OFFERING[1] if short else self.DELETE_OFFERING[0]] + cmd)
+
     def catalog(self):
         return self._run_command([self.CATALOG])
 
@@ -95,6 +102,17 @@ class TapCli:
     def service_log(self, service_name, short=False):
         return self._run_command([self.LOGS[1] if short else self.LOGS[0], service_name])
 
+    def bindings(self, instance_name):
+        output = self._run_command([self.BINDINGS, instance_name])
+        bindings = output.split("CODE: 200 BODY:")[-1].split("\n")[0]
+        return bindings
+
+    def bind_service(self, cmd: list, short=False):
+        return self._run_command([self.BIND[1] if short else self.BIND[0]] + cmd)
+
+    def unbind_service(self, cmd: list, short=False):
+        return self._run_command([self.UNBIND[1] if short else self.UNBIND[0]] + cmd)
+
     def get_service(self, service_name, short=False):
         output = self._run_command([self.SERVICE[1] if short else self.SERVICE[0], service_name])
         try:
@@ -104,12 +122,6 @@ class TapCli:
         service = json.loads(service_json)
         assert service['name'] == service_name
         return service
-
-    @retry(AssertionError, tries=30, delay=2)
-    def ensure_service_state(self, service_name, state):
-        service = self.get_service(service_name)
-        assert service is not None, "service {} does not exist".format(service_name)
-        assert service["state"] == state, "expected state '{}' but was '{}'".format(state, service['state'])
 
     def push(self, app_dir_path):
         return self._run_command([self.PUSH], cwd=app_dir_path)
@@ -124,6 +136,7 @@ class TapCli:
         except IndexError:
             return None
         app = json.loads(app_json)
+        assert isinstance(app, dict)
         assert app['name'] == application_name
         return app
 

@@ -54,36 +54,12 @@ class TestTapCli(unittest.TestCase):
     def _run_command_return_cmd(self, cmd: list):
         return cmd
 
-    def get_service_running_succeeded(self, service_name):
-        if TestTapCli.assertion_errors < 5:
-            TestTapCli.assertion_errors += 1
-            return None
-        return TestTapCli.service_state["running"]
-
-    def get_service_running_failed(self, service_name):
-        if TestTapCli.assertion_errors < 31:
-            TestTapCli.assertion_errors += 1
-            return None
-        return TestTapCli.service_state["running"]
-
     @classmethod
     def setUpClass(cls):
         cls.tap_cli = TapCli("")
 
     def setUp(self):
         TestTapCli.assertion_errors = 0
-
-    @patch.object(TapCli, "get_service", get_service_running_succeeded)
-    def test_ensure_service_running_success(self):
-        self.tap_cli.ensure_service_state("test", "RUNNING")
-
-    @patch.object(TapCli, "get_service", get_service_running_failed)
-    def test_ensure_service_running_with_assertion_error(self):
-        self.assertRaises(AssertionError, self.tap_cli.ensure_service_state, "test", "RUNNING")
-
-    @patch.object(TapCli, "get_service", get_service_running_succeeded)
-    def test_ensure_service_with_wrong_state(self):
-        self.assertRaises(AssertionError, self.tap_cli.ensure_service_state, "test", "FAILURE")
 
     @patch.object(TapCli, "_run_command", _run_command_get_service)
     def test_get_service(self):

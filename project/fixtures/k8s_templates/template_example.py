@@ -176,17 +176,17 @@ etcd_template = {
         "deployments": [
             {
                 "kind": "Deployment",
-                "apiVersion": "extensions/v1beta1",
+                "apiVersion": "extensions\/v1beta1",
                 "metadata": {
-                    "name": "$idx_and_short_serviceid",
+                    "name": "$idx_and_short_instance_id",
                     "creationTimestamp": None,
                     "labels": {
-                        "catalog_plan_id": "$catalog_plan_id",
-                        "catalog_service_id": "$catalog_service_id",
-                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                        "plan_id": "$plan_id",
+                        "offering_id": "$offering_id",
+                        "idx_and_short_instance_id": "$idx_and_short_instance_id",
                         "managed_by": "TAP",
                         "org": "$org",
-                        "service_id": "$service_id",
+                        "instance_id": "$instance_id",
                         "space": "$space"
                     }
                 },
@@ -194,17 +194,17 @@ etcd_template = {
                     "replicas": 1,
                     "selector": {
                         "matchLabels": {
-                            "idx_and_short_serviceid": "$idx_and_short_serviceid",
-                            "service_id": "$service_id"
+                            "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                            "instance_id": "$instance_id"
                         }
                     },
                     "template": {
                         "metadata": {
                             "creationTimestamp": None,
                             "labels": {
-                                "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                                "idx_and_short_instance_id": "$idx_and_short_instance_id",
                                 "managed_by": "TAP",
-                                "service_id": "$service_id"
+                                "instance_id": "$instance_id"
                             }
                         },
                         "spec": {
@@ -245,9 +245,13 @@ etcd_template = {
                             "serviceAccountName": ""
                         }
                     },
-                    "strategy": {}
+                    "strategy": {
+
+                    }
                 },
-                "status": {}
+                "status": {
+
+                }
             }
         ],
         "ingresses": None,
@@ -256,15 +260,15 @@ etcd_template = {
                 "kind": "Service",
                 "apiVersion": "v1",
                 "metadata": {
-                    "name": "$idx_and_short_serviceid",
+                    "name": "$idx_and_short_instance_id",
                     "creationTimestamp": None,
                     "labels": {
-                        "catalog_plan_id": "$catalog_plan_id",
-                        "catalog_service_id": "$catalog_service_id",
-                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                        "plan_id": "$plan_id",
+                        "offering_id": "$offering_id",
+                        "idx_and_short_instance_id": "$idx_and_short_instance_id",
                         "managed_by": "TAP",
                         "org": "$org",
-                        "service_id": "$service_id",
+                        "instance_id": "$instance_id",
                         "space": "$space"
                     }
                 },
@@ -287,11 +291,13 @@ etcd_template = {
                         }
                     ],
                     "selector": {
-                        "service_id": "$service_id"
+                        "instance_id": "$instance_id"
                     }
                 },
                 "status": {
-                    "loadBalancer": {}
+                    "loadBalancer": {
+
+                    }
                 }
             }
         ],
@@ -300,15 +306,15 @@ etcd_template = {
                 "kind": "ServiceAccount",
                 "apiVersion": "v1",
                 "metadata": {
-                    "name": "$idx_and_short_serviceid",
+                    "name": "$idx_and_short_instance_id",
                     "creationTimestamp": None,
                     "labels": {
-                        "catalog_plan_id": "$catalog_plan_id",
-                        "catalog_service_id": "$catalog_service_id",
-                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                        "plan_id": "$plan_id",
+                        "offering_id": "$offering_id",
+                        "idx_and_short_instance_id": "$idx_and_short_instance_id",
                         "managed_by": "TAP",
                         "org": "$org",
-                        "service_id": "$service_id",
+                        "instance_id": "$instance_id",
                         "space": "$space"
                     }
                 },

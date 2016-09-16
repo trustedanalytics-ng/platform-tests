@@ -39,6 +39,8 @@ class Context(object):
         self.blob_store = []
         self.image_factory = []
         self.k8s_apps = []
+        self.cli_services = []
+        self.cli_offerings = []
 
     def _cleanup_test_objects(self, object_list: list):
         while len(object_list) > 0:
@@ -70,6 +72,8 @@ class Context(object):
         self._cleanup_test_objects(self.blob_store)
         self._cleanup_test_objects(self.image_factory)
         self._cleanup_test_objects(self.k8s_apps)
+        self._cleanup_test_objects(self.cli_offerings)
+        self._cleanup_test_objects(self.cli_services)
 
 
 @pytest.fixture(scope="function")
@@ -81,6 +85,13 @@ def context(request):
 
 @pytest.fixture(scope="class")
 def class_context(request):
+    context = Context()
+    request.addfinalizer(context.cleanup)
+    return context
+
+
+@pytest.fixture(scope="module")
+def module_context(request):
     context = Context()
     request.addfinalizer(context.cleanup)
     return context

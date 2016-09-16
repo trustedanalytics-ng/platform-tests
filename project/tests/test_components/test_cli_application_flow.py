@@ -22,7 +22,6 @@ import pytest
 
 from modules import command
 from modules.constants import TapComponent as TAP, Urls
-from modules import file_utils
 from modules.markers import incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_application import K8sApplication
@@ -33,7 +32,6 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 
 APP_INSTANCES = 1
 SCALE_APP_INSTANCES = "3"
-file_utils.TMP_FILE_DIR = "/tmp/test_files/{}".format(generate_test_object_name())
 
 
 @priority.high
@@ -94,7 +92,7 @@ class TestPythonApplicationCliFlow:
     @pytest.fixture(scope="class")
     def sample_app_target_directory(self, sample_app_path):
         sample_app_path = os.path.abspath(sample_app_path)
-        return os.path.join(os.path.dirname(sample_app_path), "sample_app")
+        return os.path.join(os.path.dirname(sample_app_path), "sample_{}_app".format(self.APP_TYPE))
 
     @pytest.fixture(scope="class")
     def sample_app_tar_content(self, request, sample_app_path, sample_app_target_directory):

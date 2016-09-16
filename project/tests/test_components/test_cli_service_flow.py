@@ -47,7 +47,7 @@ class TestCliServiceFlow:
         data['services'] = [service]
 
         with open(example_offer_path, "w") as text_file:
-            print(json.dumps(data), file=text_file)
+            text_file.write(json.dumps(data))
 
         _add_generated_file(example_offer_path)
         output = tap_cli.create_offering([example_offer_path])

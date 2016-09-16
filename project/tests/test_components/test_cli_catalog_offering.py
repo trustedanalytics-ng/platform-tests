@@ -46,7 +46,7 @@ class TestCliCatalogOffering:
         data['services'] = [service]
 
         with open(example_offer_path, "w") as text_file:
-            print(json.dumps(data), file=text_file)
+            text_file.write(json.dumps(data))
 
         _add_generated_file(example_offer_path)
         return example_offer_path
@@ -58,8 +58,6 @@ class TestCliCatalogOffering:
     def test_create_offering(self, example_offer, tap_cli):
         output = tap_cli.create_offering([example_offer], self.short)
         assert 'CODE: 201 BODY:' in output
-
-    def test_check_offering_in_catalog(self, tap_cli, cli_login):
         output = tap_cli.catalog()
         assert self.OFFERING_NAME in output
 

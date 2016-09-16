@@ -39,4 +39,6 @@ from .service_type import ServiceType
 from .space import Space
 from .transfer import Transfer
 from .upsi import Upsi
+from .cli_service import CliService
+from .cli_offering import CliOffering
 

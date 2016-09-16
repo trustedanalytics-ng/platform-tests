@@ -16,7 +16,6 @@
 
 import pytest
 
-from modules import file_utils
 from modules.constants import TapComponent as TAP, Urls
 from modules.http_calls.platform.catalog import update_instance
 from modules.markers import priority, incremental
@@ -34,7 +33,6 @@ pytestmark = [pytest.mark.components(TAP.api_service, TAP.catalog)]
 class TestCodePackagingAndAppPushing:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     APP_NAME = generate_test_object_name(prefix="samplepythonapp").replace('_', '')
-    file_utils.TMP_FILE_DIR = "{}{}".format(file_utils.TMP_FILE_DIR, generate_test_object_name(prefix="/"))
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     MANIFEST_PARAMS = {
         'instances': 1,
