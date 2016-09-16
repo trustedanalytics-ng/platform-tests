@@ -35,8 +35,8 @@ class TapGitHub:
     hdfs_hive_demo = "hdfs-hive-demo"
 
     # TAP NG repositories
-    ilab_deploy = "tapng-ilab-deploy"
-    tap_cli = "tapng-cli"
+    ilab_deploy = "tap-ilab-deploy"
+    tap_cli = "tap-cli"
 
 
 class RelativeRepositoryPaths:
