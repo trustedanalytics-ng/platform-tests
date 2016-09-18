@@ -28,9 +28,6 @@ class BrokerConfigurationProvider(object):
     http_client_type = HttpClientType.BROKER
 
     config = {
-        TapComponent.application_broker: {
-            "url": config.application_broker_url,
-        },
         TapComponent.demiurge: {
             "url": config.demiurge_url,
             "username_env_key": "USERNAME",

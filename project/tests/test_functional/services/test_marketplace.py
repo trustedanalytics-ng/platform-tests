@@ -31,10 +31,10 @@ from tests.fixtures.assertions import assert_no_errors, assert_raises_http_excep
     assert_unordered_list_equal
 
 
-logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+logged_components = (TAP.service_catalog, TAP.gearpump_broker, TAP.hbase_broker,
                      TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                      TAP.zookeeper_wssb_broker)
-pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, TAP.hbase_broker,
                                      TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                                      TAP.zookeeper_wssb_broker)]
 

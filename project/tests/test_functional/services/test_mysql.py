@@ -28,8 +28,8 @@ from modules.tap_object_model import KubernetesCluster, KubernetesInstance, Serv
 
 logger = get_logger(__name__)
 
-logged_components = (TAP.service_catalog, TAP.application_broker, TAP.kubernetes_broker)
-pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.kubernetes_broker)]
+logged_components = (TAP.service_catalog, TAP.kubernetes_broker)
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.kubernetes_broker)]
 
 
 KUBECTL_DOWNLOAD_URL = "http://storage.googleapis.com/kubernetes-release/release/v1.2.0/bin/linux/amd64/kubectl"

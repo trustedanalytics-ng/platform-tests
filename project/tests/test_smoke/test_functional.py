@@ -36,7 +36,7 @@ from tests.fixtures.fixtures import sample_python_app, sample_java_app
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
-                     TAP.data_catalog, TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker,
+                     TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
                      TAP.hbase_broker, TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
                      TAP.zookeeper_broker, TAP.zookeeper_wssb_broker, TAP.platform_tests)
 pytestmark = [priority.high]
@@ -134,7 +134,7 @@ def test_add_and_delete_transfer_from_file(core_org, context):
 
 @long
 @pytest.mark.skip(reason="Not implemented for TAP NG yet")
-@pytest.mark.components(TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
+@pytest.mark.components(TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
 def test_create_and_delete_marketplace_service_instances(core_org, core_space, context,

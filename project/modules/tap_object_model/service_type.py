@@ -17,7 +17,7 @@
 import functools
 import json
 
-from ..http_calls import cloud_foundry as cf, application_broker, kubernetes_broker
+from ..http_calls import cloud_foundry as cf, kubernetes_broker
 from ..http_calls.platform import service_catalog
 from ..test_names import generate_test_object_name
 
@@ -129,12 +129,6 @@ class ServiceType(object):
             services.append(service)
         return services
 
-    @classmethod
-    def app_broker_create_service_in_catalog(cls, service_name, description, app_guid):
-        response = application_broker.app_broker_create_service(app_guid, description, service_name)
-        service_plans = response.get("plans")
-        return cls(label=response["name"], guid=response["id"], description=response["description"],
-                   space_guid=response["app"]["entity"]["space_guid"], service_plans=service_plans)
 
     @classmethod
     def k8s_broker_create_dynamic_service(cls, org_guid, space_guid, service_name=None):

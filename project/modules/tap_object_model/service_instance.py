@@ -21,7 +21,7 @@ from retry import retry
 
 from ..constants import ServiceLabels
 from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf, application_broker as app
+from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
 from ..test_names import generate_test_object_name
 from . import ServiceKey
@@ -241,17 +241,6 @@ class ServiceInstance(object):
                                    service_label=service_label)
             service_instances.append(service_instance)
         return service_instances
-
-    # ----------------------------------------- APPLICATION BROKER API ----------------------------------------- #
-
-    @classmethod
-    def app_broker_create_instance(cls, organization_guid, plan_id, service_id, space_guid):
-        instance_name = generate_test_object_name()
-        instance_guid = uuid.uuid4()
-        app.app_broker_new_service_instance(instance_guid, organization_guid, plan_id, service_id, space_guid,
-                                            instance_name)
-        return cls(guid=instance_guid, name=instance_name, service_label=None, space_guid=space_guid)
-
 
 class AtkInstance(ServiceInstance):
     started_status = "STARTED"

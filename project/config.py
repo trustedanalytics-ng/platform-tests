@@ -133,8 +133,6 @@ console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://uaa.{}".format(
 console_url = os.environ.get("PT_CONSOLE_URL", "http://console.{}".format(tap_domain))
 arcadia_url = os.environ.get("PT_ARCADIA_URL", "http://arcadia.{}".format(tap_domain))
 hue_url = os.environ.get("PT_HUE_URL", "http://hue.{}".format(tap_domain))
-application_broker_url = os.environ.get("PT_APPLICATION_BROKER_URL",
-                                        "http://application-broker.{}/{}".format(tap_domain, cf_api_version))
 demiurge_url = os.environ.get("PT_DEMIURGE_URL", "http://demiurge.{}".format(tap_domain))
 kubernetes_broker_url = os.environ.get("PT_KUBERNETES_BROKER_URL", "http://kubernetes-broker.{}".format(tap_domain))
 

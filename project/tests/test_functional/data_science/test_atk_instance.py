@@ -23,8 +23,8 @@ from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceType, AtkInstance
 
 
-logged_components = (TAP.service_catalog, TAP.service_exposer, TAP.application_broker)
-pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.service_exposer)]
+logged_components = (TAP.service_catalog, TAP.service_exposer)
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
 
 
 @incremental

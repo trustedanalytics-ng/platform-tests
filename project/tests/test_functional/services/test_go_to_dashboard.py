@@ -27,10 +27,10 @@ from modules.tap_object_model.flows.services import create_instance, delete_inst
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_no_errors
 
-logged_components = (TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+logged_components = (TAP.service_catalog, TAP.gearpump_broker, TAP.hbase_broker,
                      TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                      TAP.zookeeper_wssb_broker)
-pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.application_broker, TAP.gearpump_broker, TAP.hbase_broker,
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, TAP.hbase_broker,
                                      TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                                      TAP.zookeeper_wssb_broker)]
 

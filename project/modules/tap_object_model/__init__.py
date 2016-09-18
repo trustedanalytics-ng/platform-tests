@@ -17,7 +17,6 @@
 from .application import Application
 from .buildpack import Buildpack
 from .dataset import DataSet, DatasetAccess
-from .external_tools import ExternalTools
 from .user import User
 from .invitation import Invitation
 from .hdfs_job import HdfsJob

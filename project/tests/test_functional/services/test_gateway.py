@@ -26,8 +26,8 @@ from modules.tap_object_model import ServiceInstance, User
 from tests.fixtures.test_data import TestData
 from modules.websocket_client import WebsocketClient
 
-logged_components = (TAP.gateway, TAP.application_broker, TAP.service_catalog)
-pytestmark = [pytest.mark.components(TAP.gateway, TAP.application_broker, TAP.service_catalog)]
+logged_components = (TAP.gateway, TAP.service_catalog)
+pytestmark = [pytest.mark.components(TAP.gateway, TAP.service_catalog)]
 
 
 @incremental
