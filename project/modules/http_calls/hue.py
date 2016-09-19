@@ -22,18 +22,23 @@ from modules.http_client.configuration_provider.console import ConsoleConfigurat
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 
-console_client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
-client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=config.hue_url))
-client.session = console_client.session
+
+def _get_client():
+    console_client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=config.hue_url))
+    client.session = console_client.session
+    return client
 
 
 def login_required(func):
+    """Wrapper tries login to hue, when unsuccessfully AssertionError is raised"""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        for _ in range(5):
+        login_tries = 10
+        for _ in range(login_tries):
             response = func(*args, **kwargs)
             if "login required" in response:
-                client.request(method=HttpMethod.GET, path="", msg="login")
+                _get_client().request(method=HttpMethod.GET, path="", msg="login")
             else:
                 return response
         raise AssertionError("Could not login to hue api")
@@ -43,7 +48,7 @@ def login_required(func):
 @login_required
 def get_databases():
     """GET metastore/databases"""
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.GET,
         path="metastore/databases",
         params={"format": "json"},
@@ -54,7 +59,7 @@ def get_databases():
 @login_required
 def get_tables(database_name):
     """GET metastore/tables/{database_name}"""
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.GET,
         path="metastore/tables/{}".format(database_name),
         msg="HUE: get tables"
@@ -64,7 +69,7 @@ def get_tables(database_name):
 @login_required
 def get_table(database_name, table_name):
     """GET metastore/table/{database_name}/{table_name}"""
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.GET,
         path="metastore/table/{}/{}".format(database_name, table_name),
         msg="HUE: get table"
@@ -74,7 +79,7 @@ def get_table(database_name, table_name):
 @login_required
 def get_file_browser():
     """GET filebrowser"""
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.GET,
         path="filebrowser",
         params={"format": "json"},
@@ -85,7 +90,7 @@ def get_file_browser():
 @login_required
 def get_job_browser():
     """GET jobbrowser"""
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.GET,
         path="jobbrowser",
         params={"format": "json"},
@@ -98,13 +103,13 @@ def create_java_job_design(name, jar_path, main_class, args="", description=""):
     """POST jobsub/designs/java/new"""
 
     headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-               "X-CSRFToken": client.cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"
+               "X-CSRFToken": _get_client().cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"
                }
 
     files = "node_type=java&files=[]&name={}&jar_path={}&job_properties=[]&prepares=[]&archives=[]&main_class={}" \
             "&args={}&description={}&".format(name, jar_path, main_class, args, description)
 
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.POST,
         path="jobsub/designs/java/new",
         files={(files, "")},
@@ -117,9 +122,9 @@ def create_java_job_design(name, jar_path, main_class, args="", description=""):
 def get_job_workflow(workflow_id):
     """GET oozie/list_oozie_workflow/{workflow_id}/"""
 
-    headers = {"X-CSRFToken": client.cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"}
+    headers = {"X-CSRFToken": _get_client().cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"}
 
-    return client.request(
+    return _get_client().request(
         method=HttpMethod.GET,
         path="oozie/list_oozie_workflow/{}/".format(workflow_id),
         headers=headers,
