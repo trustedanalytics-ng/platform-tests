@@ -37,7 +37,7 @@ class TestUpdateDeleteDataSet:
         assert updated_value == expected_value, "Data set was not updated"
 
     @pytest.fixture(scope="function")
-    def dataset(self, test_org, add_admin_to_test_org, context):
+    def dataset(self, test_org, context):
         step("Create data set")
         _, dataset = data_catalog.create_dataset_from_link(context, org_guid=test_org.guid,
                                                            source=Urls.test_transfer_link)
