@@ -31,7 +31,6 @@ from tests.fixtures.assertions import assert_raises_http_exception
 logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
 
 
-@pytest.mark.usefixtures("add_admin_to_test_org")
 class TestSubmitTransfer:
     pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
@@ -53,17 +52,8 @@ class TestSubmitTransfer:
         datasets = DataSet.api_get_list(org_guid_list=[test_org.guid])
         assert dataset in datasets
 
-    @staticmethod
-    def check_transfer_and_dataset_are_not_visible_in_other_org(transfer, dataset, core_org):
-        step("Check transfer is not visible on other organization")
-        transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])
-        assert transfer not in transfers
-        step("Check dataset is not visible on other organization")
-        datasets = DataSet.api_get_list(org_guid_list=[core_org.guid])
-        assert dataset not in datasets
-
     @priority.high
-    def test_submit_and_delete_transfer(self, context, test_org, core_org):
+    def test_submit_and_delete_transfer(self, context, test_org):
         transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid)
         step("Get transfers and check if they are the same as the uploaded ones")
         retrieved_transfer = Transfer.api_get(transfer.id)
@@ -71,8 +61,6 @@ class TestSubmitTransfer:
         dataset = DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
         TestSubmitTransfer.check_transfer_and_dataset_are_visible_in_test_org(transfer=transfer, dataset=dataset,
                                                                               test_org=test_org)
-        TestSubmitTransfer.check_transfer_and_dataset_are_not_visible_in_other_org(transfer=transfer, dataset=dataset,
-                                                                                   core_org=core_org)
         step("Delete transfer")
         transfer.cleanup()
         step("Check transfer is not visible on list of transfers")
@@ -82,6 +70,18 @@ class TestSubmitTransfer:
         dataset.cleanup()
         step("Check dataset is not visible on list of datasets")
         datasets = DataSet.api_get_list(org_guid_list=[test_org.guid])
+        assert dataset not in datasets
+
+    @pytest.mark.skip(reason="Multiple organizations are not implemented for TAP_NG yet")
+    def test_transfer_and_dataset_are_not_visible_in_other_org(self, context, core_org, test_org):
+        step("Create transfer and get dataset")
+        transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid)
+        dataset = DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
+        step("Check transfer is not visible on other organization")
+        transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])
+        assert transfer not in transfers
+        step("Check dataset is not visible on other organization")
+        datasets = DataSet.api_get_list(org_guid_list=[core_org.guid])
         assert dataset not in datasets
 
     @priority.low
@@ -136,6 +136,7 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
         return transfer
 
     @priority.high
+    @pytest.mark.skip(reason="Multiple organizations are not implemented for TAP_NG yet")
     def test_cannot_submit_transfer_in_foreign_org(self, context):
         foreign_org = Organization.api_create(context=context)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN, self._create_transfer,
@@ -143,7 +144,7 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
 
     @priority.low
     @pytest.mark.parametrize("category", DataSet.CATEGORIES)
-    def test_submit_transfer_from_txt_file(self, category, context, test_org, core_org):
+    def test_submit_transfer_from_txt_file(self, category, context, test_org):
         step("Create txt file name")
         txt_file_name = "{}.txt".format(generate_test_object_name())
         step("Create transfer from file")
@@ -152,19 +153,15 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
                                                      category=category)
         TestSubmitTransfer.check_transfer_and_dataset_are_visible_in_test_org(transfer=transfer, dataset=dataset,
                                                                               test_org=test_org)
-        TestSubmitTransfer.check_transfer_and_dataset_are_not_visible_in_other_org(transfer=transfer, dataset=dataset,
-                                                                                   core_org=core_org)
 
     @priority.low
     @pytest.mark.parametrize("category", DataSet.CATEGORIES)
-    def test_submit_transfer_from_csv_file_all_categories(self, context, category, test_org, core_org):
+    def test_submit_transfer_from_csv_file_all_categories(self, context, category, test_org):
         step("Create a transfer with chosen category")
         transfer, dataset = create_dataset_from_file(context=context, org_guid=test_org.guid,
                                                      file_path=generate_csv_file(), category=category)
         TestSubmitTransfer.check_transfer_and_dataset_are_visible_in_test_org(transfer=transfer, dataset=dataset,
                                                                               test_org=test_org)
-        TestSubmitTransfer.check_transfer_and_dataset_are_not_visible_in_other_org(transfer=transfer, dataset=dataset,
-                                                                                   core_org=core_org)
 
     @priority.medium
     def test_submit_transfer_from_large_file(self, context, test_org):
