@@ -31,7 +31,7 @@ class TestGetDataSets(object):
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
-    def create_test_data_sets(cls, request, test_org, add_admin_to_test_org, class_context):
+    def create_test_data_sets(cls, request, test_org, class_context):
         step("Create new transfer for each category")
         cls.transfers = []
         for category in DataSet.CATEGORIES:
