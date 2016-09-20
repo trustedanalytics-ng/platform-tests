@@ -132,7 +132,7 @@ def cli_login(tap_cli):
 def sample_manifest_path(request):
     log_fixture("Download sample manifest.json")
     sample_manifest_path = file_utils.download_file(Urls.manifest_url, "manifest.json")
-    request.addfinalizer(lambda: os.remove(sample_manifest_path))
+    request.addfinalizer(lambda: file_utils.remove_if_exists(sample_manifest_path))
     return sample_manifest_path
 
 
@@ -143,7 +143,7 @@ def sample_app_path(request):
     sample_app_tar_name = sample_app_url.split("/")[-1]
     log_fixture("Download sample app: {}".format(sample_app_url))
     sample_app_path = file_utils.download_file(sample_app_url, sample_app_tar_name)
-    request.addfinalizer(lambda: os.remove(sample_app_path))
+    request.addfinalizer(lambda: file_utils.remove_if_exists(sample_app_path))
     return sample_app_path
 
 
