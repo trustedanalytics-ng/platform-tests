@@ -16,8 +16,6 @@
 
 import pytest
 
-from modules.constants import HttpStatus
-from modules.exceptions import UnexpectedResponseError
 from modules.tap_logger import get_logger
 from modules.tap_object_model import DataSet
 
@@ -39,6 +37,7 @@ class Context(object):
         self.blob_store = []
         self.image_factory = []
         self.k8s_apps = []
+        self.cli_applications = []
         self.cli_services = []
         self.cli_offerings = []
 
@@ -48,9 +47,8 @@ class Context(object):
             try:
                 self.logger.info("cleaning: {}".format(item))
                 item.cleanup()
-            except UnexpectedResponseError as e:
-                if e.status != HttpStatus.CODE_NOT_FOUND:
-                    self.logger.warning("Error while deleting {}: {}".format(item, e))
+            except AssertionError as e:
+                self.logger.warning("Error while deleting {}: {}".format(item, e))
 
     def cleanup(self):
         self._cleanup_test_objects(self.users)
@@ -72,6 +70,7 @@ class Context(object):
         self._cleanup_test_objects(self.blob_store)
         self._cleanup_test_objects(self.image_factory)
         self._cleanup_test_objects(self.k8s_apps)
+        self._cleanup_test_objects(self.cli_applications)
         self._cleanup_test_objects(self.cli_offerings)
         self._cleanup_test_objects(self.cli_services)
 

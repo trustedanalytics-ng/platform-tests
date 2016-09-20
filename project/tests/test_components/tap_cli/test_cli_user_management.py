@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import pytest
 
 from modules import gmail_api
@@ -37,7 +38,7 @@ class TestCLIInvitingUser:
         tap_cli.invite(email)
 
     @pytest.mark.usefixtures("send_invitation")
-    def test_0_sent_invitation_is_on_pending_list(self, email):
+    def test_sent_invitation_is_on_pending_list(self, email):
         pending_invitations = Invitation.api_get_list()
         invitation = next((i for i in pending_invitations if i.username == email), None)
         assert invitation is not None, "Sent invitation not found on pending list"

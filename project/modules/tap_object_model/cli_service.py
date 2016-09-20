@@ -74,6 +74,9 @@ class CliService(object):
     def get_bindings(self):
         return self.tap_cli.bindings(self.name)
 
+    def logs(self):
+        return self.tap_cli.service_log(self.name)
+
     def delete(self):
         return self.tap_cli.delete_service([self.name])
 
@@ -83,12 +86,12 @@ class CliService(object):
     @retry(AssertionError, tries=12, delay=5)
     def ensure_service_state(self, state):
         self.state = self.get(self.name, self.tap_cli).state
-        assert self.state == state, "state '{}', expected '{}'".format(self.state, state)
+        assert self.state == state, "expected state '{}' but was '{}'".format(state, self.state)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_on_service_list(self):
-        assert self.name in self.tap_cli.services_list(), "Instance '{}' is not on the list".format(self.name)
+        assert self.name in self.tap_cli.services_list(), "Service '{}' is not on the list of services".format(self.name)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_not_on_service_list(self):
-        assert self.name not in self.tap_cli.services_list(), "Instance '{}' is on the list".format(self.name)
+        assert self.name not in self.tap_cli.services_list(), "Service '{}' is on the list of services".format(self.name)

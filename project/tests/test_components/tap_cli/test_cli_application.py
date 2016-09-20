@@ -15,26 +15,21 @@
 #
 
 import os
-import shutil
 import tarfile
 
 import pytest
 
-from modules import command
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType
-from modules.markers import incremental, priority
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapMessage
+from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model.k8s_application import K8sApplication
+from modules.tap_object_model import CliApplication, K8sApplication
 from modules.test_names import generate_test_object_name
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
 
-APP_INSTANCES = 1
-SCALE_APP_INSTANCES = "3"
 
-
-@priority.high
+@priority.medium
 class TestCheckAppPushHelp:
     def test_check_app_push_help(self, tap_cli):
         step("Check output from tap cli push help")
@@ -43,10 +38,10 @@ class TestCheckAppPushHelp:
         assert "USAGE" in output
 
 
-@priority.high
+@priority.medium
 class TestCliCommandsWithNonExistingApplication:
     NON_EXISTING_APP_NAME = "non_existing_app_name_{}".format(generate_test_object_name())
-    CANNOT_FIND_MSG = "cannot find instance with name: {}".format(NON_EXISTING_APP_NAME)
+    CANNOT_FIND_MSG = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_stop_non_existing_app(self, tap_cli, cli_login):
@@ -62,8 +57,9 @@ class TestCliCommandsWithNonExistingApplication:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
+        scaled_instances = '3'
         step("Try to scale app with non existing name")
-        scale = tap_cli.scale_app(application_name=self.NON_EXISTING_APP_NAME, instances=SCALE_APP_INSTANCES)
+        scale = tap_cli.scale_app(application_name=self.NON_EXISTING_APP_NAME, instances=scaled_instances)
         assert self.CANNOT_FIND_MSG in scale
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
@@ -79,12 +75,11 @@ class TestCliCommandsWithNonExistingApplication:
         assert self.CANNOT_FIND_MSG in delete
 
 
-@incremental
 @priority.high
-class TestPythonApplicationCliFlow:
+@pytest.mark.usefixtures("cli_login")
+class TestPythonCliApp:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_python_app_url
-    APP_NAME = "samplepythonapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = TapApplicationType.PYTHON27
     EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
     APP_URL_MESSAGE = "TEST APP v.1.0 READY"
@@ -95,121 +90,99 @@ class TestPythonApplicationCliFlow:
         return os.path.join(os.path.dirname(sample_app_path), "sample_{}_app".format(self.APP_TYPE))
 
     @pytest.fixture(scope="class")
-    def sample_app_tar_content(self, request, sample_app_path, sample_app_target_directory):
+    def sample_cli_app(self, class_context, sample_manifest_path, sample_app_target_directory, tap_cli):
+        step("Push application")
+        application = CliApplication.push(class_context, tap_cli=tap_cli, manifest_path=sample_manifest_path,
+                                          target_directory=sample_app_target_directory, app_type=self.APP_TYPE)
+        step("Ensure app is on the app list")
+        application.ensure_on_app_list()
+        step("Ensure app is running")
+        application.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        step("Ensure app is ready")
+        application.ensure_app_is_ready()
+        return application
+
+    def test_check_sample_app_content(self, sample_app_path, sample_app_target_directory):
         step("Extract application archive")
 
         with tarfile.open(sample_app_path) as tar:
             tar.extractall(path=sample_app_target_directory)
-            file_list = [name.replace("./", "", 1) for name in tar.getnames()]
+            sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
 
-        request.addfinalizer(lambda: shutil.rmtree(sample_app_target_directory))
-
-        return file_list
-
-    def test_0_check_sample_app_content(self, sample_app_tar_content):
         step("Check content of the archive")
         missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
         assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-    def test_1_push_app(self, cli_login, sample_manifest_path, tap_cli, sample_app_target_directory):
-        step("Prepare manifest with parameters")
-        manifest_params = {
-            'instances': APP_INSTANCES,
-            'name': self.APP_NAME,
-            'type': self.APP_TYPE
-        }
-        K8sApplication.update_manifest(sample_manifest_path, manifest_params)
-        shutil.copyfile(sample_manifest_path, os.path.join(sample_app_target_directory, "manifest.json"))
-        step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
-        push = tap_cli.push(app_dir_path=sample_app_target_directory)
-        step("Check headers")
-        assert all(self.i in push for self.i in ["NAME", "IMAGE ID", "DESCRIPTION", "REPLICATION"]),\
-            "{} header is missing".format(self.i)
-
-    def test_2_ensure_app_is_on_the_list(self, tap_cli, cli_login):
-        step("Ensure app is on the list of apps")
-        tap_cli.ensure_app_availability_on_the_list(application_name=self.APP_NAME, should_be_on_the_list=True)
-
-    def test_3_ensure_app_is_running(self, tap_cli, cli_login):
+    def test_push_and_delete_sample_app(self, context, sample_manifest_path, sample_app_target_directory, tap_cli):
+        step("Push application")
+        application = CliApplication.push(context, tap_cli=tap_cli, manifest_path=sample_manifest_path,
+                                          target_directory=sample_app_target_directory, app_type=self.APP_TYPE)
+        step("Ensure app is on the app list")
+        application.ensure_on_app_list()
         step("Ensure app is running")
-        tap_cli.ensure_app_state(application_name=self.APP_NAME, state=K8sApplication.STATE_RUNNING)
-
-    def test_4_ensure_app_is_ready_and_check_app_url_content(self, tap_cli, cli_login):
-        step("Get app url")
-        app = tap_cli.app(application_name=self.APP_NAME)
-        app_url = app["urls"][0]
+        application.ensure_app_state(state=K8sApplication.STATE_RUNNING)
         step("Ensure app is ready")
-        tap_cli.ensure_app_is_ready(application_url=app_url)
-        step("Check application url content")
-        content = command.run(["curl", app_url])
-        assert self.APP_URL_MESSAGE in content
+        application.ensure_app_is_ready()
 
-    def test_5_stop_app(self, tap_cli, cli_login):
-        step("Stop app")
-        stop = tap_cli.stop_app(application_name=self.APP_NAME)
-        assert "success" in stop
-        step("Ensure app is stopped")
-        tap_cli.ensure_app_state(application_name=self.APP_NAME, state=K8sApplication.STATE_STOPPED)
-
-    def test_6_start_app(self, tap_cli, cli_login):
-        step("Start app")
-        start = tap_cli.start_app(application_name=self.APP_NAME)
-        assert "success" in start
-        step("Ensure app is running")
-        tap_cli.ensure_app_state(application_name=self.APP_NAME, state=K8sApplication.STATE_RUNNING)
-
-    def test_7_scale_app(self, tap_cli, cli_login):
-        step("Scale app")
-        scale = tap_cli.scale_app(application_name=self.APP_NAME, instances=SCALE_APP_INSTANCES)
-        assert "success" in scale
-        step("Ensure app is running")
-        tap_cli.ensure_app_state(application_name=self.APP_NAME, state=K8sApplication.STATE_RUNNING)
-
-    def test_8_check_app_logs(self, tap_cli, cli_login):
-        step("Check logs")
-        logs = tap_cli.app_logs(application_name=self.APP_NAME)
-        assert self.APP_NAME in logs
-
-    def test_9_delete_app(self, tap_cli, cli_login):
         step("Delete app")
-        delete = tap_cli.delete_app(application_name=self.APP_NAME)
-        assert "CODE: 204 BODY" in delete
+        application.delete()
+        step("Ensure app is not on the app list")
+        application.ensure_not_on_app_list()
 
-    def test_10_ensure_app_is_not_on_the_list(self, tap_cli, cli_login):
-        step("Ensure app is not on the list of apps")
-        tap_cli.ensure_app_availability_on_the_list(application_name=self.APP_NAME, should_be_on_the_list=False)
+    def test_stop_and_start_app(self, sample_cli_app):
+        step("Stop app")
+        sample_cli_app.stop()
+        step("Ensure app is stopped")
+        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_STOPPED)
+        step("Start app")
+        sample_cli_app.start()
+        step("Ensure app is running")
+        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+
+    def test_scale_app(self, sample_cli_app):
+        scaled_instances = '3'
+        step("Scale app to {} instance(s)".format(scaled_instances))
+        sample_cli_app.scale(scale_app_instances=scaled_instances)
+        step("Ensure app is running")
+        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        step("Check there are/is {} instance(s)".format(scaled_instances))
+        assert sample_cli_app.get_running_instances() == int(scaled_instances)
+
+        scaled_instances = '1'
+        step("Scale app to {} instance(s)".format(scaled_instances))
+        sample_cli_app.scale(scale_app_instances=scaled_instances)
+        step("Ensure app is running")
+        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        step("Check there are/is() instance(s)".format(scaled_instances))
+        assert sample_cli_app.get_running_instances() == int(scaled_instances)
+
+    def test_check_app_logs(self, sample_cli_app):
+        step("Check logs")
+        assert sample_cli_app.name in sample_cli_app.logs()
 
 
-@incremental
 @priority.high
-class TestGoApplicationCliFlow(TestPythonApplicationCliFlow):
+class TestGoCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_go_app_url
-    APP_NAME = "samplegoapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = TapApplicationType.GO
     EXPECTED_FILE_LIST = ["main", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
 
-@incremental
 @priority.high
-class TestJavaApplicationCliFlow(TestPythonApplicationCliFlow):
+class TestJavaCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_java_app_url
-    APP_NAME = "samplejavaapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = TapApplicationType.JAVA
     EXPECTED_FILE_LIST = ["tapng-java-sample-app-0.1.0.jar", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
 
-@incremental
 @priority.high
-@pytest.mark.bugs("DPNG-10806 [TAP-NG] 413 or 504 for pushing application")
-class TestNodeJsApplicationCliFlow(TestPythonApplicationCliFlow):
+class TestNodeJsCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
-    APP_NAME = "samplenodejsapp{}".format(generate_test_object_name().replace('_', ''))
     APP_TYPE = TapApplicationType.NODEJS
     EXPECTED_FILE_LIST = ["server.js", "run.sh", "public", "views", "app", "node_modules", "manifest.yml",
                           "package.json", "README.md"]

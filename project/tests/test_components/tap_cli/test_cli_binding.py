@@ -36,7 +36,7 @@ class TestCliBinding:
         return CliService.create(
             context=class_context,
             offering_name=offering.name,
-            plan=offering.service_plans[0],
+            plan=offering.plans[0],
             tap_cli=tap_cli)
 
     @pytest.fixture(scope="class")
@@ -44,7 +44,7 @@ class TestCliBinding:
         return CliService.create(
             context=class_context,
             offering_name=offering.name,
-            plan=offering.service_plans[0],
+            plan=offering.plans[0],
             tap_cli=tap_cli)
 
     @pytest.fixture(scope="class")
@@ -52,7 +52,7 @@ class TestCliBinding:
         return CliService(
             name=generate_test_object_name(separator="-"),
             offering_name=offering.name,
-            plan=offering.service_plans[0],
+            plan=offering.plans[0],
             tap_cli=tap_cli)
 
     @pytest.fixture(scope="function")
@@ -110,11 +110,10 @@ class TestCliBinding:
 
         step("Check that an attempt to delete bound service instance fails with an error")
         output = service_instance_2.delete()
-        error_message = TapMessage.MSG_CANNOT_DELETE_BOUND_SERVICE.format(
+        error_message = TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(
             service_instance_2.name,
             service_instance_1.name,
             service_instance_1.id)
-        assert TapMessage.CODE_CANNOT_DELETE_BOUND_SERVICE in output
         assert error_message in output
         step("Check that the service still exists")
         service_instance_2.ensure_on_service_list()

@@ -31,6 +31,7 @@ from .kubernetes_cluster import KubernetesCluster
 from .kubernetes_instance import KubernetesInstance
 from .kubernetes_secret import KubernetesSecret
 from .latest_event import EventCategory, EventMessage, LatestEvent
+from .k8s_application import K8sApplication
 from .k8s_service import K8sService
 from .ng_template import Template
 from .organization import Organization
@@ -46,5 +47,7 @@ from .service_type import ServiceType
 from .space import Space
 from .transfer import Transfer
 from .upsi import Upsi
-from .cli_offering import CliOffering
+from .cli_application import CliApplication
 from .cli_service import CliService
+from .cli_offering import CliOffering
+

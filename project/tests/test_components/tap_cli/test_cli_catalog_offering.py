@@ -15,69 +15,44 @@
 #
 
 import pytest
-import json
 
-from modules.file_utils import TMP_FILE_DIR, _add_generated_file
-
+from modules.constants import TapMessage
+from modules.tap_logger import step
+from modules.tap_object_model import CliOffering
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
-from fixtures.k8s_templates import template_example, catalog_service_example
-
-pytestmark = [pytest.mark.skip(reason="DPNG-10981 [api-tests] Refactor TAP CLI tests")]
-
 
 
 class TestCliCatalogOffering:
-    OFFERING_NAME = generate_test_object_name(separator="-")
-    PLAN_NAME = generate_test_object_name(separator="-")
     short = False
 
+    @classmethod
     @pytest.fixture(scope="class")
-    def example_offer(self):
-        assert self.OFFERING_NAME is not None
-        assert self.PLAN_NAME is not None
-        example_offer_path = TMP_FILE_DIR + "/" + self.OFFERING_NAME
-        data = {}
-        template = template_example.etcd_template
-        service = catalog_service_example.etcd_example
-        service["name"] = self.OFFERING_NAME
-        service["plans"][0]['name'] = self.PLAN_NAME
-        data['template'] = template
-        data['services'] = [service]
+    def offering(cls, class_context, tap_cli):
+        return CliOffering.create(context=class_context, tap_cli=tap_cli)
 
-        with open(example_offer_path, "w") as text_file:
-            text_file.write(json.dumps(data))
+    def test_create_and_delete_offering(self, context, tap_cli):
+        step("Create offering and check it's in catalog")
+        offering = CliOffering.create(context=context, tap_cli=tap_cli)
+        offering.ensure_in_catalog()
+        step("Delete offering and check it's no longer in catalog")
+        offering.delete()
+        offering.ensure_not_in_catalog()
 
-        _add_generated_file(example_offer_path)
-        return example_offer_path
+    def test_cannot_create_offering_without_parameters(self, tap_cli):
+        assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_OFFERING,
+                                                  tap_cli.create_offering, [], self.short)
 
-    def test_catalog(self, tap_cli):
-        output = tap_cli.catalog()
-        assert "CODE: 200" in output
-
-    def test_create_offering(self, example_offer, tap_cli):
-        output = tap_cli.create_offering([example_offer], self.short)
-        assert 'CODE: 201 BODY:' in output
-        output = tap_cli.catalog()
-        assert self.OFFERING_NAME in output
-
-    def test_create_offering_without_parameters(self, tap_cli):
-        error_message = "not enough args: create-offering <path to json with service definition>"
-        assert_raises_command_execution_exception(1, error_message, tap_cli.create_offering, [], self.short)
-
-    def test_create_offering_with_not_existing_json(self, tap_cli):
-        error_message = "open {}: no such file or directory"
+    def test_cannot_create_offering_without_json(self, tap_cli):
         invalid_json = generate_test_object_name(separator="-")
         output = tap_cli.create_offering([invalid_json], self.short)
-        assert error_message.format(invalid_json) in output
+        assert TapMessage.NO_SUCH_FILE_OR_DIRECTORY.format(invalid_json) in output
 
-    def test_create_offering_with_already_used_name(self, example_offer, tap_cli):
-        error_message = "service with name: {} already exists!".format(self.OFFERING_NAME)
-        output = tap_cli.create_offering([example_offer], self.short)
-        assert error_message in output
+    def test_create_offering_with_already_used_name(self, context, offering, tap_cli):
+        with pytest.raises(AssertionError) as e:
+            CliOffering.create(context=context, tap_cli=tap_cli, name=offering.name, plans=offering.plans)
+        assert TapMessage.SERVICE_ALREADY_EXISTS.format(offering.name) in e.value.msg
 
 
 class TestCliCatalogOfferingShortCommand(TestCliCatalogOffering):
-    OFFERING_NAME = generate_test_object_name(separator="-")
-    PLAN_NAME = generate_test_object_name(separator="-")
     short = True

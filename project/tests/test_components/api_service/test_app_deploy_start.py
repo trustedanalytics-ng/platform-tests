@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestPythonApplicationFlow:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
-    APP_NAME = "samplepythonapp{}".format(generate_test_object_name().replace('_', ''))
+    APP_NAME = "samplepythonapp{}".format(generate_test_object_name(separator=""))
     APP_TYPE = TapApplicationType.PYTHON27
 
     @property
@@ -91,27 +91,27 @@ class TestPythonApplicationFlow:
 @incremental
 class TestNodeJsApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
-    APP_NAME = "samplenodejsapp{}".format(generate_test_object_name().replace('_', ''))
+    APP_NAME = "samplenodejsapp{}".format(generate_test_object_name(separator=''))
     APP_TYPE = TapApplicationType.NODEJS
 
 
 @incremental
 class TestGoApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_go_app_url
-    APP_NAME = "samplegoapp{}".format(generate_test_object_name().replace('_', ''))
+    APP_NAME = "samplegoapp{}".format(generate_test_object_name(separator=''))
     APP_TYPE = TapApplicationType.GO
 
 
 @incremental
 class TestJavaApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_java_app_url
-    APP_NAME = "samplejavaapp{}".format(generate_test_object_name().replace('_', ''))
+    APP_NAME = "samplejavaapp{}".format(generate_test_object_name(separator=''))
     APP_TYPE = TapApplicationType.JAVA
 
 
 class TestSampleApp:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
-    APP_NAME = "sampleapp{}".format(generate_test_object_name().replace('_', ''))
+    APP_NAME = "sampleapp{}".format(generate_test_object_name(separator=''))
     APP_TYPE = TapApplicationType.PYTHON27
 
     MANIFEST_PARAMS = {

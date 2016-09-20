@@ -26,7 +26,7 @@ from modules.http_client.configuration_provider.service_tool import ServiceToolC
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import get_logger
 from modules.tap_object_model.api_service import ApiService
-from tests.fixtures.assertions import assert_returns_http_success_with_retry
+
 
 @functools.total_ordering
 class K8sApplication(object):
