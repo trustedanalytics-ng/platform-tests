@@ -103,7 +103,7 @@ def tap_cli(centos_key_path):
 
     log_fixture("Download tap client")
     command = ["scp", "-i", centos_key_path,
-               "-o StrictHostKeyChecking=no",
+               "-o StrictHostKeyChecking=no", "-o GSSAPIAuthentication=no",
                "{}@{}:{}".format(config.ng_jump_username, config.ng_jump_ip, tap_binary),
                target_directory]
 
