@@ -20,9 +20,6 @@ from unittest.mock import MagicMock, patch, mock_open
 
 import pytest
 
-import sys
-sys.path.append("/home/local/GER/kmolon/repos/platform-tests/project")
-
 from modules.tap_object_model.application import Application
 from tests.fixtures.context import Context
 from modules.exceptions import UnexpectedResponseError
