@@ -23,7 +23,7 @@ from modules.tap_object_model import ServiceInstance
 from tests.fixtures.assertions import assert_in_with_retry, assert_raises_http_exception
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [pytest.mark.components(TAP.service_catalog)]
+pytestmark = [pytest.mark.components(TAP.service_catalog), pytest.mark.skip(reason="Not yet adjusted to new TAP")]
 
 
 @priority.high

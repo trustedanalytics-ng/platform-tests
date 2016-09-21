@@ -31,6 +31,7 @@ from tests.fixtures.assertions import assert_raises_http_exception
 logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
 
 
+@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
 class TestSubmitTransfer:
     pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
@@ -120,6 +121,7 @@ class TestSubmitTransfer:
         assert "token" not in response, "token field was returned in response"
 
 
+@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
     pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)]
 

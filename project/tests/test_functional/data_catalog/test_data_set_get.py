@@ -25,6 +25,7 @@ logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadat
 pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
 
+@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
 class TestGetDataSets(object):
 
     data_sample = ["COL_0", "COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6", "COL_7"]

@@ -30,6 +30,7 @@ logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadat
 pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
 
+@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
 class TestDataSetFromHdfs(object):
 
     @priority.medium

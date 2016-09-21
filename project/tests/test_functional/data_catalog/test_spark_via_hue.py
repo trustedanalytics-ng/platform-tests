@@ -18,6 +18,7 @@ import json
 import os
 from datetime import datetime
 
+import pytest
 from retry import retry
 
 import config
@@ -39,6 +40,7 @@ from modules.test_names import generate_test_object_name
 logged_components = (TAP.data_catalog, TAP.das)
 
 
+@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
 @priority.low
 @incremental
 class TestSparkViaHue:

@@ -32,6 +32,7 @@ logged_components = (TAP.data_catalog, TAP.dataset_publisher, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
+@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
 @priority.medium
 @incremental
 class TestHue:

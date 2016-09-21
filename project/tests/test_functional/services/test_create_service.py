@@ -24,7 +24,7 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_in_with_retry, assert_raises_http_exception, assert_not_in_with_retry
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [pytest.mark.components(TAP.service_catalog)]
+pytestmark = [pytest.mark.components(TAP.service_catalog), pytest.mark.skip(reason="Not yet adjusted to new TAP")]
 
 
 @pytest.mark.bugs("DPNG-7436 Internal Server Error (500) when trying to create a service at marketplace without a name or description")
