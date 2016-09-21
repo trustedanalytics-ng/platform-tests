@@ -27,6 +27,7 @@ logged_components = (TAP.latest_events_service, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.latest_events_service)]
 
 
+@pytest.skip(reason="Latest events not supported on TAP v0.8")
 class TestLatestEventsService:
 
     @pytest.fixture(scope="class")

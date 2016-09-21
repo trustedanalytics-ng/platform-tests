@@ -44,6 +44,7 @@ def hdfs_service_offering(test_marketplace):
     return hdfs
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestHdfsRegularPlans(object):
 
     @priority.high
@@ -67,6 +68,7 @@ class TestHdfsRegularPlans(object):
         assertions.assert_no_errors(failures)
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.medium
 class TestHdfsUserDirectoryPlans(object):

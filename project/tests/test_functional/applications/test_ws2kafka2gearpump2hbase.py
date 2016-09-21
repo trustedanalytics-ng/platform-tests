@@ -39,6 +39,7 @@ pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_gearpump_hbase, TAP.
 @incremental
 @priority.medium
 @pytest.mark.sample_apps_test
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestWs2kafka2gearpump2hbase:
 
     REPO_OWNER = TapGitHub.intel_data

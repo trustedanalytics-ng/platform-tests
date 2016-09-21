@@ -26,6 +26,7 @@ logged_components = (TAP.platform_tests,)
 pytestmark = [pytest.mark.components(TAP.platform_tests)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.high
 class TestSelfTests:

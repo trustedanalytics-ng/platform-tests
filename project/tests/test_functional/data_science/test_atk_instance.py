@@ -27,6 +27,7 @@ logged_components = (TAP.service_catalog, TAP.service_exposer)
 pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.high
 class TestDataScienceAtkInstance:

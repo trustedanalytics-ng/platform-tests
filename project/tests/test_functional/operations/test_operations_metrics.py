@@ -27,6 +27,7 @@ logged_components = (TAP.platform_operations, )
 pytestmark = [pytest.mark.components(TAP.platform_operations)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestNonAdminOperationsMetrics:
 
     @pytest.mark.skip("DPNG-5904")
@@ -42,6 +43,7 @@ class TestNonAdminOperationsMetrics:
                                                 Platform.refresh_data, test_org_manager_client)
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestOperationsMetrics:
     """
     Operations Metrics test can be unstable when run parallel

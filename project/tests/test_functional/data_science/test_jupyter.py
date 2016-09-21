@@ -37,7 +37,7 @@ NOTEBOOKS_PATHS = ["examples/spark/{}.ipynb".format(filename) for filename in ("
                                                                                "pyspark-streaming-wordcount",
                                                                                "spark-sql-example")]
 
-
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestJupyterConsole:
 
     ATK_PLAN_NAME = "Simple"

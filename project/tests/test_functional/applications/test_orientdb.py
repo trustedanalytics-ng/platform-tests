@@ -27,6 +27,7 @@ from modules.test_names import generate_test_object_name
 from modules.constants import ServiceLabels
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestOrientDB(object):
     """OrientDB functional tests."""
 

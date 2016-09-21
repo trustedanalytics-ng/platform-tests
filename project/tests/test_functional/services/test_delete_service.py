@@ -26,6 +26,7 @@ logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @priority.medium
 class TestDeleteService:
 

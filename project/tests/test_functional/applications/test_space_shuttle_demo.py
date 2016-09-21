@@ -32,6 +32,7 @@ pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
 
 @incremental
 @priority.low
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestSpaceShuttleDemo:
     MODEL_TITLE = "model"
     MODEL_SOURCE_FILE_NAME = "space-shuttle-model.tar"

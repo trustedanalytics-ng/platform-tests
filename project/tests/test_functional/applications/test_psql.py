@@ -29,6 +29,7 @@ logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestPsql(object):
     psql_app = None
     test_table_name = DbInput.test_table_name

@@ -26,6 +26,7 @@ logged_components = (TAP.latest_events_service,)
 pytestmark = [pytest.mark.components(TAP.latest_events_service)]
 
 
+@pytest.skip(reason="Latest events not supported on TAP v0.8")
 @pytest.mark.usefixtures("add_admin_to_test_org")
 class TestDashboardLatestEvents:
 

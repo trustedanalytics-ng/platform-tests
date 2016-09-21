@@ -31,6 +31,7 @@ pytestmark = [pytest.mark.components(TAP.dataset_reader)]
 @incremental
 @priority.medium
 @pytest.mark.sample_apps_test
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestDatasetReader:
 
     HDFS_INSTANCE_NAME = "hdfs-instance"

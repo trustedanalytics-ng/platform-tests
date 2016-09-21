@@ -263,4 +263,3 @@ def model_hdfs_path(core_org):
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
     return model_dataset.target_uri
 
-

@@ -23,6 +23,7 @@ from modules.tap_logger import step
 logged_components = (TAP.console,)
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestAppDevelopmentPage(object):
     pytestmark = [pytest.mark.components(TAP.console)]
 

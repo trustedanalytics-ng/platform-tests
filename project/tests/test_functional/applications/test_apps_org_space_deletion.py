@@ -28,6 +28,7 @@ logged_components = (TAP.user_management, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.user_management, TAP.service_catalog)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestDeleteSpaceAndOrg:
 
     @pytest.fixture(scope="function")

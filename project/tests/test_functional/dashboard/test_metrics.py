@@ -32,6 +32,7 @@ expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsag
                          "serviceUsage", "serviceUsagePercent", "totalUsers"]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestMetrics(object):
     org_apps = org_services = None
 

@@ -29,6 +29,7 @@ logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.das, TAP.hdfs_
 pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @long
 @priority.high
 @incremental
@@ -88,6 +89,7 @@ class TestScoringEngineInstance:
         assert self.instance not in instances, "Scoring engine instance was not deleted"
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @priority.low
 @pytest.mark.sample_apps_test
 class TestScoringEngineUnauthorizedUsers:

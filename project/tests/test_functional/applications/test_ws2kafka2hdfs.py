@@ -38,6 +38,7 @@ pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_hdfs, TAP.service_ca
 @incremental
 @priority.medium
 @pytest.mark.sample_apps_test
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestWs2kafka2hdfs:
 
     REPO_OWNER = TapGitHub.intel_data

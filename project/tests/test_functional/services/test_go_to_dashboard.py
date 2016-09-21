@@ -35,6 +35,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, T
                                      TAP.zookeeper_wssb_broker)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestGoToDashboard:
 
     @pytest.fixture(scope="class")

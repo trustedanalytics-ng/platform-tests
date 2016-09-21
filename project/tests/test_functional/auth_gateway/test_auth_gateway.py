@@ -31,6 +31,7 @@ logged_components = (TAP.auth_gateway, TAP.data_catalog, TAP.das, TAP.hdfs_downl
 pytestmark = [pytest.mark.components(TAP.auth_gateway)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.medium
 @pytest.mark.skipif(config.kerberos, reason="DPNG-8628 WebHDFS needs to be workable on environments with kerberos")

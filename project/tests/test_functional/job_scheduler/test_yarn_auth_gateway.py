@@ -37,6 +37,7 @@ logged_components = (TAP.workflow_scheduler,)
 pytestmark = [pytest.mark.components(TAP.workflow_scheduler)]
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.medium
 @pytest.mark.skipif(config.kerberos, reason="DPNG-8628 WebHDFS needs to be workable on environments with kerberos")

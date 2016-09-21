@@ -39,6 +39,7 @@ def test_instance(class_context, request, test_org, test_space):
     return instance
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 class TestBindings:
 
     @pytest.fixture(scope="function")
@@ -88,6 +89,7 @@ class TestBindings:
         assert test_instance not in instances
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 class TestCreateDeleteBinding:
 
@@ -115,6 +117,8 @@ class TestCreateDeleteBinding:
         cf_bindings_list = cf.cf_api_get_apps_bindings(sample_java_app.guid)['resources']
         assert cf_bindings_list == platform_bindings_list
 
+
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @priority.low
 class TestBindingErrors:
     NOT_EXISTING_GUID = "00000000-0000-0000-0000-000000000000"

@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import pytest
+
 from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ApplicationPath, ServiceLabels
 from modules.markers import priority, incremental
@@ -23,6 +25,7 @@ from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceType, ServiceKey
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.low
 class TestOrientdbDashboard:

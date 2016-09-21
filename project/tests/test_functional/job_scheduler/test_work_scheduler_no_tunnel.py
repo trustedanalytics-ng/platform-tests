@@ -39,6 +39,7 @@ class Psql(object):
                 psql_credentials["password"], psql_credentials["port"])
 
 
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @incremental
 @priority.medium
 class TestJobSchedulerNoTunnelIncremental:
