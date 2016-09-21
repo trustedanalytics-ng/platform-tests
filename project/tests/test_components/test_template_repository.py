@@ -43,6 +43,7 @@ class TestTemplateRepository:
         template = Template.get(template_id=self.test_template.id)
         assert template == self.test_template
 
+    @pytest.mark.bugs("DPNG-10995 [TAP_NG] Incorrect response code on GET parsed_template")
     def test_3_get_parsed_template(self):
         step("Check if template is correctly parsed")
         template = Template.get_parsed(template_id=self.test_template.id,

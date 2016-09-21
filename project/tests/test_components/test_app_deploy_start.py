@@ -130,6 +130,7 @@ class TestSampleApp:
         step("Check application is ready")
         application.ensure_ready()
 
+    @pytest.mark.bugs("DPNG-11054 [TAP_NG] Response code 409 (name conflict) should be displayed when pushing twice app with the same name")
     def test_cannot_push_application_twice(self, class_context, sample_app_path, sample_manifest_path):
         step("Check that pushing the same application again causes an error")
         K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
