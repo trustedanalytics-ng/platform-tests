@@ -32,7 +32,6 @@ from modules.tap_object_model import Application, DataSet, Organization, Service
 from modules.tap_object_model import ServiceType
 from modules.tap_object_model import TestSuite
 from modules.tap_object_model.flows import onboarding
-from tests.fixtures.fixtures import sample_python_app, sample_java_app
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
@@ -45,6 +44,14 @@ pytestmark = [priority.high]
 def test_login():
     entities = ServiceType.api_get_catalog()
     assert entities is not None
+
+
+@pytest.fixture(scope="function")
+def sample_app(sample_python_app, sample_java_app):
+    return {
+        "sample_python_app": sample_python_app,
+        "sample_java_app": sample_java_app
+    }
 
 
 @pytest.mark.skip(reason="Not implemented for TAP NG yet")
@@ -155,13 +162,11 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
     assert instance not in instances
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
-@pytest.mark.parametrize("sample_app", [sample_python_app, sample_java_app])
-def test_push_sample_app_and_check_response(context, test_org, test_space, sample_app):
+@pytest.mark.parametrize("sample_app_key", ("sample_python_app", "sample_java_app"))
+def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     """Push Sample Application and Test Http Response"""
-    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app(class_context=context,
-                                                                                   test_org=test_org,
-                                                                                   test_space=test_space).urls[0]))
+    sample_app = sample_app[sample_app_key]
+    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app.urls[0]))
     step("Check response for HTTP GET to the endpoint")
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
     assert response is not None

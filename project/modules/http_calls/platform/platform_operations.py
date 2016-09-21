@@ -20,20 +20,20 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_platform_operations(client=None):
-    """GET /rest/platform/summary"""
+    """GET /platform/summary"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/platform/summary",
+        path="platform/summary",
         msg="PLATFORM/OPERATIONS: metrics"
     )
 
 
 def api_refresh_platform_operations(client=None):
-    """POST /rest/platform/summary/refresh_cache"""
+    """POST /platform/summary/refresh_cache"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/platform/summary/refresh_cache",
+        path="platform/summary/refresh_cache",
         msg="PLATFORM/OPERATIONS: refresh"
     )

@@ -22,7 +22,7 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_create_transfer_by_file_upload(org_guid, source, category=None, is_public=None, title=None, client=None):
-    """POST /rest/upload/{org_id}"""
+    """POST /upload/{org_id}"""
     body_keys = ["category", "publicRequest", "orgUUID", "title"]
     values = [category, is_public, org_guid, title]
     data = {key: val for key, val in zip(body_keys, values) if val is not None}
@@ -31,7 +31,7 @@ def api_create_transfer_by_file_upload(org_guid, source, category=None, is_publi
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/upload/{}".format(org_guid),
+        path="upload/{}".format(org_guid),
         data=data,
         files=files,
         msg="PLATFORM: create a transfer"

@@ -49,6 +49,7 @@ NEW_ENV_02 = "variable"
 NEW_ENV_02_VAL = "1234"
 ENVS = [(NEW_ENV_01, NEW_ENV_01_VAL), (NEW_ENV_02, NEW_ENV_02_VAL)]
 
+
 class TestApplication(unittest.TestCase):
     def test_update_manifest(self):
         """Tests if update manifest method works."""
@@ -125,6 +126,7 @@ class TestApplication(unittest.TestCase):
     HTTP_PROXY = "951.27.9.840"
 
     mock_proxy = HTTP_PROXY
+
     @patch("modules.tap_object_model.application.config.cf_proxy", mock_proxy)
     def test_update_manifest_with_proxy(self):
         """Check if cf_proxy is present we get proxy env"""
@@ -143,6 +145,7 @@ class TestApplication(unittest.TestCase):
         assert j["env"]["https_proxy"] == "https://" + self.HTTP_PROXY + ":912"
 
     mock_proxy = HTTP_PROXY
+
     @patch("modules.tap_object_model.application.config.cf_proxy", mock_proxy)
     def test_update_manifest_no_env_with_proxy(self):
         """Check if cf_proxy is present we get proxy env, no env is present
@@ -163,6 +166,7 @@ class TestApplication(unittest.TestCase):
         assert len(j["env"]) == 4
 
     mock_proxy = HTTP_PROXY
+
     @patch("modules.tap_object_model.application.config.cf_proxy", mock_proxy)
     def test_update_manifest_no_env_with_proxy_no_env(self):
         """Check if cf_proxy is present we get proxy env, no env is present
@@ -337,9 +341,8 @@ class TestApplication(unittest.TestCase):
             a = Application.push(ctx, self.SOURCE_DIR, self.APP_NAME,
                                  self.BOUND_SERVICES, self.ENV)
 
-        self.mock_api_service.delete_application.assert_called_once_with(self.user_admin,
-                                                                         self.APP_ID)
-
+        self.mock_api_service.delete_application.assert_called_once_with(self.APP_ID,
+                                                                         self.user_admin)
 
     @patch("builtins.open", mock_open)
     @patch("modules.tap_object_model.application.json", mock_json)
@@ -427,24 +430,24 @@ class TestApplication(unittest.TestCase):
                         self.APP_INSTANCES, self.APP_URLS)
 
         a.api_start()
-        self.mock_api_service.start_application.assert_called_once_with(self.user_admin,
-                                                                        self.APP_ID)
+        self.mock_api_service.start_application.assert_called_once_with(self.APP_ID,
+                                                                        self.user_admin)
 
         a.api_stop()
-        self.mock_api_service.stop_application.assert_called_once_with(self.user_admin,
-                                                                       self.APP_ID)
+        self.mock_api_service.stop_application.assert_called_once_with(self.APP_ID,
+                                                                       self.user_admin)
 
         # Provide a non-standard client
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE, [], [],
                         None, self.user_luser)
 
         a.api_start()
-        self.mock_api_service.start_application.assert_called_with(self.user_luser,
-                                                                   self.APP_ID)
+        self.mock_api_service.start_application.assert_called_with(self.APP_ID,
+                                                                   self.user_luser)
 
         a.api_stop()
-        self.mock_api_service.stop_application.assert_called_with(self.user_luser,
-                                                                  self.APP_ID)
+        self.mock_api_service.stop_application.assert_called_with(self.APP_ID,
+                                                                  self.user_luser)
 
     @patch("modules.tap_object_model.application.api_service", mock_api_service)
     @patch("modules.tap_object_model.application.ConsoleConfigurationProvider", mock_api_conf)
@@ -459,13 +462,13 @@ class TestApplication(unittest.TestCase):
             "routes": [{
                 "host": "not the one accessible",
                 "domain": {
-                    "name" : "The one that you won't afford"
+                    "name": "The one that you won't afford"
                 }
             },
             {
                 "host": "also not the one accessible",
                 "domain": {
-                    "name" : "Also the one that you won't afford"
+                    "name": "Also the one that you won't afford"
                 }
             }],
             "environment_json" : "ls = rm -rf",
@@ -474,10 +477,10 @@ class TestApplication(unittest.TestCase):
             "package_updated_at": "That's personal",
             "running_instances": "There are no instances, go figure...",
             "services": [{
-                "name" : "service_01"
+                "name": "service_01"
             },
             {
-                "name" : "service_00"
+                "name": "service_00"
             }]
         }
 
@@ -498,6 +501,7 @@ class TestApplication(unittest.TestCase):
     mock_requests = MagicMock()
     mock_log_http_request = MagicMock()
     mock_log_http_response = MagicMock()
+
     @patch("modules.tap_object_model.application.requests", mock_requests)
     @patch("modules.tap_object_model.application.log_http_request", mock_log_http_request)
     @patch("modules.tap_object_model.application.log_http_response", mock_log_http_response)
@@ -537,7 +541,7 @@ class TestApplication(unittest.TestCase):
         self.mock_requests.send.assert_called_with(req)
 
         # Now the response won't be OK, assertion error should raise
-        class Object():
+        class Object:
             pass
         rsp = Object()
         rsp.ok = False

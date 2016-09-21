@@ -20,10 +20,10 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_atk_instances(org_guid, client=None):
-    """GET /rest/orgs/{organization_guid}/atkinstances"""
+    """GET /orgs/{organization_guid}/atkinstances"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/orgs/{}/atkinstances".format(org_guid),
+        path="orgs/{}/atkinstances".format(org_guid),
         msg="PLATFORM: get list of atk instances"
     )

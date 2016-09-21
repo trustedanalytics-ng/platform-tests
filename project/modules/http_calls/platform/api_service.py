@@ -86,8 +86,6 @@ def get_applications(org_id: str=None, client: HttpClient=None):
     return response
 
 
-
-
 def get_application(app_id: str, client: HttpClient=None):
     """Retrieves the application details using REST call
     GET /applications/{app_id}

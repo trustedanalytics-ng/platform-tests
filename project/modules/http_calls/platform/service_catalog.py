@@ -20,28 +20,28 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 
 
 def api_get_catalog(client=None):
-    """GET /rest/catalog"""
+    """GET /catalog"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/catalog",
+        path="catalog",
         msg="PLATFORM: get catalog list"
     )
 
 
 def api_get_service(service_guid, client=None):
-    """GET /rest/service/{service_guid}"""
+    """GET /service/{service_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/services/{}".format(service_guid),
+        path="services/{}".format(service_guid),
         msg="PLATFORM: get service"
     )
 
 
 def api_create_service(name, description, org_guid, app_name, app_guid, image=None, display_name=None, tags=None,
                        client=None):
-    """GET /rest/marketplace/application"""
+    """GET /marketplace/application"""
     metadata = {}
     if image is not None:
         metadata["imageUrl"] = image
@@ -66,24 +66,24 @@ def api_create_service(name, description, org_guid, app_name, app_guid, image=No
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/marketplace/application",
+        path="marketplace/application",
         body=body,
         msg="PLATFORM: create service"
     )
 
 
 def api_delete_service(service_guid, client=None):
-    """DELETE /rest/services/{service_guid}"""
+    """DELETE /services/{service_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/services/{}".format(service_guid),
+        path="services/{}".format(service_guid),
         msg="PLATFORM: delete service"
     )
 
 
 def api_get_service_instances(space_guid=None, service_guid=None, client=None):
-    """GET /rest/service_instances"""
+    """GET /service_instances"""
     query_params = {}
     if space_guid is not None:
         query_params["space"] = space_guid
@@ -93,14 +93,14 @@ def api_get_service_instances(space_guid=None, service_guid=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/service_instances",
+        path="service_instances",
         params=query_params,
         msg="PLATFORM: get service instance list"
     )
 
 
 def api_create_service_instance(name, service_plan_guid, org_guid, space_guid, params=None, client=None):
-    """POST /rest/service_instances"""
+    """POST /service_instances"""
     body = {
         "name": name,
         "organization_guid": org_guid,
@@ -113,34 +113,34 @@ def api_create_service_instance(name, service_plan_guid, org_guid, space_guid, p
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/service_instances",
+        path="service_instances",
         body=body,
         msg="PLATFORM: create service instance"
     )
 
 
 def api_delete_service_instance(service_instance_guid, client):
-    """DELETE /rest/service_instances/{service_instance_guid}"""
+    """DELETE /service_instances/{service_instance_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/service_instances/{}".format(service_instance_guid),
+        path="service_instances/{}".format(service_instance_guid),
         msg="PLATFORM: delete service instance"
     )
 
 
 def api_get_service_plans(service_type_label, client):
-    """GET /rest/services/{service_type_label}/service_plans"""
+    """GET /services/{service_type_label}/service_plans"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/services/{}/service_plans".format(service_type_label),
+        path="services/{}/service_plans".format(service_type_label),
         msg="PLATFORM: get service plans"
     )
 
 
 def api_get_service_instances_summary(space_guid=None, service_keys=True, client=None):
-    """GET /rest/service_instances/summary"""
+    """GET /service_instances/summary"""
     query_params = {}
     if space_guid:
         query_params["space"] = space_guid
@@ -149,14 +149,14 @@ def api_get_service_instances_summary(space_guid=None, service_keys=True, client
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/service_instances/summary",
+        path="service_instances/summary",
         params=query_params,
         msg="PLATFORM: get service instances summary"
     )
 
 
 def api_create_service_key(service_instance_guid, service_key_name, client=None):
-    """POST /rest/service_keys"""
+    """POST /service_keys"""
     body = {
         "name": service_key_name,
         "service_instance_guid": service_instance_guid,
@@ -164,99 +164,99 @@ def api_create_service_key(service_instance_guid, service_key_name, client=None)
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/service_keys",
+        path="service_keys",
         body=body,
         msg="PLATFORM: create service key"
     )
 
 
 def api_delete_service_key(service_key_guid, client=None):
-    """DELETE /rest/service_keys/{service_key_guid}"""
+    """DELETE /service_keys/{service_key_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/service_keys/{}".format(service_key_guid),
+        path="service_keys/{}".format(service_key_guid),
         msg="PLATFORM: delete service key"
     )
 
 
 def api_get_filtered_applications(space, service_label=None, client=None):
-    """GET /rest/apps"""
+    """GET /apps"""
     query_params = {"space": space}
     if service_label is not None:
         query_params["service_label"] = service_label
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/apps",
+        path="apps",
         params=query_params,
         msg="PLATFORM: get application list"
     )
 
 
 def api_get_app_summary(app_guid, client=None):
-    """GET /rest/apps/{app_guid}"""
+    """GET /apps/{app_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/apps/{}".format(app_guid),
+        path="apps/{}".format(app_guid),
         msg="PLATFORM: get application summary"
     )
 
 
 def api_delete_app(app_guid, cascade=False, client=None):
-    """DELETE /rest/apps/{app_guid}"""
+    """DELETE /apps/{app_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     params = {}
     if cascade:
         params["cascade"] = "true"
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/apps/{}".format(app_guid),
+        path="apps/{}".format(app_guid),
         params=params,
         msg="PLATFORM: delete application"
     )
 
 
 def api_change_app_status(app_guid, status, client=None):
-    """POST /rest/apps/{app_guid}/status"""
+    """POST /apps/{app_guid}/status"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/apps/{}/status".format(app_guid),
+        path="apps/{}/status".format(app_guid),
         body={"state": status},
         msg="PLATFORM: restage application"
     )
 
 
 def api_get_app_bindings(app_guid, client=None):
-    """GET /rest/apps/{app_guid}/service_bindings"""
+    """GET /apps/{app_guid}/service_bindings"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     response = client.request(
         method=HttpMethod.GET,
-        path="rest/apps/{}/service_bindings".format(app_guid),
+        path="apps/{}/service_bindings".format(app_guid),
         msg="PLATFORM: get application bindings"
     )
     return response["resources"]
 
 
 def api_create_service_binding(app_guid, service_instance_guid, client=None):
-    """POST /rest/apps/{app_guid}/service_bindings"""
+    """POST /apps/{app_guid}/service_bindings"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/apps/{}/service_bindings".format(app_guid),
+        path="apps/{}/service_bindings".format(app_guid),
         body={"service_instance_guid": service_instance_guid},
         msg="PLATFORM: Create binding for app and service"
     )
 
 
 def api_delete_service_binding(binding_guid, client=None):
-    """DELETE /rest/service_bindings/{binding_guid}"""
+    """DELETE /service_bindings/{binding_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/service_bindings/{}".format(binding_guid),
+        path="service_bindings/{}".format(binding_guid),
         msg="PLATFORM: delete binding"
     )
 

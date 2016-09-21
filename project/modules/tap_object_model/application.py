@@ -24,8 +24,7 @@ import config
 from ..http_client.http_client import HttpClient
 from ..exceptions import UnexpectedResponseError
 from ..tap_cli import TapCli
-from ..http_calls import cloud_foundry as cf
-from ..http_calls.platform import service_catalog, api_service
+from ..http_calls.platform import api_service
 from ..tap_logger import log_http_request, log_http_response
 from ..test_names import generate_test_object_name
 from ..http_client.configuration_provider.console import ConsoleConfigurationProvider
@@ -83,7 +82,7 @@ class Application(object):
 
     @classmethod
     def update_manifest(cls, manifest: dict, app_name: str,
-                        bound_services: list, env: list) -> dict:
+                        bound_services: list, env: dict) -> dict:
         """Updates the name in manifest, replaces the required services
         and appends user defined envs.
 
@@ -100,7 +99,7 @@ class Application(object):
         """
         manifest[cls.APP_NAME] = app_name
 
-        if bound_services != None:
+        if bound_services is not None:
             if cls.SERVICES not in manifest:
                 manifest[cls.SERVICES] = []
             manifest[cls.SERVICES] = bound_services
@@ -108,13 +107,12 @@ class Application(object):
             if cls.SERVICES in manifest:
                 del manifest[cls.SERVICES]
 
-        if env != None:
+        if env is not None:
             if cls.ENV not in manifest:
                 manifest[cls.ENV] = {}
-            for par in env:
-                manifest[cls.ENV][par[0]] = par[1]
+            manifest[cls.ENV].update(env)
 
-        if config.cf_proxy != None:
+        if config.cf_proxy is not None:
             if cls.ENV not in manifest:
                 manifest[cls.ENV] = {}
             http_proxy = "http://{}:911".format(config.cf_proxy)
@@ -124,10 +122,18 @@ class Application(object):
 
         return manifest
 
+    @staticmethod
+    @retry(AssertionError, tries=10, delay=5)
+    def _get_app(org_id, name, client=None):
+        apps = Application.get_list(org_id, client)
+        application = next((app for app in apps if app.name == name), None)
+        assert application is not None, "App {} has not been created on the Platform".format(name)
+        return application
+
     @classmethod
     def push(cls, context, source_directory: str, name: str=None,
              org_id: str=None, bound_services: list=None, env: dict=None,
-             client: HttpClient=None):
+             tap_dir="/tmp/", client: HttpClient=None):
         """Pushes the application from source directory with provided name,
         services and envs.
 
@@ -140,6 +146,7 @@ class Application(object):
             bound_services: iterable with bound service names to be included
                             in manifest the manifest
             env: dict with app's env values to be added to manifest
+            tap_dir: dir with tap cli. By default it will be used from /tmp/.
             client: The Http client to use. If None, default (admin via console)
                     will be used.
 
@@ -163,7 +170,7 @@ class Application(object):
         # Push the application
         try:
             # Assume we are already logged in
-            TapCli(source_directory).push()
+            TapCli(tap_dir).push(source_directory)
         except:
             apps = Application.get_list(org_id, client)
             application = next((app for app in apps if app.name == name), None)
@@ -172,12 +179,7 @@ class Application(object):
             raise
 
         # retrieve the application - check that push succeeded
-        apps = Application.get_list(org_id, client)
-        application = next((app for app in apps if app.name == name), None)
-
-        if application is None:
-            raise AssertionError("App {} has not been created on the Platform".format(name))
-
+        application = cls._get_app(org_id, name, client)
         context.apps.append(application)
         return application
 
@@ -300,13 +302,13 @@ class Application(object):
         Returns:
             Application details
         """
-        response = api_service.get_application(self._client, self.app_id)
+        response = api_service.get_application(self.app_id, self._client)
         return self._get_details_from_response(response)
 
     def delete(self):
         """Deletes the application from tap
         """
-        api_service.delete_application(self._client, self.app_id)
+        api_service.delete_application(self.app_id, self._client)
 
     def cleanup(self):
         """Deletes the application from tap
@@ -316,22 +318,20 @@ class Application(object):
     def api_start(self):
         """Sends the start command to application
         """
-        api_service.start_application(self._client, self.app_id)
+        api_service.start_application(self.app_id, self._client)
 
     def api_stop(self):
         """Sends the stop command to application
         """
-        api_service.stop_application(self._client, self.app_id)
+        api_service.stop_application(self.app_id, self._client)
 
-    def _update_state(self):
+    def _update(self):
         """Updates the state of the application. If the application is
         not present, assertion kicks in
         """
-        applications = self.get_list(self.org_id, self._client)
-        application = next((app for app in applications if app.name == self.name), None)
-        assert application is not None, "App does not exist"
+        application = self._get_app(self.org_id, self.name)
         self._state = application._state
-
+        self.urls = application.urls
 
     @retry(AssertionError, tries=30, delay=2)
     def ensure_running(self):
@@ -339,7 +339,7 @@ class Application(object):
 
         If the application hasn't started, assertion kicks in
         """
-        self._update_state()
+        self._update()
         assert self.is_running is True, "App is not started"
 
     @retry(AssertionError, tries=30, delay=2)
@@ -348,5 +348,5 @@ class Application(object):
 
         If the application hasn't stopped, assertion kicks in
         """
-        self._update_state()
+        self._update()
         assert self.is_stopped is True, "App is not stopped"

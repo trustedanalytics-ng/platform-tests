@@ -20,10 +20,10 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_router_metrics(client=None):
-    """GET /rest/metrics/load-data"""
+    """GET /metrics/load-data"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/metrics/load-data",
+        path="metrics/load-data",
         msg="PLATFORM: get router metrics"
     )

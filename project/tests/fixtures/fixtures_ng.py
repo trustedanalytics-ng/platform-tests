@@ -28,10 +28,11 @@ import config
 import modules.command
 from modules import file_utils
 from modules.app_sources import AppSources
-from modules.constants import TapGitHub, RelativeRepositoryPaths
+from modules.constants import TapGitHub, RelativeRepositoryPaths, ApplicationPath
 from modules.constants.urls import Urls
 from modules.tap_cli import TapCli
 from modules.tap_logger import log_fixture, step
+from modules.tap_object_model import Application
 
 
 @pytest.fixture(scope="session")

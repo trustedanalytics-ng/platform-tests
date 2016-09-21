@@ -21,7 +21,7 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 def api_publish_dataset(category, creation_time, data_sample, format, is_public, org_guid, record_count, size,
                         source_uri, target_uri, title, client=None):
-    """POST /rest/tables"""
+    """POST /tables"""
     body = {
         "category": category,
         "creationTime": creation_time,
@@ -38,7 +38,7 @@ def api_publish_dataset(category, creation_time, data_sample, format, is_public,
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/tables",
+        path="tables",
         body=body,
         msg="PLATFORM: publish dataset in hive"
     )

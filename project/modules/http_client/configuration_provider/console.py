@@ -31,7 +31,7 @@ class ConsoleConfigurationProvider(BaseConfigurationProvider):
             password = config.admin_password
         return HttpClientConfiguration(
             client_type=HttpClientType.CONSOLE,
-            url=config.console_url,
+            url="{}/rest".format(config.console_url),
             username=username,
             password=password
         )

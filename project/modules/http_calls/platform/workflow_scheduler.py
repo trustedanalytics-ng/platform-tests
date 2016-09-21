@@ -20,7 +20,7 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 
 
 def api_get_jobs_list(org_guid, amount, unit, client=None):
-    """GET /rest/v1/oozie/jobs/workflow"""
+    """GET /v1/oozie/jobs/workflow"""
     params = {
         "amount": amount,
         "org": org_guid,
@@ -29,7 +29,7 @@ def api_get_jobs_list(org_guid, amount, unit, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/v1/oozie/jobs/workflow",
+        path="v1/oozie/jobs/workflow",
         params=params
     )
 
@@ -37,7 +37,7 @@ def api_get_jobs_list(org_guid, amount, unit, client=None):
 def api_create_job(org_guid, name, start=None, end=None, amount=None, unit=None, zone_id=None, check_column=None,
                    import_mode=None, jdbc_uri=None, last_value=None, password=None, table=None, target_dir=None,
                    username=None, client=None):
-    """POST /rest/v1/oozie/schedule_job/coordinated"""
+    """POST /v1/oozie/schedule_job/coordinated"""
     params = {"org": org_guid}
     frequency = {"amount": amount, "unit": unit}
     body_schedule_keys = ["start", "end", "frequency", "zoneId"]
@@ -51,18 +51,18 @@ def api_create_job(org_guid, name, start=None, end=None, amount=None, unit=None,
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/v1/oozie/schedule_job/coordinated",
+        path="v1/oozie/schedule_job/coordinated",
         params=params,
         body=body
     )
 
 
 def api_get_job_details(org_guid, job_id, client=None):
-    """GET /rest/v1/oozie/jobs/workflow/{id}"""
+    """GET /v1/oozie/jobs/workflow/{id}"""
     params = {"org": org_guid}
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/v1/oozie/jobs/workflow/{}".format(job_id),
+        path="v1/oozie/jobs/workflow/{}".format(job_id),
         params=params
     )

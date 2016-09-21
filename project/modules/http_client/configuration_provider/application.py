@@ -29,7 +29,7 @@ class ApplicationConfigurationProvider(object):
             username = config.admin_username
             password = config.admin_password
         return HttpClientConfiguration(
-            client_type=HttpClientType.APPLICATION,
+            client_type=HttpClientType.NO_AUTH,
             url=cls._prepare_url(url),
             username=username,
             password=password

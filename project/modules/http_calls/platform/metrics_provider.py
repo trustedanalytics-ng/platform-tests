@@ -20,10 +20,10 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_org_metrics(org_guid, client=None):
-    """GET /rest/orgs/{org_guid}/metrics"""
+    """GET /orgs/{org_guid}/metrics"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/orgs/{}/metrics".format(org_guid),
+        path="orgs/{}/metrics".format(org_guid),
         msg="PLATFORM: get metrics"
     )

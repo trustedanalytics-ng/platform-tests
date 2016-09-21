@@ -22,21 +22,21 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 
 
 def api_get_organizations(client=None):
-    """GET /rest/orgs"""
+    """GET /orgs"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/orgs",
+        path="orgs",
         msg="PLATFORM: get org list"
     )
 
 
 def api_create_organization(name, client=None):
-    """POST /rest/orgs"""
+    """POST /orgs"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     response = client.request(
         method=HttpMethod.POST,
-        path="rest/orgs",
+        path="orgs",
         body={"name": name},
         msg="PLATFORM: create an org"
     )
@@ -44,31 +44,31 @@ def api_create_organization(name, client=None):
 
 
 def api_delete_organization(org_guid, client=None):
-    """DELETE /rest/orgs/{organization_guid}"""
+    """DELETE /orgs/{organization_guid}"""
     ref_org_guid, _ = cf.cf_get_ref_org_and_space_guids()
     if org_guid == ref_org_guid:
         raise YouMustBeJokingException("You're trying to delete the reference org")
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/orgs/{}".format(org_guid),
+        path="orgs/{}".format(org_guid),
         msg="PLATFORM: delete org"
     )
 
 
 def api_rename_organization(org_guid, new_name, client=None):
-    """PUT /rest/orgs/{organization_guid}/name"""
+    """PUT /orgs/{organization_guid}/name"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.PUT,
-        path="rest/orgs/{}/name".format(org_guid),
+        path="orgs/{}/name".format(org_guid),
         body={"name": new_name},
         msg="PLATFORM: rename org"
     )
 
 
 def api_add_organization_user(org_guid, username, role=None, client=None):
-    """POST /rest/orgs/{organization_guid}/users"""
+    """POST /orgs/{organization_guid}/users"""
     body = {
         "username": username,
         "org_guid": org_guid,
@@ -77,89 +77,89 @@ def api_add_organization_user(org_guid, username, role=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/orgs/{}/users".format(org_guid),
+        path="orgs/{}/users".format(org_guid),
         body=body,
         msg="PLATFORM: add user to org"
     )
 
 
 def api_get_organization_users(org_guid, client=None):
-    """GET /rest/orgs/{organization_guid}/users"""
+    """GET /orgs/{organization_guid}/users"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/orgs/{}/users".format(org_guid),
+        path="orgs/{}/users".format(org_guid),
         msg="PLATFORM: get list of users in org"
     )
 
 
 def api_delete_organization_user(org_guid, user_guid, client=None):
-    """DELETE /rest/orgs/{organization_guid}/users/{user_guid}"""
+    """DELETE /orgs/{organization_guid}/users/{user_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/orgs/{}/users/{}".format(org_guid, user_guid),
+        path="orgs/{}/users/{}".format(org_guid, user_guid),
         msg="PLATFORM: delete user from org"
     )
 
 
 def api_update_org_user_role(org_guid, user_guid, new_role=None, client=None):
-    """POST /rest/orgs/{organization_guid}/users/{user_guid}"""
+    """POST /orgs/{organization_guid}/users/{user_guid}"""
     body = {}
     if new_role is not None:
         body["role"] = new_role
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/orgs/{}/users/{}".format(org_guid, user_guid),
+        path="orgs/{}/users/{}".format(org_guid, user_guid),
         body=body,
         msg="PLATFORM: update user roles in org"
     )
 
 
 def api_get_invitations(client=None):
-    """GET /rest/invitations"""
+    """GET /invitations"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/invitations",
+        path="invitations",
         msg="PLATFORM: get list of all invitations"
     )
 
 
 def api_invite_user(email, client=None):
-    """POST /rest/invitations"""
+    """POST /invitations"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/invitations",
+        path="invitations",
         body={"email": email},
         msg="PLATFORM: invite new platform user"
     )
 
 
 def api_delete_invitation(email, client=None):
-    """DELETE /rest/invitations/{invitation}"""
+    """DELETE /invitations/{invitation}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="rest/invitations/{}".format(email),
+        path="invitations/{}".format(email),
         msg="PLATFORM: delete invitation"
     )
 
 
 def api_resend_invitation(email, client=None):
-    """POST /rest/invitations/{invitation}/resend"""
+    """POST /invitations/{invitation}/resend"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/invitations/{}/resend".format(email),
+        path="invitations/{}/resend".format(email),
         msg="PLATFORM: resend invitation"
     )
 
 
 def api_register_new_user(code, password=None, org_name=None, client=None):
-    """POST /rest/registrations"""
+    """POST /registrations"""
     msg = "PLATFORM: register as a new user"
     if org_name is not None:
         msg += " with new organization"
@@ -171,7 +171,7 @@ def api_register_new_user(code, password=None, org_name=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="rest/registrations",
+        path="registrations",
         params={"code": code},
         body=body,
         msg=msg

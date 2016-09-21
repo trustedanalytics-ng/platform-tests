@@ -20,41 +20,41 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 
 
 def api_get_version(client=None):
-    """GET /rest/v1/versions"""
+    """GET /v1/versions"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/v1/versions",
+        path="v1/versions",
         msg="PLATFORM: get versions"
     )
 
 
 def api_get_snapshots(client=None):
-    """GET /rest/v1/snapshots"""
+    """GET /v1/snapshots"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/v1/snapshots",
+        path="v1/snapshots",
         msg="PLATFORM: get snapshots"
     )
 
 
 def api_trigger_snapshots(client=None):
-    """GET /rest/v1/snapshots/trigger"""
+    """GET /v1/snapshots/trigger"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/v1/snapshots/trigger",
+        path="v1/snapshots/trigger",
         msg="PLATFORM: trigger snapshots"
     )
 
 
 def api_get_snapshots_diff(snapshot_0_number, snapshot_1_number, client=None):
-    """GET /rest/v1/snapshots/{snapshot_0_number}/diff/{snapshot_1_number}"""
+    """GET /v1/snapshots/{snapshot_0_number}/diff/{snapshot_1_number}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/v1/snapshots/{}/diff/{}".format(snapshot_0_number, snapshot_1_number),
+        path="v1/snapshots/{}/diff/{}".format(snapshot_0_number, snapshot_1_number),
         params={"aggregateBy": "type"},
         msg="PLATFORM: get snapshots diff"
     )

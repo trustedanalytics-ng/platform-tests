@@ -20,7 +20,7 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 
 
 def api_tools_service_instances(service_label, space_guid, org_guid=None, client=None):
-    """GET /rest/tools/service_instances"""
+    """GET /tools/service_instances"""
     params = {
         "service": service_label,
         "space": space_guid
@@ -30,7 +30,7 @@ def api_tools_service_instances(service_label, space_guid, org_guid=None, client
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/tools/service_instances",
+        path="tools/service_instances",
         params=params,
         msg="PLATFORM: get tools for service instance"
     )

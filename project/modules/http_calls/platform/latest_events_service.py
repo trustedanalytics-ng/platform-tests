@@ -20,7 +20,7 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_latest_events(org_guid=None, client=None):
-    """GET /rest/les/events"""
+    """GET /les/events"""
     params = {}
     if org_guid is not None:
         params = {
@@ -29,7 +29,7 @@ def api_get_latest_events(org_guid=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="rest/les/events",
+        path="les/events",
         params=params,
         msg="PLATFORM: get latest events"
     )
