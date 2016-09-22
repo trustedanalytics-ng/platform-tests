@@ -60,7 +60,7 @@ class TestDataSetFromHdfs(object):
     @pytest.mark.skip("We don't know how this should work")
     def test_create_transfer_from_atk_model_file(self, context, test_org, atk_virtualenv, initial_dataset):
         step("Get atk app")
-        atk_app = next((app for app in Application.api_get_list() if app.name == "atk"), None)
+        atk_app = next((app for app in Application.get_list() if app.name == "atk"), None)
         if atk_app is None:
             raise AssertionError("Atk app not found")
 

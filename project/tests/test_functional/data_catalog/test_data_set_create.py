@@ -51,7 +51,7 @@ class TestCreateDataSets(object):
     @pytest.fixture(scope="class", autouse=True)
     def target_uri(cls, test_org):
         step("Get target uri from hdfs instance")
-        hdfs = next(app for app in Application.api_get_list() if "hdfs-downloader" in app.name)
+        hdfs = next(app for app in Application.get_list() if "hdfs-downloader" in app.name)
         cls.target_uri = hdfs.cf_api_env()['VCAP_SERVICES']['hdfs'][0]['credentials']['uri']
         cls.target_uri = cls.target_uri.replace("%{organization}", test_org.guid)
 
