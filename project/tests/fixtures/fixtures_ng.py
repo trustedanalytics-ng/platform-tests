@@ -41,17 +41,18 @@ def centos_key_path(request):
         ilab_deploy = AppSources.get_repository(repo_name=TapGitHub.ilab_deploy, repo_owner=TapGitHub.intel_data)
         path = os.path.join(ilab_deploy.path, RelativeRepositoryPaths.ilab_centos_key)
         request.addfinalizer(lambda: shutil.rmtree(ilab_deploy.path))
-    subprocess.check_call(["chmod", "600", path])
+        #TODO: Use library calls instead of subprocess
+        subprocess.check_call(["chmod", "600", path])
     return path
 
 
-@retry(ConnectionRefusedError, tries=20, delay=5)
+@retry(ConnectionRefusedError, tries=10, delay=5)
 def _check_tunnel_established(host, port):
     sock = socket.create_connection((host, port))
     sock.close()
 
 
-@retry(subprocess.TimeoutExpired, tries=5, delay=2)
+@retry(subprocess.TimeoutExpired, tries=5, delay=30)
 def _check_if_proc_finished(proc, command):
     if (None == proc.poll()):
         raise subprocess.TimeoutExpired(command, "")
@@ -60,7 +61,8 @@ def _check_if_proc_finished(proc, command):
 def _get_latest_instance(centos_key_path):
     rex = re.compile(r'TAP-[0-9]+[\.][0-9]+[\.][0-9]+$')
     command = ["ssh", "-i", centos_key_path,
-               "-o StrictHostKeyChecking=no",
+               "-o UserKnownHostsFile=/dev/null",
+               "-o StrictHostKeyChecking=no", "-o GSSAPIAuthentication=no",
                "{}@{}".format(config.ng_jump_username, config.ng_jump_ip),
                "ls"]
     result = modules.command.run(command)
@@ -74,7 +76,8 @@ def open_tunnel(request, centos_key_path):
     assert config.ng_jump_ip is not None
     command = ["ssh", "{}@{}".format(config.ng_jump_username, config.ng_jump_ip),
                "-N",
-               "-o StrictHostKeyChecking=no",
+               "-o UserKnownHostsFile=/dev/null",
+               "-o StrictHostKeyChecking=no", "-o GSSAPIAuthentication=no",
                "-i", centos_key_path,
                "-D", str(config.ng_socks_proxy_port)]
     log_fixture("Opening tunnel {}".format(" ".join(command)))
@@ -103,6 +106,7 @@ def tap_cli(centos_key_path):
 
     log_fixture("Download tap client")
     command = ["scp", "-i", centos_key_path,
+               "-o UserKnownHostsFile=/dev/null",
                "-o StrictHostKeyChecking=no", "-o GSSAPIAuthentication=no",
                "{}@{}:{}".format(config.ng_jump_username, config.ng_jump_ip, tap_binary),
                target_directory]
