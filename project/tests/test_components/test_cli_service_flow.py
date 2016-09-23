@@ -121,6 +121,7 @@ class TestCliService(TestCliServiceFlow):
     SERVICE_INSTANCE_NAME = generate_test_object_name(separator="-")
     short = False
 
+    @pytest.mark.bugs("DPNG-11175 [api-tests] CLI create_service_instance fails after FAILURE state for created instance")
     def test_1_create_service_instance(self, tap_cli, example_offer, cli_login):
         step("Check that user can create service instance")
         output = tap_cli.create_service([self.OFFERING_NAME, self.PLAN_NAME, self.SERVICE_INSTANCE_NAME],
