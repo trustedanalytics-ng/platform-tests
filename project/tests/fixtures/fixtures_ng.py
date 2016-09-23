@@ -36,12 +36,13 @@ from modules.tap_logger import log_fixture, step
 
 @pytest.fixture(scope="session")
 def centos_key_path(request):
-    path = config.ng_jump_key_path
+    path = os.path.expanduser(config.ng_jump_key_path)
+    assert os.path.isfile(path), "No such file {}".format(path)
     if path is None:
         ilab_deploy = AppSources.get_repository(repo_name=TapGitHub.ilab_deploy, repo_owner=TapGitHub.intel_data)
         path = os.path.join(ilab_deploy.path, RelativeRepositoryPaths.ilab_centos_key)
         request.addfinalizer(lambda: shutil.rmtree(ilab_deploy.path))
-        #TODO: Use library calls instead of subprocess
+        # TODO: Use library calls instead of subprocess
         subprocess.check_call(["chmod", "600", path])
     return path
 
@@ -163,5 +164,4 @@ def download_unpack_and_check_sample_app(request, sample_app_path):
     file_list = getattr(request.cls, "FILES_LIST")
     missing_files = [app_file for app_file in file_list if app_file not in ls]
     assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
-
 
