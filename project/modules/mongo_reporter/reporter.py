@@ -37,6 +37,8 @@ class TestResultType:
 class TestRunType:
     API_SMOKE = "api-smoke"
     API_FUNCTIONAL = "api-functional"
+    API_COMPONENTS = "api-components"
+    API_OTHER = "api-other"
 
 
 class MongoReporter(object):

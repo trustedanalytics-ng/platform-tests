@@ -27,6 +27,9 @@ def test_type(request):
             return TestRunType.API_SMOKE
         if "test_functional" in path:
             return TestRunType.API_FUNCTIONAL
+        if "test_components" in path:
+            return TestRunType.API_COMPONENTS
+    return TestRunType.API_OTHER
 
 
 def get_tap_components_from_request(request):
