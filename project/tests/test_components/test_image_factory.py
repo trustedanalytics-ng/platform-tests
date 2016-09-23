@@ -85,6 +85,7 @@ class TestImageFactory:
         image = Image.create(class_context, self.catalog_image.id)
         assert image is not None
 
+    @pytest.mark.bugs("DPNG-11177 [api-tests] Image Factory check_blob_was_deleted test fails after no attribute 'typename'")
     def test_7_check_blob_was_deleted(self):
         step("Check whether blob was successfully removed from blob-store")
         assert_raises_http_exception(ImageFactoryHttpStatus.CODE_NOT_FOUND,
