@@ -30,7 +30,7 @@ from .organization import Organization
 from .platform import Platform
 from .platform_tests import TestSuite
 from .platform_snapshot import PlatformSnapshot
-from .service_binding import ServiceBinding
+from .binding import Binding
 from .service_broker import ServiceBroker
 from .service_key import ServiceKey
 from .service_instance import AtkInstance, ServiceInstance

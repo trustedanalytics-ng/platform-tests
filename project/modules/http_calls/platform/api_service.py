@@ -245,3 +245,36 @@ def delete_offering(client: HttpClient, offering_id):
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
+
+def get_app_bindings(app_guid, client=None):
+    """GET /bindings/{app_guid}"""
+    if client is None:
+        client = _get_client()
+    response = client.request(
+        method=HttpMethod.GET,
+        path="bindings/{}".format(app_guid),
+        msg="Get application bindings"
+    )
+    return response["resources"]
+
+
+def bind(service_instance_guid, app_guid, client=None):
+    """POST /bind/{service_instance_guid}/{app_guid}"""
+    if client is None:
+        client = _get_client()
+    return client.request(
+        method=HttpMethod.POST,
+        path="bind/{}/{}".format(service_instance_guid, app_guid),
+        msg="Bind app and instance"
+    )
+
+
+def unbind(service_instance_guid, app_guid, client=None):
+    """POST /unbind/{app_guid}/{service_instance_guid}"""
+    if client is None:
+        client = _get_client()
+    return client.request(
+        method=HttpMethod.POST,
+        path="unbind/{}/{}".format(app_guid, service_instance_guid),
+        msg="Unbind app from instance"
+    )

@@ -22,7 +22,7 @@ from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP, TapGitHub, Urls
 from modules.markers import priority, incremental
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, Transfer, DataSet, User, ServiceBinding
+from modules.tap_object_model import Application, ServiceInstance, Transfer, DataSet, User, Binding
 
 logged_components = (TAP.service_catalog, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_reader)]
@@ -79,7 +79,7 @@ class TestDatasetReader:
     def cleanup(self, request, hdfs_instance, kerberos_instance):
         def fin():
             if self.hdfs_reader_app is not None:
-                for binding in ServiceBinding.api_get_list(self.hdfs_reader_app.guid):
+                for binding in Binding.api_get_list(self.hdfs_reader_app.guid):
                     binding.api_delete()
         request.addfinalizer(fin)
 

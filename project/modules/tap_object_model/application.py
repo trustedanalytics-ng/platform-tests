@@ -54,7 +54,7 @@ class Application(object):
     COMPARABLE_ATTRIBUTES = ["name", "app_id", "is_running"]
 
     def __init__(self, name: str, app_id: str, state: str,
-                 instances: list, urls: list, org_id: str=None,
+                 instances: list, urls: list, bindings: list, org_id: str=None,
                  client: HttpClient=None):
         """Class initializer.
 
@@ -74,6 +74,7 @@ class Application(object):
         self._state = state
         self.instances = instances
         self.urls = tuple(urls)
+        self.bindings = bindings
         if client is None:
             self._client = self._get_default_client()
         else:
@@ -290,7 +291,7 @@ class Application(object):
         applications = []
         for app in response:
             application = cls(name=app["name"], app_id=app["id"],
-                              org_id=app.get("org_id"), state=app["state"],
+                              org_id=app.get("org_id"), state=app["state"], bindings=app["bindings"],
                               urls=app["urls"], instances=(app["running_instances"]),
                               client=client)
             applications.append(application)
@@ -311,8 +312,6 @@ class Application(object):
         api_service.delete_application(self.app_id, self._client)
 
     def cleanup(self):
-        """Deletes the application from tap
-        """
         self.delete()
 
     def api_start(self):

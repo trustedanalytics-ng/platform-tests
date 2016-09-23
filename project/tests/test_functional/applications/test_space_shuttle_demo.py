@@ -24,7 +24,7 @@ from modules.http_calls.platform import space_shuttle_demo
 from modules.markers import incremental, priority
 from modules.platform_version import get_appstack_yml
 from modules.tap_logger import step
-from modules.tap_object_model import Application, DataSet, ServiceBinding, ServiceInstance
+from modules.tap_object_model import Application, DataSet, Binding, ServiceInstance
 
 logged_components = (TAP.space_shuttle_demo,)
 pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
@@ -65,7 +65,7 @@ class TestSpaceShuttleDemo:
     def test_1_check_if_app_has_correct_bindings(self, core_space, space_shuttle_demo_app):
         step('Check required services are correctly bound')
         instances = ServiceInstance.api_get_list(core_space.guid)
-        bindings = ServiceBinding.api_get_list(app_guid=space_shuttle_demo_app.guid)
+        bindings = Binding.api_get_list(app_guid=space_shuttle_demo_app.guid)
         binding_guids = [b.service_instance_guid for b in bindings]
         bound_instance_labels = [i.service_label for i in instances if i.guid in binding_guids]
         assert sorted(self.expected_bindings) == sorted(bound_instance_labels)

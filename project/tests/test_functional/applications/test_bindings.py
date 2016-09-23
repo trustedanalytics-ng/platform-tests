@@ -20,7 +20,7 @@ from modules.constants import ServiceCatalogHttpStatus, ServiceLabels, ServicePl
 from modules.http_calls import cloud_foundry as cf
 from modules.markers import priority, incremental
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceBinding, ServiceInstance
+from modules.tap_object_model import Application, Binding, ServiceInstance
 from tests.fixtures import assertions, fixtures
 
 
@@ -45,7 +45,7 @@ class TestBindings:
     @pytest.fixture(scope="function")
     def test_binding(self, request, sample_python_app, test_instance):
         step("Bind test app and test instance")
-        test_binding = ServiceBinding.api_create(sample_python_app.guid, test_instance.guid)
+        test_binding = Binding.api_create(sample_python_app.guid, test_instance.guid)
 
         def fin():
             fixtures.delete_or_not_found(test_binding.cleanup)
@@ -55,15 +55,15 @@ class TestBindings:
     @priority.high
     def test_app_bind_unbind_service_instance(self, sample_python_app, test_instance):
         step("Check that test app has no service bindings")
-        bindings = ServiceBinding.api_get_list(sample_python_app.guid)
+        bindings = Binding.api_get_list(sample_python_app.guid)
         assert len(bindings) == 0
         step("Bind service instance to app and check")
-        test_binding = ServiceBinding.api_create(sample_python_app.guid, test_instance.guid)
-        bindings = ServiceBinding.api_get_list(sample_python_app.guid)
+        test_binding = Binding.api_create(sample_python_app.guid, test_instance.guid)
+        bindings = Binding.api_get_list(sample_python_app.guid)
         assert test_binding in bindings
         step("Unbind service instance from application and check there are no bindings")
         test_binding.api_delete()
-        bindings = ServiceBinding.api_get_list(sample_python_app.guid)
+        bindings = Binding.api_get_list(sample_python_app.guid)
         assert test_binding not in bindings
 
     @priority.high
@@ -73,7 +73,7 @@ class TestBindings:
                                                 ServiceCatalogHttpStatus.MSG_BOUND_INSTANCE,
                                                 test_instance.api_delete)
         step("Check that the binding was not deleted")
-        bindings = ServiceBinding.api_get_list(sample_python_app.guid)
+        bindings = Binding.api_get_list(sample_python_app.guid)
         assert test_binding in bindings
 
     @priority.medium
@@ -95,13 +95,13 @@ class TestCreateDeleteBinding:
 
     @priority.medium
     def test_0_create_binding(self, test_instance, sample_java_app):
-        self.__class__.binding = ServiceBinding.api_create(sample_java_app.guid, test_instance.guid)
+        self.__class__.binding = Binding.api_create(sample_java_app.guid, test_instance.guid)
         bindings = sample_java_app.cf_api_get_summary()['service_names']
         assert list((test_instance.name,)) == bindings
 
     @priority.medium
     def test_1_compare_bindings_list_with_cf(self, sample_java_app):
-        platform_bindings_list = ServiceBinding.api_get_list(sample_java_app.guid)
+        platform_bindings_list = Binding.api_get_list(sample_java_app.guid)
         cf_bindings_list = cf.cf_api_get_apps_bindings(sample_java_app.guid)['resources']
         assert len(cf_bindings_list) == len(platform_bindings_list) and len(cf_bindings_list)
 
@@ -113,7 +113,7 @@ class TestCreateDeleteBinding:
 
     @priority.medium
     def test_3_compare_bindings_list_with_cf(self, sample_java_app):
-        platform_bindings_list = ServiceBinding.api_get_list(sample_java_app.guid)
+        platform_bindings_list = Binding.api_get_list(sample_java_app.guid)
         cf_bindings_list = cf.cf_api_get_apps_bindings(sample_java_app.guid)['resources']
         assert cf_bindings_list == platform_bindings_list
 
@@ -137,31 +137,31 @@ class TestBindingErrors:
         step("Try to create service binding to a non-existing service instance")
         expected_error_message = ServiceCatalogHttpStatus.MSG_SERVICE_INST_NOT_FOUND.format(self.NOT_EXISTING_GUID)
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
-                                                ServiceBinding.api_create, sample_python_app.guid, self.NOT_EXISTING_GUID)
+                                                Binding.api_create, sample_python_app.guid, self.NOT_EXISTING_GUID)
 
     @pytest.mark.sample_apps_test
     def test_cannot_bind_instance_with_incorrect_guid(self, sample_python_app):
         step("Try to create service binding with an incorrect service instance guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
                                                 ServiceCatalogHttpStatus.MSG_BAD_REQUEST,
-                                                ServiceBinding.api_create, sample_python_app.guid, self.INCORRECT_GUID)
+                                                Binding.api_create, sample_python_app.guid, self.INCORRECT_GUID)
 
     def test_cannot_bind_instance_to_not_existing_app(self, test_instance):
         step("Try to create service binding to a non existing app")
         expected_error_message = ServiceCatalogHttpStatus.MSG_APP_NOT_FOUND.format(self.NOT_EXISTING_GUID)
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
-                                                ServiceBinding.api_create, self.NOT_EXISTING_GUID, test_instance.guid)
+                                                Binding.api_create, self.NOT_EXISTING_GUID, test_instance.guid)
 
     @pytest.mark.bugs("DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid")
     def test_cannot_bind_instance_with_incorrect_app_guid(self, test_instance):
         step("Try to create service binding with incorrect app guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
                                                 ServiceCatalogHttpStatus.MSG_BAD_REQUEST,
-                                                ServiceBinding.api_create, self.INCORRECT_GUID, test_instance.guid)
+                                                Binding.api_create, self.INCORRECT_GUID, test_instance.guid)
 
     def test_cannot_delete_not_existing_binding(self):
         step("Try to delete non-existing binding")
-        test_binding = ServiceBinding(self.NOT_EXISTING_GUID, self.NOT_EXISTING_GUID, self.NOT_EXISTING_GUID)
+        test_binding = Binding(self.NOT_EXISTING_GUID, self.NOT_EXISTING_GUID, self.NOT_EXISTING_GUID)
         expected_error_message = ServiceCatalogHttpStatus.MSG_SERVICE_BINDING_NOT_FOUND.format(self.NOT_EXISTING_GUID)
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
                                                 test_binding.api_delete)
@@ -169,7 +169,7 @@ class TestBindingErrors:
     @pytest.mark.bugs("DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid")
     def test_cannot_delete_binding_using_incorrect_binding_guid(self):
         """ DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid """
-        test_binding = ServiceBinding(self.INCORRECT_GUID, self.INCORRECT_GUID, self.INCORRECT_GUID)
+        test_binding = Binding(self.INCORRECT_GUID, self.INCORRECT_GUID, self.INCORRECT_GUID)
         step("Try to delete service binding by providing incorrect binding guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
                                                 ServiceCatalogHttpStatus.MSG_BAD_REQUEST,

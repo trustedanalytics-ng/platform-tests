@@ -193,6 +193,7 @@ class TestApplication(unittest.TestCase):
         "http://thelonganduselesswebaddressthatnoonewillremember.com",
         "http://ashortandfriendlywebaddressthatseasytorememeber.com"
     ]
+    APP_BINDINGS = []
     BOUND_SERVICES = ["service_01", "service_02"]
     ENV = {"env_01" : "env_01_val", "env_02" : "env_02_val"}
 
@@ -287,7 +288,7 @@ class TestApplication(unittest.TestCase):
                              bound_services=self.BOUND_SERVICES, env=self.ENV)
 
         assert a == Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                                self.APP_INSTANCES, self.APP_URLS)
+                                self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         assert a._client == self.user_admin
 
@@ -298,7 +299,7 @@ class TestApplication(unittest.TestCase):
                              client=self.user_luser)
 
         assert a == Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                                self.APP_INSTANCES, self.APP_URLS)
+                                self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         assert a._client == self.user_luser
 
@@ -386,7 +387,7 @@ class TestApplication(unittest.TestCase):
                              bound_services=self.BOUND_SERVICES, env=self.ENV)
 
         assert a == Application(self.APP_NAME, self.APP_ID, "stopped",
-                                self.APP_INSTANCES, self.APP_URLS)
+                                self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
         assert a._client == self.user_admin
         assert a.is_stopped == True
         assert a.is_running == False
@@ -396,10 +397,10 @@ class TestApplication(unittest.TestCase):
     def test_lt_comparator(self):
         """Ensure the lt comparator doesn't crash anything."""
         a = Application(self.APP_NAME, "00100", self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         b = Application(self.APP_NAME, "01000", self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         assert a < b
 
@@ -408,7 +409,7 @@ class TestApplication(unittest.TestCase):
     def test_repr(self):
         """Ensure the __repr__ doesn't crash anything."""
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         assert a.__repr__() == "Application (name=" + self.APP_NAME + ", app_id=" + self.APP_ID + ")"
 
@@ -417,7 +418,7 @@ class TestApplication(unittest.TestCase):
     def test_hash(self):
         """Ensure the __hash__ doesn't crash anything."""
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         assert a.__hash__() == hash((a.name, a.app_id))
 
@@ -427,7 +428,7 @@ class TestApplication(unittest.TestCase):
     def test_start_stop(self):
         """Check if proper apis are called for start and stop operations"""
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         a.api_start()
         self.mock_api_service.start_application.assert_called_once_with(self.APP_ID,
@@ -438,7 +439,7 @@ class TestApplication(unittest.TestCase):
                                                                        self.user_admin)
 
         # Provide a non-standard client
-        a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE, [], [],
+        a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE, [], [], [],
                         None, self.user_luser)
 
         a.api_start()
@@ -494,7 +495,7 @@ class TestApplication(unittest.TestCase):
         self.mock_api_service.get_application.return_value = example_response
 
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         assert expected_response == a.get()
 
@@ -519,7 +520,7 @@ class TestApplication(unittest.TestCase):
         rsp = {"response": ""}
         self.mock_requests.send.return_value = rsp
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
-                        self.APP_INSTANCES, self.APP_URLS)
+                        self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
         path = "predefined"
         method = "GET"

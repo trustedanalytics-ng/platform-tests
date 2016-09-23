@@ -32,6 +32,7 @@ class Context(object):
         self.transfers = []
         self.apps = []
         self.service_instances = []
+        self.bindings = []
         self.service_offerings = []
         self.templates = []
         self.catalog = []
@@ -59,6 +60,7 @@ class Context(object):
             self._cleanup_test_objects(self.transfers)
         self._cleanup_test_objects(self.apps)
         self._cleanup_test_objects(self.service_instances)
+        self._cleanup_test_objects(self.bindings)
         self._cleanup_test_objects(self.service_offerings)
         self._cleanup_test_objects(self.orgs)
 

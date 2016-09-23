@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from .tap_object_model import Application, ServiceBinding, ServiceInstance
+from .tap_object_model import Application, Binding, ServiceInstance
 from .tap_logger import step
 from tests.fixtures.assertions import assert_in_with_retry
 
@@ -96,7 +96,7 @@ class ApplicationStackValidator(object):
     def __validate_bound_services(self, expected_bindings):
         """Check if all bound services are in requested application bindings."""
         service_list = ServiceInstance.api_get_list(self.__service.space_guid)
-        bound_services = ServiceBinding.api_get_list(self.__application.guid)
+        bound_services = Binding.api_get_list(self.__application.guid)
         for bound_service in bound_services:
             instance = next((si for si in service_list if si.guid == bound_service.service_instance_guid), None)
             assert instance is not None, "Bound service instance not found"

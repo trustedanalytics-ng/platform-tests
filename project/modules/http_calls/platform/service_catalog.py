@@ -228,36 +228,3 @@ def api_change_app_status(app_guid, status, client=None):
         msg="PLATFORM: restage application"
     )
 
-
-def api_get_app_bindings(app_guid, client=None):
-    """GET /apps/{app_guid}/service_bindings"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    response = client.request(
-        method=HttpMethod.GET,
-        path="apps/{}/service_bindings".format(app_guid),
-        msg="PLATFORM: get application bindings"
-    )
-    return response["resources"]
-
-
-def api_create_service_binding(app_guid, service_instance_guid, client=None):
-    """POST /apps/{app_guid}/service_bindings"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.POST,
-        path="apps/{}/service_bindings".format(app_guid),
-        body={"service_instance_guid": service_instance_guid},
-        msg="PLATFORM: Create binding for app and service"
-    )
-
-
-def api_delete_service_binding(binding_guid, client=None):
-    """DELETE /service_bindings/{binding_guid}"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.DELETE,
-        path="service_bindings/{}".format(binding_guid),
-        msg="PLATFORM: delete binding"
-    )
-
-
