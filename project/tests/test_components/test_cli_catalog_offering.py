@@ -23,6 +23,9 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 from fixtures.k8s_templates import template_example, catalog_service_example
 
+pytestmark = [pytest.mark.skip(reason="DPNG-10996 Unable to delete service offering")]
+
+
 
 class TestCliCatalogOffering:
     OFFERING_NAME = generate_test_object_name(separator="-")

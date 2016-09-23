@@ -26,6 +26,8 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 
+pytestmark = [pytest.mark.skip(reason="DPNG-10996 Unable to delete service offering")]
+
 class TestCliServiceFlow:
     OFFERING_NAME = None
     PLAN_NAME = None
