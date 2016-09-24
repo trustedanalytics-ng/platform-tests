@@ -1,0 +1,3 @@
+[bumpversion]
+files = abcde/fghij xyz
+current_version = test.version

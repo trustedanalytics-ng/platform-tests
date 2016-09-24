@@ -1,0 +1,29 @@
+#TeamCity build properties without 'system.' prefix
+#Sat Sep 24 17:37:25 CEST 2016
+agent.home.dir=/home/GER/sys_provteamcity/buildAgent
+agent.name=itp-isd-dp2-linux03
+agent.ownPort=9090
+agent.work.dir=/home/GER/sys_provteamcity/buildAgent/work
+build.number=24
+build.vcs.number=4a0fedf96b2db08c107ddd72a5c06ae887b7d5f1
+build.vcs.number.1=4a0fedf96b2db08c107ddd72a5c06ae887b7d5f1
+build.vcs.number.ItpIsd_DiscoveryPeak20_HttpsGithubComIntelDataApiTestsMaster=4a0fedf96b2db08c107ddd72a5c06ae887b7d5f1
+java.io.tmpdir=/home/GER/sys_provteamcity/buildAgent/temp/buildTmp
+teamcity.agent.cpuBenchmark=535
+teamcity.agent.dotnet.agent_url=http\://localhost\:9090/RPC2
+teamcity.agent.dotnet.build_id=3585849
+teamcity.auth.*******=YVDI4L3cN6envTIpWHwot3Yc2H7lbXWF
+teamcity.auth.userId=TeamCityBuildId\=3585849
+teamcity.build.changedFiles.file=/home/GER/sys_provteamcity/buildAgent/temp/buildTmp/changedFiles3121461767058207784.txt
+teamcity.build.checkoutDir=/home/GER/sys_provteamcity/buildAgent/work/4c3d6cc61468dee0
+teamcity.build.id=3585849
+teamcity.build.properties.file=/home/GER/sys_provteamcity/buildAgent/temp/buildTmp/teamcity.build1707500977175066861.properties
+teamcity.build.tempDir=/home/GER/sys_provteamcity/buildAgent/temp/buildTmp
+teamcity.build.workingDir=/home/GER/sys_provteamcity/buildAgent/work/4c3d6cc61468dee0/project
+teamcity.buildConfName=api-tests-AWS-manual
+teamcity.buildType.id=ItpIsd_DiscoveryPeak20_TapNgJupiter_Tests_TapngApiTestsAwsManual
+teamcity.configuration.properties.file={****replace_me****}
+teamcity.projectName=TAP.08-api-tests
+teamcity.runner.properties.file=/home/GER/sys_provteamcity/buildAgent/temp/buildTmp/teamcity.runner1140783251332756154.properties
+teamcity.tests.recentlyFailedTests.file=/home/GER/sys_provteamcity/buildAgent/temp/buildTmp/testsToRunFirst2795866025996597551.txt
+teamcity.version=9.1.3 (build 37176)

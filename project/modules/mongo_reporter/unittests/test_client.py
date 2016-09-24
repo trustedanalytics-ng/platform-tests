@@ -19,10 +19,10 @@ from unittest import mock
 from bson import ObjectId
 import mongomock
 
-from modules.mongo_reporter import client
+from modules.mongo_reporter import _client
 
 
-@mock.patch.object(client, "MongoClient", mongomock.MongoClient)
+@mock.patch.object(_client, "MongoClient", mongomock.MongoClient)
 class TestMongoClient:
     test_document = {"hello": "kitty", "int": 1, "bool": True, "none": None}
     test_db_name = "test_db"
@@ -30,11 +30,11 @@ class TestMongoClient:
     uri = "mongodb://mockmongo:1234/{}".format(test_db_name)
 
     def test_init(self):
-        db_client = client.DBClient(uri=self.uri)
+        db_client = _client.DBClient(uri=self.uri)
         assert db_client.database.name == self.test_db_name
 
     def test_insert(self):
-        db_client = client.DBClient(uri=self.uri)
+        db_client = _client.DBClient(uri=self.uri)
         test_document = self.test_document.copy()
         document_id = db_client.insert(collection_name=self.test_collection_name, document=test_document)
         assert isinstance(document_id, ObjectId)
@@ -44,7 +44,7 @@ class TestMongoClient:
         assert test_document == documents[0]
 
     def test_replace(self):
-        db_client = client.DBClient(uri=self.uri)
+        db_client = _client.DBClient(uri=self.uri)
         test_document = self.test_document.copy()
         document_id = db_client.insert(collection_name=self.test_collection_name, document=test_document)
         test_document.update({"new": "field", "bool": False})

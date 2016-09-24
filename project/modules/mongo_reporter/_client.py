@@ -24,7 +24,10 @@ logger = get_logger(__name__)
 
 class DBClient(object):
 
-    def __init__(self, uri):
+    def __init__(self, uri: str):
+        """
+        uri: mongodb://<host>:<port>/<dbname>
+        """
         client = MongoClient(host=uri)
         database_name = uri.split("/")[-1]
         self.database = client[database_name]

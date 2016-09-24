@@ -37,14 +37,15 @@ from modules.tap_object_model import Application
 
 @pytest.fixture(scope="session")
 def centos_key_path(request):
-    path = os.path.expanduser(config.ng_jump_key_path)
-    assert os.path.isfile(path), "No such file {}".format(path)
+    path = config.ng_jump_key_path
     if path is None:
         ilab_deploy = AppSources.get_repository(repo_name=TapGitHub.ilab_deploy, repo_owner=TapGitHub.intel_data)
         path = os.path.join(ilab_deploy.path, RelativeRepositoryPaths.ilab_centos_key)
         request.addfinalizer(lambda: shutil.rmtree(ilab_deploy.path))
         # TODO: Use library calls instead of subprocess
         subprocess.check_call(["chmod", "600", path])
+    path = os.path.expanduser(path)
+    assert os.path.isfile(path), "No such file {}".format(path)
     return path
 
 

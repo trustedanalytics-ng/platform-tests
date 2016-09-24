@@ -20,14 +20,12 @@ import pytest
 import requests
 
 import config
-import tests.fixtures.db_logging as db_logging
 from modules.constants import Path, ParametrizedService
-from modules.mongo_reporter.reporter import MongoReporter
+from modules.mongo_reporter import mongo_reporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceType
 
 pytest_plugins = ["tests.fixtures.context",
-                  "tests.fixtures.db_logging",
                   "tests.fixtures.fixtures",
                   "tests.fixtures.remote_logging",
                   "tests.fixtures.fixtures_ng"]
@@ -39,7 +37,7 @@ logger = get_logger(__name__)
 INCREMENTAL_KEYWORD = "incremental"
 
 
-def log_test_configuration():
+def _log_test_configuration():
     logger.info("============== configuration variables ==============")
     pt_env_vars = []
     for key, value in os.environ.items():
@@ -53,8 +51,16 @@ def log_test_configuration():
 
 
 def pytest_sessionstart(session):
-    """ Check environment viability. If the check fails, don't start test session. """
-    log_test_configuration()
+    """
+    Log platform_test environment variables.
+    Report test type to mongo_reporter.
+    Check environment viability. If the check fails, report unavailable environment and don't start test session.
+    """
+
+    _log_test_configuration()
+
+    mongo_reporter.report_test_type(session.config.option.file_or_dir[0])
+
     if not config.ng_disable_environment_check:
         try:
             requests.get(config.console_url, verify=config.ssl_validation).raise_for_status()
@@ -62,17 +68,28 @@ def pytest_sessionstart(session):
             requests.get(cf_api_url, verify=config.ssl_validation).raise_for_status()
         except Exception as e:
             logger.error("Environment {} is unavailable - {}: {}".format(config.console_url, type(e).__name__, e))
-            db_logging.log_test_run_in_database(request=None, test_type=None)
+            mongo_reporter.report_unavailable_environment()
             raise
 
 
 def pytest_collection_modifyitems(items):
-    # support for running tests of component(s)
+    """
+    Support for running tests with component tags.
+    Report all test component markers to mongo_reporter.
+    """
+    all_component_markers = []
+
     for item in items:
         components = item.get_marker("components")
         if components is not None:
+            all_component_markers.extend(components)
             for component in components.args:
-               item.add_marker(component.replace("-", "_"))
+                item.add_marker(component.replace("-", "_"))
+
+    all_components = []
+    for marker in all_component_markers:
+        all_components.extend(list(marker.args))
+    mongo_reporter.report_components(all_components)
 
 
 def pytest_collection_finish(session):
@@ -93,10 +110,7 @@ def pytest_runtest_makereport(item, call):
     # report for setup, call, teardown
     outcome = yield
     report = outcome.get_result()
-
-    if config.database_url is not None:
-        mongo_reporter = MongoReporter(mongo_uri=config.database_url, run_id=config.test_run_id)
-        mongo_reporter.log_report(report, item)
+    mongo_reporter.log_report(report, item)
 
     # support for incremental tests
     if INCREMENTAL_KEYWORD in item.keywords:
@@ -135,3 +149,7 @@ def pytest_generate_tests(metafunc):
         marketplace = ServiceType.api_get_catalog()
         test_cases, ids = _generate_test_cases(marketplace)
         metafunc.parametrize("non_parametrized_marketplace_services", test_cases, ids=ids)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    mongo_reporter.on_run_end()

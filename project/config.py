@@ -15,7 +15,6 @@
 #
 
 import os
-import configparser
 
 
 try:
@@ -196,12 +195,3 @@ def kinit_password():
     _assert_config_value_set("_kinit_password")
     return _kinit_password
 
-
-def get_test_version():
-    bumpversion_path = os.path.join(os.path.dirname(__file__), "..", ".bumpversion.cfg")
-    bump_version_file = configparser.ConfigParser()
-    bump_version_file.read(bumpversion_path)
-    version = bump_version_file["bumpversion"].get("current_version", None)
-    if version is None:
-        raise KeyError("Version not found in {}".format(bumpversion_path))
-    return version

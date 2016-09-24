@@ -20,12 +20,14 @@ import os
 class Path:
     test_root_directory = os.path.join("tests")
     test_directories = {
+        "test_components": os.path.join(test_root_directory, "test_components"),
         "test_functional": os.path.join(test_root_directory, "test_functional"),
         "test_smoke": os.path.join(test_root_directory, "test_smoke"),
         "test_monitoring": os.path.join(test_root_directory, "test_monitoring"),
         "test_performance": os.path.join(test_root_directory, "test_performance"),
     }
 
+    bumpversion_file = os.path.abspath(os.path.join("..", ".bumpversion.cfg"))
     fixture_root_dir = os.path.join("fixtures")
     mqtt_demo_certificate = os.path.join(fixture_root_dir, "mosquitto_demo_cret.pem")
     data_set_dir = os.path.join(fixture_root_dir, "data_sets")

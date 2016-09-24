@@ -14,290 +14,307 @@
 # limitations under the License.
 #
 
+import copy
+from datetime import datetime
 import os
 import socket
-from unittest import TestCase, mock
+from unittest import mock
 
-import mongomock
+from bson import ObjectId
+import pytest
 
-import config
-from modules.mongo_reporter import reporter
-
-
-class MockClient(reporter.DBClient):
-    def __init__(self, uri):
-        self.database = mongomock.MongoClient().db
+from modules.constants import Path
+from modules.mongo_reporter._reporter import MongoReporter, _MockDbClient
 
 
-class MockPassingReport:
-    class Dummy:
-        pass
-    _priority = "high"
-    when = "call"
-    duration = 0.123
-    passed = True
-    failed = False
-    nodeid = "passing.test"
-    keywords = ("a", "b", "c", "priority_" + _priority)
-    longrepr = Dummy()
-    test_type = reporter.TestResultType.REGRESSION
+MOCK_BUMPVERSION_PATH = os.path.join("modules", "mongo_reporter", "unittests", "fixtures", "mock_bumpversion")
+assert os.path.isfile(MOCK_BUMPVERSION_PATH)
+MOCK_BUMPVERSION_BAD_PATH = os.path.join("modules", "mongo_reporter", "unittests", "fixtures", "mock_bumpversion_bad")
+assert os.path.isfile(MOCK_BUMPVERSION_BAD_PATH)
+
+TEST_RUN_ID = ObjectId()
 
 
-class MockPassingItem:
-    class MockMarker:
-        def __init__(self, *args):
-            self.args = args
-    _components = ("c", "o", "m", "p")
-    _bugs = ("b", "u", "g")
-    components = MockMarker(*_components)
-    bugs = MockMarker(*_bugs)
+class MockClient:
+    def __init__(self, *args, **kwargs): pass
+    insert = mock.Mock(return_value=TEST_RUN_ID)
+    replace = lambda *args, **kwargs: None
 
-    @property
-    def obj(self):
-        return ""
+
+class MockConfig:
+    appstack_version = "test_appstack_version"
+    database_url = "test_uri"
+    tap_domain = "test_tap_domain"
+    tap_infrastructure_type = "test_infrastructure_type"
+    tap_version = "test_tap_version"
+    kerberos = "test_kerberos"
+
+
+class MockTeamcityConfiguration:
+    GET_VALUE = "test_str"
+    GETINT_VALUE = 1
+    GET_ALL_VALUE = {"a": 1, "b": 2}
 
     @classmethod
-    def get_marker(cls, name):
-        return getattr(cls, name)
-
-
-class MockFailingReport:
-    class Traceback:
-        reprtraceback = "stacktrace"
-    _priority = "medium"
-    when = "call"
-    duration = 0.123
-    passed = False
-    failed = True
-    nodeid = "failing.test"
-    keywords = ("priority_" + _priority,)
-    longrepr = Traceback()
-    test_type = reporter.TestResultType.REGRESSION
-
-
-class MockFailingSetupReport:
-    class Traceback:
-        reprtraceback = "stacktrace"
-    _priority = "medium"
-    when = "setup"
-    duration = 0.123
-    passed = False
-    failed = True
-    nodeid = "failing.test"
-    keywords = ("priority_" + _priority,)
-    longrepr = Traceback()
-
-
-class MockFailingItem:
-
-    @property
-    def obj(self):
-        return ""
+    def get(cls, *args, **kwargs):
+        return cls.GET_VALUE
 
     @classmethod
-    def get_marker(cls, name):
-        return getattr(cls, name, None)
+    def getint(cls, *args, **kwargs):
+        return cls.GETINT_VALUE
+
+    @classmethod
+    def get_all(cls, *args, **kwargs):
+        return cls.GET_ALL_VALUE
 
 
-class TestReporter(TestCase):
-    EXPECTED_CONFIG_PARAMS = {
-        "teamcity.build.id": "12345",
-        "teamcity.serverUrl": "https://server-url.com"
-    }
+@mock.patch("modules.mongo_reporter._reporter.DBClient", MockClient)
+@mock.patch("modules.mongo_reporter._reporter.TeamCityConfiguration", MockTeamcityConfiguration)
+class TestReporter(object):
 
-    EXPECTED_ENV_VARIABLES = {
-        "env_val_a": "val_a",
-        "env_val_b": "val_b"
-    }
+    @pytest.fixture(scope="function")
+    def dummy_class(self):
+        class Dummy: pass
+        return Dummy
 
-    @mock.patch.object(reporter, "DBClient", MockClient)
-    def setUp(self):
-        self.mongo_reporter = reporter.MongoReporter(mongo_uri=None, run_id=None,
-                                                     test_run_type=reporter.TestRunType.API_FUNCTIONAL)
+    def _assert_all_keys_equal_except(self, document_a: dict, document_b: dict, *args):
+        for k, v in document_a.items():
+            if k not in args:
+                assert v == document_b[k], "Value of {} key changed".format(k)
 
-    def tearDown(self):
-        reporter.MongoReporter._instance = None
+    def _assert_date_close_enough_to_now(self, date, epsilon=0.1):
+        assert abs(date - datetime.now()).total_seconds() < epsilon
 
-    def assertRunDocument(self, tested_document, expected_run_document):
-        expected_keys = list(expected_run_document.keys()) + ["start_date", "end_date", "_id"]
-        self.assertListEqual(sorted(list(tested_document.keys())), sorted(expected_keys))
-        for key, val in expected_run_document.items():
-            self.assertEqual(tested_document[key], val, "incorrect {}".format(key))
-        self.assertIsNotNone(tested_document["start_date"])
-        if expected_run_document["finished"]:
-            self.assertIsNotNone(tested_document["end_date"])
+    @mock.patch("modules.mongo_reporter._reporter.config", MockConfig)
+    def test_init_run_document(self):
+        TEST_VERSION = "test.version"
+        with mock.patch("modules.mongo_reporter._reporter.MongoReporter._get_test_version",
+                        lambda *args, **kwargs: TEST_VERSION):
+            run_document = MongoReporter()._mongo_run_document
+
+        # values from config
+        assert run_document["appstack_version"] == MockConfig.appstack_version
+        assert run_document["environment"] == MockConfig.tap_domain
+        assert run_document["environment_version"] == MockConfig.tap_version
+        assert run_document["infrastructure_type"] == MockConfig.tap_infrastructure_type
+        assert run_document["kerberos"] == MockConfig.kerberos
+        # values from TeamCityConfiguration
+        assert run_document["parameters"]["configuration_parameters"] == MockTeamcityConfiguration.GET_ALL_VALUE
+        assert run_document["teamcity_build_id"] == MockTeamcityConfiguration.GETINT_VALUE
+        assert run_document["teamcity_server_url"] == MockTeamcityConfiguration.GET_VALUE
+        # other dynamic values
+        self._assert_date_close_enough_to_now(run_document["start_date"])
+        assert run_document["started_by"] == socket.gethostname()
+        assert run_document["test_version"] == TEST_VERSION
+        assert run_document["parameters"]["environment_variables"] == os.environ
+        # non-dynamic values
+        assert run_document["end_date"] is None
+        assert run_document["finished"] is False
+        assert run_document["log"] == ""
+        assert run_document["platform_components"] == []
+        assert run_document["result"] == {MongoReporter._RESULT_PASS: 0, MongoReporter._RESULT_FAIL: 0,
+                                          MongoReporter._RESULT_SKIPPED: 0, MongoReporter._RESULT_UNKNOWN: 0}
+        assert run_document["status"] == MongoReporter._RESULT_PASS
+        assert run_document["test_count"] == 0
+        assert run_document["total_test_count"] == 0
+        assert run_document["components"] == []
+        assert run_document["environment_availability"] is True
+        assert run_document["test_type"] is None
+
+    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
+    def test_init_run_id_is_set(self):
+        reporter = MongoReporter()
+        assert reporter._run_id == TEST_RUN_ID
+
+    @mock.patch("modules.mongo_reporter._reporter.config.database_url", None)
+    def test_init_no_database_url(self):
+        reporter = MongoReporter()
+        assert isinstance(reporter._db_client, _MockDbClient)
+
+    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
+    def test_init_database_url_set(self):
+        reporter = MongoReporter()
+        assert isinstance(reporter._db_client, MockClient)
+
+    def test_init_run_id(self):
+        run_id = ObjectId()
+        reporter = MongoReporter(run_id=run_id)
+        assert reporter._run_id == run_id
+
+    def test_report_components(self):
+        TEST_COMPONENTS = ["a", "b", "c"]
+        reporter = MongoReporter()
+        document_before = copy.deepcopy(reporter._mongo_run_document)
+        reporter.report_components(TEST_COMPONENTS)
+        document_after = reporter._mongo_run_document
+        self._assert_all_keys_equal_except(document_before, document_after, "components")
+        assert sorted(document_after["components"]) == sorted(TEST_COMPONENTS)
+
+    def test_report_test_type(self):
+        RUN_TYPE_GET_VALUE = "test-type"
+        reporter = MongoReporter()
+        document_before = copy.deepcopy(reporter._mongo_run_document)
+        with mock.patch("modules.mongo_reporter._reporter.RunType.get", lambda *args, **kwargs: RUN_TYPE_GET_VALUE):
+            reporter.report_test_type("xxx")
+        document_after = reporter._mongo_run_document
+        self._assert_all_keys_equal_except(document_before, document_after, "test_type")
+        assert reporter._mongo_run_document["test_type"] == RUN_TYPE_GET_VALUE
+
+    def test_report_unavailable_environment(self):
+        reporter = MongoReporter()
+        document_before = copy.deepcopy(reporter._mongo_run_document)
+        reporter.report_unavailable_environment()
+        document_after = reporter._mongo_run_document
+        self._assert_all_keys_equal_except(document_before, document_after, "environment_availability", "end_date",
+                                           "finished")
+        assert document_after["environment_availability"] is False
+        self._assert_date_close_enough_to_now(document_after["end_date"])
+        assert document_after["finished"] is True
+
+    def test_on_run_end(self):
+        TEST_COUNT = 123
+        reporter = MongoReporter()
+        document_before = copy.deepcopy(reporter._mongo_run_document)
+        reporter._total_test_counter = TEST_COUNT
+        reporter.on_run_end()
+        document_after = reporter._mongo_run_document
+        self._assert_all_keys_equal_except(document_before, document_after, "end_date", "total_test_count", "finished")
+        self._assert_date_close_enough_to_now(document_after["start_date"])
+        assert document_after["total_test_count"] == TEST_COUNT
+        assert document_after["finished"] is True
+
+    @mock.patch("modules.mongo_reporter._reporter.Path.bumpversion_file", MOCK_BUMPVERSION_PATH)
+    def test_get_test_version(self):
+        version = MongoReporter._get_test_version()
+        assert version == "test.version"
+
+    @mock.patch("modules.mongo_reporter._reporter.Path.bumpversion_file", "idontexist")
+    def test_get_test_version_missing_bumpversion_file(self):
+        with pytest.raises(AssertionError) as e:
+            MongoReporter._get_test_version()
+        assert "No such file" in e.value.msg
+
+    @mock.patch("modules.mongo_reporter._reporter.Path.bumpversion_file", MOCK_BUMPVERSION_BAD_PATH)
+    def test_get_test_version_bad_file(self):
+        with pytest.raises(AssertionError) as e:
+            MongoReporter._get_test_version()
+        assert "Version not found" in e.value.msg
+
+    def test_marker_args_from_item_no_args(self, dummy_class):
+        class Item:
+            def get_marker(self, *args, **kwargs):
+                return dummy_class
+        args = MongoReporter._marker_args_from_item(Item(), "name")
+        assert args == tuple()
+
+    def test_marker_args_from_item(self, dummy_class):
+        TEST_ARGS = ("a", "b", "c")
+        class Item:
+            def get_marker(self, *args, **kwargs):
+                dummy_class.args = TEST_ARGS
+                return dummy_class
+        args = MongoReporter._marker_args_from_item(Item(), "name")
+        assert args == TEST_ARGS
+
+    @pytest.mark.parametrize("keywords,expected_priority", [(("abc", "def"), None),
+                                                            (("abc", "priority_kitten"), "kitten")],
+                             ids=("no-priority-set", "priority_kitten"))
+    def test_priority_from_report(self, dummy_class, keywords, expected_priority):
+        dummy_class.keywords = keywords
+        priority = MongoReporter._priority_from_report(dummy_class)
+        assert priority == expected_priority
+
+    def test_stacktrace_from_report_no_stacktrace(self, dummy_class):
+        class Report:
+            longrepr = dummy_class
+        stacktrace = MongoReporter._stacktrace_from_report(Report())
+        assert stacktrace is None
+
+    def test_stacktrace_from_report(self, dummy_class):
+        TEST_STACKTRACE = "test_stacktrace"
+        class Report:
+            dummy_class.reprtraceback = TEST_STACKTRACE
+            longrepr = dummy_class
+        stacktrace = MongoReporter._stacktrace_from_report(Report())
+        assert stacktrace == TEST_STACKTRACE
+
+    def test_test_type_from_report_directory_smoke(self, dummy_class):
+        report = dummy_class
+        report.fspath = Path.test_directories["test_smoke"]
+        test_type = MongoReporter._get_test_type_from_report(report)
+        assert test_type == MongoReporter._TEST_TYPE_SMOKE
+
+    def test_test_type_from_report_directory_other(self, dummy_class):
+        report = dummy_class
+        report.fspath = "xx"
+        with mock.patch("modules.mongo_reporter._reporter.MongoReporter._priority_from_report",
+                        lambda *args, **kwargs: "kitten"):
+            test_type = MongoReporter._get_test_type_from_report(report)
+        assert test_type == MongoReporter._TEST_TYPE_OTHER
+
+    @pytest.mark.parametrize("priority,expected_test_type", [("medium", MongoReporter._TEST_TYPE_REGRESSION),
+                                                             ("high", MongoReporter._TEST_TYPE_REGRESSION),
+                                                             ("low", MongoReporter._TEST_TYPE_OTHER),
+                                                             ("kitten", MongoReporter._TEST_TYPE_OTHER)])
+    def test_type_from_report_priority(self, priority, expected_test_type, dummy_class):
+        with mock.patch("modules.mongo_reporter._reporter.MongoReporter._priority_from_report",
+                        lambda *args, **kwargs: priority):
+            test_type = MongoReporter._get_test_type_from_report(dummy_class)
+        assert test_type == expected_test_type
+
+    @pytest.mark.parametrize("report_attr_true,expected_test_status", [("passed", MongoReporter._RESULT_PASS),
+                                                                       ("failed", MongoReporter._RESULT_FAIL),
+                                                                       ("skipped", MongoReporter._RESULT_SKIPPED),
+                                                                       ("other", MongoReporter._RESULT_UNKNOWN)],
+                             ids=("pass", "fail", "skip", "unknown"))
+    def test_test_status_from_report(self, dummy_class, report_attr_true, expected_test_status):
+        for attr_name in ("passed", "failed", "skipped", "other"):
+            setattr(dummy_class, attr_name, False)
+        setattr(dummy_class, report_attr_true, True)
+        test_status = MongoReporter._test_status_from_report(dummy_class)
+        assert test_status == expected_test_status
+
+    @pytest.mark.parametrize("run_status,test_status,expected_run_status",
+                             [(MongoReporter._RESULT_PASS, MongoReporter._RESULT_PASS, MongoReporter._RESULT_PASS),
+                              (MongoReporter._RESULT_PASS, MongoReporter._RESULT_FAIL, MongoReporter._RESULT_FAIL),
+                              (MongoReporter._RESULT_FAIL, MongoReporter._RESULT_PASS, MongoReporter._RESULT_FAIL),
+                              (MongoReporter._RESULT_PASS, MongoReporter._RESULT_SKIPPED, MongoReporter._RESULT_PASS),
+                              (MongoReporter._RESULT_PASS, MongoReporter._RESULT_UNKNOWN, MongoReporter._RESULT_PASS)])
+    def test_update_run_status(self, run_status, test_status, expected_run_status):
+        reporter = MongoReporter()
+        reporter._mongo_run_document["status"] = run_status
+        run_document_before = copy.deepcopy(reporter._mongo_run_document)
+        reporter._update_run_status(result_document={}, test_status=test_status)
+        run_document_after = reporter._mongo_run_document
+        self._assert_all_keys_equal_except(run_document_before, run_document_after, "status", "result", "test_count")
+        assert run_document_after["status"] == expected_run_status
+        assert run_document_after["result"][test_status] == run_document_before["result"][test_status] + 1
+
+    @pytest.mark.parametrize("increment_test_count", (True, False))
+    def test_update_run_status_increment_test_count(self, increment_test_count):
+        reporter = MongoReporter()
+        run_document_before = copy.deepcopy(reporter._mongo_run_document)
+        reporter._update_run_status(result_document={}, test_status=MongoReporter._RESULT_PASS,
+                                    increment_test_count=increment_test_count)
+        run_document_after = reporter._mongo_run_document
+        self._assert_all_keys_equal_except(run_document_before, run_document_after, "result", "test_count")
+        if increment_test_count:
+            assert run_document_after["test_count"] == run_document_before["test_count"] + 1
         else:
-            self.assertIsNone(tested_document["end_date"])
+            assert run_document_after["test_count"] == run_document_before["test_count"]
 
-    def assertTestDocument(self, tested_document, expected_document):
-        expected_keys = list(expected_document.keys()) + ["_id"]
-        self.assertListEqual(sorted(list(tested_document.keys())), sorted(expected_keys))
-        for key, val in expected_document.items():
-            self.assertEqual(tested_document[key], val, "incorrect {}".format(key))
+    def test_save_test_run_no_run_id(self):
+        reporter = MongoReporter()
+        reporter._run_id = None
+        with mock.patch.object(reporter._db_client, "insert", mock.Mock()) as mock_insert:
+            reporter._save_test_run()
+        mock_insert.assert_called_once_with(collection_name=MongoReporter._TEST_RUN_COLLECTION_NAME,
+                                            document=reporter._mongo_run_document)
 
-    def get_run_documents(self):
-        run_collection = reporter.MongoReporter._test_run_collection_name
-        return list(self.mongo_reporter._db_client.database[run_collection].find({}))
+    def test_save_test_run_run_id(self):
+        reporter = MongoReporter(run_id=ObjectId())
+        with mock.patch.object(reporter._db_client, "replace", mock.Mock()) as mock_replace:
+            reporter._save_test_run()
+        mock_replace.assert_called_once_with(collection_name=MongoReporter._TEST_RUN_COLLECTION_NAME,
+                                             document_id=reporter._run_id, new_document=reporter._mongo_run_document)
 
-    def get_result_documents(self):
-        result_collection = reporter.MongoReporter._test_result_collection_name
-        return list(self.mongo_reporter._db_client.database[result_collection].find({}))
-
-    @mock.patch.object(reporter.MongoReporter, "get_tc_configuration_params")
-    @mock.patch.object(reporter.MongoReporter, "get_tc_env_variables")
-    def start_run(self, get_tc_env_variables_mock, get_tc_configuration_params_mock):
-        get_tc_env_variables_mock.return_value = self.EXPECTED_ENV_VARIABLES
-        get_tc_configuration_params_mock.return_value = self.EXPECTED_CONFIG_PARAMS
-        expected_run_document = self.get_expected_run_document()
-        self.mongo_reporter.on_run_start(
-            expected_run_document["environment"],
-            expected_run_document["environment_version"],
-            expected_run_document["infrastructure_type"],
-            expected_run_document["appstack_version"],
-            expected_run_document["platform_components"],
-            expected_run_document["components"],
-            expected_run_document["environment_availability"],
-            expected_run_document["kerberos"]
-        )
-        return expected_run_document
-
-    def test_reporter_run(self):
-        # on run start
-        expected_run_document = self.start_run()
-        run_documents = self.get_run_documents()
-        result_documents = self.get_result_documents()
-        self.assertEqual(len(run_documents), 1)
-        self.assertEqual(len(result_documents), 0)
-        self.assertRunDocument(run_documents[0], expected_run_document)
-
-        # on run end
-        self.mongo_reporter.on_run_end()
-        run_documents = self.get_run_documents()
-        expected_run_document.update({"finished": True})
-        self.assertRunDocument(run_documents[0], expected_run_document)
-
-    def test_reporter_passed_test_case(self):
-        # start run
-        expected_run_document = self.start_run()
-        run_documents = self.get_run_documents()
-        run_id = run_documents[0]["_id"]
-
-        # log passed test
-        self.mongo_reporter.log_report(MockPassingReport, MockPassingItem)
-        run_documents = self.get_run_documents()
-        result_documents = self.get_result_documents()
-        self.assertEqual(len(run_documents), 1)
-        expected_run_document.update({"test_count": 1})
-        expected_run_document["result"].update({reporter.MongoReporter.PASS: 1,
-                                                reporter.MongoReporter.FAIL: 0,
-                                                reporter.MongoReporter.SKIPPED: 0})
-        self.assertRunDocument(run_documents[0], expected_run_document)
-        self.assertEqual(len(result_documents), 1)
-        expected_document = self.get_expected_test_document(
-            run_id=run_id, test_name=MockPassingReport.nodeid, duration=MockPassingReport.duration,
-            order=0, priority=MockPassingReport._priority, components=tuple(sorted(MockPassingItem._components)),
-            defects=tuple(sorted(MockPassingItem._bugs)), tags=MockPassingReport.keywords, stacktrace=None, log="",
-            status=reporter.MongoReporter.PASS, test_type=MockPassingReport.test_type
-        )
-        self.assertTestDocument(result_documents[0], expected_document)
-
-    def test_reporter_failed_test_case(self):
-        # start run
-        expected_run_document = self.start_run()
-        run_documents = self.get_run_documents()
-        run_id = run_documents[0]["_id"]
-
-        # log failed test
-        self.mongo_reporter.log_report(MockFailingReport, MockFailingItem)
-        run_documents = self.get_run_documents()
-        result_documents = self.get_result_documents()
-        self.assertEqual(len(run_documents), 1)
-        expected_run_document.update({"status": reporter.MongoReporter.FAIL, "test_count": 1})
-        expected_run_document["result"].update({reporter.MongoReporter.PASS: 0,
-                                                reporter.MongoReporter.FAIL: 1,
-                                                reporter.MongoReporter.SKIPPED: 0})
-        self.assertRunDocument(run_documents[0], expected_run_document)
-        self.assertEqual(len(result_documents), 1)
-        expected_document = self.get_expected_test_document(
-            run_id=run_id, test_name=MockFailingReport.nodeid, duration=MockFailingReport.duration,
-            order=0, priority=MockFailingReport._priority, components=tuple(), defects=tuple(),
-            tags=MockFailingReport.keywords, stacktrace=MockFailingReport.Traceback.reprtraceback, log="",
-            status=reporter.MongoReporter.FAIL, test_type=MockFailingReport.test_type
-        )
-        self.assertTestDocument(result_documents[0], expected_document)
-
-    def test_should_log_two_results_on_setup_fail(self):
-        self.mongo_reporter.log_report(MockFailingSetupReport, MockFailingItem)
-        run_documents = self.get_run_documents()
-        self.assertEqual(len(run_documents), 1)
-        result_documents = self.get_result_documents()
-        self.assertEqual(len(result_documents), 2)
-        self.assertEqual(run_documents[0]["result"], self.get_expected_run_document(fail_count=2)["result"])
-
-    @mock.patch.object(reporter.MongoReporter, "_from_teamcity_file")
-    @mock.patch("modules.mongo_reporter.reporter.is_running_under_teamcity")
-    def test_get_tc_configuration_params(self, mock_under_tc, from_teamcity_file_mock):
-        mock_under_tc.return_value = True
-        mock_files_content = [
-            {"teamcity.configuration.properties.file": "/some/fake/file/path.properties"},
-            {"teamcity.build.id": "12345", "teamcity.serverUrl": "https://server-url.com"}
-        ]
-        from_teamcity_file_mock.side_effect = mock_files_content
-        config_params = self.mongo_reporter.get_tc_configuration_params()
-        assert self.EXPECTED_CONFIG_PARAMS == config_params
-
-    @mock.patch("modules.mongo_reporter.reporter.is_running_under_teamcity")
-    def test_get_tc_env_variables(self, mock_under_tc):
-        mock_under_tc.return_value = True
-        assert self.mongo_reporter.get_tc_env_variables() == os.environ
-
-    def get_expected_test_document(self, run_id, test_name, duration, order, priority, components, defects,
-                                   tags, status, stacktrace, log, test_type):
-        return {
-            "run_id": run_id,
-            "name": test_name,
-            "docstring": None,
-            "duration": duration,
-            "order": order,
-            "priority": priority,
-            "components": components,
-            "defects": ", ".join(defects),
-            "tags": ", ".join(tags),
-            "status": status,
-            "stacktrace": stacktrace,
-            "log": log,
-            "test_type": test_type,
-        }
-
-    def get_expected_run_document(self, pass_count=0, fail_count=0, skipped_count=0, test_count=0, finished=False,
-                                  status="PASS", environment_availability=True):
-        expected_run = {
-            "environment": "test_environment",
-            "environment_version": "0.7",
-            "infrastructure_type": "AWS",
-            "appstack_version": "master",
-            "finished": finished,
-            "log": "",
-            "platform_components": ("a", "b", "c"),
-            "components": ["d", "e", "f"],
-            "result": {
-                reporter.MongoReporter.PASS: pass_count,
-                reporter.MongoReporter.FAIL: fail_count,
-                reporter.MongoReporter.SKIPPED: skipped_count
-            },
-            "started_by": socket.gethostname(),
-            "status": status,
-            "test_count": test_count,
-            "test_type": reporter.TestRunType.API_FUNCTIONAL,
-            "total_test_count": 0,
-            "test_version": config.get_test_version(),
-            "environment_availability": environment_availability,
-            "teamcity_build_id": 12345,
-            "teamcity_server_url": "https://server-url.com",
-            "parameters": {
-                "configuration_parameters": {k.replace(".", "_"): v for k, v in self.EXPECTED_CONFIG_PARAMS.items()},
-                "environment_variables": self.EXPECTED_ENV_VARIABLES,
-            },
-            "kerberos": False
-        }
-        return expected_run
