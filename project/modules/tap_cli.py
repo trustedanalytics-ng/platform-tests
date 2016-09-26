@@ -15,13 +15,12 @@
 #
 
 import json
-import os
 
 from retry import retry
 
 import config
 from modules import command
-from modules.constants import HttpStatus, RelativeRepositoryPaths
+from modules.constants import HttpStatus
 from modules.http_client import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
@@ -49,7 +48,7 @@ class TapCli:
     PUSH_HELP = [PUSH, "--help"]
 
     def __init__(self, cli_app_path):
-        self.command = os.path.join(cli_app_path, RelativeRepositoryPaths.tap_cli)
+        self.command = cli_app_path
 
     def _run_command(self, cmd: list, cwd=None):
         cmd = [self.command] + cmd
@@ -163,3 +162,4 @@ class TapCli:
             msg="Application: get /{}".format("")
         )
         assert response.status_code == HttpStatus.CODE_OK
+

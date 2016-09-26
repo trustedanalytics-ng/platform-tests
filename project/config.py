@@ -156,7 +156,8 @@ api_url_full = os.environ.get("PT_API_URL", "http://{}/api/{}".format(api_url, a
 ng_disable_environment_check = get_bool("PT_DISABLE_ENVIRONMENT_CHECK", False)
 ng_jump_ip = os.environ.get("PT_NG_JUMP_IP")  # required for running component tests on TAP NG
 ng_jump_key_path = os.environ.get("PT_NG_JUMP_KEY_PATH")  # if not passed, key will be retrieved from GitHub
-ng_jump_username = os.environ.get("PT_NG_JUMP_USERNAME", "centos")
+ng_jump_user_with_kubectl_config = os.environ.get("PT_NG_JUMP_USER_WITH_ACCESS_TO_KUBECTL_CONFIG", "tap-admin")
+ng_jump_user = os.environ.get("PT_NG_JUMP_USER", "centos")
 ng_kubernetes_api_host = os.environ.get("PT_KUBERNETES_API_HOST", "localhost")
 ng_kubernetes_api_port = get_int("PT_KUBERNETES_API_PORT", 8080)
 ng_socks_proxy_port = get_int("PT_SOCKS_PROXY_PORT", 5555)
@@ -169,6 +170,10 @@ ng_k8s_as_oauth_token_url = os.environ.get("PT_NG_AS_OAUTH_TOKEN_URL",
                                            "http://{}.{}/{}".format("api", tap_domain,
                                                                     "api/{}/login".format(ng_kubernetes_api_version)))
 ng_build_number = os.environ.get("PT_NG_BUILD_NUMBER")
+
+# Set to True if kubectl and core services are not accessible from jumpbox, but from master-0
+access_to_core_services_from_jump = os.environ.get("PT_ACCESS_TO_CORE_SERVICES_FROM_JUMP", False)
+master_0_hostname = os.environ.get("PT_MASTER_0_HOSTNAME", "master-0.kubernetes.cluster.local")
 
 
 def ng_k8s_service_credentials() -> tuple:
