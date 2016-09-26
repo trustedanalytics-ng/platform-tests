@@ -15,7 +15,7 @@
 #
 
 import config
-from modules.constants import TapComponent as TAP
+from modules.constants import ServiceLabels, ServicePlan as Plan, TapComponent as TAP
 
 default = {
     "api_version": "v1",
@@ -58,4 +58,20 @@ third_party_services = {
         "health_endpoint": None,
         "get_endpoint": None
     }
+}
+
+offerings = {
+    ServiceLabels.CASSANDRA21: [Plan.FREE],
+    ServiceLabels.CONSUL: [Plan.FREE],
+    ServiceLabels.COUCH_DB: [Plan.FREE],
+    ServiceLabels.ETCD: [Plan.FREE],
+    ServiceLabels.INFLUX_DB: [Plan.FREE],
+    ServiceLabels.JUPYTER: [Plan.FREE],
+    ServiceLabels.LOGSTASH: [Plan.FREE],
+    ServiceLabels.MEMCACHED: [Plan.MEM128MB],
+    ServiceLabels.MOSQUITTO: [Plan.FREE],
+    ServiceLabels.PSQL: [Plan.FREE],
+    ServiceLabels.RABBIT_MQ: [Plan.FREE],
+    ServiceLabels.REDIS: [Plan.FREE],
+    ServiceLabels.GATEWAY: [Plan.FREE],
 }

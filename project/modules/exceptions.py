@@ -58,3 +58,11 @@ class RedirectionLimitException(Exception):
 
 class ModelNotFoundException(Exception):
     pass
+
+
+class ServiceTypeNotFoundException(Exception):
+    pass
+
+
+class PlanNotFoundException(Exception):
+    pass

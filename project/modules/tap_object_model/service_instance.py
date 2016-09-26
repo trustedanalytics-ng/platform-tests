@@ -26,9 +26,9 @@ from ..test_names import generate_test_object_name
 
 
 class ServiceInstanceLastOperationState(object):
-    IN_PROGRESS = "in progress"
-    SUCCEEDED = "succeeded"
-    FAILED = "failed"
+    STARTING = "STARTING"
+    FAILURE = "FAILURE"
+    RUNNING = "RUNNING"
 
 
 class ServiceInstanceCreationFailed(Exception):
@@ -37,17 +37,16 @@ class ServiceInstanceCreationFailed(Exception):
 
 @functools.total_ordering
 class ServiceInstance(object):
-    COMPARABLE_ATTRS = ["guid", "name", "space_guid", "service_label"]
+    COMPARABLE_ATTRS = ["guid", "name", "service_label"]
 
-    def __init__(self, guid, name, space_guid, service_label, bound_apps=None, credentials=None, last_operation=None,
+    def __init__(self, guid, name, service_label, bound_apps=None, credentials=None, state=None,
                  dashboard_url=None, tags=None):
         self.guid = guid
         self.name = name
-        self.space_guid = space_guid
         self.service_label = service_label
         self.bound_apps = bound_apps or []
         self.credentials = credentials
-        self.last_operation = last_operation
+        self.state = state
         self.tags = tags
         self.dashboard_url = dashboard_url
 
@@ -73,9 +72,9 @@ class ServiceInstance(object):
 
     @classmethod
     @retry(AssertionError, tries=100, delay=3)
-    def _get_instance_with_retry(cls, instance_name, space_guid, service_label):
+    def _get_instance_with_retry(cls, instance_name, service_label):
         """Wait for created instance and return it"""
-        instance_list = cls.api_get_list(space_guid)
+        instance_list = cls.api_get_list()
         instance = next((i for i in instance_list if i.name == instance_name), None)
         if instance is None:
             raise AssertionError("Instance {} was not created".format(service_label))
@@ -84,34 +83,31 @@ class ServiceInstance(object):
     # ----------------------------------------- Platform API ----------------------------------------- #
 
     @classmethod
-    def api_create_with_plan_name(cls, context, org_guid, space_guid, service_label, name=None, service_plan_name=None,
+    def api_create_with_plan_name(cls, context, org_guid, service_label, name=None, service_plan_name=None,
                                   params=None, client=None):
         """
         Create service instance using using plan name - first make call to retrieve plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
         service_plan_guid = cls._retrieve_service_plan_guid(service_label, service_plan_name, client)
-        return cls.api_create(context, org_guid, space_guid, service_label, name, service_plan_guid, params, client, )
+        return cls.api_create(context, org_guid, service_label, name, service_plan_guid, params, client, )
 
     @classmethod
-    def api_create(cls, context, org_guid, space_guid, service_label, name=None, service_plan_guid=None,
+    def api_create(cls, context, service_label, service_type_guid, name=None, service_plan_guid=None,
                    params=None, client=None):
         """
         Create service instance using using plan guid.
         :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
         """
         name = generate_test_object_name(short=True) if name is None else name
-        instance = None
         try:
             response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
-                                                                   org_guid=org_guid, space_guid=space_guid,
-                                                                   params=params, client=client)
-            instance = cls(guid=response["metadata"]["guid"], name=name, space_guid=space_guid,
-                           service_label=service_label, last_operation=response["entity"].get("last_operation"),
-                           dashboard_url=response["entity"]["dashboard_url"])
+                                                                   service_type_guid=service_type_guid, params=params,
+                                                                   client=client)
+            instance = cls(guid=response["id"], name=response["name"], service_label=service_label)
         except UnexpectedResponseError as e:
             if e.status == 504 and "Gateway Timeout" in e.error_message:
-                instance = cls._get_instance_with_retry(name, space_guid, service_label)
+                instance = cls._get_instance_with_retry(name, service_label)
             else:
                 raise
         # The functionality below changed in new TAP
@@ -130,16 +126,12 @@ class ServiceInstance(object):
         return service_plan_data["metadata"]["guid"]
 
     @classmethod
-    def api_get_list(cls, space_guid=None, service_type_guid=None, client=None):
+    def api_get_list(cls, offering_id=None, client=None):
         instances = []
-        response = service_catalog.api_get_service_instances(space_guid=space_guid, service_guid=service_type_guid,
-                                                             client=client)
+        response = service_catalog.api_get_service_instances(offering_id, client=client)
         for data in response:
-            bound_apps = [{"app_guid": binding_data["guid"], "app_name": binding_data["name"]}
-                          for binding_data in data["bound_apps"]]
-            service_label = data["service_plan"]["service"]["label"] if data.get("service_plan") is not None else None
-            instance = cls(guid=data["guid"], name=data["name"], space_guid=space_guid, service_label=service_label,
-                           bound_apps=bound_apps, last_operation=data.get("last_operation"),
+            instance = cls(guid=data["id"], name=data["name"], service_label=data["serviceName"],
+                           bound_apps=data["bindings"], state=data["state"],
                            dashboard_url=data.get("dashboard_url"))
             instances.append(instance)
         return instances
@@ -185,16 +177,14 @@ class ServiceInstance(object):
 
     @retry(AssertionError, tries=180, delay=5)
     def ensure_created(self):
-        instances = ServiceInstance.api_get_list(space_guid=self.space_guid)
+        instances = ServiceInstance.api_get_list()
         updated_instance = next((i for i in instances if i.guid == self.guid), None)
         assert updated_instance is not None, "Instance of {} not found on the list".format(self.name)
-        self.last_operation = updated_instance.last_operation
-        assert self.last_operation_type == "create",\
-            "Instance of {} not created - last operation: {}".format(self.name, self.last_operation)
-        if self.last_operation_state == ServiceInstanceLastOperationState.FAILED:
+        self.state = updated_instance.state
+        if self.state == ServiceInstanceLastOperationState.FAILURE:
             raise ServiceInstanceCreationFailed()
-        assert self.last_operation_state == ServiceInstanceLastOperationState.SUCCEEDED,\
-            "Instance of {} not created - last operation: {}".format(self.name, self.last_operation)
+        assert self.state == ServiceInstanceLastOperationState.RUNNING,\
+            "Instance of {} not created - last operation: {}".format(self.name, self.state)
 
     # ----------------------------------------- CF API ----------------------------------------- #
 
@@ -241,6 +231,7 @@ class ServiceInstance(object):
                                    service_label=service_label)
             service_instances.append(service_instance)
         return service_instances
+
 
 class AtkInstance(ServiceInstance):
     started_status = "STARTED"

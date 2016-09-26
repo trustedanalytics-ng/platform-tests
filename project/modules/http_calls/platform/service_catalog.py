@@ -82,49 +82,49 @@ def api_delete_service(service_guid, client=None):
     )
 
 
-def api_get_service_instances(space_guid=None, service_guid=None, client=None):
-    """GET /service_instances"""
+def api_get_service_instances(offering_id=None, client=None):
+    """GET /services"""
     query_params = {}
-    if space_guid is not None:
-        query_params["space"] = space_guid
-    if service_guid is not None:
-        query_params["broker"] = service_guid
-
+    if offering_id is not None:
+        query_params["broker"] = offering_id
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="service_instances",
+        path="services",
         params=query_params,
         msg="PLATFORM: get service instance list"
     )
 
 
-def api_create_service_instance(name, service_plan_guid, org_guid, space_guid, params=None, client=None):
+def api_create_service_instance(name, service_type_guid, service_plan_guid, params=None, client=None):
     """POST /service_instances"""
     body = {
+        "metadata": [
+            {
+                "key": "PLAN_ID",
+                "value": service_plan_guid
+            }
+        ],
         "name": name,
-        "organization_guid": org_guid,
-        "service_plan_guid": service_plan_guid,
-        "space_guid": space_guid,
-        "parameters": {"name": name},
+        "type": "SERVICE"
     }
     if params is not None:
         body["parameters"].update(params)
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="service_instances",
+        path="services/{}".format(service_type_guid),
         body=body,
         msg="PLATFORM: create service instance"
     )
 
 
 def api_delete_service_instance(service_instance_guid, client):
-    """DELETE /service_instances/{service_instance_guid}"""
+    """DELETE /services/{service_instance_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="service_instances/{}".format(service_instance_guid),
+        path="services/{}".format(service_instance_guid),
         msg="PLATFORM: delete service instance"
     )
 

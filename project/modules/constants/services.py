@@ -18,7 +18,9 @@
 class ServiceLabels(object):
     ARANGODB = "arangodb22"
     ATK = "atk"
+    CASSANDRA21 = "cassandra21"
     CDH = "cdh"
+    CONSUL = "consul"
     COUCH_DB = "couchdb16"
     ELASTICSEARCH = "elasticsearch13"
     ELASTICSEARCH17_MULTINODE = "elasticsearch17-multinode"
@@ -48,7 +50,7 @@ class ServiceLabels(object):
     ORIENT_DB_DASHBOARD = "orientdb-dashboard"
     PSQL = "postgresql93"
     PSQL94_MULTINODE = "postgresql94-multinode"
-    RABBIT_MQ = "rabbitmq33"
+    RABBIT_MQ = "rabbitmq36"
     REDIS = "redis28"
     RETHINK_DB = "rethinkdb"
     RSTUDIO = "rstudio"
@@ -77,6 +79,7 @@ class ServicePlan(object):
     WORKER_1 = "1 worker"
     WORKER_2 = "2 workers"
     WORKER_3 = "3 workers"
+    MEM128MB = "128Mb"
 
 
 class ParametrizedService(object):

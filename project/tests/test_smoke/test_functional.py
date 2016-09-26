@@ -15,12 +15,13 @@
 #
 
 import pytest
+import itertools
 
 import config
 import tests.fixtures.assertions as assertions
 from modules.constants import TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
-from modules.exceptions import UnexpectedResponseError
+from modules.exceptions import UnexpectedResponseError, ServiceTypeNotFoundException
 from modules.file_utils import generate_csv_file
 from modules.http_client import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
@@ -32,6 +33,7 @@ from modules.tap_object_model import Application, DataSet, Organization, Service
 from modules.tap_object_model import ServiceType
 from modules.tap_object_model import TestSuite
 from modules.tap_object_model.flows import onboarding
+from tap_ng_component_config import offerings
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
@@ -141,27 +143,33 @@ def test_add_and_delete_transfer_from_file(core_org, context):
     transfer_flow(transfer, core_org)
 
 
+def _offerings_as_parameters():
+    parameters = []
+    for key, val in offerings.items():
+        parameters += list(itertools.product([key], val))
+    return parameters
+
+
 @long
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
-def test_create_and_delete_marketplace_service_instances(core_org, core_space, context,
-                                                         non_parametrized_marketplace_services):
+@pytest.mark.parametrize("service_label,plan_name", _offerings_as_parameters())
+def test_create_and_delete_marketplace_service_instances(context, test_marketplace, service_label, plan_name):
     """Create and Delete Marketplace Service Instance"""
-    service_type = non_parametrized_marketplace_services[0]
-    plan = non_parametrized_marketplace_services[1]
-
-    step("Create instance {} {}".format(service_type.label, plan["name"]))
-    instance = ServiceInstance.api_create(context=context, org_guid=core_org.guid, space_guid=core_space.guid,
-                                          service_label=service_type.label, service_plan_guid=plan["guid"])
+    step("Create instance {} {}".format(service_label, plan_name))
+    service_type = next((s for s in test_marketplace if s.label == service_label), None)
+    if service_type is None:
+        raise ServiceTypeNotFoundException("ServiceType for {} not found in marketplace".format(service_label))
+    plan_guid = service_type.get_service_plan_guid(plan_name)
+    instance = ServiceInstance.api_create(context=context, service_type_guid=service_type.guid,
+                                          service_label=service_label, service_plan_guid=plan_guid)
     step("Check that the instance was created")
     instance.ensure_created()
     step("Delete the instance")
     instance.api_delete()
     step("Check that the instance was deleted")
-    instances = ServiceInstance.api_get_list(space_guid=core_space.guid, service_type_guid=service_type.guid)
-    assert instance not in instances
+    assertions.assert_not_in_with_retry(instance, ServiceInstance.api_get_list)
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")

@@ -17,6 +17,7 @@
 import functools
 import json
 
+from ..exceptions import PlanNotFoundException
 from ..http_calls import cloud_foundry as cf, kubernetes_broker
 from ..http_calls.platform import service_catalog
 from ..test_names import generate_test_object_name
@@ -108,6 +109,12 @@ class ServiceType(object):
 
     def cleanup(self):
         self.api_delete()
+
+    def get_service_plan_guid(self, plan_name):
+        plan_guid = next((plan["guid"] for plan in self.service_plans if plan["name"] == plan_name), None)
+        if plan_guid is None:
+            raise PlanNotFoundException("Plan {} not found".format(plan_name))
+        return plan_guid
 
     @classmethod
     def cf_api_get_list_from_marketplace_by_space(cls, space_guid):

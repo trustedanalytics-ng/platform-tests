@@ -192,9 +192,9 @@ def remove_admin_from_test_org(admin_user, test_org):
 
 
 @pytest.fixture(scope="session")
-def test_marketplace(test_space):
-    log_finalizer("test_marketplace: Get list of marketplace services in test space")
-    return ServiceType.api_get_list_from_marketplace(space_guid=test_space.guid)
+def test_marketplace():
+    log_finalizer("test_marketplace: Get list of marketplace services.")
+    return ServiceType.api_get_catalog()
 
 
 def delete_or_not_found(delete_method, *args, **kwargs):
