@@ -28,7 +28,7 @@ from tap_ng_component_config import k8s_core_services, third_party_services, api
 
 @priority.high
 @pytest.mark.usefixtures("open_tunnel")
-class TestSmoke:
+class TestK8sComponents:
     k8s_core_service_params = sorted(k8s_core_services.items(), key=lambda x: x[0])
     k8s_core_service_ids = sorted([c for c in k8s_core_services.keys()])
     third_party_service_params = sorted(third_party_services.items(), key=lambda x: x[0])

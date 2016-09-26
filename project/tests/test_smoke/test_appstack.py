@@ -33,6 +33,7 @@ from tests.fixtures.assertions import assert_no_errors
 logger = get_logger(__name__)
 
 
+@pytest.mark.skip("Excluded until further notice.")
 @priority.high
 class TrustedAnalyticsSmokeTest(TapTestCase):
     EXCLUDED_APP_NAMES = {ServiceLabels.ATK}
