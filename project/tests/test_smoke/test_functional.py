@@ -14,9 +14,8 @@
 # limitations under the License.
 #
 
-import itertools
-
 import pytest
+import itertools
 
 from modules.constants import TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
@@ -133,7 +132,7 @@ def _offerings_as_parameters():
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
 @pytest.mark.parametrize("service_label,plan_name", _offerings_as_parameters())
-def test_create_and_delete_marketplace_service_instances(context, test_marketplace, service_label, plan_name):
+def test_create_and_delete_marketplace_service_instances(context, service_label, plan_name):
     """Create and Delete Marketplace Service Instance"""
     step("Create instance {} {}".format(service_label, plan_name))
     instance = ServiceInstance.create_with_name(context, offering_label=service_label, plan_name=plan_name)
