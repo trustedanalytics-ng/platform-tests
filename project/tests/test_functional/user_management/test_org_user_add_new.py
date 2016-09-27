@@ -83,6 +83,7 @@ class TestAddNewUserToOrganization:
                                      role=User.ORG_ROLE["user"])
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_non_admin_cannot_add_new_user_to_org(self, context, test_org_user_client, test_org):
         step("Try to add user to an organization using non-admin user")
         org_users = User.get_list_in_organization(test_org.guid)

@@ -38,6 +38,7 @@ class TestPassword:
         self.test_user = User.create_by_adding_to_organization(context, org_guid=test_org.guid)
 
     @priority.high
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_reset_password(self):
         step("Login to the platform")
         client = self.test_user.get_client()
@@ -70,6 +71,7 @@ class TestPassword:
         self.test_user.login()
 
     @priority.high
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_change_password(self):
         step("Login to the platform")
         client = self.test_user.get_client()

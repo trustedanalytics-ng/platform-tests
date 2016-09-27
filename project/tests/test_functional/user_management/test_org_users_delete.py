@@ -35,6 +35,7 @@ class TestDeleteOrganizationUser:
         return User.create_by_adding_to_organization(context, org_guid=test_org.guid, role=User.ORG_ROLE["user"])
 
     @priority.high
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_org_admin_can_delete_user(self, context, test_org, user_to_delete):
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
         step("Admin removes a user from the test org")
@@ -43,6 +44,7 @@ class TestDeleteOrganizationUser:
         assert_user_not_in_org(user_to_delete, test_org.guid)
 
     @priority.low
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_cannot_delete_org_user_twice(self, context, user_to_delete, test_org):
         step("Admin removes a user from the test org")
         user_to_delete.delete_from_organization(org_guid=test_org.guid)
@@ -58,6 +60,7 @@ class TestDeleteOrganizationUser:
                                      non_existing_user.delete_from_organization, org_guid=test_org.guid)
 
     @priority.low
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_non_admin_cannot_delete_user(self, context, test_org, test_org_user_client, user_to_delete):
         step("Check that non-admin cannot delete user from org")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,

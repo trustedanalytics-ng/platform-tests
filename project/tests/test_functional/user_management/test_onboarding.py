@@ -79,6 +79,7 @@ class TestOnboarding:
                 self._assert_message_correct(message["subject"], message["content"], message["sender"])
 
     @priority.high
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_simple_onboarding(self, context):
         step("Send an invite to a new user")
         invitation = Invitation.api_send(context)
@@ -92,6 +93,7 @@ class TestOnboarding:
         assert_user_in_org_and_role(user, Guid.CORE_ORG_GUID, User.ORG_ROLE["user"])
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_cannot_invite_existing_user(self, context, test_org_user):
         step("Check that sending invitation to the same user causes an error.")
         assert_raises_http_exception(HttpStatus.CODE_CONFLICT,
@@ -100,6 +102,7 @@ class TestOnboarding:
                                      username=test_org_user.username)
 
     @priority.high
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_non_admin_user_cannot_invite_another_user(self, context, test_org):
         step("Create a test user")
         user = User.create_by_adding_to_organization(context, org_guid=test_org.guid,
@@ -121,6 +124,7 @@ class TestOnboarding:
                                      username=username)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_cannot_use_the_same_activation_code_twice(self, context):
         step("Invite a user")
         invitation = Invitation.api_send(context)
@@ -139,6 +143,7 @@ class TestOnboarding:
                                      Invitation.api_send, context, username=username)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_user_cannot_register_without_password(self, context):
         step("Invite a new user")
         invitation = Invitation.api_send(context)

@@ -34,6 +34,7 @@ pytestmark = [pytest.mark.components(TAP.user_management)]
 class TestPendingInvitations:
 
     @priority.high
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_add_new_pending_invitation(self, context):
         step("Invite new user")
         invitation = Invitation.api_send(context)
@@ -41,6 +42,7 @@ class TestPendingInvitations:
         assert_in_with_retry(invitation, Invitation.api_get_list)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_accepting_invitation_deletes_it_from_pending_list(self, context):
         step("Invite new user")
         invitation = Invitation.api_send(context)
@@ -50,6 +52,7 @@ class TestPendingInvitations:
         assert_not_in_with_retry(invitation, Invitation.api_get_list)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_add_new_pending_invitation_twice_for_the_same_user(self, context):
         step("Send invitation two times for a single user")
         invitation = Invitation.api_send(context)
@@ -59,6 +62,7 @@ class TestPendingInvitations:
         assert invited_users.count(invitation.username) == 1, "More than one invitation for the user"
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_resend_pending_invitation(self, context):
         step("Invite new user")
         invitation = Invitation.api_send(context)
@@ -90,6 +94,7 @@ class TestPendingInvitations:
                                      invitation.api_resend)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_delete_pending_invitation(self, context):
         step("Invite new user")
         invitation = Invitation.api_send(context)
@@ -119,6 +124,7 @@ class TestPendingInvitations:
                                      invitation.api_delete)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_cannot_get_pending_invitations_as_non_admin_user(self, test_org_user_client):
         step("As non admin user try to get pending invitations list")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_IS_DENIED,
