@@ -123,6 +123,17 @@ To run functional tests of user-management, excluding long tests:
 
 Tests log to both stdout, and stderr, so to save output to a file, use `> <log_file> 2>&1`.
 
+#### Rerunning failed tests
+
+To run only tests that failed on TC:
+
+1. Go to the given test run and artifact tab.
+
+2. Download `lastfailed/lastfailed` file and put it on `/path/to/platform-tests/project/.cache/v/cache/` directory.
+
+3. Run tests from command line with `--lf` (`--last-failed`) flag.
+
+Due to issues with mongo reporter it might be necessary to specify a tests path. In this case just use a directory that contains all failed tests (e.g. `platform-tests/project/tests`). Full command should looks like ```./run_tests.sh tests --lf```.
 
 ### Run smoke tests on bastion
 
