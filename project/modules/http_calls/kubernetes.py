@@ -14,53 +14,45 @@
 # limitations under the License.
 #
 
-import config
-from modules.http_client import HttpClientConfiguration, HttpClientFactory, HttpClientType, HttpMethod
+from modules.http_client import HttpClientFactory, HttpMethod
+from modules.http_client.configuration_provider.kubernetes import KubernetesConfigurationProvider
 
 
-socks_proxy = "socks5://localhost:{}".format(config.ng_socks_proxy_port)
-client_configuration = HttpClientConfiguration(
-    client_type=HttpClientType.NO_AUTH,
-    url="http://localhost:{}/api/{}".format(config.ng_kubernetes_api_port, config.ng_kubernetes_api_version),
-    proxies={"http": socks_proxy, "https": socks_proxy}
-)
-client = HttpClientFactory.get(client_configuration)
-
-default_namespace = "default"
+DEFAULT_NAMESPACE = "default"
 
 
 def k8s_get_pods():
     """GET /namespaces/{namespace}/pods"""
-    return client.request(
+    return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/pods".format(default_namespace),
+        path="namespaces/{}/pods".format(DEFAULT_NAMESPACE),
         msg="KUBERNETES: get pods"
     )
 
 
 def k8s_get_services():
     """GET /namespaces/{namespace}/services"""
-    return client.request(
+    return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/services".format(default_namespace),
+        path="namespaces/{}/services".format(DEFAULT_NAMESPACE),
         msg="KUBERNETES: get services"
     )
 
 
 def k8s_get_service(service_name):
     """GET /namespaces/{namespace}/services/{name}"""
-    return client.request(
+    return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/services/{}".format(default_namespace, service_name),
+        path="namespaces/{}/services/{}".format(DEFAULT_NAMESPACE, service_name),
         msg="KUBERNETES: get service {}".format(service_name)
     )
 
 
 def k8s_get_configmap(configmap_name):
     """GET /namespaces/{namespace}/configmaps/{configmap_name}"""
-    return client.request(
+    return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/configmaps/{}".format(default_namespace, configmap_name),
+        path="namespaces/{}/configmaps/{}".format(DEFAULT_NAMESPACE, configmap_name),
         msg="KUBERNETES: get configmap {}".format(configmap_name)
     )
 

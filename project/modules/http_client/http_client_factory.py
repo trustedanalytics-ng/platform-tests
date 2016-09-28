@@ -86,7 +86,8 @@ class HttpClientFactory(object):
             username=configuration.username,
             password=configuration.password,
             auth_type=auth_type,
-            proxies=configuration.proxies
+            proxies=configuration.proxies,
+            cert=configuration.cert
         )
         instance = HttpClient(configuration.url, auth)
         cls._INSTANCES[configuration] = instance

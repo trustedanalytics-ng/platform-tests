@@ -1,0 +1,19 @@
+apiVersion: test-version
+clusters:
+- cluster:
+    certificate-authority: ca.crt
+    server: https://bla.bla.bla:443
+  name: tap
+contexts:
+- context:
+    cluster: tap
+    user: admin
+  name: tap-context
+current-context: tap-context
+kind: Config
+preferences: {}
+users:
+- name: test-username
+  user:
+    client-certificate: test-username.crt
+    client-key: test-username.key
