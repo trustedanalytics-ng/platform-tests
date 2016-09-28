@@ -106,5 +106,6 @@ vcsroot.url=https\://github.com/intel-data/platform-tests
 vcsroot.useAlternates=true
 vcsroot.username=dev-ops
 vcsroot.usernameStyle=USERID
+dep.ItpIsd_DiscoveryPeak20_TapNgJupiter_Tests_ApiComponentsTests.env.LESSCLOSE=/usr/bin/lesspipe %s %s
 test.key=test value
 test.key.int=4
