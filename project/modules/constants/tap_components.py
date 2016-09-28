@@ -14,11 +14,10 @@
 # limitations under the License.
 #
 
+
 class TapComponent:
     auth_gateway = "auth-gateway"
-    auth_proxy = "auth-proxy"
     app_dependency_discoverer = "app-dependency-discoverer"
-    app_launcher_helper = "app-launcher-helper"
     console = "console"
     cdh_broker = "cdh-broker"
     das = "das"
@@ -47,7 +46,6 @@ class TapComponent:
     router_metrics_provider = "router-metrics-provider"
     service_catalog = "service-catalog"
     service_exposer = "service-exposer"
-    smtp = "smtp"
     smtp_broker = "smtp-broker"
     user_management = "user-management"
     workflow_scheduler = "workflow-scheduler"
@@ -67,14 +65,30 @@ class TapComponent:
     space_shuttle_demo = "space-shuttle-demo"
 
     # ---- TAP NG components ---- #
-    blob_store = "blob-store"
-    catalog = "catalog"
     api_service = "api-service"
+    blob_store = "blob-store"
+    ca = "ca"
+    catalog = "catalog"
     container_broker = "container-broker"
+    h2o_model_provider = "h2o-model-provider"
     image_factory = "image-factory"
+    metrics_collector_ambassador = "metrics-collector-ambassador"
+    metrics_presenter = "metrics-presenter"
+    metrics_tap_catalog_collector = "metrics-tap-catalog-collector"
+    monitor = "monitor"
+    nginx_ingress = "nginx-ingress"
     template_repository = "template-repository"
+    uaa_client_register_job = "tap-uaa-client-register-job"
 
     # ---- TAP NG components - 3rd party ---- #
     image_repository = "image-repository"
     message_queue = "queue"
 
+    @classmethod
+    def get_list(cls):
+        return [cls.api_service, cls.blob_store, cls.ca, cls.catalog, cls.console, cls.container_broker, cls.das,
+                cls.data_catalog, cls.dataset_publisher, cls.h2o_broker, cls.h2o_model_provider,
+                cls.h2o_scoring_engine_publisher, cls.hdfs_downloader, cls.hdfs_uploader, cls.image_factory,
+                cls.metadata_parser, cls.metrics_collector_ambassador, cls.metrics_presenter,
+                cls.metrics_tap_catalog_collector, cls.model_catalog, cls.monitor, cls.nginx_ingress,
+                cls.uaa_client_register_job, cls.user_management, cls.template_repository]

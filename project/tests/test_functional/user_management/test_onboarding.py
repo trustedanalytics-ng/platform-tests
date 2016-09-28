@@ -30,8 +30,8 @@ from modules.tap_object_model.flows import onboarding
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception, assert_user_in_org_and_role
 
-logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
-pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
+logged_components = (TAP.user_management, TAP.auth_gateway)
+pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway)]
 
 
 class TestOnboarding:

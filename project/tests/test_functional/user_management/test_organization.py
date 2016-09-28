@@ -28,8 +28,8 @@ from modules.test_names import escape_hive_name
 from tests.fixtures import assertions
 
 
-logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
-pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)]
+logged_components = (TAP.user_management, TAP.auth_gateway)
+pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.user_management)]
 
 
 @pytest.mark.skip(reason="Not implemented for TAP NG yet")

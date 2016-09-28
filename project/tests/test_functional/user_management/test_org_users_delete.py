@@ -23,8 +23,8 @@ from modules.tap_logger import step
 from modules.tap_object_model import User
 from tests.fixtures.assertions import assert_user_not_in_org, assert_user_in_org_and_role, assert_raises_http_exception
 
-logged_components = (TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)
-pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway, TAP.auth_proxy)]
+logged_components = (TAP.user_management, TAP.auth_gateway)
+pytestmark = [pytest.mark.components(TAP.user_management, TAP.auth_gateway)]
 
 
 class TestDeleteOrganizationUser:

@@ -55,7 +55,7 @@ def sample_app(sample_python_app, sample_java_app):
 
 
 @pytest.mark.skip(reason="Not implemented for TAP NG yet")
-@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_create_and_delete_organization(context):
     """Create and Delete Organization"""
     step("Create organization")
@@ -69,7 +69,7 @@ def test_create_and_delete_organization(context):
     assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
 
 
-@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_onboarding(context):
     """Test Onboarding"""
     step("Onboard new user")
@@ -79,7 +79,7 @@ def test_onboarding(context):
     assert test_user in users
 
 
-@pytest.mark.components(TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+@pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """Add New User to and Delete from Organization"""
     step("Add new user to organization")

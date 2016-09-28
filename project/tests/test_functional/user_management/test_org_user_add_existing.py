@@ -22,7 +22,7 @@ from modules.tap_logger import step
 from modules.tap_object_model import Organization, User
 from tests.fixtures.assertions import assert_user_in_org_and_role, assert_raises_http_exception, assert_user_not_in_org
 
-loged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+loged_components = (TAP.auth_gateway, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 

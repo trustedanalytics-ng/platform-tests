@@ -23,7 +23,7 @@ from modules.tap_object_model import Organization, User
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
-logged_components = (TAP.auth_gateway, TAP.auth_proxy, TAP.user_management)
+logged_components = (TAP.auth_gateway, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
