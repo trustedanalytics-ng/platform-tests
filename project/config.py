@@ -172,7 +172,7 @@ ng_k8s_as_oauth_token_url = os.environ.get("PT_NG_AS_OAUTH_TOKEN_URL",
 ng_build_number = os.environ.get("PT_NG_BUILD_NUMBER")
 
 # Set to True if kubectl and core services are not accessible from jumpbox, but from master-0
-access_to_core_services_from_jump = os.environ.get("PT_ACCESS_TO_CORE_SERVICES_FROM_JUMP", False)
+access_to_core_services_from_jump = get_bool("PT_ACCESS_TO_CORE_SERVICES_FROM_JUMP", False)
 master_0_hostname = os.environ.get("PT_MASTER_0_HOSTNAME", "master-0.kubernetes.cluster.local")
 
 
