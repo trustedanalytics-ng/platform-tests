@@ -20,20 +20,20 @@ from unittest import mock
 
 import pytest
 
-from modules.ssh_lib.jump_client import JumpClient
+from modules.ssh_lib._jump_client import JumpClient
 from ._mocks import MockSystemMethods, MockConfig
 
 
 
-@mock.patch("modules.ssh_lib.jump_client.os.path.isfile", MockSystemMethods.isfile)
-@mock.patch("modules.ssh_lib.jump_client.os.path.exists", MockSystemMethods.exists)
+@mock.patch("modules.ssh_lib._jump_client.os.path.isfile", MockSystemMethods.isfile)
+@mock.patch("modules.ssh_lib._jump_client.os.path.exists", MockSystemMethods.exists)
 class TestJumpClient:
     TEST_USERNAME = "test-username"
-    CONFIG_MODULE = "modules.ssh_lib.jump_client.config"
-    GET_REPOSITORY = "modules.ssh_lib.jump_client.AppSources.get_repository"
-    RELATIVE_REPO_PATH = "modules.ssh_lib.jump_client.RelativeRepositoryPaths.ilab_jump_key"
-    CHMOD = "modules.ssh_lib.jump_client.os.chmod"
-    RMTREE = "modules.ssh_lib.jump_client.shutil.rmtree"
+    CONFIG_MODULE = "modules.ssh_lib._jump_client.config"
+    GET_REPOSITORY = "modules.ssh_lib._jump_client.AppSources.get_repository"
+    RELATIVE_REPO_PATH = "modules.ssh_lib._jump_client.RelativeRepositoryPaths.ilab_jump_key"
+    CHMOD = "modules.ssh_lib._jump_client.os.chmod"
+    RMTREE = "modules.ssh_lib._jump_client.shutil.rmtree"
 
     @pytest.fixture()
     def dummy_object(self):

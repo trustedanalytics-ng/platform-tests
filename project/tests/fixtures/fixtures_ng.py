@@ -31,8 +31,10 @@ from modules.tap_logger import log_fixture
 
 @pytest.fixture(scope="session")
 def open_tunnel(request):
+    log_fixture("Open SSH tunnel to jumpbox")
     jump_tunnel = JumpTunnel()
     jump_tunnel.open()
+    log_fixture("SSH tunnel to jumpbox is open")
     request.addfinalizer(jump_tunnel.close)
     return jump_tunnel
 

@@ -14,5 +14,13 @@
 # limitations under the License.
 #
 
-from .jump_client import JumpClient
-from .jump_tunnel import JumpTunnel
+import config
+from ._jump_client import JumpClient
+from ._simple_jump_tunnel import SimpleJumpTunnel
+from ._nested_jump_tunnel import NestedJumpTunnel
+
+
+if config.access_to_core_services_from_jump:
+    JumpTunnel = SimpleJumpTunnel
+else:
+    JumpTunnel = NestedJumpTunnel

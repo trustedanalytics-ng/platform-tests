@@ -23,16 +23,13 @@ class MockConfig:
     JUMP_KEY_FILENAME = "test_key"
     EXISTING_JUMP_KEY_PATH = os.path.join(JUMP_KEY_DIRECTORY, JUMP_KEY_FILENAME)
     JUMP_KEY_HOME_DIR = "~/tmp/test_key"
-    ACCESS_TO_CORE_TAP_FROM_JUMP = False
 
-    def __init__(self, jump_hostname=JUMP_HOSTNAME, jump_key_path=EXISTING_JUMP_KEY_PATH,
-                 direct_access_from_jump=ACCESS_TO_CORE_TAP_FROM_JUMP, verbose_ssh=False):
+    def __init__(self, jump_hostname=JUMP_HOSTNAME, jump_key_path=EXISTING_JUMP_KEY_PATH, verbose_ssh=False):
         self.tap_domain = "test-domain"
         self.ng_jump_ip = jump_hostname
         self.ng_jump_key_path = jump_key_path
         self.ng_jump_user_with_kubectl_config = "test-username-admin"
         self.ng_jump_user = "test-username-centos"
-        self.access_to_core_services_from_jump = direct_access_from_jump
         self.ng_socks_proxy_port = 123
         self.master_0_hostname = "test-master-0"
         self.verbose_ssh = verbose_ssh
