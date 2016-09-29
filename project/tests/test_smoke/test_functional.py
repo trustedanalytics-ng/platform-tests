@@ -79,6 +79,7 @@ def test_onboarding(context):
     assert test_user in users
 
 
+@pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """Add New User to and Delete from Organization"""
