@@ -42,8 +42,13 @@ class JumpClient(object):
         self.auth_options = ["-o UserKnownHostsFile=/dev/null",
                              "-o StrictHostKeyChecking=no",
                              "-o GSSAPIAuthentication=no"]
-        self.ssh_command = ["ssh", "-i", self.key_path] + self.auth_options + ["{}@{}".format(self._username, self._host)]
-        self.scp_command = ["scp", "-r", "-i", self.key_path] + self.auth_options
+        ssh_options = ["-i", self.key_path] + self.auth_options + ["{}@{}".format(self._username, self._host)]
+        scp_options = ["-r", "-i", self.key_path] + self.auth_options
+        if config.verbose_ssh:
+            ssh_options = ["-vvv"] + ssh_options
+            scp_options = ["-v"] + scp_options
+        self.ssh_command = ["ssh"] + ssh_options
+        self.scp_command = ["scp"] + scp_options
 
     @property
     def key_path(self):

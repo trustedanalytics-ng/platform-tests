@@ -26,7 +26,7 @@ class MockConfig:
     ACCESS_TO_CORE_TAP_FROM_JUMP = False
 
     def __init__(self, jump_hostname=JUMP_HOSTNAME, jump_key_path=EXISTING_JUMP_KEY_PATH,
-                 direct_access_from_jump=ACCESS_TO_CORE_TAP_FROM_JUMP):
+                 direct_access_from_jump=ACCESS_TO_CORE_TAP_FROM_JUMP, verbose_ssh=False):
         self.tap_domain = "test-domain"
         self.ng_jump_ip = jump_hostname
         self.ng_jump_key_path = jump_key_path
@@ -35,6 +35,7 @@ class MockConfig:
         self.access_to_core_services_from_jump = direct_access_from_jump
         self.ng_socks_proxy_port = 123
         self.master_0_hostname = "test-master-0"
+        self.verbose_ssh = verbose_ssh
 
 
 

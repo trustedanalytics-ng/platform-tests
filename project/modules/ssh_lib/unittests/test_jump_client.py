@@ -40,9 +40,10 @@ class TestJumpClient:
         class Dummy: pass
         return Dummy()
 
-    def test_init(self):
+    @pytest.mark.parametrize("verbose_ssh", (False, True), ids=("verbose_ssh=False", "verbose_ssh=True"))
+    def test_init(self, verbose_ssh):
         mock_config = MockConfig()
-        with mock.patch(self.CONFIG_MODULE, MockConfig()):
+        with mock.patch(self.CONFIG_MODULE, MockConfig(verbose_ssh=verbose_ssh)):
             test_client = JumpClient(username=self.TEST_USERNAME)
         assert test_client._username == self.TEST_USERNAME
         assert test_client._host == mock_config.ng_jump_ip
@@ -53,6 +54,13 @@ class TestJumpClient:
         assert test_client.key_path in test_client.scp_command
         assert " ".join(test_client.auth_options) in " ".join(test_client.ssh_command)
         assert " ".join(test_client.auth_options) in " ".join(test_client.scp_command)
+
+        if verbose_ssh:
+            assert "-vvv" in test_client.ssh_command
+            assert "-v" in test_client.scp_command
+        else:
+            assert "-vvv" not in test_client.ssh_command
+            assert "-v" not in test_client.scp_command
 
     @mock.patch(CONFIG_MODULE, MockConfig(jump_hostname=None))
     def test_no_jump_ip(self):

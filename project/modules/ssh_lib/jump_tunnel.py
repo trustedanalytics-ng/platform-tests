@@ -46,9 +46,12 @@ class JumpTunnel(object):
         else:
             self._logger.warning("Kubernetes not available directly from jumpbox.")
             self._copy_key_to_remote_host()  # necessary to establish tunnel on master-0
+            verbose_ssh = "-vvv" if config.verbose_ssh else ""
             tunnel_command = ["-L", "{0}:{1}:{0}".format(self._local_port, self._LOCALHOST),
-                              "ssh {} {} -D {} -N".format(" ".join(self._auth_options), self._master_0_host,
-                                                          self._local_port)]
+                              "ssh {} {} {} -D {} -N".format(verbose_ssh,
+                                                             " ".join(self._auth_options),
+                                                             self._master_0_host,
+                                                             self._local_port)]
             self._tunnel_command = self._ssh_command + tunnel_command
 
     def open(self):
@@ -78,4 +81,3 @@ class JumpTunnel(object):
         target_path = os.path.join(self._home_directory, ".ssh", "id_rsa")
         self._jump_client.scp_to_remote(source_path=self._key_path, target_path=target_path)
         self._jump_client.ssh("chmod 600 {}".format(target_path))
-

@@ -147,6 +147,7 @@ logsearch_collect_retry_count = get_int("PT_LOGSEARCH_COLLECT_RETRY_COUNT", 5)
 logsearch_elastic_search_host = os.environ.get("PT_LOGSEARCH_ELASTIC_SEARCH_HOST", "10.0.7.10")
 # Logging
 logging_level = os.environ.get("PT_LOGGING_LEVEL", "DEBUG")
+verbose_ssh = get_bool("PT_VERBOSE_SSH", False)
 
 # -------------------------------------- TAP NG -------------------------------------- #
 
