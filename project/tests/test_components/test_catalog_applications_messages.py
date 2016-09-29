@@ -30,6 +30,7 @@ class TestCatalogApplicationsMessages:
     CORRECT_INSTANCE_NAME = generate_test_object_name().replace("_", "-")
     INVALID_APPLICATION_ID = "90982774-09198298"
 
+    @pytest.mark.bugs("DPNG-11467 Create application without body fails due to missing attribute 'catalog_application'")
     def test_0_create_application(self, class_context):
         step("Create template in catalog")
         self.__class__.catalog_template = CatalogTemplate.create(class_context, state=CatalogTemplate.STATE_IN_PROGRESS)
@@ -49,6 +50,7 @@ class TestCatalogApplicationsMessages:
         applications = CatalogApplication.get_list()
         assert self.catalog_application in applications
 
+    @pytest.mark.bugs("DPNG-11467 Create application without body fails due to missing attribute 'catalog_application'")
     def test_1_check_create_application_instance_no_body(self, class_context):
         step("Create instance in application without body")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, "", CatalogApplication.create_instance, class_context,
