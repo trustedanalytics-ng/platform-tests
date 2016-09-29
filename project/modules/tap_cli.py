@@ -21,12 +21,15 @@ from retry import retry
 import config
 from modules import command
 from modules.constants import HttpStatus
+from modules.exceptions import CommandExecutionException
 from modules.http_client import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 
 
 class TapCli:
+    ERROR = "ERROR"
+
     TARGET = "target"
     HELP = "help", "h"
     VERSION = "--version", "-v"
@@ -53,7 +56,10 @@ class TapCli:
     def _run_command(self, cmd: list, cwd=None):
         cmd = [self.command] + cmd
         output = command.run(cmd, cwd=cwd)
-        return "\n".join(output)
+        output = "\n".join(output)
+        if self.ERROR in output:
+            raise CommandExecutionException(return_code=0, output=output, command=cmd)
+        return output
 
     def login(self, login_domain=config.cf_api_url, tap_auth=None):
         if tap_auth is None:
