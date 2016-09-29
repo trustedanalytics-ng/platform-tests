@@ -40,7 +40,7 @@ from modules.test_names import generate_test_object_name
 logged_components = (TAP.data_catalog, TAP.das)
 
 
-@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
+@pytest.mark.skip(reason="Not yet adjusted to new TAP")
 @priority.low
 @incremental
 class TestSparkViaHue:

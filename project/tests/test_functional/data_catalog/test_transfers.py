@@ -31,7 +31,7 @@ from tests.fixtures.assertions import assert_raises_http_exception
 logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
 
 
-@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
+@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransfer:
     pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
 
@@ -121,7 +121,7 @@ class TestSubmitTransfer:
         assert "token" not in response, "token field was returned in response"
 
 
-@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
+@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
     pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)]
 
@@ -202,6 +202,7 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
         DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
 
 
+@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class GetTransfers:
     pytestmark = [pytest.mark.components(TAP.das)]
 

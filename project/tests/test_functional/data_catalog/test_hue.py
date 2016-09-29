@@ -32,7 +32,7 @@ logged_components = (TAP.data_catalog, TAP.dataset_publisher, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
-@pytest.mark.skip(reason="Skipped due to mocked data-catalog")
+@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 @priority.medium
 @incremental
 class TestHue:
