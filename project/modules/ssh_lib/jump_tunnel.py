@@ -34,7 +34,7 @@ class JumpTunnel(object):
         self._jump_client = JumpClient(self._username)
         self._ssh_command = self._jump_client.ssh_command
         self._auth_options = self._jump_client.auth_options
-        self._key_path = config.ng_jump_key_path
+        self._key_path = self._jump_client.key_path
         self._local_port = config.ng_socks_proxy_port
         self._master_0_host = config.master_0_hostname
         self._home_directory = os.path.join("/home", self._username)

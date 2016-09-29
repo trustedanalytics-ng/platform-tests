@@ -22,15 +22,14 @@ from ._mocks import MockConfig, MockSystemMethods
 from modules.ssh_lib.jump_tunnel import JumpClient, JumpTunnel
 
 
-jump_client_mock_config = MockConfig()
-
 
 @mock.patch("modules.ssh_lib.jump_client.os.path.isfile", MockSystemMethods.isfile)
 @mock.patch("modules.ssh_lib.jump_client.os.path.exists", MockSystemMethods.exists)
-@mock.patch("modules.ssh_lib.jump_client.config", jump_client_mock_config)
+@mock.patch("modules.ssh_lib.jump_client.config", MockConfig())
 class TestJumpTunnel:
     CONFIG_MODULE = "modules.ssh_lib.jump_tunnel.config"
     COPY_KEY_METHOD = "modules.ssh_lib.jump_tunnel.JumpTunnel._copy_key_to_remote_host"
+    CLIENT_MOCK_GET_REPOSITORY = "modules.ssh_lib.jump_client.AppSources.get_repository"
 
     @pytest.mark.parametrize("simple_ssh", (True, False))
     def test_init_simple_ssh(self, simple_ssh):
@@ -55,3 +54,9 @@ class TestJumpTunnel:
             assert "-L" in jump_tunnel._tunnel_command
             assert "{0}:{1}:{0}".format(mock_config.ng_socks_proxy_port, JumpTunnel._LOCALHOST) in jump_tunnel._tunnel_command
             mock_copy_key_method.assert_called_once()
+
+    @mock.patch(CONFIG_MODULE, MockConfig(jump_key_path=None))
+    @mock.patch(COPY_KEY_METHOD, mock.Mock())
+    def test_init_empty_key_path(self):
+        jump_tunnel = JumpTunnel()
+        assert jump_tunnel._key_path is not None
