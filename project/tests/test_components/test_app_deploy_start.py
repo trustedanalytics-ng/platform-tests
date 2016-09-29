@@ -44,6 +44,8 @@ class TestPythonApplicationFlow:
             'type': self.APP_TYPE
         }
 
+    @pytest.mark.bugs("DPNG-10722 sample-java-app from platform-tests does not work on new tap")
+    @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR"
     def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
         step("Prepare manifest with parameters")
         K8sApplication.update_manifest(sample_manifest_path, self.manifest_params)
