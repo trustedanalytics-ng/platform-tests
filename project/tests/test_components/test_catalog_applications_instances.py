@@ -31,6 +31,7 @@ class TestCatalogApplicationsInstances:
 
     CORRECT_INSTANCE_NAME = generate_test_object_name().replace("_", "-")
 
+    @pytest.mark.bugs("DPNG-11467 Error 400 "Field: Name has incorrect value:" while create catalog application")
     def test_0_create_application(self, class_context):
         step("Create template in catalog")
         self.__class__.catalog_template = CatalogTemplate.create(class_context, state=CatalogTemplate.STATE_IN_PROGRESS)
