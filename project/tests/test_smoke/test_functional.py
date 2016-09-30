@@ -69,6 +69,7 @@ def test_create_and_delete_organization(context):
     assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
 
 
+@pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_onboarding(context):
     """Test Onboarding"""
