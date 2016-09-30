@@ -25,6 +25,7 @@ import config
 from modules.constants import Path
 from modules.tap_logger import get_logger
 from ._client import DBClient
+from ._tap_info import TapInfo
 from ._teamcity_configuration import TeamCityConfiguration
 from ._run_type import RunType
 
@@ -81,6 +82,7 @@ class MongoReporter(object):
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "status": self._RESULT_PASS,
+            "tap_build_number": TapInfo.get_build_number(),
             "test_count": 0,
             "total_test_count": 0,
             "test_version": self._get_test_version(),

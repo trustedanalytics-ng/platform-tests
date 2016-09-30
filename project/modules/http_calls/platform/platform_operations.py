@@ -37,3 +37,13 @@ def api_refresh_platform_operations(client=None):
         path="platform/summary/refresh_cache",
         msg="PLATFORM/OPERATIONS: refresh"
     )
+
+
+def api_get_platform_info(client=None):
+    """GET /rest/platform_info"""
+    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    return client.request(
+        method=HttpMethod.GET,
+        path="platform_info",
+        msg="PLATFORM: get info"
+    )

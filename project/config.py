@@ -88,6 +88,9 @@ tap_version = os.environ.get("PT_TAP_VERSION")
 # TAP infrastructure type provided by user (AWS, OS or Hybrid)
 tap_infrastructure_type = os.environ.get("PT_TAP_INFRASTRUCTURE_TYPE")
 
+# TAP build number (last number from version - 0.8.XXXX)
+tap_build_number = get_int("PT_BUILD_NUMBER")
+
 # local_appstack_path - if None, appstack is retrieved from GitHub apployer repository
 appstack_file_path = os.environ.get("PT_APPSTACK_PATH")
 appstack_version = os.environ.get("PT_APPSTACK_VERSION", "master")

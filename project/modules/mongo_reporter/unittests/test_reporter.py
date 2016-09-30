@@ -26,7 +26,6 @@ import pytest
 from modules.constants import Path
 from modules.mongo_reporter._reporter import MongoReporter, _MockDbClient
 
-
 MOCK_BUMPVERSION_PATH = os.path.join("modules", "mongo_reporter", "unittests", "fixtures", "mock_bumpversion")
 assert os.path.isfile(MOCK_BUMPVERSION_PATH)
 MOCK_BUMPVERSION_BAD_PATH = os.path.join("modules", "mongo_reporter", "unittests", "fixtures", "mock_bumpversion_bad")
@@ -48,6 +47,7 @@ class MockConfig:
     tap_infrastructure_type = "test_infrastructure_type"
     tap_version = "test_tap_version"
     kerberos = "test_kerberos"
+    tap_build_number = 9876
 
 
 class MockTeamcityConfiguration:
@@ -77,6 +77,13 @@ class TestReporter(object):
         class Dummy: pass
         return Dummy
 
+    @pytest.fixture(scope="function")
+    def mock_platform(self, monkeypatch):
+        _mock_platform = mock.Mock()
+        monkeypatch.setattr("modules.mongo_reporter._tap_info.PlatformInfo.get", _mock_platform)
+        monkeypatch.setattr("modules.mongo_reporter._tap_info.config", MockConfig)
+        return _mock_platform
+
     def _assert_all_keys_equal_except(self, document_a: dict, document_b: dict, *args):
         for k, v in document_a.items():
             if k not in args:
@@ -86,7 +93,7 @@ class TestReporter(object):
         assert abs(date - datetime.now()).total_seconds() < epsilon
 
     @mock.patch("modules.mongo_reporter._reporter.config", MockConfig)
-    def test_init_run_document(self):
+    def test_init_run_document(self, mock_platform):
         TEST_VERSION = "test.version"
         with mock.patch("modules.mongo_reporter._reporter.MongoReporter._get_test_version",
                         lambda *args, **kwargs: TEST_VERSION):
@@ -107,6 +114,7 @@ class TestReporter(object):
         assert run_document["started_by"] == socket.gethostname()
         assert run_document["test_version"] == TEST_VERSION
         assert run_document["parameters"]["environment_variables"] == os.environ
+        assert run_document["tap_build_number"] == MockConfig.tap_build_number
         # non-dynamic values
         assert run_document["end_date"] is None
         assert run_document["finished"] is False
@@ -317,4 +325,3 @@ class TestReporter(object):
             reporter._save_test_run()
         mock_replace.assert_called_once_with(collection_name=MongoReporter._TEST_RUN_COLLECTION_NAME,
                                              document_id=reporter._run_id, new_document=reporter._mongo_run_document)
-
