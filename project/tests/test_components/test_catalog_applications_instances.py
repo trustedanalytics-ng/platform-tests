@@ -14,15 +14,16 @@
 # limitations under the License.
 #
 import pytest
+
 import fixtures.k8s_templates.catalog_service_example as service_body
-from modules.tap_logger import step
-from modules.markers import incremental
 from modules.constants import InstanceFactoryHttpStatus
+from modules.markers import incremental
+from modules.tap_logger import step
 from modules.tap_object_model.catalog_application import CatalogApplication
 from modules.tap_object_model.catalog_image import CatalogImage
 from modules.tap_object_model.catalog_template import CatalogTemplate
-from tests.fixtures.assertions import assert_raises_http_exception
 from modules.test_names import generate_test_object_name
+from tests.fixtures.assertions import assert_raises_http_exception
 
 
 @incremental
@@ -31,7 +32,6 @@ class TestCatalogApplicationsInstances:
 
     CORRECT_INSTANCE_NAME = generate_test_object_name().replace("_", "-")
 
-    @pytest.mark.bugs("DPNG-11467 Error 400 "Field: Name has incorrect value:" while create catalog application")
     def test_0_create_application(self, class_context):
         step("Create template in catalog")
         self.__class__.catalog_template = CatalogTemplate.create(class_context, state=CatalogTemplate.STATE_IN_PROGRESS)

@@ -15,7 +15,9 @@
 #
 
 import functools
+
 import modules.http_calls.platform.catalog as catalog
+from modules.test_names import generate_test_object_name
 
 
 @functools.total_ordering
@@ -38,8 +40,9 @@ class CatalogApplication(object):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, template_id, image_id):
-        response = catalog.create_application(template_id, image_id)
+    def create(cls, context, template_id, image_id, name=None):
+        response = catalog.create_application(name or generate_test_object_name(separator="-"),
+                                              template_id, image_id)
         new_application = cls._from_response(response)
         context.catalog.append(new_application)
         return new_application

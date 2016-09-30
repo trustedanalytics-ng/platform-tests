@@ -20,8 +20,8 @@ from modules.tap_logger import step
 from modules.tap_object_model.catalog_application import CatalogApplication
 from modules.tap_object_model.catalog_image import CatalogImage
 from modules.tap_object_model.catalog_template import CatalogTemplate
-from tests.fixtures.assertions import assert_raises_http_exception
 from modules.test_names import generate_test_object_name
+from tests.fixtures.assertions import assert_raises_http_exception
 
 
 @pytest.mark.usefixtures("open_tunnel")
@@ -30,7 +30,6 @@ class TestCatalogApplicationsMessages:
     CORRECT_INSTANCE_NAME = generate_test_object_name().replace("_", "-")
     INVALID_APPLICATION_ID = "90982774-09198298"
 
-    @pytest.mark.bugs("DPNG-11467 Error 400 "Field: Name has incorrect value:" while create catalog application")
     def test_0_create_application(self, class_context):
         step("Create template in catalog")
         self.__class__.catalog_template = CatalogTemplate.create(class_context, state=CatalogTemplate.STATE_IN_PROGRESS)
@@ -50,7 +49,6 @@ class TestCatalogApplicationsMessages:
         applications = CatalogApplication.get_list()
         assert self.catalog_application in applications
 
-    @pytest.mark.bugs("DPNG-11467 Error 400 "Field: Name has incorrect value:" while create catalog application")
     def test_1_check_create_application_instance_no_body(self, class_context):
         step("Create instance in application without body")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, "", CatalogApplication.create_instance, class_context,

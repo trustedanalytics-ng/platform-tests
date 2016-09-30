@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from tap_ng_component_config import k8s_core_services
 from modules.constants import TapComponent
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider
+from tap_ng_component_config import k8s_core_services
 
 
 def _get_client():
@@ -313,9 +312,10 @@ def create_service_plan(service_id, body):
 
 
 #region Applications
-def create_application(template_id, image_id):
+def create_application(name, template_id, image_id):
     """ POST /applications """
     body = {
+        "name": name,
         "imageId": image_id,
         "templateId": template_id,
         "replication": 0
