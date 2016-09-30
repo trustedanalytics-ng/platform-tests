@@ -15,9 +15,9 @@
 #
 
 import config
+from .base import BaseConfigurationProvider
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
-from .base import BaseConfigurationProvider
 
 
 class ConsoleNoAuthConfigurationProvider(BaseConfigurationProvider):
@@ -28,7 +28,7 @@ class ConsoleNoAuthConfigurationProvider(BaseConfigurationProvider):
         """Provide http client configuration."""
         return HttpClientConfiguration(
             client_type=HttpClientType.NO_AUTH,
-            url=config.console_url,
+            url="{}/rest".format(config.console_url),
             username=username,
             password=password
         )

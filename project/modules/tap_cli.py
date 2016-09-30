@@ -49,6 +49,8 @@ class TapCli:
     SCALE = "scale"
     DELETE = "delete"
     PUSH_HELP = [PUSH, "--help"]
+    INVITE = "invite"
+    DELETE_USER = "delete-user", "du"
 
     def __init__(self, cli_app_path):
         self.command = cli_app_path
@@ -169,3 +171,8 @@ class TapCli:
         )
         assert response.status_code == HttpStatus.CODE_OK
 
+    def invite(self, email):
+        return self._run_command([self.INVITE, email])
+
+    def delete_user(self, email, short=False):
+        return self._run_command([self.DELETE_USER[1] if short else self.DELETE_USER[0], email])

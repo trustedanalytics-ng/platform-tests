@@ -17,8 +17,8 @@
 from ...exceptions import YouMustBeJokingException
 from ...http_calls import cloud_foundry as cf
 from ...http_client.client_auth.http_method import HttpMethod
-from ...http_client.http_client_factory import HttpClientFactory
 from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
+from ...http_client.http_client_factory import HttpClientFactory
 
 
 def api_get_organizations(client=None):

@@ -189,6 +189,20 @@ class TestTapCli(unittest.TestCase):
     def test_service_log_short_command(self):
         assert ["log", "test1"] == self.tap_cli.service_log("test1", short=True)
 
+    test_user = "test_user"
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_invite(self):
+        assert ["invite", self.test_user] == self.tap_cli.invite(self.test_user)
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_delete_user(self):
+        assert ["delete-user", self.test_user] == self.tap_cli.delete_user(self.test_user)
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_delete_user_short_command(self):
+        assert ["du", self.test_user] == self.tap_cli.delete_user(self.test_user, short=True)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -88,21 +88,3 @@ def sample_app_path(request):
     sample_app_path = file_utils.download_file(sample_app_url, sample_app_tar_name)
     request.addfinalizer(lambda: file_utils.remove_if_exists(sample_app_path))
     return sample_app_path
-
-
-# @pytest.fixture(scope="class")
-# def download_unpack_and_check_sample_app(request, sample_app_path):
-#     log_fixture("Extract application archive")
-#     sample_app_path = os.path.abspath(sample_app_path)
-#     with tarfile.open(sample_app_path) as tar:
-#         tar.extractall()
-#         file_list = tar.getnames()
-#
-#     log_fixture("Check content of the archive")
-#     expected_file_list = getattr(request.cls, "FILES_LIST")
-#     missing_files = [app_file for app_file in expected_file_list if app_file not in file_list]
-#
-#     request.addfinalizer(lambda: file_utils.remove_if_exists(sample_app_path))
-#
-#     assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
-
