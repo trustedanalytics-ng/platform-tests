@@ -27,12 +27,14 @@ class TestCliBasicFlow:
     def restore_login(self, request, tap_cli):
         request.addfinalizer(tap_cli.login)
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_target(self, tap_cli, cli_login):
         step("Run tap target")
         output = tap_cli.target()
         assert config.cf_api_url in output
         assert config.ng_k8s_service_auth_username in output
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_help(self, tap_cli, cli_login):
         step("Check output from tap cli help")
         output = tap_cli.help()
@@ -41,7 +43,7 @@ class TestCliBasicFlow:
         assert "COMMANDS" in output
         assert "GLOBAL OPTIONS" in output
 
-    @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @pytest.mark.bugs("DPNG-10167 [TAP-NG] CLI - help improvements required")
     def test_version(self, tap_cli, cli_login):
         step("Check tap cli version")
@@ -50,13 +52,13 @@ class TestCliBasicFlow:
         assert match is not None
         assert "0.0.0" not in output
 
-    @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_cannot_login_with_incorrect_password(self, tap_cli, restore_login):
         step("Check that login with incorrect password returns Unauthorized")
         output = tap_cli.login(tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
         assert 'CODE: 401 BODY: {"message":"Bad response status: 401"}\nAuthentication failed' in output
 
-    @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")    
     @pytest.mark.bugs("DPNG-10120 [TAP-NG] CLI - ./tap target should be enable only for console-service ip")
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):
         step("Check that user cannot login to tap cli using incorrect domain")

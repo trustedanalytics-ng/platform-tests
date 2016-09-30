@@ -50,26 +50,31 @@ class TestCliCommandsWithNonExistingApplication:
     NON_EXISTING_APP_NAME = "non_existing_app_name_{}".format(generate_test_object_name())
     CANNOT_FIND_MSG = "cannot find instance with name: {}".format(NON_EXISTING_APP_NAME)
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_stop_non_existing_app(self, tap_cli, cli_login):
         step("Try to stop app with non existing name")
         stop = tap_cli.stop_app(application_name=self.NON_EXISTING_APP_NAME)
         assert self.CANNOT_FIND_MSG in stop
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_start_non_existing_app(self, tap_cli, cli_login):
         step("Try to start app with non existing name")
         start = tap_cli.start_app(application_name=self.NON_EXISTING_APP_NAME)
         assert self.CANNOT_FIND_MSG in start
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
         step("Try to scale app with non existing name")
         scale = tap_cli.scale_app(application_name=self.NON_EXISTING_APP_NAME, instances=SCALE_APP_INSTANCES)
         assert self.CANNOT_FIND_MSG in scale
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_check_logs_for_non_existing_app(self, tap_cli, cli_login):
         step("Try to check logs for non existing app name")
         logs = tap_cli.app_logs(application_name=self.NON_EXISTING_APP_NAME)
         assert self.CANNOT_FIND_MSG in logs
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_delete_non_existing_app(self, tap_cli, cli_login):
         step("Try to delete with non existing app name")
         delete = tap_cli.delete_app(application_name=self.NON_EXISTING_APP_NAME)
@@ -108,6 +113,7 @@ class TestPythonApplicationCliFlow:
         missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
         assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_1_push_app(self, cli_login, sample_manifest_path, tap_cli, sample_app_target_directory):
         step("Prepare manifest with parameters")
         manifest_params = {
