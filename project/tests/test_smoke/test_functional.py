@@ -164,6 +164,7 @@ def test_create_and_delete_marketplace_service_instances(core_org, core_space, c
     assert instance not in instances
 
 
+@pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
 @pytest.mark.parametrize("sample_app_key", ("sample_python_app", "sample_java_app"))
 def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     """Push Sample Application and Test Http Response"""
