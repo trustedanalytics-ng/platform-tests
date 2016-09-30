@@ -19,7 +19,7 @@ from retry import retry
 
 import config
 from modules.constants import ServiceLabels
-from modules.tap_object_model import Application, ServiceInstance, ServiceKey
+from modules.tap_object_model import Application, ServiceInstance
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -95,10 +95,12 @@ class Gearpump(object):
         return gearpump_ui_app
 
     def get_yarn_app_status(self):
-        if self.yarn_app_id is None:
-            gearpump_key = ServiceKey.api_create(self.instance.guid)
-            self.yarn_app_id = gearpump_key.credentials["yarnApplicationId"]
-            gearpump_key.api_delete()
-        yarn = Yarn()
-        result = yarn.get_application_details(self.yarn_app_id)
-        return result["State"]
+        # This functionality changed in new TAP
+        # if self.yarn_app_id is None:
+        #     gearpump_key = ServiceKey.api_create(self.instance.guid)
+        #     self.yarn_app_id = gearpump_key.credentials["yarnApplicationId"]
+        #     gearpump_key.api_delete()
+        # yarn = Yarn()
+        # result = yarn.get_application_details(self.yarn_app_id)
+        # return result["State"]
+        pass

@@ -22,7 +22,7 @@ from modules.markers import priority, incremental
 from modules.service_tools.orientdb_api import OrientDbApi
 from modules.service_tools.orientdb_dashboard_api import OrientDbDashboardApi
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, ServiceType, ServiceKey
+from modules.tap_object_model import Application, ServiceInstance, ServiceType
 
 
 @pytest.mark.skip(reason="Not yet adjusted to new TAP")
@@ -49,16 +49,18 @@ class TestOrientdbDashboard:
         assert orientdb_dashboard_service is not None, "OrientDB service not available in marketplace"
 
     def test_2_add_and_delete_key_to_orientdb_service_instance(self, core_space):
-        step("Create a key for the orientdb instance")
-        orientdb_instance_key = ServiceKey.api_create(self.orientdb_instance.guid)
-        step("Check a key for the orientdb instance")
-        summary = ServiceInstance.api_get_keys(core_space.guid)
-        assert orientdb_instance_key in summary[self.orientdb_instance]
-        step("Delete orientdb service key")
-        orientdb_instance_key.api_delete()
-        step("Check that key has been deleted")
-        summary = ServiceInstance.api_get_keys(core_space.guid)
-        assert orientdb_instance_key not in summary[self.orientdb_instance]
+        # This functionality changed in new TAP
+        # step("Create a key for the orientdb instance")
+        # orientdb_instance_key = ServiceKey.api_create(self.orientdb_instance.guid)
+        # step("Check a key for the orientdb instance")
+        # summary = ServiceInstance.api_get_keys(core_space.guid)
+        # assert orientdb_instance_key in summary[self.orientdb_instance]
+        # step("Delete orientdb service key")
+        # orientdb_instance_key.api_delete()
+        # step("Check that key has been deleted")
+        # summary = ServiceInstance.api_get_keys(core_space.guid)
+        # assert orientdb_instance_key not in summary[self.orientdb_instance]
+        pass
 
     def test_3_push_test_orientdb_api_app(self, class_context, core_space, login_to_cf_core):
         step("Push orientdb-api application to cf")

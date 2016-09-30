@@ -15,7 +15,6 @@
 #
 
 import functools
-import uuid
 
 from retry import retry
 
@@ -24,7 +23,6 @@ from ..exceptions import UnexpectedResponseError
 from ..http_calls import cloud_foundry as cf
 from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
 from ..test_names import generate_test_object_name
-from . import ServiceKey
 
 
 class ServiceInstanceLastOperationState(object):
@@ -116,9 +114,10 @@ class ServiceInstance(object):
                 instance = cls._get_instance_with_retry(name, space_guid, service_label)
             else:
                 raise
-        instance_summary = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
-                                                                             client=client)
-        instance.tags = next(filter(lambda s: s["label"] == instance.service_label, instance_summary))["tags"]
+        # The functionality below changed in new TAP
+        # instance_summary = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
+        #                                                                      client=client)
+        # instance.tags = next(filter(lambda s: s["label"] == instance.service_label, instance_summary))["tags"]
         context.service_instances.append(instance)
         return instance
 
@@ -145,23 +144,24 @@ class ServiceInstance(object):
             instances.append(instance)
         return instances
 
-    @classmethod
-    def api_get_keys(cls, space_guid, client=None):
-        """Return a dict mapping instances to their keys, retrieved from /rest/service_instances/summary."""
-        keys = {}
-        response = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
-                                                                     client=client)
-        for service_data in response:
-            for instance_data in service_data.get("instances", []):
-                instance = cls(guid=instance_data["guid"], name=instance_data["name"], space_guid=space_guid,
-                               service_label=service_data["label"])
-                service_keys = []
-                for key_data in instance_data["service_keys"]:
-                    service_keys.append(ServiceKey(guid=key_data["guid"], name=key_data["name"],
-                                                   credentials=key_data["credentials"],
-                                                   service_instance_guid=key_data["service_instance_guid"]))
-                keys[instance] = service_keys
-        return keys
+    # The functionality changed in new TAP
+    # @classmethod
+    # def api_get_keys(cls, space_guid, client=None):
+    #     """Return a dict mapping instances to their keys, retrieved from /rest/service_instances/summary."""
+    #     keys = {}
+    #     response = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
+    #                                                                  client=client)
+    #     for service_data in response:
+    #         for instance_data in service_data.get("instances", []):
+    #             instance = cls(guid=instance_data["guid"], name=instance_data["name"], space_guid=space_guid,
+    #                            service_label=service_data["label"])
+    #             service_keys = []
+    #             for key_data in instance_data["service_keys"]:
+    #                 service_keys.append(ServiceKey(guid=key_data["guid"], name=key_data["name"],
+    #                                                credentials=key_data["credentials"],
+    #                                                service_instance_guid=key_data["service_instance_guid"]))
+    #             keys[instance] = service_keys
+    #     return keys
 
     def api_get_credentials(self, client=None):
         """Return hostname, login, password from /rest/tools/service_instances"""

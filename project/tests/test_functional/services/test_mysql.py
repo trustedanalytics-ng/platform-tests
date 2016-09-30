@@ -24,7 +24,7 @@ from modules.constants.services import ServicePlan
 from modules.markers import incremental, priority
 from modules.ssh_client import DirectSshClient
 from modules.tap_logger import get_logger, step
-from modules.tap_object_model import KubernetesCluster, KubernetesInstance, ServiceInstance, ServiceKey, ServiceType
+from modules.tap_object_model import KubernetesCluster, KubernetesInstance, ServiceInstance, ServiceType
 
 logger = get_logger(__name__)
 
@@ -72,10 +72,12 @@ class TestMySQLClusteredService:
         self.instance.ensure_created()
 
     def test_1_get_key_for_instance(self):
-        self.__class__.key = ServiceKey.api_create(self.instance.guid)
-        assert "dbname" in self.key.credentials, "dbname field not found in key's credentials"
-        assert "username" in self.key.credentials, "username field not found in key's credentials"
-        assert "password" in self.key.credentials, "password field not found in key's credentials"
+        # This functionality changed in new TAP
+        # self.__class__.key = ServiceKey.api_create(self.instance.guid)
+        # assert "dbname" in self.key.credentials, "dbname field not found in key's credentials"
+        # assert "username" in self.key.credentials, "username field not found in key's credentials"
+        # assert "password" in self.key.credentials, "password field not found in key's credentials"
+        pass
 
     @pytest.mark.bugs("DPNG-9520 Pending status for mysql56-clustered")
     def test_2_expose_service_instance(self, test_org, test_space):
@@ -203,7 +205,7 @@ class TestMySQLClusteredService:
 
     @pytest.fixture
     def mysql_clients(self, ssh_client, pod_prefix):
-        self.__class__.key = ServiceKey.api_create(self.instance.guid)
+        # self.__class__.key = ServiceKey.api_create(self.instance.guid)
         client_1 = self.mysql_client_for_node(0, ssh_client, pod_prefix)
         client_2 = self.mysql_client_for_node(1, ssh_client, pod_prefix)
         client_3 = self.mysql_client_for_node(2, ssh_client, pod_prefix)

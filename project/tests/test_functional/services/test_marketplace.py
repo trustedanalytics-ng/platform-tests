@@ -183,8 +183,9 @@ class TestMarketplaceServices:
         ServiceInstance.api_create(context=context, org_guid=test_org.guid, space_guid=test_space.guid,
                                    service_label=service_type.label,
                                    service_plan_guid=service_type.service_plan_guids[0])
-        test_space = Space.api_create(test_org)
-        step("Get service instance summary in another space")
-        summary = ServiceInstance.api_get_keys(test_space.guid)
-        step("Check that service instance summary is empty in the second space")
-        assert summary == {}
+        # This functionality changed in new TAP
+        # test_space = Space.api_create(test_org)
+        # step("Get service instance summary in another space")
+        # summary = ServiceInstance.api_get_keys(test_space.guid)
+        # step("Check that service instance summary is empty in the second space")
+        # assert summary == {}

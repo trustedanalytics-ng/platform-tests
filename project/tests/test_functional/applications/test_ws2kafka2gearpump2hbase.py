@@ -28,7 +28,7 @@ from modules.hbase_client import HbaseClient
 from modules.markers import incremental, priority
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, ServiceKey
+from modules.tap_object_model import Application, ServiceInstance
 from modules.test_names import generate_test_object_name
 from modules.websocket_client import WebsocketClient
 
@@ -128,16 +128,18 @@ class TestWs2kafka2gearpump2hbase:
         ws.close()
 
     def _get_service_key_dict(self, instance):
-        service_key = ServiceKey.api_create(instance.guid, instance.name)
-        service_key.api_delete()
-        plan = self.BARE_PLAN_NAME if instance.service_label == ServiceLabels.HBASE else self.SHARED_PLAN_NAME
-        return {
-            "label": instance.service_label,
-            "name": instance.name,
-            "tags": instance.tags,
-            "credentials": service_key.credentials,
-            "plan": plan
-        }
+        # This functionality changed in new TAP
+        # service_key = ServiceKey.api_create(instance.guid, instance.name)
+        # service_key.api_delete()
+        # plan = self.BARE_PLAN_NAME if instance.service_label == ServiceLabels.HBASE else self.SHARED_PLAN_NAME
+        # return {
+        #     "label": instance.service_label,
+        #     "name": instance.name,
+        #     "tags": instance.tags,
+        #     "credentials": service_key.credentials,
+        #     "plan": plan
+        # }
+        pass
 
     def test_0_create_gearpump_instance(self, class_context, test_org, test_space):
         step("Create gearpump instance")
@@ -150,11 +152,13 @@ class TestWs2kafka2gearpump2hbase:
         self.gearpump.get_credentials()
 
     def test_1_get_api_keys(self):
-        step("Create service key for each service instance and prepare credentials dictionary")
-        for instance in self.test_instances:
-            if instance.service_label != ServiceLabels.KERBEROS:
-                key_dict = {instance.service_label: [self._get_service_key_dict(instance)]}
-                self.__class__.instances_credentials.update(key_dict)
+        # This functionality changed in new TAP
+        # step("Create service key for each service instance and prepare credentials dictionary")
+        # for instance in self.test_instances:
+        #     if instance.service_label != ServiceLabels.KERBEROS:
+        #         key_dict = {instance.service_label: [self._get_service_key_dict(instance)]}
+        #         self.__class__.instances_credentials.update(key_dict)
+        pass
 
     def test_2_get_hbase_namespace(self):
         step("Get hbase namespace")

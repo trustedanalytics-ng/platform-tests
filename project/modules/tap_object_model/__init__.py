@@ -32,7 +32,6 @@ from .platform_tests import TestSuite
 from .platform_snapshot import PlatformSnapshot
 from .binding import Binding
 from .service_broker import ServiceBroker
-from .service_key import ServiceKey
 from .service_instance import AtkInstance, ServiceInstance
 from .service_plan import ServicePlan
 from .service_offering import ServiceOffering

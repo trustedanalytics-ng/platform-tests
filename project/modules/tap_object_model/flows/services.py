@@ -1,4 +1,4 @@
-#
+    #
 # Copyright (c) 2016 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +15,15 @@
 #
 
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance, ServiceKey
+from modules.tap_object_model import ServiceInstance
 from tests.fixtures.assertions import assert_equal_with_retry, assert_instance_in_space, assert_instance_not_in_space
 
 
-def get_service_keys(instance):
-    summary = ServiceInstance.api_get_keys(instance.space_guid)
-    assert instance in summary
-    return summary[instance]
+# This functionality changed in new TAP
+# def get_service_keys(instance):
+#     summary = ServiceInstance.api_get_keys(instance.space_guid)
+#     assert instance in summary
+#     return summary[instance]
 
 
 def create_instance_and_key_then_delete_key_and_instance(context, org, space, other_space, service_label, plan, client=None):
@@ -54,17 +55,21 @@ def delete_instance(instance, space_guid, client=None):
 
 
 def create_key(instance, space_guid, client=None):
-    step("Check that the instance exists in summary and has no service keys")
-    assert_equal_with_retry(expected_value=[], callableObj=get_service_keys, instance=instance)
-    step("Create a key for the instance and check it's correct")
-    instance_key = ServiceKey.api_create(instance.guid, client=client)
-    summary = ServiceInstance.api_get_keys(space_guid)
-    assert summary[instance][0] == instance_key
-    return instance_key
+    # This functionality changed in new TAP
+    # step("Check that the instance exists in summary and has no service keys")
+    # assert_equal_with_retry(expected_value=[], callableObj=get_service_keys, instance=instance)
+    # step("Create a key for the instance and check it's correct")
+    # instance_key = ServiceKey.api_create(instance.guid, client=client)
+    # summary = ServiceInstance.api_get_keys(space_guid)
+    # assert summary[instance][0] == instance_key
+    # return instance_key
+    pass
 
 
 def delete_key(instance, instance_key, space_guid, client=None):
-    step("Delete key and check that it's deleted")
-    instance_key.api_delete(client=client)
-    summary = ServiceInstance.api_get_keys(space_guid)
-    assert summary[instance] == []
+    # This functionality changed in new TAP
+    # step("Delete key and check that it's deleted")
+    # instance_key.api_delete(client=client)
+    # summary = ServiceInstance.api_get_keys(space_guid)
+    # assert summary[instance] == []
+    pass

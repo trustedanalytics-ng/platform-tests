@@ -139,47 +139,6 @@ def api_get_service_plans(service_type_label, client):
     )
 
 
-def api_get_service_instances_summary(space_guid=None, service_keys=True, client=None):
-    """GET /service_instances/summary"""
-    query_params = {}
-    if space_guid:
-        query_params["space"] = space_guid
-    if service_keys:
-        query_params["service_keys"] = service_keys
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.GET,
-        path="service_instances/summary",
-        params=query_params,
-        msg="PLATFORM: get service instances summary"
-    )
-
-
-def api_create_service_key(service_instance_guid, service_key_name, client=None):
-    """POST /service_keys"""
-    body = {
-        "name": service_key_name,
-        "service_instance_guid": service_instance_guid,
-    }
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.POST,
-        path="service_keys",
-        body=body,
-        msg="PLATFORM: create service key"
-    )
-
-
-def api_delete_service_key(service_key_guid, client=None):
-    """DELETE /service_keys/{service_key_guid}"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.DELETE,
-        path="service_keys/{}".format(service_key_guid),
-        msg="PLATFORM: delete service key"
-    )
-
-
 def api_get_filtered_applications(space, service_label=None, client=None):
     """GET /apps"""
     query_params = {"space": space}

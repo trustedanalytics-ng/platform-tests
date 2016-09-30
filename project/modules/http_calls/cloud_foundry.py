@@ -270,11 +270,6 @@ def cf_api_get_service_instances():
     return __get_all_pages("service_instances", log_msg="CF: get service instances")
 
 
-def cf_api_get_service_keys_for_instance(org_guid):
-    """GET /v2/service_instances/{org_guid}/service_keys"""
-    return __get_all_pages("service_instances/{}/service_keys".format(org_guid),
-                           log_msg="CF: get service keys for service")
-
 # ---------------------------------------------------- buildpacks ---------------------------------------------------- #
 
 
