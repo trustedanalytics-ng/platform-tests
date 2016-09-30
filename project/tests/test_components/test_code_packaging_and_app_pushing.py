@@ -42,6 +42,7 @@ class TestCodePackagingAndAppPushing:
         'type': "PYTHON"
     }
 
+    @pytest.mark.bugs("DPNG-8751 Adjust sample-python-app to TAP NG")
     def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
         step("Change manifest.json params")
         K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
