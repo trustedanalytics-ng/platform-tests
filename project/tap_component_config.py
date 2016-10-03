@@ -32,18 +32,18 @@ api_service = {
     }
 }
 
-k8s_core_services = {
+TAP_core_services = {name: {} for name in TAP.get_list()}
+
+TAP_core_services.update({
     TAP.catalog: {"get_endpoint": "images"},
     TAP.container_broker: {"get_endpoint": "secret/smtp"},
-    TAP.image_factory: {},
-    TAP.template_repository: {"get_endpoint": "templates"},
-    TAP.blob_store: {}
-}
+    TAP.template_repository: {"get_endpoint": "templates"}
+})
 
-for item in k8s_core_services:
+for item in TAP_core_services:
     updated_config = default.copy()
-    updated_config.update(k8s_core_services[item])
-    k8s_core_services[item] = updated_config
+    updated_config.update(TAP_core_services[item])
+    TAP_core_services[item] = updated_config
 
 third_party_services = {
     TAP.image_repository: {

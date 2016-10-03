@@ -19,7 +19,7 @@ import config
 from .. import HttpClientConfiguration, HttpClientType, HttpClientFactory, HttpMethod
 from modules.tap_object_model.k8s_service import K8sService
 from .. import HttpClientConfiguration, HttpClientType
-from tap_ng_component_config import k8s_core_services
+from tap_component_config import TAP_core_services
 from modules.constants import TapComponent
 
 

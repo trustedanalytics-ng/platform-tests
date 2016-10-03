@@ -92,4 +92,4 @@ class TapComponent:
                 cls.h2o_scoring_engine_publisher, cls.hdfs_downloader, cls.hdfs_uploader, cls.image_factory,
                 cls.metadata_parser, cls.metrics_collector_ambassador, cls.metrics_presenter,
                 cls.metrics_tap_catalog_collector, cls.model_catalog, cls.monitor, cls.nginx_ingress,
-                cls.uaa_client_register_job, cls.user_management, cls.template_repository]
+                cls.template_repository, cls.user_management]

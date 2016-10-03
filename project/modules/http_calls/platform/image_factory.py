@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from tap_ng_component_config import k8s_core_services
+from tap_component_config import TAP_core_services
 from modules.constants import TapComponent
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider
@@ -22,7 +22,7 @@ from modules.constants import HttpStatus
 
 
 def _get_client():
-    api_version = k8s_core_services[TapComponent.image_factory]["api_version"]
+    api_version = TAP_core_services[TapComponent.image_factory]["api_version"]
     configuration = K8sServiceConfigurationProvider.get(TapComponent.image_factory,
                                                         api_endpoint="api/{}".format(api_version))
     return HttpClientFactory.get(configuration)
