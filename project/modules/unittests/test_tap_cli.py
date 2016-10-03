@@ -114,7 +114,8 @@ class TestTapCli(unittest.TestCase):
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_login(self):
         tap_auth = "username", "password"
-        assert ["login", config.cf_api_url, tap_auth[0], tap_auth[1]] == self.tap_cli.login(tap_auth=tap_auth)
+        assert ["login", "http://{}".format(config.api_url), tap_auth[0],
+                tap_auth[1]] == self.tap_cli.login(tap_auth=tap_auth)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_target(self):

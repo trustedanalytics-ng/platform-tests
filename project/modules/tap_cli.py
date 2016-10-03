@@ -61,10 +61,10 @@ class TapCli:
             raise CommandExecutionException(return_code=0, output=output, command=cmd)
         return output
 
-    def login(self, login_domain=config.cf_api_url, tap_auth=None):
+    def login(self, login_domain=config.api_url, tap_auth=None):
         if tap_auth is None:
             tap_auth = config.ng_k8s_service_credentials()
-        return self._run_command([self.LOGIN, login_domain, tap_auth[0], tap_auth[1]])
+        return self._run_command([self.LOGIN, "http://{}".format(login_domain), tap_auth[0], tap_auth[1]])
 
     def target(self):
         return self._run_command([self.TARGET])
