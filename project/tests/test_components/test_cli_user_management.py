@@ -61,7 +61,7 @@ class TestCLIDeletingUser:
     @staticmethod
     @pytest.fixture
     def user(context):
-        return onboard(context)
+        return onboard(context, check_email=False)
 
     @pytest.mark.parametrize("short", (True, False))
     def test_delete_user(self, user, tap_cli, short):
