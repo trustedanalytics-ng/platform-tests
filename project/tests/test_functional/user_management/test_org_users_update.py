@@ -27,7 +27,6 @@ logged_components = (TAP.auth_gateway, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 class TestUpdateOrganizationUser:
 
     @pytest.fixture(scope="class")
@@ -39,46 +38,38 @@ class TestUpdateOrganizationUser:
                 "after": User.ORG_ROLE["user"],
                 "expected": User.ORG_ROLE["user"]
             },
-            "admin_to_None": {
-                "before": User.ORG_ROLE["admin"],
-                "after": None,
-                "expected": User.ORG_ROLE["user"]
-            },
             "user_to_admin": {
                 "before": User.ORG_ROLE["user"],
                 "after": User.ORG_ROLE["admin"],
                 "expected": User.ORG_ROLE["admin"]
             },
-            "user_to_None": {
-                "before": User.ORG_ROLE["user"],
-                "after": None,
-                "expected": User.ORG_ROLE["user"]
-            }
         }
         for key, val in roles_to_update.items():
-            val["user"] = User.create_by_adding_to_organization(class_context, test_org.guid, role=val["before"])
+            val["user"] = User.create_by_adding_to_organization(context=class_context, org_guid=test_org.guid,
+                                                                role=val["before"])
         return roles_to_update
 
     @pytest.fixture(scope="function")
     def updated_user(self, context, test_org):
         step("Create test user in test org")
-        return User.create_by_adding_to_organization(context, test_org.guid)
+        return User.create_by_adding_to_organization(context=context, org_guid=test_org.guid)
 
     @priority.high
-    @pytest.mark.parametrize("test_case_name", ("admin_to_user", "admin_to_None", "user_to_admin", "user_to_None"))
+    @pytest.mark.parametrize("test_case_name", ("admin_to_user", "user_to_admin"))
     def test_update_org_role(self, test_org, test_case_name, update_test_cases):
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
-        role_before = update_test_cases["test_case_name"]["before"]
-        role_after = update_test_cases["test_case_name"]["after"]
-        role_expected = update_test_cases["test_case_name"]["expected"]
-        updated_user = update_test_cases["test_case_name"]["user"]
+        role_before = update_test_cases[test_case_name]["before"]
+        role_after = update_test_cases[test_case_name]["after"]
+        role_expected = update_test_cases[test_case_name]["expected"]
+        updated_user = update_test_cases[test_case_name]["user"]
 
         step("Update user from {} to {}".format(role_before, role_after))
-        updated_user.update_org_role(test_org.guid, new_role=role_after)
+        updated_user.update_org_role(org_guid=test_org.guid, new_role=role_after)
         step("Check that user's new role is {}".format(role_expected))
         assert_user_in_org_and_role(updated_user, test_org.guid, role_expected)
 
     @priority.low
+    @pytest.mark.skip(reason="Not implemented yet in user-management")
     def test_cannot_remove_org_admin_role_from_the_last_org_admin(self, test_org, test_org_admin):
         test_org_users = User.get_list_in_organization(org_guid=test_org.guid)
         admins = [u for u in test_org_users
@@ -113,7 +104,7 @@ class TestUpdateOrganizationUser:
 
     @priority.low
     def test_cannot_update_org_user_with_incorrect_role(self, test_org, updated_user):
-        initial_role = updated_user.ORG_ROLE.get(test_org.guid)
+        initial_role = updated_user.org_role.get(test_org.guid)
         invalid_role = "invalid role"
         step("Check that updating user using invalid role returns an error")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
@@ -126,8 +117,8 @@ class TestUpdateOrganizationUser:
         step("Check that non-admin cannot update another user's roles")
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                     updated_user.update_org_role, test_org.guid, new_role=User.ORG_ROLE["admin"],
-                                     client=test_org_user_client)
+                                     updated_user.update_org_role, org_guid=test_org.guid,
+                                     new_role=User.ORG_ROLE["admin"], client=test_org_user_client)
         step("Check that updated user's roles did not change")
         users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
@@ -140,8 +131,9 @@ class TestUpdateOrganizationUser:
     @pytest.mark.fixture(scope="class")
     def another_org_user(self, context, another_org):
         step("Add users to the organization")
-        User.create_by_adding_to_organization(context, org_guid=another_org.guid, role=User.ORG_ROLE["admin"])
-        return User.create_by_adding_to_organization(context, org_guid=another_org.guid, role=User.ORG_ROLE["user"])
+        User.create_by_adding_to_organization(context=context, org_guid=another_org.guid, role=User.ORG_ROLE["admin"])
+        return User.create_by_adding_to_organization(context=context, org_guid=another_org.guid,
+                                                     role=User.ORG_ROLE["user"])
 
     @priority.low
     @pytest.mark.skip(reason="Multiple orgs are not supported")
@@ -154,6 +146,7 @@ class TestUpdateOrganizationUser:
         assert_user_in_org_and_role(another_org_user, another_org.guid, User.ORG_ROLE["user"])
 
     @priority.low
+    @pytest.mark.skip(reason="Multiple orgs are not supported")
     def test_cannot_update_user_which_is_not_in_org(self, test_org, another_org, another_org_user):
         step("Check that user not in org cannot be updated")
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done

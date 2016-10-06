@@ -104,7 +104,6 @@ class TestAddNewUserToOrganization:
         users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
-    @pytest.mark.skip(reason="DPNG-10987 User-management is not able to add admin user (blocked prerequisite)")
     @priority.medium
     def test_org_admin_adds_new_user(self, context, test_org, test_org_admin_client):
         step("Org admin adds a new user to an organization")
