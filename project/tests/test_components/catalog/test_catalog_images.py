@@ -17,41 +17,43 @@
 import pytest
 
 from modules.tap_logger import step
-from modules.markers import incremental
-from modules.tap_object_model.catalog_image import CatalogImage
-from modules.constants import ImageFactoryHttpStatus
+from modules.tap_object_model import CatalogImage
+from modules.constants import CatalogHttpStatus, TapEntityState, TapApplicationType
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
-@incremental
 @pytest.mark.usefixtures("open_tunnel")
-class TestImageFactory:
+class TestCatalogImages:
 
-    def test_0_create_image_in_catalog(self, class_context):
-        step("Send application metadata to catalog")
-        self.__class__.catalog_image = CatalogImage.create(class_context, image_type=CatalogImage.TYPE_JAVA,
-                                                           state=CatalogImage.STATE_PENDING)
-        step("Check if image is on list of catalog images")
+    def test_create_and_delete_catalog_image(self, context):
+        step("Create catalog image")
+        catalog_image = CatalogImage.create(context, image_type=TapApplicationType.JAVA, state=TapEntityState.PENDING)
+
+        step("Check that the image is on list of catalog images")
         images = CatalogImage.get_list()
-        assert self.catalog_image in images
+        assert catalog_image in images
 
-    def test_1_update_catalog_image(self):
-        step("Update image")
-        self.catalog_image.update(field="type", value=CatalogImage.TYPE_GO)
-        step("Check image by id")
-        image = CatalogImage.get(self.catalog_image.id)
-        assert image.state == self.catalog_image.state
-        assert image.type == self.catalog_image.type
+        step("Delete the image")
+        catalog_image.delete()
 
-    def test_2_delete_image(self):
-        step("Delete image")
-        self.catalog_image.delete()
         step("Check that the image was deleted")
         images = CatalogImage.get_list()
-        assert self.catalog_image not in images
+        assert catalog_image not in images
 
-    def test_3_check_image_was_deleted(self):
-        step("Check whether image was successfully removed from catalog")
-        assert_raises_http_exception(ImageFactoryHttpStatus.CODE_NOT_FOUND,
-                                     ImageFactoryHttpStatus.MSG_IMAGE_DOES_NOT_EXIST,
-                                     CatalogImage.get, self.catalog_image.id)
+        step("Check that getting the deleted image returns an error")
+        # TODO this error message should be different
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     CatalogImage.get, image_id=catalog_image.id)
+
+    def test_update_catalog_image(self, context):
+        step("Create catalog image")
+        test_image = CatalogImage.create(context, image_type=TapApplicationType.JAVA, state=TapEntityState.PENDING)
+
+        step("Update image")
+        test_image.update(field_name="type", value=TapApplicationType.GO)
+
+        step("Check that the image was updated")
+        image = CatalogImage.get(image_id=test_image.id)
+        assert test_image == image
+
+

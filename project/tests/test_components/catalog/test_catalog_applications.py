@@ -16,53 +16,49 @@
 
 import pytest
 
-from modules.constants import InstanceFactoryHttpStatus
-from modules.markers import incremental
+from modules.constants import CatalogHttpStatus
+import modules.http_calls.platform.catalog as catalog_api
 from modules.tap_logger import step
-from modules.tap_object_model.catalog_application import CatalogApplication
-from modules.tap_object_model.catalog_image import CatalogImage
-from modules.tap_object_model.catalog_template import CatalogTemplate
+from modules.tap_object_model import CatalogApplication
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
-@incremental
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogApplications:
 
-    def test_0_create_application(self, class_context):
-        step("Create template in catalog")
-        self.__class__.catalog_template = CatalogTemplate.create(class_context, state=CatalogTemplate.STATE_IN_PROGRESS)
-        step("Check if template is on list of catalog templates")
-        templates = CatalogTemplate.get_list()
-        assert self.catalog_template in templates
-        step("Create image in catalog")
-        self.__class__.catalog_image = CatalogImage.create(class_context)
-        step("Check if image is on list of catalog images")
-        images = CatalogImage.get_list()
-        assert self.catalog_image in images
+    def test_create_and_delete_application(self, context, catalog_template, catalog_image):
         step("Create application in catalog")
-        self.__class__.catalog_application = CatalogApplication.create(class_context, template_id=self.catalog_template.id,
-                                                                       image_id=self.catalog_image.id)
-        step("Check if application is on list of catalog applications")
+        catalog_application = CatalogApplication.create(context, template_id=catalog_template.id,
+                                                        image_id=catalog_image.id)
+        step("Check that application is on the list of catalog applications")
         applications = CatalogApplication.get_list()
-        assert self.catalog_application in applications
+        assert catalog_application in applications
 
-    def test_1_update_application(self):
-        step("Update application")
-        self.catalog_application.update(field="replication", value=1)
-        step("Check application by id")
-        application = CatalogApplication.get(self.catalog_application.id)
-        assert application.replication == self.catalog_application.replication
+        step("Delete the application")
+        catalog_application.delete()
 
-    def test_2_delete_application(self):
-        step("Delete application")
-        self.catalog_application.delete()
-        step("Check that the application was deleted")
+        step("Check that the application is not on the list")
         applications = CatalogApplication.get_list()
-        assert self.catalog_application not in applications
+        assert catalog_application not in applications
 
-    def test_3_check_application_was_deleted(self):
-        step("Check whether application was successfully removed from catalog")
-        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_NOT_FOUND,
-                                     InstanceFactoryHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
-                                     CatalogApplication.get, self.catalog_application.id)
+        step("Check that getting the deleted application returns an error")
+        # TODO this error message should be different
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     CatalogApplication.get, application_id=catalog_application.id)
+
+    def test_update_application(self, context, catalog_template, catalog_image):
+        step("Create catalog application")
+        catalog_application = CatalogApplication.create(context, template_id=catalog_template.id,
+                                                        image_id=catalog_image.id)
+        step("Update the application")
+        catalog_application.update(field_name="replication", value=2)
+        step("Check that application was updated")
+        application = CatalogApplication.get(application_id=catalog_application.id)
+        assert catalog_application == application
+
+    def test_cannot_get_application_with_invalid_id(self):
+        step("Check application with invalid application id")
+        invalid_id = "90982774-09198298"
+        # TODO this error message should be different
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     catalog_api.get_application, application_id=invalid_id)

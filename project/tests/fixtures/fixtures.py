@@ -24,7 +24,6 @@ import config
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
-from modules.http_calls import cloud_foundry as cf
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer

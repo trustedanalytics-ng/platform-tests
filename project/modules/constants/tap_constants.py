@@ -15,22 +15,31 @@
 #
 
 
-class TapCliState:
-    REQUESTED = "REQUESTED"
+class TapEntityState:
     DEPLOYING = "DEPLOYING"
-    FAILURE = "FAILURE"
-    STOPPED = "STOPPED"
-    START_REQ = "START_REQ"
-    STARTING = "STARTING"
-    RUNNING = "RUNNING"
-    STOP_REQ = "STOP_REQ"
-    STOPPING = "STOPPING"
     DESTROY_REQ = "DESTROY_REQ"
     DESTROYING = "DESTROYING"
+    FAILURE = "FAILURE"
+    IN_PROGRESS = "IN_PROGRESS"
+    PENDING = "PENDING"
+    READY = "READY"
+    REQUESTED = "REQUESTED"
+    RUNNING = "RUNNING"
+    START_REQ = "START_REQ"
+    STARTING = "STARTING"
+    STOP_REQ = "STOP_REQ"
+    STOPPED = "STOPPED"
+    STOPPING = "STOPPING"
     UNAVAILABLE = "UNAVAILABLE"
 
 
-class TapCliResponse:
+class TapMessage:
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     MSG_CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
+
+
+class TapApplicationType:
+    GO = "GO"
+    JAVA = "JAVA"
+    PYTHON = "PYTHON"

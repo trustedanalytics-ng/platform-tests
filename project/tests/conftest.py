@@ -27,6 +27,7 @@ from modules.tap_object_model import ServiceType
 
 pytest_plugins = ["tests.fixtures.context",
                   "tests.fixtures.fixtures",
+                  "tests.fixtures.fixtures_core_components",
                   "tests.fixtures.remote_logging",
                   "tests.fixtures.fixtures_ng"]
 

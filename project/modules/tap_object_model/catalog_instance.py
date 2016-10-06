@@ -14,64 +14,27 @@
 # limitations under the License.
 #
 
-import functools
-import uuid
-
-from retry import retry
-
-import modules.http_calls.platform.catalog as catalog
+import modules.http_calls.platform.catalog as catalog_api
+from ._catalog_instance_superclass import CatalogInstanceSuperClass
 
 
-@functools.total_ordering
-class CatalogInstance(object):
-
-    def __init__(self, instance_id: str, class_id: str, name: str):
-        self.id = instance_id
-        self.name = name
-        self.classId = class_id
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    def __repr__(self):
-        return "{} (id={})".format(self.__class__.__name__, self.id)
+class CatalogInstance(CatalogInstanceSuperClass):
 
     @classmethod
-    def create(cls, context, service_id, body, instance_name):
-        if body:
-            body["name"] = instance_name
-        response = catalog.create_service_instance(service_id, body)
-        new_instance = cls._from_response(response)
-        context.catalog.append(new_instance)
-        return new_instance
+    def get_all(cls):
+        response = catalog_api.get_instances()
+        return cls._list_from_response(response)
 
     @classmethod
-    def get(cls, instance_id: str):
-        response = catalog.get_instance(instance_id)
+    def get(cls, *, instance_id):
+        response = catalog_api.get_instance(instance_id=instance_id)
         return cls._from_response(response)
 
-    @classmethod
-    def get_list(cls):
-        response = catalog.get_instances()
-        instances = []
-        for item in response:
-            instance = cls._from_response(item)
-            instances.append(instance)
-        return instances
+    def update(self, *, field_name, value):
+        setattr(self, field_name, value)
+        if field_name == "class_id":
+            field_name = "classId"
+        catalog_api.update_instance(instance_id=self.id, field_name=field_name, value=value)
 
     def delete(self):
-        catalog.delete_instance(instance_id=self.id)
-
-    def cleanup(self):
-        self.delete()
-
-    @classmethod
-    def _from_response(cls, response):
-        return cls(instance_id=response["id"], class_id = response["classId"], name=response["name"])
-
-    def update(self, field, value):
-        setattr(self, field, value)
-        catalog.update_instance(self.id, field, value)
+        catalog_api.delete_instance(instance_id=self.id)

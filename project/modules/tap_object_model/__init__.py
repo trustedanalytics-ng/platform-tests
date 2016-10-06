@@ -16,10 +16,17 @@
 
 from .application import Application
 from .buildpack import Buildpack
+from .catalog_application import CatalogApplication
+from .catalog_application_instance import CatalogApplicationInstance
+from .catalog_image import CatalogImage
+from .catalog_instance import CatalogInstance
+from .catalog_service import CatalogService
+from .catalog_service_instance import CatalogServiceInstance
+from .catalog_template import CatalogTemplate
 from .dataset import DataSet, DatasetAccess
 from .user import User
-from .invitation import Invitation
 from .hdfs_job import HdfsJob
+from .invitation import Invitation
 from .kubernetes_cluster import KubernetesCluster
 from .kubernetes_instance import KubernetesInstance
 from .kubernetes_secret import KubernetesSecret
@@ -39,6 +46,5 @@ from .service_type import ServiceType
 from .space import Space
 from .transfer import Transfer
 from .upsi import Upsi
-from .cli_service import CliService
 from .cli_offering import CliOffering
-
+from .cli_service import CliService

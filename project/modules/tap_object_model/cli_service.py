@@ -17,7 +17,7 @@
 from retry import retry
 
 from modules import test_names
-from modules.constants import TapCliState
+from modules.constants import TapEntityState
 
 
 class CliService(object):
@@ -56,7 +56,7 @@ class CliService(object):
         tap_cli.create_service([offering_name, plan.name, name])
         cli_service = cls.get(name, tap_cli)
         context.cli_services.append(cli_service)
-        cli_service.ensure_service_state(TapCliState.RUNNING)
+        cli_service.ensure_service_state(TapEntityState.RUNNING)
         return cli_service
 
     def bind(self, bound_service):

@@ -188,7 +188,6 @@ class PlatformTestsHttpStatus(HttpStatus):
 class ImageFactoryHttpStatus(HttpStatus):
     MSG_BLOB_ID_ALREADY_IN_USE = "The specified Blob ID is already in use"
     MSG_BLOB_DOES_NOT_EXIST = "The specified blob does not exist"
-    MSG_IMAGE_DOES_NOT_EXIST = "100: Key not found"
 
 
 class BlobStoreHttpStatus(HttpStatus):
@@ -201,12 +200,13 @@ class TemplateRepositoryHttpStatus(HttpStatus):
     MSG_TEMPLATE_DOES_NOT_EXIST = "Template doesn't exist!"
 
 
-class InstanceFactoryHttpStatus(HttpStatus):
+class CatalogHttpStatus(HttpStatus):
     MSG_TOO_SHORT_SERVICE_ID = "serviceId has to be longer than 15 characters!"
-    MSG_INSTANCE_DOES_NOT_EXIST = "100: Key not found"
     MSG_INSTANCE_FORBIDDEN_CHARACTERS = "Field: Name has incorrect value: {}"
-    MSG_INSTANCE_BAD_SERVICEID = "unexpected end of JSON input"
+    MSG_INVALID_JSON = "unexpected end of JSON input"
     MSG_INSTANCE_UNCHANGED_FIELDS = "ID and Name fields can not be changed!"
+    MSG_KEY_NOT_FOUND = "100: Key not found"
+    MSG_SERVICE_EXISTS = "service with name: {} already exists!"
 
 
 class ApiServiceHttpStatus(HttpStatus):

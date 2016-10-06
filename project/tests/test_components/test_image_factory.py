@@ -60,7 +60,7 @@ class TestImageFactory:
 
     def test_2_check_catalog_metadata(self):
         step("Check that metadata are available in catalog - get image by id")
-        image = CatalogImage.get(self.catalog_image.id)
+        image = CatalogImage.get(image_id=self.catalog_image.id)
         assert image.state == self.NODEJS_APP_STATE
 
     def test_3_create_artifact_blob_store(self, class_context, download_nodejs_example):

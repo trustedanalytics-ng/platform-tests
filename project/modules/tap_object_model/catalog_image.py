@@ -15,27 +15,25 @@
 #
 
 import functools
-import uuid
 
 from retry import retry
 
-import modules.http_calls.platform.catalog as catalog
+from modules.constants import TapEntityState
+import modules.http_calls.platform.catalog as catalog_api
 
 
 @functools.total_ordering
 class CatalogImage(object):
-    STATE_READY = "READY"
-    STATE_PENDING = "PENDING"
-    TYPE_JAVA = "JAVA"
-    TYPE_GO = "GO"
+    _COMPARABLE_ATTRIBUTES = ["id", "type", "state", "blob_type"]
 
-    def __init__(self, image_id: str, image_type: str, state: str):
+    def __init__(self, *, image_id: str, image_type: str, state: str, blob_type: str):
         self.id = image_id
         self.type = image_type
         self.state = state
+        self.blob_type = blob_type
 
     def __eq__(self, other):
-        return self.id == other.id and self.type == other.type
+        return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
 
     def __lt__(self, other):
         return self.id < other.id
@@ -44,29 +42,25 @@ class CatalogImage(object):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, image_id=None, image_type=None, state=None):
-        if image_id is None:
-            image_id = str(uuid.uuid4())
-        response = catalog.create_image(image_type=image_type, state=state)
-        try:
-            new_image = cls._from_response(response)
-        except:
-            # If exception occurred, check whether image is on the list and if so, delete it.
-            image = next((i for i in cls.get_list() if i.id == image_id), None)
-            if image is not None:
-                image.cleanup()
-            raise
+    def _from_response(cls, response):
+        return cls(image_id=response["id"], image_type=response["type"], state=response["state"],
+                   blob_type=response["blobType"])
+
+    @classmethod
+    def create(cls, context, *, image_type=None, state=None):
+        response = catalog_api.create_image(image_type=image_type, state=state)
+        new_image = cls._from_response(response)
         context.catalog.append(new_image)
         return new_image
 
     @classmethod
-    def get(cls, image_id: str):
-        response = catalog.get_image(image_id)
+    def get(cls, *, image_id: str):
+        response = catalog_api.get_image(image_id=image_id)
         return cls._from_response(response)
 
     @classmethod
     def get_list(cls):
-        response = catalog.get_images()
+        response = catalog_api.get_images()
         images = []
         for item in response:
             image = cls._from_response(item)
@@ -75,20 +69,16 @@ class CatalogImage(object):
 
     @retry(AssertionError, tries=3, delay=2)
     def ensure_ready(self):
-        image = self.get(self.id)
+        image = self.get(image_id=self.id)
         self.state = image.state
-        assert self.state == self.STATE_READY
+        assert self.state == TapEntityState.READY
 
     def delete(self):
-        catalog.delete_image(image_id=self.id)
+        catalog_api.delete_image(image_id=self.id)
 
     def cleanup(self):
         self.delete()
 
-    @classmethod
-    def _from_response(cls, response):
-        return cls(image_id=response["id"], image_type=response["type"], state=response["state"])
-
-    def update(self, field, value):
-        setattr(self, field, value)
-        catalog.update_image(self.id, field, value)
+    def update(self, *, field_name, value):
+        setattr(self, field_name, value)
+        catalog_api.update_image(image_id=self.id, field_name=field_name, value=value)

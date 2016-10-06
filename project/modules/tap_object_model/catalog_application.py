@@ -22,34 +22,45 @@ from modules.test_names import generate_test_object_name
 
 @functools.total_ordering
 class CatalogApplication(object):
+    _COMPARABLE_ATTRIBUTES = ["id", "name", "description", "replication", "image_id", "template_id"]
 
-    def __init__(self, application_id: str, replication=None, instance_id=None, instance_name=None, instance_state=None):
+    def __init__(self, *, application_id: str, name: str, description: str, replication: int, image_id: str,
+                 template_id: str):
         self.id = application_id
+        self.name = name
+        self.description = description
         self.replication = replication
-        self.instance_id = instance_id
-        self.instance_name = instance_name
-        self.instance_state = instance_state
+        self.image_id = image_id
+        self.template_id = template_id
 
     def __eq__(self, other):
-        return self.id == other.id
+        return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
 
     def __lt__(self, other):
         return self.id < other.id
 
     def __repr__(self):
-        return "{} (id={})".format(self.__class__.__name__, self.id)
+        return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
 
     @classmethod
-    def create(cls, context, template_id, image_id, name=None):
-        response = catalog.create_application(name or generate_test_object_name(separator="-"),
-                                              template_id, image_id)
+    def _from_response(cls, response):
+        return cls(application_id=response["id"], name=response["name"], description=response["description"],
+                   replication=response["replication"], image_id=response["imageId"],
+                   template_id=response["templateId"])
+
+    @classmethod
+    def create(cls, context, *, template_id, image_id, name=None, replication=1):
+        if name is None:
+            name = generate_test_object_name(separator="-")
+        response = catalog.create_application(name=name, template_id=template_id, image_id=image_id,
+                                              replication=replication)
         new_application = cls._from_response(response)
         context.catalog.append(new_application)
         return new_application
 
     @classmethod
-    def get(cls, application_id: str):
-        response = catalog.get_application(application_id)
+    def get(cls, *, application_id: str):
+        response = catalog.get_application(application_id=application_id)
         return cls._from_response(response)
 
     @classmethod
@@ -67,54 +78,6 @@ class CatalogApplication(object):
     def cleanup(self):
         self.delete()
 
-    @classmethod
-    def _from_response(cls, response):
-        return cls(application_id=response["id"], replication=response["replication"])
-
-    def update(self, field, value):
-        setattr(self, field, value)
-        catalog.update_application(self.id, field, value)
-
-    @classmethod
-    def create_instance(cls, context, application_id, body, instance_name):
-        if body:
-            body["name"] = instance_name
-        response = catalog.create_application_instance(application_id, body)
-        new_instance = cls._from_instance_response(response)
-        context.catalog.append(new_instance)
-        return new_instance
-
-    @classmethod
-    def get_instance(cls, application_id: str, instance_id: str):
-        response = catalog.get_application_instance(application_id, instance_id)
-        return cls._from_instance_response(response)
-
-    @classmethod
-    def get_instances_list(cls, application_id: str):
-        response = catalog.get_application_instances(application_id)
-        services = []
-        for item in response:
-            service = cls._from_instance_response(item)
-            services.append(service)
-        return services
-
-    @classmethod
-    def get_all_services_instances_list(cls):
-        response = catalog.get_all_applications_instances()
-        services = []
-        for item in response:
-            service = cls._from_instance_response(item)
-            services.append(service)
-        return services
-
-    def update_instance(self, field, value):
-        setattr(self, field, value)
-        catalog.update_application_instance(self.id, self.instance_id, field, value)
-
-    def delete_application_instance(self):
-        catalog.delete_service_instance(service_id=self.id, instance_id=self.instance_id)
-
-    @classmethod
-    def _from_instance_response(cls, response):
-        return cls(application_id=response["classId"], instance_id=response["id"], instance_name=response["name"],
-                   instance_state=response["state"])
+    def update(self, *, field_name, value):
+        setattr(self, field_name, value)
+        catalog.update_application(application_id=self.id, field_name=field_name, value=value)
