@@ -15,20 +15,17 @@
 #
 
 import config
-from .base import BaseConfigurationProvider
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
 
 
-class ConsoleNoAuthConfigurationProvider(BaseConfigurationProvider):
+class ConsoleNoAuthConfigurationProvider(object):
     """Provide configuration for console http client."""
 
     @classmethod
-    def get(cls, username=None, password=None) -> HttpClientConfiguration:
+    def get(cls) -> HttpClientConfiguration:
         """Provide http client configuration."""
         return HttpClientConfiguration(
             client_type=HttpClientType.NO_AUTH,
-            url="{}/rest".format(config.console_url),
-            username=username,
-            password=password
+            url="{}/rest".format(config.console_url)
         )

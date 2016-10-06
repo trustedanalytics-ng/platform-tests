@@ -88,7 +88,7 @@ class TestOnboarding:
         message = messages[0]
         self._assert_message_correct(message["subject"], message["content"], message["sender"])
         step("Register the new user")
-        user = onboarding.register(context, code=invitation.code, username=invitation.username)
+        user = onboarding.register(context=context, code=invitation.code, username=invitation.username)
         step("Check that the user and their organization exist")
         assert_user_in_org_and_role(user, Guid.CORE_ORG_GUID, User.ORG_ROLE["user"])
 
@@ -105,7 +105,7 @@ class TestOnboarding:
     @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_non_admin_user_cannot_invite_another_user(self, context, test_org):
         step("Create a test user")
-        user = User.create_by_adding_to_organization(context, org_guid=test_org.guid,
+        user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid,
                                                      role=User.ORG_ROLE["user"])
         non_admin_user_client = user.login()
         step("Check an error is returned when non-admin tries to onboard another user")
@@ -120,7 +120,7 @@ class TestOnboarding:
         step("An error is returned when user registers with invalid code")
         username = generate_test_object_name(email=True)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                     onboarding.register, context, code="xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                                     onboarding.register, context=context, code="FFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
                                      username=username)
 
     @priority.medium
@@ -129,10 +129,10 @@ class TestOnboarding:
         step("Invite a user")
         invitation = Invitation.api_send(context)
         step("The new user registers")
-        onboarding.register(context, invitation.code, invitation.username)
+        onboarding.register(context=context, code=invitation.code, username=invitation.username)
         step("Check that error is returned when the user tries to use code twice")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                     onboarding.register, context, code=invitation.code,
+                                     onboarding.register, context=context, code=invitation.code,
                                      username=invitation.username)
 
     @priority.low
@@ -140,7 +140,7 @@ class TestOnboarding:
         step("Check that passing invalid email results in error")
         username = "non_mail_username"
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
-                                     Invitation.api_send, context, username=username)
+                                     Invitation.api_send, context=context, username=username)
 
     @priority.medium
     @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
@@ -163,7 +163,7 @@ class TestOnboarding:
         step("Check that an error is returned when the user registers with an already-existing org name")
         assert_raises_http_exception(HttpStatus.CODE_CONFLICT,
                                      HttpStatus.MSG_ORGANIZATION_ALREADY_EXISTS.format(test_org.name),
-                                     onboarding.register, context, code=invitation.code,
+                                     onboarding.register, context=context, code=invitation.code,
                                      username=invitation.username, org_name=test_org.name)
         step("Check that the user was not created")
         username_list = [user.username for user in User.get_all_users()]

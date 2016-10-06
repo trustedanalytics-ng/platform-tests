@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+from config import console_url
 from ...exceptions import YouMustBeJokingException
 from ...http_calls import cloud_foundry as cf
 from ...http_client.client_auth.http_method import HttpMethod
@@ -21,7 +22,7 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 from ...http_client.http_client_factory import HttpClientFactory
 
 
-def api_get_organizations(client=None):
+def api_get_organizations(*, client=None):
     """GET /orgs"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -31,7 +32,7 @@ def api_get_organizations(client=None):
     )
 
 
-def api_create_organization(name, client=None):
+def api_create_organization(*, name, client=None):
     """POST /orgs"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     response = client.request(
@@ -43,7 +44,7 @@ def api_create_organization(name, client=None):
     return response.strip('"')  # guid is returned together with quotation marks
 
 
-def api_delete_organization(org_guid, client=None):
+def api_delete_organization(*, org_guid, client=None):
     """DELETE /orgs/{organization_guid}"""
     ref_org_guid, _ = cf.cf_get_ref_org_and_space_guids()
     if org_guid == ref_org_guid:
@@ -56,7 +57,7 @@ def api_delete_organization(org_guid, client=None):
     )
 
 
-def api_rename_organization(org_guid, new_name, client=None):
+def api_rename_organization(*, org_guid, new_name, client=None):
     """PUT /orgs/{organization_guid}/name"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -67,7 +68,7 @@ def api_rename_organization(org_guid, new_name, client=None):
     )
 
 
-def api_add_organization_user(org_guid, username, role=None, client=None):
+def api_add_organization_user(*, org_guid, username, role=None, client=None):
     """POST /orgs/{organization_guid}/users"""
     body = {
         "username": username,
@@ -83,7 +84,7 @@ def api_add_organization_user(org_guid, username, role=None, client=None):
     )
 
 
-def api_get_organization_users(org_guid, client=None):
+def api_get_organization_users(*, org_guid, client=None):
     """GET /orgs/{organization_guid}/users"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -93,7 +94,7 @@ def api_get_organization_users(org_guid, client=None):
     )
 
 
-def api_delete_organization_user(org_guid, user_guid, client=None):
+def api_delete_organization_user(*, org_guid, user_guid, client=None):
     """DELETE /orgs/{organization_guid}/users/{user_guid}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -103,7 +104,7 @@ def api_delete_organization_user(org_guid, user_guid, client=None):
     )
 
 
-def api_update_org_user_role(org_guid, user_guid, new_role=None, client=None):
+def api_update_org_user_role(*, org_guid, user_guid, new_role=None, client=None):
     """POST /orgs/{organization_guid}/users/{user_guid}"""
     body = {}
     if new_role is not None:
@@ -117,7 +118,7 @@ def api_update_org_user_role(org_guid, user_guid, new_role=None, client=None):
     )
 
 
-def api_get_invitations(client=None):
+def api_get_invitations(*, client=None):
     """GET /invitations"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -127,7 +128,7 @@ def api_get_invitations(client=None):
     )
 
 
-def api_invite_user(email, client=None):
+def api_invite_user(*, email, client=None):
     """POST /invitations"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -138,7 +139,7 @@ def api_invite_user(email, client=None):
     )
 
 
-def api_delete_invitation(email, client=None):
+def api_delete_invitation(*, email, client=None):
     """DELETE /invitations/{invitation}"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -148,7 +149,7 @@ def api_delete_invitation(email, client=None):
     )
 
 
-def api_resend_invitation(email, client=None):
+def api_resend_invitation(*, email, client=None):
     """POST /invitations/{invitation}/resend"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
@@ -158,13 +159,12 @@ def api_resend_invitation(email, client=None):
     )
 
 
-def api_register_new_user(code, password=None, org_name=None, client=None):
+def api_register_new_user(*, code, password=None, org_name=None, client=None):
     """POST /registrations"""
     msg = "PLATFORM: register as a new user"
-    if org_name is not None:
-        msg += " with new organization"
     body = {}
     if org_name is not None:
+        msg += " with new organization"
         body["org"] = org_name
     if password is not None:
         body["password"] = password

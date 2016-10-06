@@ -16,7 +16,7 @@
 
 import pytest
 
-from config import console_login_url
+from config import uaa_url
 from modules import gmail_api, api_password
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_client.client_auth.http_method import HttpMethod
@@ -36,18 +36,17 @@ class TestPassword:
     @pytest.fixture(scope="function", autouse=True)
     def user(self, request, test_org, context):
         step("Create test user")
-        self.test_user = User.create_by_adding_to_organization(context, org_guid=test_org.guid)
+        self.test_user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid)
 
     @priority.high
     @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_reset_password(self):
         step("Login to the platform")
         client = self.test_user.get_client()
-        client.url = console_login_url
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
 
         step("Logout")
-        client.request(method=HttpMethod.GET, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
 
         step("Enter your email and press  'SEND RESET PASSWORD LINK'")
         pswd_api.reset_password()
@@ -56,14 +55,14 @@ class TestPassword:
         client.auth.authenticate()
 
         step("Logout and go to email message and press 'reset your password' link.")
-        client.request(method=HttpMethod.GET, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
         code = gmail_api.get_reset_password_links(self.test_user.username)
 
         step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
         pswd_api.reset_password_set_new(code, self.NEW_PASSWORD)
 
         step("Logout")
-        client.request(method=HttpMethod.GET, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
 
         step("Try to login with old credentials.")
         assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
@@ -77,7 +76,6 @@ class TestPassword:
     def test_change_password(self):
         step("Login to the platform")
         client = self.test_user.get_client()
-        client.url = console_login_url
         self.test_user.login()
 
         step("Change user password.")
@@ -85,7 +83,7 @@ class TestPassword:
         pswd_api.change_password(self.test_user.password, self.NEW_PASSWORD)
 
         step("Logout and try to login with old credentials.")
-        client.request(method=HttpMethod.GET, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
         HttpClientFactory.remove(self.test_user.client_configuration)
         assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
 

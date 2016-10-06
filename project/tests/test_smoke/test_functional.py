@@ -76,7 +76,7 @@ def test_create_and_delete_organization(context):
 def test_onboarding(context):
     """Test Onboarding"""
     step("Onboard new user")
-    test_user = onboarding.onboard(context, check_email=False)
+    test_user = onboarding.onboard(context=context, check_email=False)
     step("Check that user is created")
     users = User.get_all_users()
     assert test_user in users
@@ -87,8 +87,8 @@ def test_onboarding(context):
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """Add New User to and Delete from Organization"""
     step("Add new user to organization")
-    test_user = onboarding.onboard(context, check_email=False)
-    test_user.add_to_organization(core_org.guid, role=User.ORG_ROLE["admin"])
+    test_user = onboarding.onboard(context=context, check_email=False)
+    test_user.add_to_organization(org_guid=core_org.guid, role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
     users = User.get_list_in_organization(org_guid=core_org.guid)
     assert test_user in users

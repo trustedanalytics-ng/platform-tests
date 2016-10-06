@@ -47,7 +47,7 @@ class TestPendingInvitations:
         step("Invite new user")
         invitation = Invitation.api_send(context)
         step("Register user with the received code")
-        onboarding.register(context, code=invitation.code, username=invitation.username)
+        onboarding.register(context=context, code=invitation.code, username=invitation.username)
         step("Check that invitation is no longer present in pending invitation list")
         assert_not_in_with_retry(invitation, Invitation.api_get_list)
 
@@ -75,7 +75,7 @@ class TestPendingInvitations:
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=2)
         assert len(messages) == 2
         step("Register user with the received code")
-        user = onboarding.register(context, code=invitation.code, username=invitation.username)
+        user = onboarding.register(context=context, code=invitation.code, username=invitation.username)
         assert_user_in_org_and_role(user, Guid.CORE_ORG_GUID, User.ORG_ROLE["user"])
 
     @priority.low
@@ -104,7 +104,7 @@ class TestPendingInvitations:
         assert_not_in_with_retry(invitation, Invitation.api_get_list)
         step("Check that the user cannot register after deletion of pending invitation")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                     onboarding.register, context, code=invitation.code,
+                                     onboarding.register, context=context, code=invitation.code,
                                      username=invitation.username)
 
     @priority.low

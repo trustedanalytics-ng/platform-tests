@@ -44,7 +44,7 @@ class Invitation(object):
     def api_send(cls, context, username=None, inviting_client=None):
         """Send invitation to a new user using inviting_client."""
         username = generate_test_object_name(email=True) if username is None else username
-        response = api.api_invite_user(username, client=inviting_client)
+        response = api.api_invite_user(email=username, client=inviting_client)
         try:
             code = gmail_api.extract_code_from_message(response["details"])
         except AssertionError:  # Not all responses include code

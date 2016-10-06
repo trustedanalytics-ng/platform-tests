@@ -18,9 +18,9 @@ import json
 
 from bs4 import BeautifulSoup
 
-import config
+from config import uaa_url
 from modules.http_client.client_auth.http_method import HttpMethod
-from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
+from modules.http_client.configuration_provider.console_no_auth import ConsoleNoAuthConfigurationProvider
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 
@@ -29,11 +29,7 @@ class PasswordAPI(object):
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.client = HttpClientFactory.get(ServiceConfigurationProvider.get(
-            url=config.console_login_url,
-            username=self.username,
-            password=self.password
-        ))
+        self.client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get())
 
     @property
     def _username(self):
@@ -42,6 +38,7 @@ class PasswordAPI(object):
     def reset_password(self):
         self.client.request(
             method=HttpMethod.POST,
+            url=uaa_url,
             path="forgot_password.do",
             data={"email": self._username},
             headers={"Accept": "text/html", "Content-Type": "application/x-www-form-urlencoded"},
@@ -59,6 +56,7 @@ class PasswordAPI(object):
         }
         self.client.request(
             method=HttpMethod.POST,
+            url=uaa_url,
             path="reset_password.do",
             data=data,
             headers={"Accept": "text/html", "Content-Type": "application/x-www-form-urlencoded"},
@@ -68,6 +66,7 @@ class PasswordAPI(object):
     def _get_codes(self, code):
         response = self.client.request(
             method=HttpMethod.GET,
+            url=uaa_url,
             path="reset_password?code={}&email={}".format(code, self._username),
             msg="Reset password: get reset form"
         )

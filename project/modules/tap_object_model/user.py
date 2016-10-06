@@ -38,7 +38,7 @@ class User(object):
         "user": "USER",
     }
 
-    def __init__(self, guid=None, username=None, password=None, org_role=None):
+    def __init__(self, *, guid=None, username=None, password=None, org_role=None):
         self.guid = guid
         self.username = username
         self.password = password
@@ -64,14 +64,14 @@ class User(object):
         return "".join([random.choice(base) for _ in range(length)])
 
     @classmethod
-    def create_by_adding_to_organization(cls, context, org_guid, username=None, password=None, role=None,
+    def create_by_adding_to_organization(cls, *, context, org_guid, username=None, password=None, role=None,
                                          inviting_client=None):
         username = generate_test_object_name(email=True) if username is None else username
         password = cls.generate_password() if password is None else password
-        um.api_add_organization_user(org_guid, username, role, client=inviting_client)
+        um.api_add_organization_user(org_guid=org_guid, username=username, role=role, client=inviting_client)
         code = gmail_api.get_invitation_code_for_user(username)
-        client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(username))
-        um.api_register_new_user(code, password, client=client)
+        client = HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get())
+        um.api_register_new_user(code=code, password=password, client=client)
         org_users = cls.get_list_in_organization(org_guid=org_guid)
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
@@ -81,8 +81,8 @@ class User(object):
         return new_user
 
     @classmethod
-    def get_list_in_organization(cls, org_guid, client=None):
-        response = um.api_get_organization_users(org_guid, client=client)
+    def get_list_in_organization(cls, *, org_guid, client=None):
+        response = um.api_get_organization_users(org_guid=org_guid, client=client)
         users = []
         for user_data in response:
             user = cls(guid=user_data["guid"], username=user_data["username"])
@@ -100,18 +100,18 @@ class User(object):
         """Return API client for this user."""
         if self.client is not None:
             return self.client
-        return HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get(self.username))
+        return HttpClientFactory.get(ConsoleNoAuthConfigurationProvider.get())
 
-    def add_to_organization(self, org_guid, role=ORG_ROLE["user"], client=None):
-        um.api_add_organization_user(org_guid, self.username, role, client=client)
+    def add_to_organization(self, *, org_guid, role=ORG_ROLE["user"], client=None):
+        um.api_add_organization_user(org_guid=org_guid, username=self.username, role=role, client=client)
         self.org_role[org_guid] = list(set(self.org_role.get(org_guid, set())) | set(role))
 
-    def update_org_role(self, org_guid, new_role=None, client=None):
-        um.api_update_org_user_role(org_guid, self.guid, new_role, client=client)
+    def update_org_role(self, *, org_guid, new_role=None, client=None):
+        um.api_update_org_user_role(org_guid=org_guid, user_guid=self.guid, new_role=new_role, client=client)
         self.org_role[org_guid] = list(new_role)
 
-    def delete_from_organization(self, org_guid, client=None):
-        um.api_delete_organization_user(org_guid, self.guid, client=client)
+    def delete_from_organization(self, *, org_guid, client=None):
+        um.api_delete_organization_user(org_guid=org_guid, user_guid=self.guid, client=client)
 
     @classmethod
     def get_admin(cls):

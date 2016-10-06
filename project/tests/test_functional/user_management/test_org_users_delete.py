@@ -32,7 +32,7 @@ class TestDeleteOrganizationUser:
     @pytest.fixture(scope="function")
     def user_to_delete(self, context, test_org):
         step("Create user to be deleted")
-        return User.create_by_adding_to_organization(context, org_guid=test_org.guid, role=User.ORG_ROLE["user"])
+        return User.create_by_adding_to_organization(context=context, org_guid=test_org.guid, role=User.ORG_ROLE["user"])
 
     @priority.high
     @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")

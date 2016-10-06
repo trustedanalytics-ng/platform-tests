@@ -43,14 +43,15 @@ class HttpClient(object):
     def session(self, session):
         self._auth.session = session
 
-    def request(self, method: HttpMethod, path, headers=None, files=None, params=None, data=None, body=None, msg="",
+    def request(self, *, method: HttpMethod, url=None, path, headers=None, files=None, params=None, data=None, body=None, msg="",
                 raw_response=False, timeout=900, raise_exception=True):
         """Perform request and return response."""
         if not self._auth.authenticated:
             self._auth.authenticate()
+        url = self.url if url is None else url
         return self._auth.session.request(
             method=method,
-            url="{}/{}".format(self.url, path),
+            url="{}/{}".format(url, path),
             headers=headers,
             files=files,
             params=params,
@@ -62,4 +63,3 @@ class HttpClient(object):
             timeout=timeout,
             raise_exception=raise_exception
         )
-

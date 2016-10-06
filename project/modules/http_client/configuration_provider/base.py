@@ -24,5 +24,5 @@ class BaseConfigurationProvider(object, metaclass=ABCMeta):
     """Base class that all configuration provider implementations derive from."""
 
     @abstractclassmethod
-    def get(cls, username=None, password=None) -> HttpClientConfiguration:
+    def get(cls, *, username=None, password=None) -> HttpClientConfiguration:
         """Return http client configuration."""

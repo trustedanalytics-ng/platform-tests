@@ -48,7 +48,7 @@ def test_org(request, core_org):
 @pytest.fixture(scope="session")
 def test_org_user(request, session_context, test_org):
     log_fixture("test_org_user: Add user to test org")
-    test_org_user = User.create_by_adding_to_organization(session_context, org_guid=test_org.guid,
+    test_org_user = User.create_by_adding_to_organization(context=session_context, org_guid=test_org.guid,
                                                           role=User.ORG_ROLE["user"])
     TestData.test_org_user = test_org_user
     return test_org_user
@@ -70,7 +70,7 @@ def test_org_user_client(test_org_user):
 @pytest.fixture(scope="session")
 def test_org_admin(request, session_context, test_org):
     log_fixture("test_org_user: Add admin to test org")
-    test_org_admin = User.create_by_adding_to_organization(session_context, org_guid=test_org.guid,
+    test_org_admin = User.create_by_adding_to_organization(context=session_context, org_guid=test_org.guid,
                                                            role=User.ORG_ROLE["admin"])
     TestData.test_org_user = test_org_admin
     return test_org_admin

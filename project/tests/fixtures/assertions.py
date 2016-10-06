@@ -73,13 +73,13 @@ def assert_http_status(error_message_phrase, status_correct, e, status_1, status
 
 
 def assert_user_not_in_org(user, org_guid):
-    org_users = User.get_list_in_organization(org_guid)
+    org_users = User.get_list_in_organization(org_guid=org_guid)
     assert user not in org_users, "User unexpectedly found in organization"
 
 
 def assert_user_in_org_and_role(invited_user, org_guid, expected_role):
     step("Check that the user is in the organization with expected role ({}).".format(expected_role))
-    org_users = User.get_list_in_organization(org_guid)
+    org_users = User.get_list_in_organization(org_guid=org_guid)
     assert invited_user in org_users, "Invited user is not on org users list"
     org_user = next(user for user in org_users if user.username == invited_user.username)
     org_user_role = org_user.org_role.get(org_guid, [])
