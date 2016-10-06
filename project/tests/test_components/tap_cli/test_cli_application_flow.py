@@ -205,7 +205,7 @@ class TestJavaApplicationCliFlow(TestPythonApplicationCliFlow):
 
 @incremental
 @priority.high
-@pytest.mark.skip("DPNG-10806 [TAP-NG] 413 or 504 for pushing application")
+@pytest.mark.bugs("DPNG-10806 [TAP-NG] 413 or 504 for pushing application")
 class TestNodeJsApplicationCliFlow(TestPythonApplicationCliFlow):
     SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url

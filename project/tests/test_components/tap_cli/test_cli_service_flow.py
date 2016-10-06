@@ -26,7 +26,7 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 
-pytestmark = [pytest.mark.skip(reason="DPNG-10996 Unable to delete service offering")]
+pytestmark = [pytest.mark.skip(reason="DPNG-10981 [api-tests] Refactor TAP CLI tests")]
 
 class TestCliServiceFlow:
     OFFERING_NAME = None
