@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus
+from modules.constants import InstanceFactoryHttpStatus
 from modules.markers import incremental
 from modules.tap_logger import step
 from modules.tap_object_model.catalog_application import CatalogApplication
@@ -63,6 +63,6 @@ class TestCatalogApplications:
 
     def test_3_check_application_was_deleted(self):
         step("Check whether application was successfully removed from catalog")
-        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
-                                     CatalogHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
+        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_NOT_FOUND,
+                                     InstanceFactoryHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
                                      CatalogApplication.get, self.catalog_application.id)

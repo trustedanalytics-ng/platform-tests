@@ -16,7 +16,7 @@
 import pytest
 
 import fixtures.k8s_templates.catalog_service_example as service_body
-from modules.constants import CatalogHttpStatus
+from modules.constants import InstanceFactoryHttpStatus
 from modules.markers import incremental
 from modules.tap_logger import step
 from modules.tap_object_model.catalog_application import CatalogApplication
@@ -76,7 +76,7 @@ class TestCatalogApplicationsInstances:
 
     def test_4_check_application_instance_was_deleted(self):
         step("Check whether application instance was successfully removed from catalog")
-        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
-                                     CatalogHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
+        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_NOT_FOUND,
+                                     InstanceFactoryHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
                                      CatalogApplication.get_instance, self.application_instance.id,
                                      self.application_instance.instance_id)

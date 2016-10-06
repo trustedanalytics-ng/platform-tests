@@ -100,7 +100,7 @@ class CatalogApplication(object):
 
     @classmethod
     def get_all_services_instances_list(cls):
-        response = catalog.get_all_application_instances()
+        response = catalog.get_all_applications_instances()
         services = []
         for item in response:
             service = cls._from_instance_response(item)

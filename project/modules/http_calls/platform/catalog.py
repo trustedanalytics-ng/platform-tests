@@ -135,14 +135,14 @@ def get_instances():
                                  msg="CATALOG: get instances list")
 
 
-def get_instance(*, instance_id):
+def get_instance(instance_id):
     """ GET /instances/{instance_id} """
     return _get_client().request(HttpMethod.GET,
                                  path="instances/{}".format(instance_id),
                                  msg="CATALOG: get instance")
 
 
-def delete_instance(*, instance_id):
+def delete_instance(instance_id):
     """ DELETE /instances/{instance_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="instances/{}".format(instance_id),
@@ -150,11 +150,11 @@ def delete_instance(*, instance_id):
     return response
 
 
-def update_instance(*, instance_id, field_name, value):
+def update_instance(instance_id, field, value):
     """ PATCH /instances/{instance_id} """
     body = [{
         "op": "Update",
-        "field": field_name,
+        "field": field,
         "value": value
     }]
     response = _get_client().request(HttpMethod.PATCH,
@@ -173,21 +173,15 @@ def get_services():
                                  msg="CATALOG: get services list")
 
 
-def get_service(*, service_id):
+def get_service(service_id):
     """ GET /services/{service_id} """
     return _get_client().request(HttpMethod.GET,
                                  path="services/{}".format(service_id),
                                  msg="CATALOG: get service")
 
 
-def create_service(*, template_id, name, bindable=True, plans=None):
+def create_service(body):
     """ POST /services """
-    body = {
-        "templateId": template_id,
-        "name": name,
-        "bindable": bindable,
-        "plans": plans
-    }
     response = _get_client().request(HttpMethod.POST,
                                      path="services",
                                      body=body,
@@ -195,7 +189,7 @@ def create_service(*, template_id, name, bindable=True, plans=None):
     return response
 
 
-def delete_service(*, service_id):
+def delete_service(service_id):
     """ DELETE /services/{service_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="services/{}".format(service_id),
@@ -203,11 +197,11 @@ def delete_service(*, service_id):
     return response
 
 
-def update_service(*, service_id, field_name, value):
+def update_service(service_id, field, value):
     """ PATCH /services/{service_id} """
     body = [{
         "op": "Update",
-        "field": field_name,
+        "field": field,
         "value": value
     }]
     response = _get_client().request(HttpMethod.PATCH,
@@ -217,13 +211,8 @@ def update_service(*, service_id, field_name, value):
     return response
 
 
-def create_service_instance(*, service_id, name, instance_type, state):
+def create_service_instance(service_id, body):
     """ POST /services/{service_id}/instances """
-    body = {
-        "name": name,
-        "type": instance_type,
-        "state": state
-    }
     response = _get_client().request(HttpMethod.POST,
                                      path="services/{}/instances".format(service_id),
                                      body=body,
@@ -231,42 +220,42 @@ def create_service_instance(*, service_id, name, instance_type, state):
     return response
 
 
-def get_all_service_instances():
+def get_all_services_instances():
     """ GET /services/instances """
     return _get_client().request(HttpMethod.GET,
                                  path="services/instances",
-                                 msg="CATALOG: get list of all service instances")
+                                 msg="CATALOG: get all services instances list")
 
 
-def get_service_instances(*, service_id):
+def get_service_instances(service_id):
     """ GET /services/{serviceId}/instances """
     return _get_client().request(HttpMethod.GET,
                                  path="services/{}/instances".format(service_id),
-                                 msg="CATALOG: get instances of a service")
+                                 msg="CATALOG: get instances list")
 
 
-def get_service_instance(*, service_id, instance_id):
+def get_service_instance(service_id, instance_id):
     """ GET /services/{serviceId}/instances/{instance_id} """
     return _get_client().request(HttpMethod.GET,
                                  path="services/{}/instances/{}".format(service_id, instance_id),
-                                 msg="CATALOG: get service instance")
+                                 msg="CATALOG: get instance")
 
 
-def update_service_instance(*, service_id, instance_id, field_name, value):
+def update_service_instance(service_id, instance_id, field, value):
     """ PATCH /services/{service_id}/instances/{instance_id} """
     body = [{
         "op": "Update",
-        "field": field_name,
+        "field": field,
         "value": value
     }]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="services/{}/instances/{}".format(service_id, instance_id),
                                      body=body,
-                                     msg="CATALOG: update service instance")
+                                     msg="CATALOG: updating service")
     return response
 
 
-def delete_service_instance(*, service_id, instance_id):
+def delete_service_instance(service_id, instance_id):
     """ DELETE /services/{service_id}/instances/{instance_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="services/{}/instances/{}".format(service_id, instance_id),
@@ -374,13 +363,8 @@ def update_application(application_id, field, value):
     return response
 
 
-def create_application_instance(*, application_id, name, instance_type, state):
+def create_application_instance(application_id, body):
     """ POST /applications/{application_id}/instances """
-    body = {
-        "name": name,
-        "type": instance_type,
-        "state": state
-    }
     response = _get_client().request(HttpMethod.POST,
                                      path="applications/{}/instances".format(application_id),
                                      body=body,
@@ -388,32 +372,40 @@ def create_application_instance(*, application_id, name, instance_type, state):
     return response
 
 
-def get_all_application_instances():
+def get_all_applications_instances():
     """ GET /applications/instances """
     return _get_client().request(HttpMethod.GET,
                                  path="applications/instances",
-                                 msg="CATALOG: get all application instances")
+                                 msg="CATALOG: get all applications instances list")
 
 
-def get_application_instances(*, application_id):
+def get_application_instances(application_id):
     """ GET /applications/{application_id}/instances """
     return _get_client().request(HttpMethod.GET,
                                  path="applications/{}/instances".format(application_id),
-                                 msg="CATALOG: get instances of an application")
+                                 msg="CATALOG: get application instances list")
 
 
-def get_application_instance(*, application_id, instance_id):
+def get_application_instance(application_id, instance_id):
     """ GET /applications/{application_id}/instances/{instance_id} """
     return _get_client().request(HttpMethod.GET,
                                  path="applications/{}/instances/{}".format(application_id, instance_id),
                                  msg="CATALOG: get application instance")
 
 
-def update_application_instance(*, application_id, instance_id, field_name, value):
+def delete_application_instance(application_id, instance_id):
+    """ DELETE /applications/{application_id}/instances/{instance_id} """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="applications/{}/instances/{}".format(application_id, instance_id),
+                                     msg="CATALOG: delete application instance")
+    return response
+
+
+def update_application_instance(application_id, instance_id, field, value):
     """ PATCH /applications/{application_id}/instances/{instance_id} """
     body = [{
         "op": "Update",
-        "field": field_name,
+        "field": field,
         "value": value
     }]
     response = _get_client().request(HttpMethod.PATCH,
@@ -421,13 +413,4 @@ def update_application_instance(*, application_id, instance_id, field_name, valu
                                      body=body,
                                      msg="CATALOG: updating application instance")
     return response
-
-
-def delete_application_instance(*, application_id, instance_id):
-    """ DELETE /applications/{application_id}/instances/{instance_id} """
-    response = _get_client().request(HttpMethod.DELETE,
-                                     path="applications/{}/instances/{}".format(application_id, instance_id),
-                                     msg="CATALOG: delete application instance")
-    return response
-
 #endregion

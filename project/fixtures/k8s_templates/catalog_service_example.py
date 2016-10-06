@@ -14,17 +14,24 @@
 # limitations under the License.
 #
 
-# ng_catalog_instance_correct_body = {
-#     "type": "service",
-#     "name": "instance-name-",
-#     "state": "requested"
-# }
-#
-# ng_catalog_instance_bad_name_body = {
-#     "type": "service",
-#     "name": "instance-name!#%-",
-#     "state": "requested"
-# }
+ng_catalog_instance_correct_body = {
+    "type": "service",
+    "name": "instance-name-",
+    "state": "requested"
+}
+
+ng_catalog_instance_bad_name_body = {
+    "type": "service",
+    "name": "instance-name!#%-",
+    "state": "requested"
+}
+
+ng_catalog_service_correct_body = {
+    "name": "service-name-",
+    "bindable": False,
+    "templateId": "template-id-",
+    "plans": None
+}
 
 # will be used in task: https://intel-data.atlassian.net/browse/DPNG-10830
 ng_catalog_service_correct_body_with_plan = {

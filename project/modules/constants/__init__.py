@@ -17,7 +17,7 @@
 from .application_path import ApplicationPath
 from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus, \
     KubernetesBrokerHttpStatus, ImageFactoryHttpStatus, BlobStoreHttpStatus , TemplateRepositoryHttpStatus, \
-    CatalogHttpStatus, ApiServiceHttpStatus
+    InstanceFactoryHttpStatus, ApiServiceHttpStatus
 from .logger_type import LoggerType
 from .project_paths import Path
 from .services import ParametrizedService, ServiceLabels, ServicePlan, ServiceTag
@@ -25,5 +25,5 @@ from .sources import TapGitHub, RelativeRepositoryPaths
 from .tap_components import TapComponent
 from .urls import Urls
 from .guid import Guid
-from .tap_constants import TapEntityState, TapMessages
+from .tap_constants import TapCliState, TapCliResponse
 

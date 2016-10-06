@@ -15,7 +15,7 @@
 #
 
 
-class TapEntityState:
+class TapCliState:
     REQUESTED = "REQUESTED"
     DEPLOYING = "DEPLOYING"
     FAILURE = "FAILURE"
@@ -30,7 +30,7 @@ class TapEntityState:
     UNAVAILABLE = "UNAVAILABLE"
 
 
-class TapMessages:
+class TapCliResponse:
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     MSG_CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '

@@ -201,11 +201,11 @@ class TemplateRepositoryHttpStatus(HttpStatus):
     MSG_TEMPLATE_DOES_NOT_EXIST = "Template doesn't exist!"
 
 
-class CatalogHttpStatus(HttpStatus):
+class InstanceFactoryHttpStatus(HttpStatus):
     MSG_TOO_SHORT_SERVICE_ID = "serviceId has to be longer than 15 characters!"
     MSG_INSTANCE_DOES_NOT_EXIST = "100: Key not found"
     MSG_INSTANCE_FORBIDDEN_CHARACTERS = "Field: Name has incorrect value: {}"
-    MSG_INVALID_JSON = "unexpected end of JSON input"
+    MSG_INSTANCE_BAD_SERVICEID = "unexpected end of JSON input"
     MSG_INSTANCE_UNCHANGED_FIELDS = "ID and Name fields can not be changed!"
 
 
