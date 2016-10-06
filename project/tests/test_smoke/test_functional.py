@@ -33,7 +33,7 @@ from modules.tap_object_model import Application, DataSet, Organization, Service
 from modules.tap_object_model import ServiceType
 from modules.tap_object_model import TestSuite
 from modules.tap_object_model.flows import onboarding
-from tap_ng_component_config import offerings
+from tap_component_config import offerings
 
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
