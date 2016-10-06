@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import uuid
+
 import pytest
-import fixtures.k8s_templates.catalog_service_example as service_body
+
 from modules.tap_logger import step
 from modules.markers import incremental
-from modules.constants import InstanceFactoryHttpStatus
-from modules.tap_object_model.catalog_instance import CatalogInstance
-from modules.tap_object_model.catalog_service import CatalogService
-from modules.tap_object_model.catalog_template import CatalogTemplate
+from modules.constants import CatalogHttpStatus
+from modules.tap_object_model import CatalogInstance, CatalogService, CatalogServiceInstance, CatalogTemplate
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
@@ -44,25 +44,24 @@ class TestCatalogInstances:
         assert self.catalog_service in services
 
     def test_1_create_instance_in_catalog(self, class_context):
-        step("Create instance in catalog")
-        self.__class__.catalog_instance = CatalogInstance.create(class_context, service_id=self.catalog_service.id,
-                                                                 body=service_body.ng_catalog_instance_correct_body,
-                                                                 instance_name=self.CORRECT_INSTANCE_NAME)
+        step("Create service instance in catalog")
+        self.__class__.catalog_instance = CatalogServiceInstance.create(class_context, service_id=self.catalog_service.id)
         step("Check if instance is on list of catalog instances")
         instances = CatalogInstance.get_list()
         assert self.catalog_instance in instances
         step("Create existing instance")
-        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_CONFLICT,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_CONFLICT,
                                      "instance with name: {} already exists!".format(self.CORRECT_INSTANCE_NAME),
-                                     CatalogInstance.create, class_context, self.catalog_service.id,
-                                     service_body.ng_catalog_instance_correct_body, self.CORRECT_INSTANCE_NAME)
+                                     CatalogInstance.create, class_context, service_id=self.catalog_service.id,
+                                     name = self.catalog_instance.name)
 
     def test_2_update_instance(self):
         step("Update instance")
-        self.catalog_instance.update(field="classId", value="testupdate")
+        self.catalog_instance.update(field_name="classId", value="testupdate")
         step("Check instance by id")
-        instance = CatalogInstance.get(self.catalog_instance.id)
-        assert instance.classId == self.catalog_instance.classId
+        instance = CatalogInstance.get(instance_id=self.catalog_instance.id)
+        # assert instance.classId == self.catalog_instance.classId
+        assert self.catalog_instance == instance
 
     def test_3_delete_instance(self):
         step("Delete instance")
@@ -73,6 +72,6 @@ class TestCatalogInstances:
 
     def test_4_check_instance_was_deleted(self):
         step("Check whether instance was successfully removed from catalog")
-        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_NOT_FOUND,
-                                     InstanceFactoryHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
-                                     CatalogInstance.get, self.catalog_instance.id)
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
+                                     CatalogHttpStatus.MSG_INSTANCE_DOES_NOT_EXIST,
+                                     CatalogInstance.get, instance_id=self.catalog_instance.id)

@@ -44,7 +44,7 @@ class TestCatalogService:
         step("Update service")
         self.catalog_service.update(field="description", value="test12")
         step("Check service by id")
-        service = CatalogService.get(self.catalog_service.id)
+        service = CatalogService.get(service_id=self.catalog_service.id)
         assert service.description == self.catalog_service.description
 
     def test_2_add_existing_service(self, class_context):

@@ -13,24 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import uuid
+
 import pytest
-import fixtures.k8s_templates.catalog_service_example as service_body
+
 from modules.tap_logger import step
-from modules.markers import incremental
-from modules.constants import InstanceFactoryHttpStatus
-from modules.tap_object_model.catalog_instance import CatalogInstance
-from modules.tap_object_model.catalog_service import CatalogService
-from modules.tap_object_model.catalog_template import CatalogTemplate
+from modules.constants import CatalogHttpStatus
+import modules.http_calls.platform.catalog as catalog_api
+from modules.tap_object_model import CatalogService, CatalogServiceInstance, CatalogTemplate
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogInstancesMessages:
+    # TODO merge with the other file
 
-    INCORRECT_INSTANCE_NAME = "instance!#-{}".format(uuid.uuid4().hex)
+    INCORRECT_INSTANCE_NAME = "instance!#"
 
     def test_0_prepare_service_for_instance(self, class_context):
+        # TODO change to a fixture
         step("Create template in catalog")
         self.__class__.catalog_template = CatalogTemplate.create(class_context, state=CatalogTemplate.STATE_IN_PROGRESS)
         step("Check if template is on list of catalog templates")
@@ -44,13 +44,13 @@ class TestCatalogInstancesMessages:
 
     def test_1_check_create_instance_with_forbidden_characters(self, class_context):
         step("Check create instance with forbidden characters")
-        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_BAD_REQUEST,
-                                     InstanceFactoryHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME),
-                                     CatalogInstance.create, class_context, self.catalog_service.id,
-                                     service_body.ng_catalog_instance_bad_name_body, self.INCORRECT_INSTANCE_NAME)
+        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME)
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
+                                     CatalogServiceInstance.create, class_context, service_id=self.catalog_service.id,
+                                     name=self.INCORRECT_INSTANCE_NAME)
 
     def test_2_check_create_instance_with_empty_body(self, class_context):
         step("Check create instance with empty body")
-        assert_raises_http_exception(InstanceFactoryHttpStatus.CODE_BAD_REQUEST,
-                                     InstanceFactoryHttpStatus.MSG_INSTANCE_BAD_SERVICEID,
-                                     CatalogInstance.create, class_context, self.catalog_service.id, None, None)
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_INVALID_JSON,
+                                     catalog_api.create_service_instance, service_id=self.catalog_service.id,
+                                     name=None, instance_type=None, state=None)
