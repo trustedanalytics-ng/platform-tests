@@ -23,7 +23,6 @@ from modules.app_sources import AppSources
 from modules.constants import ServicePlan, ServiceLabels, TapGitHub, TapComponent as TAP
 from modules.markers import incremental, priority
 from modules.service_tools.psql import PsqlRow, PsqlTable
-from modules.ssh_client import DirectSshClient, SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import Application, HdfsJob, ServiceInstance, ServiceType
 from modules.tap_object_model.hdfs_job import JobStatus

@@ -15,7 +15,6 @@
 #
 
 import config
-from modules.ssh_client import CdhMasterClient
 from modules.tap_logger import get_logger
 
 
@@ -29,6 +28,7 @@ class YarnAppStatus(object):
 
 class Yarn(object):
     def __init__(self):
+        raise NotImplementedError("Will be refactored in DPNG-8548")
         self.ssh_client = CdhMasterClient(config.cdh_master_0_hostname)
         self.yarn_app = ["yarn", "application"]
 

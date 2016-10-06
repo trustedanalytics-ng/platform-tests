@@ -30,7 +30,6 @@ from modules.http_calls import hue
 from modules.http_client import HttpClientFactory
 from modules.http_client.configuration_provider.uaa import UaaConfigurationProvider
 from modules.markers import priority, incremental
-from modules.ssh_client import CdhMasterClient
 from modules.tap_logger import step
 from modules.tap_object_model import Application
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_file, create_dataset_from_link
@@ -38,6 +37,7 @@ from modules.tap_object_model.hdfs_job import JobStatus
 from modules.test_names import generate_test_object_name
 
 logged_components = (TAP.data_catalog, TAP.das)
+pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
 @pytest.mark.skip(reason="Not yet adjusted to new TAP")

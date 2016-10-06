@@ -88,7 +88,6 @@ def set_level(level_name):
             logger.setLevel(__LOGGING_LEVEL)
     # set custom logging levels to third-party library loggers
     logging.getLogger("requests.packages.urllib3.connectionpool").setLevel(__LOGGING_LEVEL)
-    logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
     logging.getLogger("googleapiclient.discovery").setLevel(logging.WARNING)
 
 

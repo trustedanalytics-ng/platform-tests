@@ -18,7 +18,6 @@ import config
 from . import kerberos
 from .http_client.configuration_provider.uaa import UaaConfigurationProvider
 from .http_client.http_client_factory import HttpClientFactory
-from .ssh_client import CdhMasterClient
 from .tap_logger import get_logger
 from .tap_object_model import User
 
@@ -30,6 +29,7 @@ class Hive(object):
     __JDBC_KERBEROS_PARAMS = ";principal=hive/cdh-master-0@CLOUDERA;auth=kerberos"
 
     def __init__(self, user=None):
+        raise NotImplementedError("Will be refactored in DPNG-8899")
         self.__is_kerberos = kerberos.is_kerberos_environment()
         self.__url = self.__get_url()
         if user is None:

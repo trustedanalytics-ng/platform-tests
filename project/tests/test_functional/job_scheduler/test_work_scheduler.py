@@ -20,7 +20,6 @@ import config
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import priority, incremental
 from modules.service_tools.psql import PsqlTable, PsqlRow
-from modules.ssh_client import SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
 from modules.test_names import generate_test_object_name

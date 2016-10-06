@@ -17,11 +17,11 @@
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.cloudera import ClouderaConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.ssh_client import ClouderaManagerSshTunnel
 
 
 class ClouderaClient(object):
     def __init__(self):
+        raise NotImplementedError("Will be refactored in DPNG-9155")
         self.tunnel = ClouderaManagerSshTunnel()
         self.tunnel.connect()
 

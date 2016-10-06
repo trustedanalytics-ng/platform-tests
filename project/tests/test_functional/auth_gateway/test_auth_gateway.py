@@ -20,7 +20,6 @@ import config
 from modules.constants import TapComponent as TAP, Urls
 from modules.file_utils import generate_csv_file
 from modules.markers import incremental, priority
-from modules.ssh_client import SshTunnel
 from modules.tap_object_model import Organization, ServiceInstance, User
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_file, create_dataset_from_link
 from modules.tap_logger import step
@@ -49,6 +48,7 @@ class TestAuthGateway:
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def create_web_hdfs_client(cls, request):
+        raise NotImplementedError("Will be refactored in DPNG-8898.")
         ssh_tunel = SshTunnel(config.cdh_master_0_hostname, WebhdfsTools.VIA_HOST_USERNAME,
                               path_to_key=WebhdfsTools.PATH_TO_KEY, port=WebhdfsTools.DEFAULT_PORT, via_port=22,
                               via_hostname=config.jumpbox_hostname, local_port=WebhdfsTools.DEFAULT_PORT)

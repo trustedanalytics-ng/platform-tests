@@ -22,7 +22,6 @@ from config import jumpbox_hostname, jumpbox_key_path, jumpbox_username, kuberne
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.constants.services import ServicePlan
 from modules.markers import incremental, priority
-from modules.ssh_client import DirectSshClient
 from modules.tap_logger import get_logger, step
 from modules.tap_object_model import KubernetesCluster, KubernetesInstance, ServiceInstance, ServiceType
 

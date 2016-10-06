@@ -25,7 +25,6 @@ import config
 from modules.app_sources import AppSources
 from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub, ServicePlan
 from modules.markers import incremental, priority
-from modules.ssh_client import SshTunnel
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance
 from modules.webhdfs_tools import WebhdfsTools
@@ -143,6 +142,7 @@ class TestWs2kafka2hdfs:
         ws.close()
 
     def _get_messages_from_hdfs(self, hdfs_path):
+        raise NotImplementedError("Will be refactored in DPNG-8898")
         ssh_tunnel = SshTunnel(config.cdh_master_2_hostname, WebhdfsTools.VIA_HOST_USERNAME,
                                path_to_key=WebhdfsTools.PATH_TO_KEY, port=WebhdfsTools.DEFAULT_PORT, via_port=22,
                                via_hostname=config.jumpbox_hostname, local_port=WebhdfsTools.DEFAULT_PORT)

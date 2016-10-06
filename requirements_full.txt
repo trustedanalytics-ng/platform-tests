@@ -14,7 +14,6 @@ MarkupSafe==0.23
 mongomock
 oauth2client==2.0.1
 paho-mqtt==1.1
-paramiko==1.16.0
 pbr==1.8.1
 pexpect==4.0.1
 ptyprocess==0.5.1
@@ -36,7 +35,6 @@ sentinels==0.0.6
 simplejson==3.8.2
 six==1.10.0
 smmap==0.8.5
-sshtunnel==0.0.8.1
 teamcity-messages==1.17
 uritemplate==0.6
 websockets==3.1

@@ -16,7 +16,6 @@
 
 from ..constants.logger_type import LoggerType
 from ..tap_logger import get_logger
-from ..ssh_client import SshTunnel
 from .config import Config
 
 logger = get_logger(LoggerType.REMOTE_LOGGER)
@@ -50,6 +49,7 @@ class SshConnector(object):
         """ Create ssh tunnel. """
         if self.__ssh_tunnel is not None:
             return
+        raise NotImplementedError("Will be refactored in DPNG-8858")
         self.__ssh_tunnel = SshTunnel(
             hostname=Config.ELASTIC_SEARCH_HOST,
             port=Config.ELASTIC_SEARCH_PORT,

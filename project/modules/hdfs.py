@@ -18,7 +18,6 @@ import re
 
 import config
 from modules.exceptions import HdfsException
-from modules.ssh_client import CdhMasterClient
 from modules.tap_logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,6 +29,7 @@ class Hdfs(object):
     _HDFS_CMD = _SUDO + ["hdfs"]
 
     def __init__(self):
+        raise NotImplementedError("Will be refactored in DPNG-8898")
         self.ssh_client = CdhMasterClient(config.cdh_master_0_hostname)
         logger.info("Accessing HDFS on {}".format(self.ssh_client.cdh_host_name))
 
