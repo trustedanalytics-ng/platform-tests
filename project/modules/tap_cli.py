@@ -221,3 +221,14 @@ class TapCli:
 
     def delete_user(self, username, short=False):
         return self._run_command([self.DELETE_USER[1] if short else self.DELETE_USER[0], username])
+
+    def ensure_app_has_id(self, application_name):
+        output = self._run_command([self.APP, application_name])
+        try:
+            app_json = output.split(sep="BODY:")[2].split(sep="\n")[0]
+        except IndexError:
+            return None
+        app = json.loads(app_json)
+        assert isinstance(app, dict)
+        assert app['id'] is not None
+        return app

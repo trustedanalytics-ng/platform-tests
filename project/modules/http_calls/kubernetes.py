@@ -56,3 +56,11 @@ def k8s_get_configmap(configmap_name):
         msg="KUBERNETES: get configmap {}".format(configmap_name)
     )
 
+def k8s_logs(application_name, params):
+    """GET /namespaces/{namespace}/pods/{application_name}/log"""
+    return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
+        method=HttpMethod.GET,
+        path="namespaces/{}/pods/{}/log".format(DEFAULT_NAMESPACE, application_name),
+        params=params,
+        msg="KUBERNETES: get logs {}".format(application_name)
+    )

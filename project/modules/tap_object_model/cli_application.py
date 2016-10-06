@@ -124,3 +124,8 @@ class CliApplication(CliObjectSuperclass):
             msg="Send GET to application {}".format(self.name)
         )
         assert response.status_code == HttpStatus.CODE_OK
+
+    @retry(AssertionError, tries=12, delay=5)
+    def ensure_app_has_id(self):
+        app = self.tap_cli.ensure_app_has_id(self.name)
+        return app["id"]
