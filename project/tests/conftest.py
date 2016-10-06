@@ -123,7 +123,7 @@ def pytest_runtest_setup(item):
     if INCREMENTAL_KEYWORD in item.keywords:
         previous_fail = getattr(item.parent, "_previous_fail", None)
         if previous_fail is not None:
-            pytest.skip("previous test failed ({})".format(previous_fail.name))
+            pytest.fail("previous test failed ({})".format(previous_fail.name))
 
 
 def pytest_runtest_logstart(nodeid, location):
