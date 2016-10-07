@@ -37,6 +37,9 @@ class TapMessage:
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     MSG_CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
+    AUTHENTICATION_FAILED = "Authentication failed"
+    AUTHENTICATION_SUCCEEDED = "Authentication succeeded"
+    NO_SUCH_HOST = "no such host"
 
 
 class TapApplicationType:

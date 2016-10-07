@@ -20,7 +20,7 @@ from retry import retry
 
 import config
 from modules import command
-from modules.constants import HttpStatus
+from modules.constants import HttpStatus, TapMessage
 from modules.exceptions import TapCliException
 from modules.http_client import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
@@ -67,7 +67,7 @@ class TapCli:
         if tap_auth is None:
             tap_auth = config.ng_k8s_service_credentials()
         output = self._run_command([self.LOGIN, "http://{}".format(login_domain), tap_auth[0], tap_auth[1]])
-        if "Authentication succeeded" not in output:
+        if TapMessage.AUTHENTICATION_SUCCEEDED not in output:
             raise TapCliException(output)
 
     def target(self):

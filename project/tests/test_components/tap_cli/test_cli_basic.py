@@ -19,6 +19,8 @@ import re
 import pytest
 
 import config
+from modules.constants import TapMessage
+from modules.exceptions import TapCliException
 from modules.tap_logger import step
 
 
@@ -55,14 +57,15 @@ class TestCliBasicFlow:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_cannot_login_with_incorrect_password(self, tap_cli, restore_login):
         step("Check that login with incorrect password returns Unauthorized")
-        output = tap_cli.login(tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
-        assert 'CODE: 401 BODY: {"message":"Bad response status: 401"}\nAuthentication failed' in output
+        with pytest.raises(TapCliException) as e:
+            tap_cli.login(tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
+        assert TapMessage.AUTHENTICATION_FAILED in e.value.args[0]
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")    
     @pytest.mark.bugs("DPNG-10120 [TAP-NG] CLI - ./tap target should be enable only for console-service ip")
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):
         step("Check that user cannot login to tap cli using incorrect domain")
-        inorrect_domain = "incorrect.domain"
-        tap_cli.login(login_domain=inorrect_domain)
-        output = tap_cli.target()
-        assert inorrect_domain not in output
+        incorrect_domain = "incorrect.domain"
+        with pytest.raises(TapCliException) as e:
+            tap_cli.login(login_domain=incorrect_domain)
+        assert TapMessage.NO_SUCH_HOST in e.value.args[0]
