@@ -34,7 +34,7 @@ class TestCliBasicFlow:
         step("Run tap target")
         output = tap_cli.target()
         assert config.cf_api_url in output
-        assert config.ng_k8s_service_auth_username in output
+        assert config.admin_username in output
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_help(self, tap_cli, cli_login):
