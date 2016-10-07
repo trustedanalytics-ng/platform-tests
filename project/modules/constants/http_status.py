@@ -222,5 +222,9 @@ class ApiServiceHttpStatus(HttpStatus):
     MSG_BAD_REQUEST = "Bad response status"
 
 
+class ContainerBrokerHttpStatus(HttpStatus):
+    MSG_DEPLOYMENTS_NOT_FOUND = "Deployments associated with the service {} are not found"
+    
+
 class ModelCatalogHttpStatus(HttpStatus):
     MSG_MODEL_NOT_FOUND = "Model with given {} not found"

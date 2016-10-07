@@ -14,7 +14,10 @@
 # limitations under the License.
 #
 
+from retry import retry
+
 from modules.constants import TapEntityState
+from modules.exceptions import ServiceInstanceCreationFailed
 import modules.http_calls.platform.catalog as catalog_api
 from modules.test_names import generate_test_object_name
 from ._catalog_instance_superclass import CatalogInstanceSuperClass
@@ -24,11 +27,13 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
     TYPE = "SERVICE"
 
     @classmethod
-    def create(cls, context, *, service_id, name=None, instance_type=TYPE, state=TapEntityState.REQUESTED):
+    def create(cls, context, *, service_id, name=None, instance_type=TYPE, state=TapEntityState.REQUESTED,
+               plan_id=None):
         if name is None:
             name = generate_test_object_name().replace("_", "-")
+        metadata = cls._build_metadata(plan_id=plan_id)
         response = catalog_api.create_service_instance(service_id=service_id, name=name, instance_type=instance_type,
-                                                       state=state)
+                                                       state=state, metadata=metadata)
         new_instance = cls._from_response(response)
         context.test_objects.append(new_instance)
         return new_instance
@@ -55,3 +60,30 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
 
     def delete(self):
         catalog_api.delete_service_instance(service_id=self.class_id, instance_id=self.id)
+
+    @retry(AssertionError, tries=5, delay=2)
+    def ensure_bound(self, src_instance_id):
+        this_instance = self.get(service_id=self.class_id, instance_id=self.id)
+        assert src_instance_id in this_instance.bound_instance_ids
+
+    @retry(AssertionError, tries=5, delay=2)
+    def ensure_unbound(self, src_instance_id):
+        this_instance = self.get(service_id=self.class_id, instance_id=self.id)
+        assert src_instance_id not in this_instance.bound_instance_ids
+
+    @retry(AssertionError, tries=10, delay=10)
+    def ensure_in_state(self, *, expected_state):
+        instance = self.get(service_id=self.class_id, instance_id=self.id)
+        self.state = instance.state
+        if expected_state != TapEntityState.FAILURE and self.state == TapEntityState.FAILURE:
+            raise ServiceInstanceCreationFailed("{} is in state {}".format(self, self.state))
+        assert self.state == expected_state, "{} state is {}, expected {}".format(self, self.state, expected_state)
+
+    @staticmethod
+    def _build_metadata(*, plan_id=None):
+        metadata = []
+        if plan_id is not None:
+            metadata.append({"key": "PLAN_ID", "value": plan_id})
+        if metadata == []:
+            metadata = None
+        return metadata

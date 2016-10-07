@@ -16,6 +16,11 @@
 
 import functools
 
+from retry import retry
+
+from modules.constants import TapEntityState
+from modules.exceptions import ServiceInstanceCreationFailed
+
 
 @functools.total_ordering
 class CatalogInstanceSuperClass(object):
@@ -24,13 +29,16 @@ class CatalogInstanceSuperClass(object):
     """
 
     _COMPARABLE_ATTRIBUTES = ["id", "name", "type", "class_id", "state"]
+    _STOP_STATE_SEQUENCE = [TapEntityState.STOP_REQ, TapEntityState.STOPPING, TapEntityState.STOPPED]
 
-    def __init__(self, instance_id: str, name: str, instance_type: str, class_id: str, state: str):
+    def __init__(self, instance_id: str, name: str, instance_type: str, class_id: str, state: str,
+                 bound_instance_ids: list):
         self.id = instance_id
         self.name = name
         self.type = instance_type
         self.class_id = class_id
         self.state = state
+        self.bound_instance_ids = bound_instance_ids
 
     def __eq__(self, other):
         return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
@@ -38,10 +46,18 @@ class CatalogInstanceSuperClass(object):
     def __lt__(self, other):
         return self.id < other.id
 
+    def __repr__(self):
+        return "{} (name={}, id={})".format(self.__class__.__name__,  self.name, self.id)
+
     @classmethod
     def _from_response(cls, response: dict):
+        bindings = response.get("bindings")
+        if bindings is None:
+            bound_instance_ids = []
+        else:
+            bound_instance_ids = [i["id"] for i in bindings]
         return cls(instance_id=response["id"], name=response["name"], instance_type=response["type"],
-                   class_id=response["classId"], state=response["state"])
+                   class_id=response["classId"], state=response["state"], bound_instance_ids=bound_instance_ids)
 
     @classmethod
     def _list_from_response(cls, response: list) -> list:
@@ -51,8 +67,29 @@ class CatalogInstanceSuperClass(object):
             instances.append(instance)
         return instances
 
-    def delete(self):
+    @classmethod
+    def get(cls, *, instance_id):
         return NotImplemented
 
+    def update(self, *, field_name, value):
+        return NotImplemented
+
+    def stop(self):
+        for state in self._STOP_STATE_SEQUENCE:
+            self.update(field_name="state", value=state)
+            self.ensure_in_state(expected_state=state)
+
+    def destroy(self):
+        self.update(field_name="state", value=TapEntityState.DESTROY_REQ)
+
     def cleanup(self):
-        self.delete()
+        self.stop()
+        self.destroy()
+
+    @retry(AssertionError, tries=10, delay=10)
+    def ensure_in_state(self, *, expected_state):
+        instance = self.get(instance_id=self.id)
+        self.state = instance.state
+        if expected_state != TapEntityState.FAILURE and self.state == TapEntityState.FAILURE:
+            raise ServiceInstanceCreationFailed("{} is in state {}".format(self, self.state))
+        assert self.state == expected_state, "{} state is {}, expected {}".format(self, self.state, expected_state)

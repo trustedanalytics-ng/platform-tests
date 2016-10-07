@@ -21,6 +21,7 @@ class TapEntityState:
     DESTROYING = "DESTROYING"
     FAILURE = "FAILURE"
     IN_PROGRESS = "IN_PROGRESS"
+    OFFLINE = "OFFLINE"
     PENDING = "PENDING"
     READY = "READY"
     REQUESTED = "REQUESTED"
@@ -31,12 +32,6 @@ class TapEntityState:
     STOPPED = "STOPPED"
     STOPPING = "STOPPING"
     UNAVAILABLE = "UNAVAILABLE"
-
-
-class TapOfferingState:
-    DEPLOYING = "DEPLOYING"
-    READY = "READY"
-    OFFLINE = "OFFLINE"
 
 
 class TapMessage:

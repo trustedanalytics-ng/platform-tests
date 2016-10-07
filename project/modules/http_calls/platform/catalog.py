@@ -226,13 +226,15 @@ def update_service(*, service_id, field_name, value):
 # ------------------------------------------------ service instances ------------------------------------------------ #
 
 
-def create_service_instance(*, service_id, name, instance_type, state):
+def create_service_instance(*, service_id, name, instance_type, state, metadata=None):
     """ POST /services/{service_id}/instances """
     body = {
         "name": name,
         "type": instance_type,
         "state": state
     }
+    if metadata is not None:
+        body["metadata"] = metadata
     body = {k: v for k, v in body.items() if v is not None}
     response = _get_client().request(HttpMethod.POST,
                                      path="services/{}/instances".format(service_id),

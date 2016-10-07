@@ -18,18 +18,20 @@ import functools
 
 import modules.http_calls.platform.catalog as catalog_api
 from modules.test_names import generate_test_object_name
+from ._service_plan import ServicePlan
 
 
 @functools.total_ordering
 class CatalogService(object):
     _COMPARABLE_ATTRIBUTES = ["id", "name", "description", "template_id", "state"]
 
-    def __init__(self, *, service_id, name, description, template_id, state):
+    def __init__(self, *, service_id, name, description, template_id, state, plans: list):
         self.id = service_id
         self.name = name
         self.description = description
         self.template_id = template_id
         self.state = state
+        self.plans = [] if plans is None else plans
 
     def __eq__(self, other):
         return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
@@ -42,8 +44,11 @@ class CatalogService(object):
 
     @classmethod
     def _from_response(cls, response):
+        service_plans = []
+        for item in response["plans"]:
+            service_plans.append(ServicePlan.from_response(item))
         return cls(service_id=response["id"], name=response["name"], description=response["description"],
-                   template_id=response["templateId"], state=response["state"])
+                   template_id=response["templateId"], state=response["state"], plans=service_plans)
 
     @classmethod
     def create(cls, context, *, template_id, name=None, bindable=True, plans=None):

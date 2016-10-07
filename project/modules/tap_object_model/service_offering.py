@@ -19,7 +19,7 @@ import functools
 from retry import retry
 
 from fixtures.k8s_templates import template_example
-from modules.constants import TapEntityState, TapOfferingState
+from modules.constants import TapEntityState
 from modules.exceptions import ServiceOfferingCreationFailed
 from modules.http_calls.platform import api_service as api
 from modules.http_client import HttpClient
@@ -77,10 +77,10 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
     @retry(AssertionError, tries=60, delay=3)
     def ensure_ready(self):
         self._refresh()
-        if self.state == TapOfferingState.OFFLINE:
+        if self.state == TapEntityState.OFFLINE:
             raise ServiceOfferingCreationFailed()
-        assert self.state == TapOfferingState.READY, "Offiline state is {}, expected {}".format(self.state,
-                                                                                                TapEntityState.READY)
+        assert self.state == TapEntityState.READY, "Offering state is {}, expected {}".format(self.state,
+                                                                                              TapEntityState.READY)
 
     def _refresh(self):
         offerings = self.get_list()

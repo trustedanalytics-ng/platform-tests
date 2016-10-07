@@ -35,16 +35,17 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
     PLAN_ID_METADATA_KEY = "PLAN_ID"
 
     def __init__(self, *, service_id: str, name: str, offering_id: str, plan_id: str, bindings: list, state: str,
-                 client: HttpClient=None):
+                 offering_label: str=None, client: HttpClient=None):
         super().__init__(object_id=service_id, client=client)
         self.name = name
         self.offering_id = offering_id
+        self.offering_label = offering_label
         self.plan_id = plan_id
         self.state = state
         self.bindings = [] if bindings is None else bindings
 
     def __repr__(self):
-        return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
+        return "{} (name={}, id={}, offering={})".format(self.__class__.__name__, self.name, self.id, self.offering_label)
 
     @classmethod
     def create(cls, context, *, offering_id: str, plan_id: str, name: str=None,
@@ -109,7 +110,8 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         plan_id = next((m["value"] for m in response["metadata"] if m["key"] == cls.PLAN_ID_METADATA_KEY), None)
         assert plan_id is not None, "No service instance plan id found in the response"
         return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["classId"],
-                   bindings=response["bindings"], state=response["state"], name=response["name"], client=client)
+                   bindings=response["bindings"], state=response["state"], name=response["name"],
+                   offering_label=response["serviceName"], client=client)
 
     def _refresh(self):
         instances = self.get_list()
@@ -117,7 +119,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         assert this_instance is not None, "Instance {} not found on the list".format(self.name)
         self.state = this_instance.state
 
-    def get_credentials(self):
+    def get_credentials(self, client=None):
         return api.get_service_credentials(service_id=self.id, client=self._get_client(client))
 
     @classmethod

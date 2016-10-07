@@ -26,6 +26,7 @@ from .catalog_instance import CatalogInstance
 from .catalog_service import CatalogService
 from .catalog_service_instance import CatalogServiceInstance
 from .catalog_template import CatalogTemplate
+from .container_broker_instance import ContainerBrokerInstance
 from .dataset import DataSet, DatasetAccess
 from .user import User
 from .hdfs_job import HdfsJob
@@ -36,6 +37,7 @@ from .kubernetes_cluster import KubernetesCluster
 from .kubernetes_instance import KubernetesInstance
 from .kubernetes_secret import KubernetesSecret
 from .latest_event import EventCategory, EventMessage, LatestEvent
+from .kubernetes_pod import KubernetesPod
 from .k8s_service import K8sService
 from .template import Template
 from .model_artifact import ModelArtifact

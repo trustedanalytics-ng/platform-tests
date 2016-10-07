@@ -36,6 +36,7 @@ def assert_not_in_with_retry(something, get_list_method, *args, **kwargs):
     obj_list = get_list_method(*args, **kwargs)
     assert something not in obj_list, "{} was found on the list".format(something)
 
+
 @retry(AssertionError, tries=30, delay=2)
 def assert_not_in_by_id_with_retry(id, get_list_method, *args, **kwargs):
     """Use when adding something takes longer"""
@@ -43,11 +44,13 @@ def assert_not_in_by_id_with_retry(id, get_list_method, *args, **kwargs):
     ids = [o.id for o in obj_list]
     assert id not in ids, "{} was found on the list".format(id)
 
+
 @retry(AssertionError, tries=30, delay=2)
 def assert_in_with_retry(something, get_list_method, *args, **kwargs):
     """Use when adding something takes longer"""
     obj_list = get_list_method(*args, **kwargs)
     assert something in obj_list, "{} was not found on the list".format(something)
+
 
 @retry(AssertionError, tries=30, delay=2)
 def assert_in_by_id_with_retry(id, get_list_method, *args, **kwargs):
@@ -94,13 +97,6 @@ def assert_user_in_org_and_role(invited_user, org_guid, expected_role):
 def assert_greater_with_retry(get_list_method, list_to_compare, *args, **kwargs):
     obj_list = get_list_method(*args, **kwargs)
     assert len(obj_list) > len(list_to_compare)
-
-
-def assert_returns_http_error(callable_obj, *args, **kwargs):
-    with pytest.raises(UnexpectedResponseError) as e:
-        callable_obj(*args, **kwargs)
-    status_first_digit = e.exception.status // 100
-    assert status_first_digit in (4, 5), "Status code: {}. Expected: 4XX or 5XX".format(e.exception.status)
 
 
 @retry(AssertionError, tries=5, delay=10)
@@ -155,4 +151,5 @@ def assert_command_execution(output, return_code_correct, e, return_code):
     output_contains_string = output in e.value.output or output == ""
     assert return_code_correct and output_contains_string, \
         "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.return_code, e.value.output, return_code, output)
+
 
