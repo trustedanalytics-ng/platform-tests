@@ -15,6 +15,7 @@
 #
 
 import json
+import os
 
 from retry import retry
 
@@ -65,10 +66,11 @@ class TapCli:
 
     def login(self, login_domain=config.api_url, tap_auth=None):
         if tap_auth is None:
-            tap_auth = config.ng_k8s_service_credentials()
+            tap_auth = [config.admin_username, config.admin_password]
         output = self._run_command([self.LOGIN, "http://{}".format(login_domain), tap_auth[0], tap_auth[1]])
         if TapMessage.AUTHENTICATION_SUCCEEDED not in output:
             raise TapCliException(output)
+        return output
 
     def target(self):
         return self._run_command([self.TARGET])
@@ -122,7 +124,24 @@ class TapCli:
         return service
 
     def push(self, app_dir_path):
-        return self._run_command([self.PUSH], cwd=app_dir_path)
+        """Pushes the application. If the path contains a file, it is assumed
+        it is a gzipped application that will be pushed, otherwise the path
+        is a directory that will be wholy pushed
+
+        Args:
+            app_dir_path: Path to gzipped application or path to directory with
+            application
+
+        Returns:
+            Result of the command
+        """
+        file_name = os.path.basename(app_dir_path)
+        if file_name is "":
+            cmd = [self.PUSH]
+        else:
+            cmd = [self.PUSH, file_name]
+
+        return self._run_command(cmd, cwd=os.path.dirname(app_dir_path))
 
     def apps(self):
         return self._run_command([self.APPS])

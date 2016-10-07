@@ -54,6 +54,9 @@ class TestTapCli(unittest.TestCase):
     def _run_command_return_cmd(self, cmd: list):
         return cmd
 
+    def _run_command_auth_ok(self, cmd: list):
+        return "Authentication succeeded"
+
     @classmethod
     def setUpClass(cls):
         cls.tap_cli = TapCli("")
@@ -87,11 +90,10 @@ class TestTapCli(unittest.TestCase):
     def test_get_service_wrong_name(self):
         self.assertRaises(AssertionError, self.tap_cli.get_service, "test1")
 
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    @patch.object(TapCli, "_run_command", _run_command_auth_ok)
     def test_login(self):
         tap_auth = "username", "password"
-        assert ["login", "http://{}".format(config.api_url), tap_auth[0],
-                tap_auth[1]] == self.tap_cli.login(tap_auth=tap_auth)
+        assert "Authentication succeeded" == self.tap_cli.login(tap_auth=tap_auth)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_target(self):
