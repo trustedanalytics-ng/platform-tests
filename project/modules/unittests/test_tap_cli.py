@@ -174,6 +174,30 @@ class TestTapCli(unittest.TestCase):
         assert ["invite", self.test_user] == self.tap_cli.invite(self.test_user)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_reinvite(self):
+        assert ["reinvite", self.test_user] == self.tap_cli.reinvite(self.test_user)
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_users(self):
+        assert ["users"] == self.tap_cli.users()
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_invitations(self):
+        assert ["invitations"] == self.tap_cli.invitations()
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_invitations_short_command(self):
+        assert ["invs"] == self.tap_cli.invitations(short=True)
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_delete_invitations(self):
+        assert ["delete-invitation", self.test_user] == self.tap_cli.delete_invitation(self.test_user)
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_delete_invitations_short_command(self):
+        assert ["di", self.test_user] == self.tap_cli.delete_invitation(self.test_user, short=True)
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_delete_user(self):
         assert ["delete-user", self.test_user] == self.tap_cli.delete_user(self.test_user)
 

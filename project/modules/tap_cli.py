@@ -53,6 +53,10 @@ class TapCli:
     BIND = "bind-instance", "bind"
     UNBIND = "unbind-instance", "unbind"
     INVITE = "invite"
+    REINVITE = "reinvite"
+    USERS = "users"
+    INVITATIONS = "invitations", "invs"
+    DELETE_INVITATION = "delete-invitation", "di"
     DELETE_USER = "delete-user", "du"
 
     def __init__(self, cli_app_path):
@@ -200,8 +204,20 @@ class TapCli:
         )
         assert response.status_code == HttpStatus.CODE_OK
 
-    def invite(self, email):
-        return self._run_command([self.INVITE, email])
+    def invite(self, username):
+        return self._run_command([self.INVITE, username])
 
-    def delete_user(self, email, short=False):
-        return self._run_command([self.DELETE_USER[1] if short else self.DELETE_USER[0], email])
+    def reinvite(self, username):
+        return self._run_command([self.REINVITE, username])
+
+    def users(self):
+        return self._run_command([self.USERS])
+
+    def invitations(self, short=False):
+        return self._run_command([self.INVITATIONS[1] if short else self.INVITATIONS[0]])
+
+    def delete_invitation(self, username, short=False):
+        return self._run_command([self.DELETE_INVITATION[1] if short else self.DELETE_INVITATION[0], username])
+
+    def delete_user(self, username, short=False):
+        return self._run_command([self.DELETE_USER[1] if short else self.DELETE_USER[0], username])

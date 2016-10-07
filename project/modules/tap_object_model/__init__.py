@@ -50,4 +50,6 @@ from .upsi import Upsi
 from .cli_application import CliApplication
 from .cli_service import CliService
 from .cli_offering import CliOffering
+from .cli_invitation import CliInvitation
+from .cli_user import CliUser
 
