@@ -21,15 +21,13 @@ from retry import retry
 import config
 from modules import command
 from modules.constants import HttpStatus
-from modules.exceptions import CommandExecutionException
+from modules.exceptions import TapCliException
 from modules.http_client import HttpClientFactory
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 
 
 class TapCli:
-    ERROR = "ERROR"
-
     TARGET = "target"
     HELP = "help", "h"
     VERSION = "--version", "-v"
@@ -63,14 +61,14 @@ class TapCli:
         cmd = [self.command] + cmd
         output = command.run(cmd, cwd=cwd)
         output = "\n".join(output)
-        if self.ERROR in output:
-            raise CommandExecutionException(return_code=0, output=output, command=cmd)
         return output
 
     def login(self, login_domain=config.api_url, tap_auth=None):
         if tap_auth is None:
             tap_auth = config.ng_k8s_service_credentials()
-        return self._run_command([self.LOGIN, "http://{}".format(login_domain), tap_auth[0], tap_auth[1]])
+        output = self._run_command([self.LOGIN, "http://{}".format(login_domain), tap_auth[0], tap_auth[1]])
+        if "Authentication succeeded" not in output:
+            raise TapCliException(output)
 
     def target(self):
         return self._run_command([self.TARGET])

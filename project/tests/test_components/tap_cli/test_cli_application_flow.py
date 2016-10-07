@@ -21,7 +21,7 @@ import tarfile
 import pytest
 
 from modules import command
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType
 from modules.markers import incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_application import K8sApplication
@@ -85,7 +85,7 @@ class TestPythonApplicationCliFlow:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_NAME = "samplepythonapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "PYTHON"
+    APP_TYPE = TapApplicationType.PYTHON27
     EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
     APP_URL_MESSAGE = "TEST APP v.1.0 READY"
 
@@ -187,7 +187,7 @@ class TestGoApplicationCliFlow(TestPythonApplicationCliFlow):
     SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_go_app_url
     APP_NAME = "samplegoapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "GO"
+    APP_TYPE = TapApplicationType.GO
     EXPECTED_FILE_LIST = ["main", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
@@ -198,7 +198,7 @@ class TestJavaApplicationCliFlow(TestPythonApplicationCliFlow):
     SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_NAME = "samplejavaapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "JAVA"
+    APP_TYPE = TapApplicationType.JAVA
     EXPECTED_FILE_LIST = ["tapng-java-sample-app-0.1.0.jar", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
@@ -210,7 +210,7 @@ class TestNodeJsApplicationCliFlow(TestPythonApplicationCliFlow):
     SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
     APP_NAME = "samplenodejsapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "NODEJS"
+    APP_TYPE = TapApplicationType.NODEJS
     EXPECTED_FILE_LIST = ["server.js", "run.sh", "public", "views", "app", "node_modules", "manifest.yml",
                           "package.json", "README.md"]
     APP_URL_MESSAGE = "This is a Cloud Foundry sample application."

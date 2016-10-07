@@ -16,7 +16,6 @@
 
 import pytest
 
-import config
 from modules.constants.urls import Urls
 from modules.file_utils import download_file
 from modules.tap_logger import step

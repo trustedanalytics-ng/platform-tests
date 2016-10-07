@@ -42,4 +42,6 @@ class TapMessage:
 class TapApplicationType:
     GO = "GO"
     JAVA = "JAVA"
-    PYTHON = "PYTHON"
+    NODEJS = "NODEJS"
+    PYTHON27 = "PYTHON2.7"
+    PYTHON34 = "PYTHON3.4"

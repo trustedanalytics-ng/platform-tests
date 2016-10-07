@@ -16,9 +16,7 @@
 
 import pytest
 
-import config
-from modules.constants import TapComponent as TAP
-from modules.constants.urls import Urls
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState
 from modules.file_utils import download_file
 from modules.tap_logger import step
 from modules.markers import priority, incremental
@@ -39,8 +37,8 @@ pytestmark = [pytest.mark.components(TAP.image_factory)]
 class TestImageFactory:
 
     NODEJS_APP_NAME = "test_blob"
-    NODEJS_APP_TYPE = "NODEJS"
-    NODEJS_APP_STATE = "PENDING"
+    NODEJS_APP_TYPE = TapApplicationType.NODEJS
+    NODEJS_APP_STATE = TapEntityState.PENDING
     catalog_image = None
 
     @pytest.fixture(scope="class")

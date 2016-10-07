@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import pytest
 
-from modules.constants import ApiServiceHttpStatus
-from modules.constants import TapComponent as TAP
-from modules.constants.urls import Urls
+from modules.constants import ApiServiceHttpStatus, TapApplicationType, TapComponent as TAP, Urls
 from modules.markers import incremental
 from modules.tap_logger import step
 from modules.tap_object_model.api_service import ApiService
@@ -34,7 +33,7 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 class TestPythonApplicationFlow:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_NAME = "samplepythonapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "PYTHON"
+    APP_TYPE = TapApplicationType.PYTHON27
 
     @property
     def manifest_params(self):
@@ -93,27 +92,27 @@ class TestPythonApplicationFlow:
 class TestNodeJsApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
     APP_NAME = "samplenodejsapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "NODEJS"
+    APP_TYPE = TapApplicationType.NODEJS
 
 
 @incremental
 class TestGoApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_go_app_url
     APP_NAME = "samplegoapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "GO"
+    APP_TYPE = TapApplicationType.GO
 
 
 @incremental
 class TestJavaApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_NAME = "samplejavaapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "JAVA"
+    APP_TYPE = TapApplicationType.JAVA
 
 
 class TestSampleApp:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_NAME = "sampleapp{}".format(generate_test_object_name().replace('_', ''))
-    APP_TYPE = "PYTHON"
+    APP_TYPE = TapApplicationType.PYTHON27
 
     MANIFEST_PARAMS = {
         'instances': 1,

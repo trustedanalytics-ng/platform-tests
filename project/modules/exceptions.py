@@ -66,3 +66,7 @@ class ServiceTypeNotFoundException(Exception):
 
 class PlanNotFoundException(Exception):
     pass
+
+
+class TapCliException(Exception):
+    pass

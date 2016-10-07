@@ -16,8 +16,8 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls
-from modules.http_calls.platform.catalog import update_instance
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState
+import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority, incremental
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_application import K8sApplication
@@ -37,7 +37,7 @@ class TestCodePackagingAndAppPushing:
     MANIFEST_PARAMS = {
         'instances': 1,
         'name': APP_NAME,
-        'type': "PYTHON"
+        'type': TapApplicationType.PYTHON27
     }
 
     @pytest.mark.bugs("DPNG-8751 Adjust sample-python-app to TAP NG")
@@ -52,16 +52,16 @@ class TestCodePackagingAndAppPushing:
         app = K8sApplication.get(self.app.id)
         step("Check application parameters")
         assert app.name == self.APP_NAME, "Application has incorrect name"
-        assert app.state == K8sApplication.STATE_RUNNING, "Application is not running"
+        assert app.state == TapEntityState.RUNNING, "Application is not running"
         assert app.replication is 1, "Application replication is incorrect"
-        assert app.image_state == "READY", "Application image state is incorrect"
+        assert app.image_state == TapEntityState.READY, "Application image state is incorrect"
 
     def test_1_change_app_state_and_remove_it(self):
         step("Update app state")
-        update_instance(instance_id=self.app.id, field="state", value=K8sApplication.STATE_FAILURE)
+        catalog_api.update_instance(instance_id=self.app.id, field_name="state", value=TapEntityState.FAILURE)
         step("Check app state")
         app = K8sApplication.get(self.app.id)
-        assert app.state == K8sApplication.STATE_FAILURE, "Application is not in the expected state"
+        assert app.state == TapEntityState.FAILURE, "Application is not in the expected state"
         step("Delete app")
         self.app.delete()
         step("Check if app is removed")
