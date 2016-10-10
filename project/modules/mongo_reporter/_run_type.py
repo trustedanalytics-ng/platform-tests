@@ -30,11 +30,15 @@ class RunType:
     }
 
     @classmethod
-    def get(cls, pytest_file_or_dir):
+    def get(cls, path_list):
         """
         Return test run type keyword based on the file/directory pytest parameter.
         """
+        return cls._map_path(path_list[0]) if len(path_list) == 1 else cls._API_OTHER
+
+    @classmethod
+    def _map_path(cls, path):
         for test_dir_path, test_run_tag in cls._PATH_TYPE_MAPPING.items():
-            if test_dir_path in pytest_file_or_dir:
+            if test_dir_path in path:
                 return test_run_tag
         return cls._API_OTHER

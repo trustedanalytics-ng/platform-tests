@@ -60,7 +60,7 @@ def pytest_sessionstart(session):
 
     _log_test_configuration()
 
-    mongo_reporter.report_test_type(session.config.option.file_or_dir[0])
+    mongo_reporter.report_test_type(session.config.option.file_or_dir)
     mongo_reporter.report_tap_build_number()
 
     if not config.ng_disable_environment_check:

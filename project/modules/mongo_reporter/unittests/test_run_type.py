@@ -23,12 +23,15 @@ from modules.mongo_reporter._run_type import RunType
 class TestRunType:
 
     @pytest.mark.parametrize("pytest_directory_arg,expected_run_type",
-                             [(Path.test_directories["test_functional"], RunType._API_FUNCTIONAL),
-                              (Path.test_directories["test_functional"] + "/kitten", RunType._API_FUNCTIONAL),
-                              (Path.test_directories["test_smoke"], RunType._API_SMOKE),
-                              (Path.test_directories["test_components"], RunType._API_COMPONENTS),
-                              (Path.test_root_directory, RunType._API_OTHER),
-                              ("kitten", RunType._API_OTHER)])
+                             [([Path.test_directories["test_functional"]], RunType._API_FUNCTIONAL),
+                              ([Path.test_directories["test_functional"] + "/kitten"], RunType._API_FUNCTIONAL),
+                              ([Path.test_directories["test_smoke"]], RunType._API_SMOKE),
+                              ([Path.test_directories["test_components"]], RunType._API_COMPONENTS),
+                              ([Path.test_root_directory], RunType._API_OTHER),
+                              (["kitten"], RunType._API_OTHER),
+                              ([], RunType._API_OTHER),
+                              ([Path.test_directories["test_smoke"], Path.test_directories["test_smoke"]],
+                               RunType._API_OTHER)])
     def test_get(self, pytest_directory_arg, expected_run_type):
         run_type = RunType.get(pytest_directory_arg)
         assert run_type == expected_run_type
