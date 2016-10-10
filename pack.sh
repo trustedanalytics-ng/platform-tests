@@ -22,7 +22,6 @@ VENDOR=vendor/
 SECRETS_PATH=./project/secrets/
 REQUIREMENTS_PATH=./requirements.txt
 ZIPPED_ITEMS="deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt .bumpversion.cfg"
-DELETED_ITEMS="project/modules/remote_logger project/modules/cloudera_client.py project/modules/hdfs.py project/modules/hive.py project/modules/kerberos.py"
 
 # prepare dependencies
 if [ -d $VENDOR ]; then
@@ -39,5 +38,4 @@ echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
 
 # assemble the artifact
 VERSION=$(grep current_version .bumpversion.cfg | cut -d " " -f 3)
-rm -rf $DELETED_ITEMS
 zip -r platform-tests-${VERSION}.zip $VENDOR $ZIPPED_ITEMS
