@@ -193,6 +193,8 @@ class ImageFactoryHttpStatus(HttpStatus):
 class BlobStoreHttpStatus(HttpStatus):
     MSG_BLOB_ID_ALREADY_IN_USE = "The specified Blob ID is already in use"
     MSG_BLOB_DOES_NOT_EXIST = "The specified blob does not exist"
+    MSG_BLOB_CONTENT_MISSING = "Blob not specified."
+    MSG_BLOB_ID_MISSING = "The blob_id is not specified."
 
 
 class TemplateRepositoryHttpStatus(HttpStatus):

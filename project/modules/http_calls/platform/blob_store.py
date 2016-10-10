@@ -29,7 +29,7 @@ def _get_client():
 
 def get_blob(*, blob_id):
     """ GET /blobs/{blob_id} """
-    response = _get_client().request(HttpMethod.GET,
+    response = _get_client().request(method=HttpMethod.GET,
                                      path="blobs/{}".format(blob_id),
                                      raw_response=True, raise_exception=True,
                                      msg="BLOB-STORE: get blob")
@@ -37,24 +37,34 @@ def get_blob(*, blob_id):
     return response
 
 
-def create_blob(*, blob_id, file_path):
+def create_blob_raw_params(*, files, params):
     """ POST /blobs """
-    file = {"uploadfile": (file_path, "multipart/form-data")}
-    params = {"blob_id": blob_id}
-
-    response = _get_client().request(HttpMethod.POST,
+    response = _get_client().request(method=HttpMethod.POST,
                                      path="blobs",
                                      params=params,
-                                     files=file,
+                                     files=files,
                                      raw_response=True, raise_exception=True,
                                      msg="BLOB-STORE: create blob")
     assert response.status_code == HttpStatus.CODE_CREATED
     return response
 
 
+def create_blob_from_file(*, blob_id, file_path):
+    files = {"uploadfile": (file_path, open(file_path, "rb"))}
+    params = {"blob_id": blob_id}
+    return create_blob_raw_params(files=files, params=params)
+
+
+def create_blob_from_data(*, blob_id, blob_content):
+    files = {"uploadfile": blob_content}
+    params = {"blob_id": blob_id}
+    return create_blob_raw_params(files=files, params=params)
+
+
 def delete_blob(*, blob_id):
     """ DELETE /blobs/{blob_id} """
-    response = _get_client().request(HttpMethod.DELETE, path="blobs/{}".format(blob_id),
+    response = _get_client().request(method=HttpMethod.DELETE,
+                                     path="blobs/{}".format(blob_id),
                                      msg="BLOB-STORE: delete blob")
     return response
 
