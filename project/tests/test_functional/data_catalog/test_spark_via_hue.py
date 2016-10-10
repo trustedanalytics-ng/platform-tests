@@ -114,7 +114,7 @@ class TestSparkViaHue:
         properties_path = "/tmp/{}".format(datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
         step("Get oozie url")
         app_name = TAP.cdh_broker
-        cdh_broker = next((app for app in Application.cf_api_get_list() if app_name == app.name), None)
+        cdh_broker = next((app for app in Application.get_list() if app_name == app.name), None)
         assert cdh_broker is not None, "{} not available".format(app_name)
         oozie_url = str(json.loads(cdh_broker.cf_api_env()["ENVIRONMENT_JSON"]["CREDENTIALS"])["resource_manager"]). \
             replace("8088", "11000/oozie")

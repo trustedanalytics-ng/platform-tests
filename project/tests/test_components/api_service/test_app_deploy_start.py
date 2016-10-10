@@ -20,9 +20,9 @@ from modules.constants import ApiServiceHttpStatus, TapApplicationType, TapCompo
 from modules.markers import incremental
 from modules.tap_logger import step
 from modules.tap_object_model.api_service import ApiService
-from modules.tap_object_model.k8s_application import K8sApplication
+from modules.tap_object_model.application import Application
 from modules.test_names import generate_test_object_name
-from tests.fixtures.assertions import assert_raises_http_exception
+from tests.fixtures import assertions
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
@@ -46,34 +46,33 @@ class TestPythonApplicationFlow:
         }
 
     @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
-    def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
+    def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path, tap_cli):
         step("Prepare manifest with parameters")
-        K8sApplication.update_manifest(sample_manifest_path, self.manifest_params)
+        Application.update_manifest(sample_manifest_path, self.manifest_params)
         step("Push sample application")
-        self.__class__.application = K8sApplication.push(class_context, sample_app_path, sample_manifest_path)
+        self.__class__.application = Application.push(class_context, app_dir=sample_app_path, tap_cli=tap_cli)
         step("Check application is running")
         self.application.ensure_running()
-        step("Check application is ready")
-        self.application.ensure_ready()
 
     def test_1_stop_application(self):
         step("Stop application")
         self.application.stop()
         step("Check that the application is stopped")
         self.application.ensure_stopped()
-        self.application.ensure_is_down()
 
     def test_2_start_application(self):
         step("Start application")
         self.application.start()
         step("Check application is ready")
-        self.application.ensure_ready()
+        self.application.ensure_running()
 
+    @pytest.mark.skip("DPNG-11693: Checking logs in applications don't work yet")
     def test_3_check_logs(self):
         step("Check that getting application logs returns no error")
         response = self.application.get_logs()
         assert response.status_code == ApiServiceHttpStatus.CODE_OK
 
+    @pytest.mark.skip("DPNG-11694: Scaling applications don't work yet")
     def test_4_scale_application(self):
         step("Scale application")
         replicas_number = 3
@@ -85,8 +84,8 @@ class TestPythonApplicationFlow:
     def test_5_delete_application(self):
         step("Delete application")
         self.application.delete()
-        step("Check that application url is unavailable")
-        self.application.ensure_is_down()
+        step("Check that application is not on the list")
+        assertions.assert_not_in_with_retry(self.application, Application.get_list)
 
 
 @incremental
@@ -126,31 +125,32 @@ class TestSampleApp:
     }
 
     @pytest.fixture(scope="class", autouse=True)
-    def sample_app(self, class_context, sample_app_path, sample_manifest_path):
+    def sample_app(self, class_context, sample_app_path, sample_manifest_path,
+                   tap_cli):
         step("Prepare manifest with parameters")
-        K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
+        Application.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
         step("Push sample application")
-        application = K8sApplication.push(class_context, sample_app_path, sample_manifest_path)
+        application = Application.push(class_context, app_dir=sample_app_path, tap_cli=tap_cli)
         step("Check application is running")
         application.ensure_running()
-        step("Check application is ready")
-        application.ensure_ready()
 
     @pytest.mark.bugs("DPNG-11054 [TAP_NG] Response code 409 (name conflict) should be displayed when pushing twice app with the same name")
-    def test_cannot_push_application_twice(self, class_context, sample_app_path, sample_manifest_path):
+    def test_cannot_push_application_twice(self, class_context, sample_app_path, sample_manifest_path, tap_cli):
         step("Check that pushing the same application again causes an error")
-        K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
-        assert_raises_http_exception(ApiServiceHttpStatus.CODE_CONFLICT, "",
-                                     K8sApplication.push, class_context, sample_app_path, sample_manifest_path)
+        Application.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
+        with pytest.raises(AssertionError):
+            Application.push(class_context, app_dir=sample_app_path, tap_cli=tap_cli)
 
+    @pytest.mark.skip("DPNG-11694: Scaling applications don't work yet")
     def test_cannot_scale_application_with_incorrect_id(self):
         step("Scale application with incorrect id")
         incorrect_id = "wrong_id"
         expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(incorrect_id)
-        assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
                                      ApiService.scale_application, incorrect_id, 3)
 
+    @pytest.mark.skip("DPNG-11694: Scaling applications don't work yet")
     def test_cannot_scale_application_with_incorrect_instance_number(self):
         step("Scale application with incorrect replicas number")
-        assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
                                      ApiService.scale_application, 3, "wrong_number")

@@ -49,7 +49,7 @@ NEW_ENV_02 = "variable"
 NEW_ENV_02_VAL = "1234"
 ENVS = [(NEW_ENV_01, NEW_ENV_01_VAL), (NEW_ENV_02, NEW_ENV_02_VAL)]
 
-
+@pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
 class TestApplication(unittest.TestCase):
     def test_update_manifest(self):
         """Tests if update manifest method works."""
@@ -430,11 +430,11 @@ class TestApplication(unittest.TestCase):
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE,
                         self.APP_INSTANCES, self.APP_URLS, self.APP_BINDINGS)
 
-        a.api_start()
+        a.start()
         self.mock_api_service.start_application.assert_called_once_with(self.APP_ID,
                                                                         self.user_admin)
 
-        a.api_stop()
+        a.stop()
         self.mock_api_service.stop_application.assert_called_once_with(self.APP_ID,
                                                                        self.user_admin)
 
@@ -442,11 +442,11 @@ class TestApplication(unittest.TestCase):
         a = Application(self.APP_NAME, self.APP_ID, self.APP_STATE, [], [], [],
                         None, self.user_luser)
 
-        a.api_start()
+        a.start()
         self.mock_api_service.start_application.assert_called_with(self.APP_ID,
                                                                    self.user_luser)
 
-        a.api_stop()
+        a.stop()
         self.mock_api_service.stop_application.assert_called_with(self.APP_ID,
                                                                   self.user_luser)
 

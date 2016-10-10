@@ -20,195 +20,177 @@ import os
 import requests
 from retry import retry
 
-import config
-from ..http_client.http_client import HttpClient
-from ..exceptions import UnexpectedResponseError
-from ..tap_cli import TapCli
-from ..http_calls.platform import api_service
-from ..tap_logger import log_http_request, log_http_response
-from ..test_names import generate_test_object_name
-from ..http_client.configuration_provider.console import ConsoleConfigurationProvider
-from ..http_client import HttpClientFactory
+from modules.constants import TapEntityState
+from modules.exceptions import UnexpectedResponseError
+import modules.http_calls.platform.api_service as api
+from modules.http_client import HttpClient
+from modules.tap_cli import TapCli
+from modules.tap_logger import log_http_request, log_http_response
+from ._api_model_superclass import ApiModelSuperclass
 
 
-class Application(object):
+class Application(ApiModelSuperclass):
     """ Application represents an Application on TAP.
-    It allows to push, delete, retrieve TAP applications using `console` or
-    `api-service` REST APIs.
+    It allows to push, delete, retrieve TAP applications using 'console' or 'api-service' REST APIs.
     It enables sending http requests to such applications.
     """
-    STATUS = {"failure": "FAILURE",
-              "stopped": "STOPPED",
-              "stopping": "STOPPING",
-              "starting": "STARTING",
-              "running": "RUNNING"}
+
+    _COMPARABLE_ATTRIBUTES = ["name", "id", "image_type", "_state", "replication", "running_instances", "urls"]
+    _REFRESH_ATTRIBUTES = ["id", "image_type", "_state", "replication", "running_instances", "urls"]
 
     MANIFEST_NAME = "manifest.json"
 
-    APP_NAME = "name"
-    ENV = "env"
-    SERVICES = "services"
-
-    RUN_SCRIPT = "run.sh"
-
-    COMPARABLE_ATTRIBUTES = ["name", "app_id", "is_running"]
-
-    def __init__(self, name: str, app_id: str, state: str,
-                 instances: list, urls: list, bindings: list, org_id: str=None,
-                 client: HttpClient=None):
+    def __init__(self, app_id: str, name: str, bindings: list, image_type: str, state: str, replication: int,
+                 running_instances: int, urls: list, client: HttpClient=None):
         """Class initializer.
 
         Args:
             name: Name of the application
-            app_id: Id of the application
+            id: Id of the application
             state: Current state of the application
             instances: Instances that the application uses
             urls: Urls that the application used
-            org_id: In which organization the application resides
             client: The Http client to use. If None, Http client from default
                     configuration will be used
         """
+        super().__init__(item_id=app_id, client=client)
         self.name = name
-        self.app_id = app_id
-        self.org_id = org_id
-        self._state = state
-        self.instances = instances
-        self.urls = tuple(urls)
         self.bindings = bindings
-        if client is None:
-            self._client = self._get_default_client()
-        else:
-            self._client = client
-        self.request_session = requests.session()
+        self.image_type = image_type
+        self._state = state
+        self.replication = replication
+        self.running_instances = running_instances
+        self.urls = tuple(urls)
+        self._request_session = requests.session()
+
+    def __repr__(self):
+        return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
 
     @classmethod
-    def update_manifest(cls, manifest: dict, app_name: str,
-                        bound_services: list, env: dict) -> dict:
-        """Updates the name in manifest, replaces the required services
-        and appends user defined envs.
+    def update_manifest(cls, manifest_path: str, params: dict):
+        """Updates the manifest with provided params
 
         Args:
-            manifest: The manifest as a json object
-            app_name: The new application name to set
-            bound_services: Services to that should be already present. This
-                            will replace any services that were present in the
-                            manifest!
-            env: Envs to append.
-
-        Returns:
-            Updated manifest
+            manifest_path: Path to the manifest file
+            params: key->value that will update the manifest
         """
-        manifest[cls.APP_NAME] = app_name
+        with open(manifest_path, 'r') as file:
+            manifest = json.loads(file.read())
+            for key, val in params.items():
+                manifest[key] = val
 
-        if bound_services is not None:
-            if cls.SERVICES not in manifest:
-                manifest[cls.SERVICES] = []
-            manifest[cls.SERVICES] = bound_services
-        else:
-            if cls.SERVICES in manifest:
-                del manifest[cls.SERVICES]
-
-        if env is not None:
-            if cls.ENV not in manifest:
-                manifest[cls.ENV] = {}
-            manifest[cls.ENV].update(env)
-
-        if config.cf_proxy is not None:
-            if cls.ENV not in manifest:
-                manifest[cls.ENV] = {}
-            http_proxy = "http://{}:911".format(config.cf_proxy)
-            https_proxy = "https://{}:912".format(config.cf_proxy)
-            manifest[cls.ENV]["http_proxy"] = http_proxy
-            manifest[cls.ENV]["https_proxy"] = https_proxy
-
-        return manifest
-
-    @staticmethod
-    @retry(AssertionError, tries=10, delay=5)
-    def _get_app(org_id, name, client=None):
-        apps = Application.get_list(org_id, client)
-        application = next((app for app in apps if app.name == name), None)
-        assert application is not None, "App {} has not been created on the Platform".format(name)
-        return application
+        with open(manifest_path, 'w') as file:
+            file.write(json.dumps(manifest))
 
     @classmethod
-    def push(cls, context, source_directory: str, name: str=None,
-             org_id: str=None, bound_services: list=None, env: dict=None,
-             tap_dir="/tmp/", client: HttpClient=None):
+    def push(cls, context, app_dir: str, tap_cli: TapCli, client: HttpClient=None):
         """Pushes the application from source directory with provided name,
-        services and envs.
+        services and envs. This only pushed the application, but does not
+        verify whether the app is running or not.
 
         Args:
-            context: context object that will store created applications. It is
-                     used later to perform a cleanup
-            source_directory: dir with application, manifest and run script
-            name: Name of the application. If None, name will be generated
-            org_id: To which organization the application should be pushed
-            bound_services: iterable with bound service names to be included
-                            in manifest the manifest
-            env: dict with app's env values to be added to manifest
-            tap_dir: dir with tap cli. By default it will be used from /tmp/.
+            context: context object that will store created applications. It is used later to perform a cleanup.
+            app_dir: path to the gzipped application
+            tap_cli: tap client, that will be used to push the app.
             client: The Http client to use. If None, default (admin via console)
-                    will be used.
+                    will be used. It will be used to verify if the app was pushed
 
-        Returns:
-            Created application object
+            Returns:
+                Created application object
         """
-        # Generate a name for the application
-        name = generate_test_object_name(short=True) if name is None else name
-        # Read the manifest and modify it with name, services and envs
-        manifest_path = os.path.normpath(os.path.join(source_directory,
-                                                      cls.MANIFEST_NAME))
-        with open(manifest_path, "r") as f:
-            manifest = json.load(f)
-
-        manifest = cls.update_manifest(manifest, app_name=name,
-                                       bound_services=bound_services, env=env)
-
-        with open(manifest_path, "w") as f:
-            json.dump(manifest, f)
-
-        # Push the application
+        name = cls._read_app_name_from_manifest(app_dir)
+        tap_cli.login()
         try:
-            # Assume we are already logged in
-            TapCli(tap_dir).push(source_directory)
+            tap_cli.push(app_dir)
         except:
-            apps = Application.get_list(org_id, client)
+            apps = Application.get_list(client=client)
             application = next((app for app in apps if app.name == name), None)
             if application is not None:
                 application.cleanup()
             raise
 
-        # retrieve the application - check that push succeeded
-        application = cls._get_app(org_id, name, client)
-        context.apps.append(application)
-        return application
+        # Find the application and return it
+        apps = Application.get_list(client=client)
+        app = next((a for a in apps if a.name == name), None)
+        assert app is not None, "App {} has not been created on the platform".format(name)
 
-    def __eq__(self, other):
-        return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
-
-    def __hash__(self):
-        return hash((self.name, self.app_id))
-
-    def __lt__(self, other):
-        return self.app_id < other.app_id
-
-    def __repr__(self):
-        return "{0} (name={1}, app_id={2})".format(self.__class__.__name__, self.name, self.app_id)
+        # Wait for the application to receive id
+        app._ensure_has_id()
+        context.apps.append(app)
+        return app
 
     @property
     def is_stopped(self) -> bool:
-        """Returns true if application has stopped."""
-        return self._state.upper() == self.STATUS["stopped"]
+        """Returns True if application is stopped."""
+        return self._state.upper() == TapEntityState.STOPPED
 
     @property
     def is_running(self) -> bool:
-        """Returns true if any of the application instances are running."""
-        return self._state == self.STATUS["running"]
+        """Returns True if any of the application instances are running."""
+        return self._state == TapEntityState.RUNNING
 
-    def api_request(self, path: str, method: str="GET", scheme: str="http",
-                    hostname: str=None, data: dict=None, params: dict=None,
-                    body: dict=None, raw: bool=False):
+    @classmethod
+    def get(cls, app_id: str, client: HttpClient=None):
+        """Retrieves the application based on app id
+
+        Args:
+            id: id of the application to retrieve
+
+        Returns:
+            The application
+        """
+        if client is None:
+            client = cls._get_default_client()
+        response = api.get_application(app_id=app_id, client=client)
+        return cls._from_response(response, client)
+
+    @classmethod
+    def get_list(cls, client: HttpClient=None):
+        """Get list of applications from Console / service-catalog API
+
+        Args:
+            client: Http client to use
+        """
+        if client is None:
+            client = cls._get_default_client()
+        response = api.get_applications(client=client).json()
+        return cls._list_from_response(response, client)
+
+    def delete(self, client: HttpClient=None):
+        """ Deletes the application from TAP """
+        client = self._get_client(client)
+        api.delete_application(app_id=self.id, client=client)
+
+    def start(self, client: HttpClient=None):
+        """ Sends the start command to application """
+        client = self._get_client(client)
+        api.start_application(app_id=self.id, client=client)
+
+    def stop(self, client: HttpClient=None):
+        """ Sends the stop command to application """
+        client = self._get_client(client)
+        api.stop_application(app_id=self.id, client=client)
+
+    @retry(AssertionError, tries=30, delay=2)
+    def ensure_running(self):
+        """Waits for the application to start for a given number of tries.
+
+        If the application hasn't started, assertion kicks in
+        """
+        self._refresh()
+        assert self.is_running is True, "App {} is not started. App's state: {}".format(self.name, self._state)
+
+    @retry(AssertionError, tries=30, delay=2)
+    def ensure_stopped(self):
+        """Waits for the application to stop for a given number of tries.
+
+        If the application hasn't stopped, assertion kicks in
+        """
+        self._refresh()
+        assert self.is_stopped is True, "App {} is not stopped. App's state: {}".format(self.name, self._state)
+
+    def api_request(self, path: str, method: str="GET", scheme: str="http", hostname: str=None, data: dict=None,
+                    params: dict=None, body: dict=None, raw: bool=False):
         """Send a request to application api
 
         Args:
@@ -225,7 +207,7 @@ class Application(object):
             Response to the request
         """
         hostname = hostname or self.urls[0]
-        request = self.request_session.prepare_request(requests.Request(
+        request = self._request_session.prepare_request(requests.Request(
             method=method.upper(),
             url="{}://{}/{}".format(scheme, hostname, path),
             params=params,
@@ -233,7 +215,7 @@ class Application(object):
             json=body
         ))
         log_http_request(request, "")
-        response = self.request_session.send(request)
+        response = self._request_session.send(request)
         log_http_response(response)
         if raw is True:
             return response
@@ -244,108 +226,39 @@ class Application(object):
         except ValueError:
             return response.text
 
-    @staticmethod
-    def _get_details_from_response(response: dict) -> dict:
-        """Truncates the response to interesting attributes and returns it
-
-        Returns:
-            Truncated response of interesting attributes
-        """
-        return {
-            "command": response["command"],
-            "detected_buildpack": response["detected_buildpack"],
-            "disk_quota": response["disk_quota"],
-            "domains": sorted(["{}.{}".format(item["host"], item["domain"]["name"]) for item in response["routes"]]),
-            "environment_json": response["environment_json"],
-            "instances": response["instances"],
-            "memory": response["memory"],
-            "package_updated_at": response["package_updated_at"],
-            "running_instances": response["running_instances"],
-            "service_names": sorted([service["name"] for service in response["services"]])
-        }
-
-    @staticmethod
-    def _get_default_client():
-        """Retrieves the default Http Client from configuration.
-
-        Returns:
-            Default Http Client (admin for console)
-        """
-        configuration = ConsoleConfigurationProvider.get()
-        return HttpClientFactory.get(configuration)
-
-    # -------------------------------- platform api -------------------------------- #
+    @classmethod
+    def _from_response(cls, response: dict, client: HttpClient):
+        return cls(app_id=response["id"], name=response["name"], bindings=response["bindings"],
+                   image_type=response["imageType"], state=response["state"], replication=response["replication"],
+                   running_instances=response["running_instances"], urls=response["urls"], client=client)
 
     @classmethod
-    def get_list(cls, org_id: str=None, client: HttpClient=None):
-        """Get list of applications from Console / service-catalog API
+    def _read_app_name_from_manifest(cls, app_dir: str):
+        """Retrieves the application name assuming there is a manifest.json file
 
-        Args:
-            org_id: Organization id from which the application will be listed
-            client: Http client to use
-        """
-        if client is None:
-            client = cls._get_default_client()
-        response = api_service.get_applications(client=client,
-                                                org_id=org_id).json()
-        applications = []
-        for app in response:
-            application = cls(name=app["name"], app_id=app["id"],
-                              org_id=app.get("org_id"), state=app["state"], bindings=app["bindings"],
-                              urls=app["urls"], instances=(app["running_instances"]),
-                              client=client)
-            applications.append(application)
-        return applications
-
-    def get(self) -> dict:
-        """Returns the details of the uploaded application.
+        Arguments:
+            app_dir: Path to the gzipped application. In this same directory
+                     there should be a manifest.json file
 
         Returns:
-            Application details
+            The application name
         """
-        response = api_service.get_application(self.app_id, self._client)
-        return self._get_details_from_response(response)
+        manifest_path = os.path.join(os.path.dirname(app_dir), cls.MANIFEST_NAME)
+        with open(manifest_path, 'r') as file:
+            manifest = json.loads(file.read())
+        return manifest['name']
 
-    def delete(self):
-        """Deletes the application from tap
-        """
-        api_service.delete_application(self.app_id, self._client)
-
-    def cleanup(self):
-        self.delete()
-
-    def api_start(self):
-        """Sends the start command to application
-        """
-        api_service.start_application(self.app_id, self._client)
-
-    def api_stop(self):
-        """Sends the stop command to application
-        """
-        api_service.stop_application(self.app_id, self._client)
-
-    def _update(self):
-        """Updates the state of the application. If the application is
-        not present, assertion kicks in
-        """
-        application = self._get_app(self.org_id, self.name)
-        self._state = application._state
-        self.urls = application.urls
+    def _refresh(self):
+        """ Updates the state of the application. If the application is not present, assertion kicks in """
+        apps = self.get_list()
+        app = next((a for a in apps if a.name == self.name), None)
+        assert app is not None, "Cannot find application {}".format(self.name)
+        for attr_name in self._REFRESH_ATTRIBUTES:
+            new_value = getattr(app, attr_name)
+            setattr(self, attr_name, new_value)
 
     @retry(AssertionError, tries=30, delay=2)
-    def ensure_running(self):
-        """Waits for the application to start for a given ammount of tries.
-
-        If the application hasn't started, assertion kicks in
-        """
-        self._update()
-        assert self.is_running is True, "App is not started"
-
-    @retry(AssertionError, tries=30, delay=2)
-    def ensure_stopped(self):
-        """Waits for the application to stop for a given ammount of tries.
-
-        If the application hasn't stopped, assertion kicks in
-        """
-        self._update()
-        assert self.is_stopped is True, "App is not stopped"
+    def _ensure_has_id(self):
+        """ Waits for the application to receive an id. If no id is found, assertion is raised """
+        self._refresh()
+        assert self.id != "", "App {} hasn't received id in 60s. State: {}".format(self.name, format(self._state))

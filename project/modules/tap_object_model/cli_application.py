@@ -22,7 +22,7 @@ from retry import retry
 from modules.constants import HttpStatus
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
-from modules.tap_object_model.k8s_application import K8sApplication
+from modules.tap_object_model import Application
 from modules.test_names import generate_test_object_name
 
 
@@ -45,7 +45,7 @@ class CliApplication:
             'name': name,
             'type': app_type
         }
-        K8sApplication.update_manifest(manifest_path, manifest_params)
+        Application.update_manifest(manifest_path, manifest_params)
         shutil.copyfile(manifest_path, os.path.join(target_directory, "manifest.json"))
 
     @classmethod

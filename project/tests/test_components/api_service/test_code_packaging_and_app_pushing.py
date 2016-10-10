@@ -20,7 +20,7 @@ from modules.constants import TapComponent as TAP, Urls, TapApplicationType, Tap
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority, incremental
 from modules.tap_logger import step
-from modules.tap_object_model.k8s_application import K8sApplication
+from modules.tap_object_model.application import Application
 from modules.test_names import generate_test_object_name
 
 logged_components = (TAP.api_service, TAP.catalog)
@@ -42,15 +42,16 @@ class TestCodePackagingAndAppPushing:
         'type': TapApplicationType.PYTHON27
     }
 
-    def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
+    @pytest.mark.bugs("DPNG-8751 Adjust sample-python-app to TAP NG")
+    def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path, tap_cli):
         step("Change manifest.json params")
-        K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
+        Application.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
         step("Push application")
-        self.__class__.app = K8sApplication.push(class_context, sample_app_path, sample_manifest_path)
+        self.__class__.app = Application.push(class_context, app_dir=sample_app_path, tap_cli=tap_cli)
         step("Ensure application is running")
         self.app.ensure_running()
         step("Get application")
-        app = K8sApplication.get(self.app.id)
+        app = Application.get(app_id=self.app.id)
         step("Check application parameters")
         assert app.name == self.APP_NAME, "Application has incorrect name"
         assert app.state == TapEntityState.RUNNING, "Application is not running"
@@ -61,10 +62,10 @@ class TestCodePackagingAndAppPushing:
         step("Update app state")
         catalog_api.update_instance(instance_id=self.app.id, field_name="state", value=TapEntityState.FAILURE)
         step("Check app state")
-        app = K8sApplication.get(self.app.id)
+        app = Application.get(app_id=self.app.id)
         assert app.state == TapEntityState.FAILURE, "Application is not in the expected state"
         step("Delete app")
         self.app.delete()
         step("Check if app is removed")
-        apps = K8sApplication.get_list()
+        apps = Application.get_list()
         assert self.app not in apps

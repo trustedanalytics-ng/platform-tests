@@ -69,10 +69,10 @@ class TestTapApp:
         step("Check the application is running")
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
         step("Stop the application and check that it is stopped")
-        test_app.api_stop(client=client)
+        test_app.stop(client=client)
         assertions.assert_equal_with_retry(False, test_app.cf_api_app_is_running)
         step("Start the application and check that it has started")
-        test_app.api_start(client=client)
+        test_app.start(client=client)
         assertions.assert_equal_with_retry(True, test_app.cf_api_app_is_running)
         step("Delete the application and check that it doesn't exist")
         test_app.api_delete(client=client)
@@ -126,10 +126,10 @@ class TestTapApp:
                                        roles=User.SPACE_ROLES["manager"])
         step("Check that manager cannot stop app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_stop, client=space_manager_client)
+                                                test_app.stop, client=space_manager_client)
         step("Check that manager cannot start app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                                test_app.api_start, client=space_manager_client)
+                                                test_app.start, client=space_manager_client)
         step("Check that manager cannot delete app")
         assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
                                                 test_app.api_delete, client=space_manager_client)

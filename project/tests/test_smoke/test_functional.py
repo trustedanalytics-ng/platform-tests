@@ -192,8 +192,7 @@ def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, 
                                                               admin_user):
     """Connect to Atk from Jupyter using Default Atk Client"""
     step("Get atk app from core space")
-    atk_app = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
-                    if app.name == "atk"), None)
+    atk_app = next((app for app in Application.get_list() if app.name == "atk"), None)
     if atk_app is None:
         raise AssertionError("Atk app not found in core space")
     atk_url = atk_app.urls[0]

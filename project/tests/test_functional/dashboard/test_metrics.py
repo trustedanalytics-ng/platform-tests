@@ -50,11 +50,11 @@ class TestMetrics(object):
         tested_app = next((x for x in self.org_apps if x.name == app_name), None)
         assert tested_app is not None, "The application does not exist"
         tested_app.ensure_started()
-        tested_app.api_stop()
+        tested_app.stop()
         tested_app.ensure_stopped()
         assert_raises_http_exception(UserManagementHttpStatus.CODE_NOT_FOUND, UserManagementHttpStatus.MSG_NOT_FOUND,
                                      http_request, *args)
-        tested_app.api_start()
+        tested_app.start()
         tested_app.ensure_started()
         assert_returns_http_success_with_retry(http_request, *args)
 

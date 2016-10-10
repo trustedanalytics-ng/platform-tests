@@ -19,10 +19,10 @@ import tarfile
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapMessage
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapMessage, TapEntityState
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import CliApplication, K8sApplication
+from modules.tap_object_model import CliApplication
 from modules.test_names import generate_test_object_name
 
 logged_components = (TAP.api_service,)
@@ -98,7 +98,7 @@ class TestPythonCliApp:
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")
-        application.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        application.ensure_app_state(state=TapEntityState.RUNNING)
         step("Ensure app is ready")
         application.ensure_app_is_ready()
         return application
@@ -121,7 +121,7 @@ class TestPythonCliApp:
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")
-        application.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        application.ensure_app_state(state=TapEntityState.RUNNING)
         step("Ensure app is ready")
         application.ensure_app_is_ready()
 
@@ -134,18 +134,18 @@ class TestPythonCliApp:
         step("Stop app")
         sample_cli_app.stop()
         step("Ensure app is stopped")
-        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_STOPPED)
+        sample_cli_app.ensure_app_state(state=TapEntityState.STOPPED)
         step("Start app")
         sample_cli_app.start()
         step("Ensure app is running")
-        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
 
     def test_scale_app(self, sample_cli_app):
         scaled_instances = '3'
         step("Scale app to {} instance(s)".format(scaled_instances))
         sample_cli_app.scale(scale_app_instances=scaled_instances)
         step("Ensure app is running")
-        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_RUNNING)
+        sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
         step("Check there are/is {} instance(s)".format(scaled_instances))
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
@@ -153,8 +153,8 @@ class TestPythonCliApp:
         step("Scale app to {} instance(s)".format(scaled_instances))
         sample_cli_app.scale(scale_app_instances=scaled_instances)
         step("Ensure app is running")
-        sample_cli_app.ensure_app_state(state=K8sApplication.STATE_RUNNING)
-        step("Check there are/is() instance(s)".format(scaled_instances))
+        sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
+        step("Check there are/is {} instance(s)".format(scaled_instances))
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
     def test_check_app_logs(self, sample_cli_app):
