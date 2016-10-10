@@ -70,3 +70,7 @@ class PlanNotFoundException(Exception):
 
 class TapCliException(Exception):
     pass
+
+
+class ServiceInstanceCreationFailed(Exception):
+    pass

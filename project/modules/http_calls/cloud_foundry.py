@@ -169,19 +169,6 @@ def cf_api_get_space_routes(space_guid):
     )
 
 
-def cf_api_get_space_services(space_guid, label=None):
-    """GET /v2/spaces/{space_guid}/services"""
-    params = {}
-    if label is not None:
-        params["q"] = "label:{}".format(label)
-    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
-        method=HttpMethod.GET,
-        path="spaces/{}/services".format(space_guid),
-        params=params,
-        msg="CF: get space services",
-    )
-
-
 # -------------------------------------------------- service --------------------------------------------------------- #
 
 
@@ -194,19 +181,6 @@ def cf_api_get_services(service_name=None):
 
 
 # -------------------------------------------------- service plans --------------------------------------------------- #
-
-
-def cf_api_get_service_plans(service_guid=None):
-    """GET /v2/service_plans"""
-    params = {}
-    if service_guid is not None:
-        params["q"] = "service_guid:{}".format(service_guid)
-    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
-        method=HttpMethod.GET,
-        path="service_plans",
-        params=params,
-        msg="CF: get service plans",
-    )
 
 
 def cf_api_update_service_access(service_guid, enable_service=True):
@@ -239,17 +213,6 @@ def cf_api_delete_user(user_guid):
 # ------------------------------------------------ service instances ------------------------------------------------- #
 
 
-def cf_api_create_service_instance(instance_name, space_guid, service_plan_guid):
-    """POST /v2/service_instances"""
-    return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
-        method=HttpMethod.POST,
-        path="service_instances",
-        params={"accepts_incomplete": "true"},
-        body={"name": instance_name, "space_guid": space_guid, "service_plan_guid": service_plan_guid},
-        msg="CF: create service instance",
-    )
-
-
 def cf_api_create_user_provided_service_instance(instance_name, space_guid, credentials):
     """POST /v2/user_provided_service_instances"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
@@ -263,11 +226,6 @@ def cf_api_create_user_provided_service_instance(instance_name, space_guid, cred
 def cf_api_get_user_provided_service_instances():
     """GET /v2/user_provided_service_instances"""
     return __get_all_pages("user_provided_service_instances", log_msg="CF: get upsi")
-
-
-def cf_api_get_service_instances():
-    """GET /v2/service_instances"""
-    return __get_all_pages("service_instances", log_msg="CF: get service instances")
 
 
 # ---------------------------------------------------- buildpacks ---------------------------------------------------- #

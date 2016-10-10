@@ -162,15 +162,14 @@ def test_create_and_delete_marketplace_service_instances(context, test_marketpla
     service_type = next((s for s in test_marketplace if s.label == service_label), None)
     if service_type is None:
         raise ServiceTypeNotFoundException("ServiceType for {} not found in marketplace".format(service_label))
-    plan_guid = service_type.get_service_plan_guid(plan_name)
-    instance = ServiceInstance.api_create(context=context, service_type_guid=service_type.guid,
-                                          service_label=service_label, service_plan_guid=plan_guid)
-    step("Check that the instance was created")
-    instance.ensure_created()
+    plan_id = service_type.get_service_plan_id(plan_name)
+    instance = ServiceInstance.create(context=context, plan_id=plan_id, offering_id=service_type.guid)
+    step("Check that the instance is running")
+    instance.ensure_running()
     step("Delete the instance")
-    instance.api_delete()
+    instance.delete()
     step("Check that the instance was deleted")
-    assertions.assert_not_in_with_retry(instance, ServiceInstance.api_get_list)
+    assertions.assert_not_in_with_retry(instance, ServiceInstance.get_list)
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")

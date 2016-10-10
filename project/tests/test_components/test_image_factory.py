@@ -49,7 +49,7 @@ class TestImageFactory:
         log_fixture("CATALOG: Wait for the image to be in state {}".format(TapEntityState.RUNNING))
         catalog_image.ensure_in_state(TapEntityState.READY)
 
-        log_fixture("CATALOG: Check tha the image is on the image list")
+        log_fixture("CATALOG: Check that the image is on the image list")
         catalog_images = CatalogImage.get_list()
         assert catalog_image in catalog_images
         return catalog_image

@@ -54,7 +54,7 @@ class Application(ApiModelSuperclass):
             client: The Http client to use. If None, Http client from default
                     configuration will be used
         """
-        super().__init__(item_id=app_id, client=client)
+        super().__init__(object_id=app_id, client=client)
         self.name = name
         self.bindings = bindings
         self.image_type = image_type

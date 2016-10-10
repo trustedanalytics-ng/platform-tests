@@ -14,47 +14,30 @@
 # limitations under the License.
 #
 
-import functools
-
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client import HttpClientFactory, HttpClient
 
 
-@functools.total_ordering
 class ApiModelSuperclass(object):
     """
     Base class for all models which support both api-service and console.
     """
-    _COMPARABLE_ATTRIBUTES = []
 
-    def __init__(self, *, item_id: str, client: HttpClient=None):
-        self.id = item_id
+    def __init__(self, *, object_id: str, client: HttpClient=None):
+        self.id = object_id
         self._client = client
         if self._client is None:
             self._client = self._get_default_client()
-
-    def __eq__(self, other):
-        return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
-
-    def __lt__(self, other):
-        raise self.id < other.id
-
-    def __hash__(self):
-        return hash(tuple(getattr(self, a) for a in self._COMPARABLE_ATTRIBUTES))
-
-    def __repr__(self):
-        return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
     def _from_response(cls, response: dict, client: HttpClient):
         raise NotImplemented
 
     @classmethod
-    def _list_from_response(cls, response: list, client: HttpClient) -> list:
+    def _list_from_response(cls, response: list, client: HttpClient):
         items = []
         for item in response:
-            instance = cls._from_response(item, client)
-            items.append(instance)
+            items.append(cls._from_response(item, client))
         return items
 
     @classmethod
@@ -63,11 +46,5 @@ class ApiModelSuperclass(object):
 
     def _get_client(self, client):
         if client is None:
-            return self._client
+            client = self._client
         return client
-
-    def delete(self):
-        raise NotImplemented
-
-    def cleanup(self):
-        self.delete()

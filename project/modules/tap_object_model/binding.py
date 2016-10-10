@@ -42,7 +42,7 @@ class Binding(object):
     @classmethod
     def get_list(cls, app_guid, client=None):
         client = cls._get_client(client)
-        response = api_service.get_app_bindings(app_guid, client)
+        response = api_service.get_app_bindings(app_id=app_guid, client=client)
         bindings = []
         # Response is None when there are no bindings
         if response is not None:
@@ -65,7 +65,7 @@ class Binding(object):
     @classmethod
     def create(cls, context, app_guid, service_instance_guid, client=None):
         client = cls._get_client(client)
-        response = api_service.bind(service_instance_guid, app_guid, client)
+        response = api_service.bind(service_instance_guid=service_instance_guid, app_id=app_guid, client=client)
         assert response["message"] == "success"
         binding = cls.find_on_list(app_guid, service_instance_guid, client)
         context.bindings.append(binding)
@@ -73,7 +73,7 @@ class Binding(object):
 
     def delete(self, client=None):
         client = self._get_client(client)
-        api_service.unbind(self.app_guid, self.service_instance_guid, client)
+        api_service.unbind(app_id=self.app_guid, service_instance_guid=self.service_instance_guid, client=client)
 
     def cleanup(self):
         self.delete()

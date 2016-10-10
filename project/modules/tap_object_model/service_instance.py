@@ -14,245 +14,120 @@
 # limitations under the License.
 #
 
-import functools
-
 from retry import retry
 
-from ..constants import ServiceLabels
-from ..exceptions import UnexpectedResponseError
-from ..http_calls import cloud_foundry as cf
-from ..http_calls.platform import app_launcher_helper as app_launcher, service_catalog, service_exposer
-from ..test_names import generate_test_object_name
+from modules.constants import TapEntityState
+from modules.http_client import HttpClient
+from modules.exceptions import ServiceInstanceCreationFailed
+import modules.http_calls.platform.api_service as api
+from modules.test_names import generate_test_object_name
+from ._api_model_superclass import ApiModelSuperclass
+from ._tap_object_superclass import TapObjectSuperclass
 
 
-class ServiceInstanceLastOperationState(object):
-    STARTING = "STARTING"
-    FAILURE = "FAILURE"
-    RUNNING = "RUNNING"
+class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
+    """
+    ServiceInstance represents a service instance on TAP.
+    The class uses 'console' or 'api-service' REST APIs.
+    """
 
+    _COMPARABLE_ATTRIBUTES = ["id", "name", "plan_id", "state"]
+    PLAN_ID_METADATA_KEY = "PLAN_ID"
 
-class ServiceInstanceCreationFailed(Exception):
-    pass
-
-
-@functools.total_ordering
-class ServiceInstance(object):
-    COMPARABLE_ATTRS = ["guid", "name", "service_label"]
-
-    def __init__(self, guid, name, service_label, bound_apps=None, credentials=None, state=None,
-                 dashboard_url=None, tags=None):
-        self.guid = guid
+    def __init__(self, *, service_id: str, name: str, offering_id: str, plan_id: str, bindings: list, state: str,
+                 client: HttpClient=None):
+        super().__init__(object_id=service_id, client=client)
         self.name = name
-        self.service_label = service_label
-        self.bound_apps = bound_apps or []
-        self.credentials = credentials
+        self.offering_id = offering_id
+        self.plan_id = plan_id
         self.state = state
-        self.tags = tags
-        self.dashboard_url = dashboard_url
-
-    def __eq__(self, other):
-        return all((getattr(self, a) == getattr(other, a) for a in self.COMPARABLE_ATTRS))
-
-    def __lt__(self, other):
-        return self.guid < other.guid
+        self.bindings = [] if bindings is None else bindings
 
     def __repr__(self):
-        return "{} (name={}, guid={})".format(self.__class__.__name__, self.name, self.guid)
-
-    def __hash__(self):
-        return hash(tuple(getattr(self, a) for a in self.COMPARABLE_ATTRS))
-
-    @property
-    def last_operation_type(self):
-        return self.last_operation["type"]
-
-    @property
-    def last_operation_state(self):
-        return self.last_operation["state"]
+        return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
 
     @classmethod
-    @retry(AssertionError, tries=100, delay=3)
-    def _get_instance_with_retry(cls, instance_name, service_label):
-        """Wait for created instance and return it"""
-        instance_list = cls.api_get_list()
-        instance = next((i for i in instance_list if i.name == instance_name), None)
-        if instance is None:
-            raise AssertionError("Instance {} was not created".format(service_label))
-        return instance
-
-    # ----------------------------------------- Platform API ----------------------------------------- #
-
-    @classmethod
-    def api_create_with_plan_name(cls, context, org_guid, service_label, name=None, service_plan_name=None,
-                                  params=None, client=None):
-        """
-        Create service instance using using plan name - first make call to retrieve plan guid.
-        :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
-        """
-        service_plan_guid = cls._retrieve_service_plan_guid(service_label, service_plan_name, client)
-        return cls.api_create(context, org_guid, service_label, name, service_plan_guid, params, client, )
-
-    @classmethod
-    def api_create(cls, context, service_label, service_type_guid, name=None, service_plan_guid=None,
-                   params=None, client=None):
-        """
-        Create service instance using using plan guid.
-        :return: service instance with retry for long creating instances (tries 100 times with 3s wait).
-        """
-        name = generate_test_object_name(short=True) if name is None else name
-        try:
-            response = service_catalog.api_create_service_instance(name=name, service_plan_guid=service_plan_guid,
-                                                                   service_type_guid=service_type_guid, params=params,
-                                                                   client=client)
-            instance = cls(guid=response["id"], name=response["name"], service_label=service_label)
-        except UnexpectedResponseError as e:
-            if e.status == 504 and "Gateway Timeout" in e.error_message:
-                instance = cls._get_instance_with_retry(name, service_label)
-            else:
-                raise
-        # The functionality below changed in new TAP
-        # instance_summary = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
-        #                                                                      client=client)
-        # instance.tags = next(filter(lambda s: s["label"] == instance.service_label, instance_summary))["tags"]
+    def create(cls, context, *, offering_id: str, plan_id: str, name: str=None,
+               params: dict=None, client: HttpClient=None):
+        if name is None:
+            name = generate_test_object_name(short=True)
+        if client is None:
+            client = cls._get_default_client()
+        response = api.create_service(name=name, service_plan_id=plan_id, params=params,
+                                      offering_id=offering_id, client=client)
+        instance = cls._from_response(response, client)
         context.service_instances.append(instance)
         return instance
 
     @classmethod
-    def _retrieve_service_plan_guid(cls, service_label, service_plan_name, client=None):
-        response = service_catalog.api_get_service_plans(service_type_label=service_label, client=client)
-        service_plan_data = next((item for item in response if item["entity"]["name"] == service_plan_name), None)
-        if service_plan_data is None:
-            raise ValueError("No such plan {} for service {}".format(service_plan_name, service_label))
-        return service_plan_data["metadata"]["guid"]
+    def create_with_name(cls, context, *, offering_label: str, name: str=None, plan_name: str=None, params: dict=None,
+                         client: HttpClient=None):
+        """
+        Create service instance using offering label and plan name.
+        First, make call to retrieve offering id and plan id.
+        """
+        offering_id, plan_id = cls._get_offering_id_and_plan_id_by_names(offering_label=offering_label,
+                                                                         plan_name=plan_name)
+        return cls.create(context, offering_id=offering_id, plan_id=plan_id, name=name, params=params, client=client)
 
     @classmethod
-    def api_get_list(cls, offering_id=None, client=None):
-        instances = []
-        response = service_catalog.api_get_service_instances(offering_id, client=client)
-        for data in response:
-            instance = cls(guid=data["id"], name=data["name"], service_label=data["serviceName"],
-                           bound_apps=data["bindings"], state=data["state"],
-                           dashboard_url=data.get("dashboard_url"))
-            instances.append(instance)
-        return instances
+    def get_list(cls, *, name: str=None, offering_id: str=None, plan_name: str=None, limit: int=None, skip: int=None,
+                 client: HttpClient=None) -> list:
+        response = api.get_services(name=name, offering_id=offering_id, plan_name=plan_name, limit=limit, skip=skip,
+                                    client=client)
+        return cls._list_from_response(response, client)
 
-    # The functionality changed in new TAP
-    # @classmethod
-    # def api_get_keys(cls, space_guid, client=None):
-    #     """Return a dict mapping instances to their keys, retrieved from /rest/service_instances/summary."""
-    #     keys = {}
-    #     response = service_catalog.api_get_service_instances_summary(space_guid=space_guid, service_keys=True,
-    #                                                                  client=client)
-    #     for service_data in response:
-    #         for instance_data in service_data.get("instances", []):
-    #             instance = cls(guid=instance_data["guid"], name=instance_data["name"], space_guid=space_guid,
-    #                            service_label=service_data["label"])
-    #             service_keys = []
-    #             for key_data in instance_data["service_keys"]:
-    #                 service_keys.append(ServiceKey(guid=key_data["guid"], name=key_data["name"],
-    #                                                credentials=key_data["credentials"],
-    #                                                service_instance_guid=key_data["service_instance_guid"]))
-    #             keys[instance] = service_keys
-    #     return keys
-
-    def api_get_credentials(self, client=None):
-        """Return hostname, login, password from /rest/tools/service_instances"""
-        response = service_exposer.api_tools_service_instances(service_label=self.service_label,
-                                                               space_guid=self.space_guid, client=client)
-        return {
-            "hostname": response[self.name]["hostname"],
-            "login": response[self.name]["login"],
-            "password": response[self.name]["password"]
-        }
-
-    def api_delete(self, client=None):
-        service_catalog.api_delete_service_instance(self.guid, client=client)
-
-    def cleanup(self):
-        self.api_delete()
-
-    @classmethod
-    def api_get_data_science_service_instances(cls, space_guid, org_guid, service_label):
-        return service_exposer.api_tools_service_instances(service_label, space_guid, org_guid)
-
-    @retry(AssertionError, tries=180, delay=5)
+    @retry(AssertionError, tries=6, delay=5)
     def ensure_created(self):
-        instances = ServiceInstance.api_get_list()
-        updated_instance = next((i for i in instances if i.guid == self.guid), None)
-        assert updated_instance is not None, "Instance of {} not found on the list".format(self.name)
-        self.state = updated_instance.state
-        if self.state == ServiceInstanceLastOperationState.FAILURE:
+        self._refresh()
+
+    @retry(AssertionError, tries=5, delay=5)
+    def ensure_running(self):
+        this_instance = self._refresh()
+        self.state = this_instance.state
+        if self.state == TapEntityState.FAILURE:
             raise ServiceInstanceCreationFailed()
-        assert self.state == ServiceInstanceLastOperationState.RUNNING,\
-            "Instance of {} not created - last operation: {}".format(self.name, self.state)
+        assert self.state == TapEntityState.RUNNING, "Instance state is {}, expected {}".format(self.state,
+                                                                                                TapEntityState.RUNNING)
 
-    # ----------------------------------------- CF API ----------------------------------------- #
+    def delete(self):
+        api.delete_service(service_id=self.id, client=self._client)
 
     @classmethod
-    def cf_api_create(cls, space_guid, service_label, name=None, service_plan_name=None, service_plan_guid=None):
+    def _from_response(cls, response, client=None):
+        plan_id = next((m["value"] for m in response["metadata"] if m["key"] == cls.PLAN_ID_METADATA_KEY), None)
+        assert plan_id is not None, "No service instance plan id found in the response"
+        return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["classId"],
+                   bindings=response["bindings"], state=response["state"], name=response["name"], client=client)
+
+    def _refresh(self):
+        instances = self.get_list()
+        this_instance = next((i for i in instances if i.id == self.id), None)
+        assert this_instance is not None, "Instance {} not found on the list".format(self.name)
+        return this_instance
+
+    @classmethod
+    def _get_offering_id_and_plan_id_by_names(cls, offering_label: str, plan_name: str, client: HttpClient=None) -> tuple:
         """
-        Service instance can be either created passing:
-        - service_plan_guid - one api call is used, or
-        - service_label and service_plan_name - 2 additional calls are made to retrieve service_plan_guid
+        From the list of offerings, retrieve offering_id by label and plan_id by name.
         """
-        name = generate_test_object_name() if name is None else name
-        if all([x is None for x in (service_label, service_plan_name, service_plan_guid)]):
-            raise ValueError("service_plan_guid, or service_label and service_plan_name have to be supplied")
-        if service_plan_guid is None:
-            # retrieve plan guid based on service name and plan name
-            response = cf.cf_api_get_space_services(space_guid=space_guid, label=service_label)
-            service_guid = response["resources"][0]["metadata"]["guid"]
-            response = cf.cf_api_get_service_plans(service_guid)
-            sp_data = next((d for d in response["resources"] if d["entity"]["name"] == service_plan_name), None)
-            if sp_data is None:
-                raise ValueError("No such plan {} for service {}".format(service_plan_name, service_label))
-        response = cf.cf_api_create_service_instance(instance_name=name, space_guid=space_guid,
-                                                     service_plan_guid=service_plan_guid)
-        return cls(guid=response["metadata"]["guid"], service_label=service_label, name=name, space_guid=space_guid)
+        response = api.get_catalog(client=client)
 
-    @classmethod
-    def cf_api_get_list(cls):
-        si_data = cf.cf_api_get_service_instances()
-        services = []
-        for data in si_data:
-            services.append(cls(guid=data["metadata"]["guid"], name=data["entity"]["name"], service_label=None,
-                                space_guid=data["entity"]["space_guid"]))
-        return services
+        # find offering in the response
+        offering_data = next((i for i in response if i["entity"]["label"] == offering_label), None)
+        assert offering_data is not None, "No such offering {}".format(offering_label)
 
-    @classmethod
-    def from_cf_api_space_summary_response(cls, response: dict, space_guid: str) -> list:
-        service_instances = []
-        for instance_data in response["services"]:
-            try:
-                service_label = instance_data["service_plan"]["service"]["label"]
-            except KeyError:
-                service_label = None
-            service_instance = cls(guid=instance_data["guid"], name=instance_data["name"], space_guid=space_guid,
-                                   service_label=service_label)
-            service_instances.append(service_instance)
-        return service_instances
+        # find plan in offering data
+        plan_data = next((i for i in offering_data["entity"]["service_plans"] if i["entity"]["name"] == plan_name), None)
+        assert plan_data is not None, "No such plan {} for offering {}".format(plan_name, offering_label)
+
+        offering_id = offering_data["metadata"]["guid"]
+        plan_id = plan_data["metadata"]["guid"]
+        return offering_id, plan_id
 
 
 class AtkInstance(ServiceInstance):
-    started_status = "STARTED"
-
-    def __init__(self, guid, name, space_guid, org_guid=None, scoring_engine=None, state=None, creator_guid=None,
-                 creator_name=None):
-        super().__init__(guid, name, space_guid, ServiceLabels.ATK)
-        self.state = state.upper() if state is not None else state
-        self.scoring_engine = scoring_engine
-        self.org_guid = org_guid
-        self.creator_guid = creator_guid
-        self.creator_name = creator_name
 
     @classmethod
     def api_get_list_from_data_science_atk(cls, org_guid, client=None):
-        response = app_launcher.api_get_atk_instances(org_guid, client=client)
-        atk_instances = []
-        if response["instances"] is not None:
-            for data in response["instances"]:
-                instance = cls(guid=data["service_guid"], name=data["name"], space_guid=None, org_guid=org_guid,
-                               state=data["state"], creator_guid=data["metadata"].get("creator_guid"),
-                               creator_name=data["metadata"].get("creator_name"))
-                atk_instances.append(instance)
-        return atk_instances
+        raise NotImplemented("Not sure if/how it will be implemented for new TAP")

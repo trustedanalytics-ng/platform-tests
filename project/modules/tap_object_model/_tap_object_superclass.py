@@ -29,6 +29,9 @@ class TapObjectSuperclass(object):
             raise NotImplementedError("_COMPARABLE_ATTRIBUTES not implemented for class {}".format(self.__class__.__name__))
         return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
 
+    def __hash__(self):
+        return hash(tuple(getattr(self, a) for a in self._COMPARABLE_ATTRIBUTES))
+
     def __lt__(self, other):
         return self.id < other.id
 

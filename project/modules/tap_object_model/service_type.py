@@ -19,7 +19,7 @@ import json
 
 from ..exceptions import PlanNotFoundException
 from ..http_calls import cloud_foundry as cf, kubernetes_broker
-from ..http_calls.platform import service_catalog
+from ..http_calls.platform import api_service as api
 from ..test_names import generate_test_object_name
 
 
@@ -70,12 +70,12 @@ class ServiceType(object):
 
     @classmethod
     def api_get_catalog(cls, client=None):
-        response = service_catalog.api_get_catalog(client=client)
+        response = api.get_catalog(client=client)
         return [cls._from_details(data) for data in response]
 
     @classmethod
     def api_get(cls, space_guid, service_guid, client=None):
-        response = service_catalog.api_get_service(service_guid=service_guid, client=client)
+        response = api.get_service(service_id=service_guid, client=client)
         return cls._from_details(response, space_guid)
 
     @classmethod
@@ -110,7 +110,7 @@ class ServiceType(object):
     def cleanup(self):
         self.api_delete()
 
-    def get_service_plan_guid(self, plan_name):
+    def get_service_plan_id(self, plan_name):
         plan_guid = next((plan["guid"] for plan in self.service_plans if plan["name"] == plan_name), None)
         if plan_guid is None:
             raise PlanNotFoundException("Plan {} not found".format(plan_name))

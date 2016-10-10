@@ -25,200 +25,28 @@ def _get_client():
     return HttpClientFactory.get(configuration)
 
 
-def post(path):
-    """ POST /{path} """
-    response = _get_client().request(HttpMethod.POST,
-                                     path=path,
-                                     raw_response=True,
-                                     msg="API-SERVICE: post /{}".format(path))
-    return response
+# --------------------------------------- offerings --------------------------------------- #
 
 
-def put(path, body={}):
-    """ PUT /{path} """
-    response = _get_client().request(HttpMethod.PUT,
-                                     path=path,
-                                     body=body,
-                                     raw_response=True,
-                                     msg="API-SERVICE: put /{}".format(path))
-    return response
-
-
-def push_application(file_path, manifest_path):
-    """ POST /applications """
-    files = {"blob": (file_path, open(file_path, 'rb'), "multipart/form-data"),
-             "manifest": (manifest_path, open(manifest_path, 'rb'), "multipart/form-data")}
-
-    response = _get_client().request(HttpMethod.POST,
-                                     path="applications",
-                                     files=files,
-                                     raw_response=True,
-                                     msg="API-SERVICE: push application")
-    assert response.status_code == HttpStatus.CODE_ACCEPTED
-    return response
-
-
-def get_applications(org_id: str=None, client: HttpClient=None):
-    """Retrieves list of applications using REST call
-    GET /applications
-
-    Args:
-        client: HttpClient to use
-        org_id: Optional organization id
-
-    Returns:
-        Response containing list of apps.
-    """
-    if client is None:
-        client = _get_client()
-
-    query_params = {}
-    path = "applications"
-    if org_id is not None:
-        query_params["org_id"] = org_id
-
-    response = client.request(HttpMethod.GET,
-                              path=path,
-                              params=query_params,
-                              raw_response=True,
-                              msg="Get application list")
-    assert response.status_code == HttpStatus.CODE_OK
-    return response
-
-
-def get_application(app_id: str, client: HttpClient=None):
-    """Retrieves the application details using REST call
-    GET /applications/{app_id}
-
-    Args:
-        client: Http client to use
-        app_id: Id of the application
-
-    Returns:
-        Raw response to the call
-    """
-    if client is None:
-        client = _get_client()
-
-    path = "applications/{}".format(app_id)
-    response = client.request(HttpMethod.GET,
-                              path=path,
-                              raw_response=True,
-                              msg="Get application details")
-    assert response.status_code == HttpStatus.CODE_OK
-    return response
-
-
-def get_application_logs(app_id: str, client: HttpClient=None):
-    """Attempts to retrieve application logs using REST call
-    GET /logs/{app_id}
-
-    Args:
-        client: Http client to use
-        app_id: Id of the application
-
-    Returns:
-        Raw response to the call
-    """
-    if client is None:
-        client = _get_client()
-
-    path = "logs/{}".format(app_id)
-    response = client.request(HttpMethod.GET,
-                              path=path,
-                              raw_response=True,
-                              msg="Get application logs")
-    assert response.status_code == HttpStatus.CODE_OK
-    return response
-
-
-def delete_application(app_id: str, client: HttpClient=None):
-    """Deletes an application with provided id using REST call
-    DELETE /applications/{app_id}
-
-    Args:
-        client: HttpClient to use
-        app_id: Id of the application
-
-    Returns:
-        Raw response of the operation
-    """
-    if client is None:
-        client = _get_client()
-
-    response = client.request(HttpMethod.DELETE,
-                              path="applications/{}".format(app_id),
-                              msg="Delete application")
-    return response
-
-
-def scale_application(id, replicas):
-    """ PUT /applications/{id}/scale """
-    body = {"replicas": replicas}
-    path = "applications/{}/scale".format(id)
-    response = put(path, body)
-    return response
-
-
-def start_application(app_id: str, client: HttpClient=None):
-    """Attempts to start application with a provided client using REST call
-    PUT applications/{app_id}/start
-
-    Args:
-        client: Http client to use
-        app_id: Id of application to start
-
-    Returns:
-        Raw response to the request
-    """
-    if client is None:
-        client = _get_client()
-
-    path = "applications/{}/start".format(app_id)
-    response = client.request(HttpMethod.PUT,
-                              path=path,
-                              raw_response=True,
-                              msg="Start application")
-    assert response.status_code == HttpStatus.CODE_OK
-    return response
-
-
-def stop_application(app_id: str, client: HttpClient=None):
-    """Attempts to stop application with a provided client using REST call
-    PUT applications/{app_id}/stop
-
-    Args:
-        client: Http client to use
-        app_id: Id of application to stop
-
-    Returns:
-        Raw response to the request
-    """
-    if client is None:
-        client = _get_client()
-
-    path = "applications/{}/stop".format(app_id)
-    response = client.request(HttpMethod.PUT,
-                              path=path,
-                              raw_response=True,
-                              msg="Stop application")
-    assert response.status_code == HttpStatus.CODE_OK
-    return response
-
-
-def get_catalog(client: HttpClient):
+def get_catalog(*, client: HttpClient):
     """ GET /catalog """
+    # TODO will be changed to GET /offerings
+    if client is None:
+        client = _get_client()
     return client.request(HttpMethod.GET, path="catalog")
 
 
-def get_offering(client: HttpClient, offering_id):
-    """ GET /catalog/:offering_id """
-    return client.request(HttpMethod.GET, path="catalog/{}".format(offering_id))
+def get_offerings(*, client: HttpClient=None):
+    """ GET /offerings """
+    if client is None:
+        client = _get_client()
+    return client.request(HttpMethod.GET, path="offerings")
 
 
-def create_offering(client: HttpClient, template_body: dict, service_name: str, description: str, bindable: bool,
+def create_offering(*, client: HttpClient, template_body: dict, service_name: str, description: str, bindable: bool,
                     tags: list, plans: list):
     """ POST /offering """
+    # TODO will be changed to POST /offerings
     body = {
         "template": {
             "body": template_body,
@@ -233,48 +61,250 @@ def create_offering(client: HttpClient, template_body: dict, service_name: str, 
             "metadata": []
         }]
     }
+    if client is None:
+        client = _get_client()
     response = client.request(HttpMethod.POST, path="offering", body=body, raw_response=True)
     assert response.status_code == HttpStatus.CODE_CREATED
+    # TODO should return response.json()
     return response.json()
 
 
-def delete_offering(client: HttpClient, offering_id):
-    """ DELETE /catalog/:offering_id """
-    # TODO verify path, endpoint not documented
+def get_offering(*, client: HttpClient, offering_id):
+    """ GET /catalog/{offering_id} """
+    # TODO will be changed to GET /offerings/{offering_id}
+    if client is None:
+        client = _get_client()
+    return client.request(HttpMethod.GET, path="catalog/{}".format(offering_id))
+
+
+def delete_offering(*, client: HttpClient, offering_id):
+    """ DELETE /catalog/{offering_id} """
+    # TODO will be changed to GET /offerings/{offering_id}
+    if client is None:
+        client = _get_client()
     response = client.request(HttpMethod.DELETE, path="catalog/{}".format(offering_id), raw_response=True)
     assert response.status_code == HttpStatus.CODE_ACCEPTED
+    # TODO should return response.json()
     return response.json()
 
 
-def get_app_bindings(app_guid, client=None):
-    """GET /bindings/{app_guid}"""
+# --------------------------------------- applications --------------------------------------- #
+
+
+def create_application(*, file_path, manifest_path):
+    """ POST /applications """
+    files = {
+        "blob": (file_path, open(file_path, 'rb'), "multipart/form-data"),
+        "manifest": (manifest_path, open(manifest_path, 'rb'), "multipart/form-data")
+    }
+    response = _get_client().request(HttpMethod.POST, path="applications", files=files, raw_response=True,
+                                     msg="Create an application")
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
+    # TODO should return response.json()
+    return response
+
+
+def get_applications(*, org_id: str=None, client: HttpClient=None):
+    """ GET /applications
+
+    Args:
+        client: HttpClient to use
+        org_id: Optional organization id
+
+    Returns:
+        Response containing list of apps.
+    """
+    if client is None:
+        client = _get_client()
+
+    query_params = {}
+    if org_id is not None:
+        query_params["org_id"] = org_id
+
+    response = client.request(HttpMethod.GET, path="applications", params=query_params, raw_response=True,
+                              msg="List applications")
+    assert response.status_code == HttpStatus.CODE_OK
+    # TODO should return response.json()
+    return response
+
+
+def get_application(*, app_id: str, client: HttpClient=None):
+    """ GET /applications/{app_id}
+
+    Args:
+        client: Http client to use
+        app_id: Id of the application
+
+    Returns:
+        Raw response to the call
+    """
+    if client is None:
+        client = _get_client()
+    response = client.request(HttpMethod.GET, path="applications/{}".format(app_id), raw_response=True,
+                              msg="Get application")
+    assert response.status_code == HttpStatus.CODE_OK
+    # TODO should return response.json()
+    return response
+
+
+def delete_application(*, app_id: str, client: HttpClient=None):
+    """ DELETE /applications/{app_id}
+
+    Args:
+        client: HttpClient to use
+        app_id: Id of the application
+
+    Returns:
+        Raw response of the operation
+    """
+    if client is None:
+        client = _get_client()
+    return client.request(HttpMethod.DELETE, path="applications/{}".format(app_id), msg="Delete application")
+
+
+def get_application_logs(*, app_id: str, client: HttpClient=None):
+    # TODO will be changed to GET /applications/{app_id}/logs
+    """ GET /logs/{app_id}
+
+    Args:
+        client: Http client to use
+        app_id: Id of the application
+
+    Returns:
+        Raw response to the call
+    """
+    if client is None:
+        client = _get_client()
+    response = client.request(HttpMethod.GET, path="logs/{}".format(app_id), raw_response=True,
+                              msg="Get application logs")
+    assert response.status_code == HttpStatus.CODE_OK
+    # TODO should return response.json()
+    return response
+
+
+def scale_application(*, app_id, replicas):
+    # TODO will be changed to PUT /applications/{app_id}/scale
+    """ PUT /applications/{id}/scale """
+    response = _get_client().request(HttpMethod.PUT, path="applications/{}/scale".format(id),
+                                     body={"replicas": replicas}, raw_response=True, msg="Scale application")
+    # TODO should return response.json()
+    return response
+
+
+def get_app_bindings(*, app_id, client=None):
+    # TODO will be changed to GET /applications/{app_id}/bindings
+    """ GET /bindings/{app_guid}"""
     if client is None:
         client = _get_client()
     response = client.request(
         method=HttpMethod.GET,
-        path="bindings/{}".format(app_guid),
+        path="bindings/{}".format(app_id),
         msg="Get application bindings"
     )
     return response["resources"]
 
 
-def bind(service_instance_guid, app_guid, client=None):
-    """POST /bind/{service_instance_guid}/{app_guid}"""
+def bind(*, service_instance_guid, app_id, client=None):
+    """ POST /bind/{service_instance_guid}/{app_guid} """
+    # TODO will be changed to POST /applications/{app_id}/bindings
     if client is None:
         client = _get_client()
-    return client.request(
-        method=HttpMethod.POST,
-        path="bind/{}/{}".format(service_instance_guid, app_guid),
-        msg="Bind app and instance"
-    )
+    return client.request(method=HttpMethod.POST, path="bind/{}/{}".format(service_instance_guid, app_id),
+                          msg="Bind app and instance")
 
 
-def unbind(service_instance_guid, app_guid, client=None):
-    """POST /unbind/{app_guid}/{service_instance_guid}"""
+def unbind(*, service_instance_guid, app_id, client=None):
+    """ POST /unbind/{app_guid}/{service_instance_guid} """
+    # TODO will be changed to DELETE /applications/{app_id}/bindings
     if client is None:
         client = _get_client()
-    return client.request(
-        method=HttpMethod.POST,
-        path="unbind/{}/{}".format(app_guid, service_instance_guid),
-        msg="Unbind app from instance"
-    )
+    return client.request(method=HttpMethod.POST, path="unbind/{}/{}".format(app_id, service_instance_guid),
+                          msg="Unbind app from instance")
+
+
+def start_application(*, app_id: str, client: HttpClient=None):
+    """ PUT applications/{app_id}/start
+
+    Args:
+        client: Http client to use
+        app_id: Id of application to start
+
+    Returns:
+        Raw response to the request
+    """
+    if client is None:
+        client = _get_client()
+    response = client.request(HttpMethod.PUT, path="applications/{}/start".format(app_id), raw_response=True,
+                              msg="Start application")
+    assert response.status_code == HttpStatus.CODE_OK
+    # TODO should return response.json()
+    return response
+
+
+def stop_application(*, app_id: str, client: HttpClient=None):
+    """ PUT applications/{app_id}/stop
+
+    Args:
+        client: Http client to use
+        app_id: Id of application to stop
+
+    Returns:
+        Raw response to the request
+    """
+    if client is None:
+        client = _get_client()
+    response = client.request(HttpMethod.PUT, path="applications/{}/stop".format(app_id), raw_response=True,
+                              msg="Stop application")
+    assert response.status_code == HttpStatus.CODE_OK
+    # TODO should return response.json()
+    return response
+
+
+# --------------------------------------- services --------------------------------------- #
+
+
+def get_services(*, name=None, offering_id=None, plan_name=None, limit=None, skip=None, client=None):
+    """ GET /services """
+    query_params = {
+        "offering_id": offering_id,
+        "plan_name": plan_name,
+        "name": name,
+        "limit": limit,
+        "skip": skip
+    }
+    query_params = {k: v for k, v in query_params.items() if v is not None}
+    if client is None:
+        client = _get_client()
+    return client.request(method=HttpMethod.GET, path="services", params=query_params, msg="List service instances")
+
+
+def create_service(*, name, service_plan_id, offering_id, params, client=None):
+    """POST /services/{offering_id}"""
+    # TODO will be changed to POST /services, with offering_id passed as "classId" in body
+    metadata = [{"key": "PLAN_ID", "value": service_plan_id}]
+    if params is not None:
+        metadata = metadata + [{"key": key, "value": val} for key, val in params.items()]
+    body = {
+        "metadata": metadata,
+        "name": name,
+        "type": "SERVICE"
+    }
+    if client is None:
+        client = _get_client()
+    return client.request(method=HttpMethod.POST, path="services/{}".format(offering_id), body=body,
+                          msg="Create service instance")
+
+
+def get_service(*, service_id, client=None):
+    """ GET /services/{service_id} """
+    if client is None:
+        client = _get_client()
+    return client.request(method=HttpMethod.GET, path="services/{}".format(service_id), msg="Get service instance")
+
+
+def delete_service(*, service_id, client):
+    """ DELETE /services/{service_id} """
+    if client is None:
+        client = _get_client()
+    return client.request(method=HttpMethod.DELETE, path="services/{}".format(service_id),
+                          msg="Delete service instance")
