@@ -77,6 +77,7 @@ class TestCliCommandsWithNonExistingApplication:
 
 @priority.high
 @pytest.mark.usefixtures("cli_login")
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestPythonCliApp:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_python_app_url
@@ -162,6 +163,7 @@ class TestPythonCliApp:
 
 
 @priority.high
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestGoCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_go_app_url
@@ -171,6 +173,7 @@ class TestGoCliApp(TestPythonCliApp):
 
 
 @priority.high
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestJavaCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_java_app_url
@@ -180,6 +183,7 @@ class TestJavaCliApp(TestPythonCliApp):
 
 
 @priority.high
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestNodeJsCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url

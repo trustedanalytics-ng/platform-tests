@@ -30,6 +30,7 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 
 @incremental
 @pytest.mark.usefixtures("open_tunnel")
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestPythonApplicationFlow:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_NAME = "samplepythonapp{}".format(generate_test_object_name(separator=""))
@@ -89,6 +90,7 @@ class TestPythonApplicationFlow:
 
 
 @incremental
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestNodeJsApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
     APP_NAME = "samplenodejsapp{}".format(generate_test_object_name(separator=''))
@@ -96,6 +98,7 @@ class TestNodeJsApplicationFlow(TestPythonApplicationFlow):
 
 
 @incremental
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestGoApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_go_app_url
     APP_NAME = "samplegoapp{}".format(generate_test_object_name(separator=''))
@@ -103,12 +106,14 @@ class TestGoApplicationFlow(TestPythonApplicationFlow):
 
 
 @incremental
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestJavaApplicationFlow(TestPythonApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_NAME = "samplejavaapp{}".format(generate_test_object_name(separator=''))
     APP_TYPE = TapApplicationType.JAVA
 
 
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestSampleApp:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_NAME = "sampleapp{}".format(generate_test_object_name(separator=''))
