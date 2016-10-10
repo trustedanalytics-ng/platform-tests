@@ -47,7 +47,6 @@ class MockConfig:
     tap_infrastructure_type = "test_infrastructure_type"
     tap_version = "test_tap_version"
     kerberos = "test_kerberos"
-    tap_build_number = 9876
 
 
 class MockTeamcityConfiguration:
@@ -93,7 +92,7 @@ class TestReporter(object):
         assert abs(date - datetime.now()).total_seconds() < epsilon
 
     @mock.patch("modules.mongo_reporter._reporter.config", MockConfig)
-    def test_init_run_document(self, mock_platform):
+    def test_init_run_document(self):
         TEST_VERSION = "test.version"
         with mock.patch("modules.mongo_reporter._reporter.MongoReporter._get_test_version",
                         lambda *args, **kwargs: TEST_VERSION):
@@ -114,7 +113,7 @@ class TestReporter(object):
         assert run_document["started_by"] == socket.gethostname()
         assert run_document["test_version"] == TEST_VERSION
         assert run_document["parameters"]["environment_variables"] == os.environ
-        assert run_document["tap_build_number"] == MockConfig.tap_build_number
+        assert run_document["tap_build_number"] is None
         # non-dynamic values
         assert run_document["end_date"] is None
         assert run_document["finished"] is False

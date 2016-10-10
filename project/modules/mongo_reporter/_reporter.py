@@ -54,6 +54,8 @@ class MongoReporter(object):
     _TEST_RESULT_COLLECTION_NAME = "test_result"
 
     def __init__(self, run_id=None):
+        """Important! This method cannot make http calls!"""
+
         if config.database_url is None:
             logger.warning("Not writing results to a database - database_url not configured.")
             self._db_client = _MockDbClient()
@@ -82,7 +84,6 @@ class MongoReporter(object):
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "status": self._RESULT_PASS,
-            "tap_build_number": TapInfo.get_build_number(),
             "test_count": 0,
             "total_test_count": 0,
             "test_version": self._get_test_version(),
@@ -92,6 +93,7 @@ class MongoReporter(object):
             # updated in separate methods
             "components": [],
             "environment_availability": True,
+            "tap_build_number": None,
             "test_type": None,
         }
         self._save_test_run()
@@ -108,6 +110,10 @@ class MongoReporter(object):
     def report_unavailable_environment(self):
         self._mongo_run_document["environment_availability"] = False
         self.on_run_end()
+        self._save_test_run()
+
+    def report_tap_build_number(self):
+        self._mongo_run_document["tap_build_number"] = TapInfo.get_build_number()
         self._save_test_run()
 
     def on_run_end(self):
