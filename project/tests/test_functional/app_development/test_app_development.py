@@ -23,7 +23,7 @@ from modules.tap_logger import step
 logged_components = (TAP.console,)
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-10967 Adjust app development tests to TAP NG")
 class TestAppDevelopmentPage(object):
     pytestmark = [pytest.mark.components(TAP.console)]
 

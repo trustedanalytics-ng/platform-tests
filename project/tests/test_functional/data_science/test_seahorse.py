@@ -20,7 +20,7 @@ import config
 from modules.service_tools.seahorse import Seahorse
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-9246 Adjust seahorse tests to TAP NG")
 @pytest.mark.skipif(not config.seahorse, reason="No seahorse on TAP")
 class TestSeahorse:
     WORKFLOW_NAME = "Text Message Spam Detection"

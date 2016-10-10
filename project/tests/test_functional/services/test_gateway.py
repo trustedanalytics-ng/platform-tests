@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.components(TAP.gateway, TAP.service_catalog)]
 
 @incremental
 @priority.high
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8770 Adjust test_gateway to TAP NG")
 class Gateway(TapTestCase):
     gateway_instance = None
     kafka_instance = None

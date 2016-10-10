@@ -26,7 +26,7 @@ logged_components = (TAP.platform_operations, TAP.metrics_provider)
 pytestmark = [pytest.mark.components(TAP.platform_operations, TAP.metrics_provider)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8721 Adjust metrics tests to TAP NG")
 class TestBuildpacks(object):
 
     def get_buildpack_list(self, bdict):

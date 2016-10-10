@@ -29,7 +29,7 @@ logged_components = (TAP.gearpump_broker, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.service_catalog)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8806 Adjust test_gearpump tests to TAP NG")
 @incremental
 class TestGearpumpConsole:
 

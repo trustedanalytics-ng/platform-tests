@@ -39,7 +39,7 @@ def test_instance(class_context, request, test_org, test_space):
     return instance
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8778 Adjust test_bindings to TAP NG")
 class TestBindings:
 
     @pytest.fixture(scope="function")
@@ -89,7 +89,7 @@ class TestBindings:
         assert test_instance not in instances
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8778 Adjust test_bindings to TAP NG")
 @incremental
 class TestCreateDeleteBinding:
 
@@ -118,7 +118,7 @@ class TestCreateDeleteBinding:
         assert cf_bindings_list == platform_bindings_list
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8778 Adjust test_bindings to TAP NG")
 @priority.low
 class TestBindingErrors:
     NOT_EXISTING_GUID = "00000000-0000-0000-0000-000000000000"

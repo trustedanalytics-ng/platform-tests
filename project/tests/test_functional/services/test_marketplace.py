@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, T
                                      TAP.zookeeper_wssb_broker)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8758 Adjust test_marketplace tests to TAP NG")
 class TestMarketplaceServices:
     SERVICES_TESTED_SEPARATELY = [ServiceLabels.HDFS, ServiceLabels.SEAHORSE]
 

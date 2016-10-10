@@ -40,7 +40,7 @@ class Psql(object):
                 psql_credentials["password"], psql_credentials["port"])
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-8705 Adjust job scheduler tests to TAP NG")
 @incremental
 @priority.medium
 @pytest.mark.skipif(config.kerberos, reason="DPNG-8628 WebHDFS needs to be workable on environments with kerberos")

@@ -15,9 +15,13 @@
 #
 
 import os
+from collections import defaultdict, Counter, namedtuple
+from itertools import groupby
 
 import pytest
+import re
 import requests
+from _pytest.mark import MarkInfo, MarkDecorator
 
 import config
 from modules.constants import Path, ParametrizedService
@@ -74,12 +78,15 @@ def pytest_sessionstart(session):
             raise
 
 
-def pytest_collection_modifyitems(items):
+def pytest_collection_modifyitems(config, items):
     """
     Support for running tests with component tags.
     Report all test component markers to mongo_reporter.
     """
     all_component_markers = []
+
+    if config.option.collectonly:
+        _log_skip_statistic(items)
 
     for item in items:
         components = item.get_marker("components")
@@ -92,6 +99,63 @@ def pytest_collection_modifyitems(items):
     for marker in all_component_markers:
         all_components.extend(list(marker.args))
     mongo_reporter.report_components(all_components)
+
+
+def _log_skip_statistic(items):
+    issue_stats, other_tests = _calc_statistics(items)
+    _log_labeled_stats(issue_stats)
+    _log_others(other_tests)
+
+
+def _calc_statistics(items):
+    skipped_items = _get_skipped_items(items)
+    issue_numbers = []
+    other_tests = []
+    for item in skipped_items:
+        match = re.search("DPNG-\d+", item.reason)
+        if match:
+            issue_numbers.append(match.group(0))
+        else:
+            issue_numbers.append('others')
+            other_tests.append(item)
+    return Counter(issue_numbers), other_tests
+
+
+SkippedItem = namedtuple("SkippedItem", "test_name reason")
+
+
+def _get_skipped_items(items):
+    skipped_items = [item for item in items if item.keywords.get('skip') is not None]
+    items = []
+    for item in skipped_items:
+        skip_info = item.keywords.get('skip')
+        if isinstance(skip_info, (MarkInfo, MarkDecorator)):
+            if 'reason' in skip_info.kwargs:
+                reason = skip_info.kwargs['reason']
+            elif skip_info.args:
+                reason = skip_info.args[0]
+            else:
+                reason = ''
+            items.append(SkippedItem(item.nodeid, reason))
+    return items
+
+
+def _log_labeled_stats(issues):
+    msg = ["Skipped tests statistic:"]
+    issues_sorted_by_quantity = sorted(issues.items(), key=lambda i: i[1], reverse=True)
+    for issue, quantity in issues_sorted_by_quantity:
+        msg.append("{:>11}: {:>6}".format(issue, quantity))
+    logger.info("\n".join(msg))
+
+
+def _log_others(other_items):
+    msg = ["Skipped tests not labeled with issue:"]
+    items_grouped_by_reason = groupby(other_items, key=lambda i: i.reason)
+    for reason, items in items_grouped_by_reason:
+        msg.append("{}:".format(reason))
+        msg.extend("|---{}".format(item.test_name) for item in items)
+    logger.info("\n".join(msg))
+    pass
 
 
 def pytest_collection_finish(session):

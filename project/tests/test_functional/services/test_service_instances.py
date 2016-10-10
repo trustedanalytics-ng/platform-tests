@@ -27,7 +27,7 @@ logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-10954 Adjust test_service_instances to TAP NG")
 class TestTapServiceInstance:
     @pytest.fixture(scope="function")
     def org_space(self, context):
