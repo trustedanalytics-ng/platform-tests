@@ -66,7 +66,7 @@ class TestModelUpdate:
     @priority.low
     @pytest.mark.parametrize("model_id", (Guid.NON_EXISTING_GUID, "invalid-model-id"))
     def test_cannot_update_model_with_incorrect_guid(self, model_id):
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_MODEL_NOT_FOUND,
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
                                      model_catalog_api.update_model, model_id=model_id, **self.UPDATED_METADATA)
 
     @priority.high

@@ -21,8 +21,7 @@ import modules.http_calls.platform.model_catalog as model_catalog_api
 
 @functools.total_ordering
 class ScoringEngineModel(object):
-    _COMPARABLE_ATTRIBUTES = ["id", "name", "description", "revision", "algorithm", "creation_tool",
-                              "added_by", "added_on", "modified_by", "modified_on"]
+    _COMPARABLE_ATTRIBUTES = ["id", "name", "description", "revision", "algorithm", "creation_tool"]
     _UPDATABLE_METADATA = ["name", "description", "creation_tool", "revision", "algorithm"]
 
     def __init__(self, *, model_id, name, description, revision, algorithm, creation_tool, added_by, added_on,

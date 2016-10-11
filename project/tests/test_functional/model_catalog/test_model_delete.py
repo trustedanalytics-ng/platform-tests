@@ -49,11 +49,11 @@ class TestModelDelete:
         step("Delete sample model")
         sample_model.delete()
         step("Try to delete the same model from organization for the second time")
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_MODEL_NOT_FOUND,
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
                                      sample_model.delete)
 
     @priority.low
     def test_cannot_delete_non_existing_model(self):
         step("Check that an attempt to delete model which does not exist returns an error")
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_MODEL_NOT_FOUND,
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
                                      model_catalog_api.delete_model, model_id=Guid.NON_EXISTING_GUID)
