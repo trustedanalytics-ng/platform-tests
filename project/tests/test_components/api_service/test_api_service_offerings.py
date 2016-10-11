@@ -22,7 +22,6 @@ from modules.tap_object_model import ServiceOffering
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
-@pytest.mark.skip("DPNG-10981[api-tests] Refactor TAP CLI tests")
 class TestApiServiceOfferings:
 
     @pytest.mark.bugs("DPNG-10996 [TAP-NG] Unable to delete service offering")

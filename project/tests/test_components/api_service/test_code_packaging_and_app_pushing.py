@@ -30,6 +30,8 @@ pytestmark = [pytest.mark.components(TAP.api_service, TAP.catalog)]
 @incremental
 @priority.medium
 @pytest.mark.usefixtures("open_tunnel")
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
+@pytest.mark.bugs("DPNG-11677 Not possible to push PYTHON2.7 or PYTHON3.4 apps")
 class TestCodePackagingAndAppPushing:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     APP_NAME = generate_test_object_name(prefix="samplepythonapp").replace('_', '')
@@ -40,7 +42,6 @@ class TestCodePackagingAndAppPushing:
         'type': TapApplicationType.PYTHON27
     }
 
-    @pytest.mark.bugs("DPNG-8751 Adjust sample-python-app to TAP NG")
     def test_0_push_application(self, class_context, sample_app_path, sample_manifest_path):
         step("Change manifest.json params")
         K8sApplication.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)

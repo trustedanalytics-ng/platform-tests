@@ -25,6 +25,7 @@ from modules.test_names import generate_test_object_name
 
 
 @incremental
+@pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 class TestCLIInvitingUser:
     @staticmethod
     @pytest.fixture(scope="class")
@@ -64,6 +65,7 @@ class TestCLIDeletingUser:
     def user(context):
         return onboard(context, check_email=False)
 
+    @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
     @pytest.mark.parametrize("short", (True, False))
     def test_delete_user(self, user, tap_cli, short):
         tap_cli.delete_user(user.username, short=short)

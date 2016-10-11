@@ -31,6 +31,7 @@ from tap_component_config import TAP_core_services, third_party_services, api_se
 
 @priority.high
 @pytest.mark.usefixtures("open_tunnel")
+@pytest.mark.bugs("DPNG-11629 [api-tests] Create list of endpoints and api version for components that desn't have such information")
 class TestK8sComponents:
     k8s_core_service_params = sorted(TAP_core_services.items(), key=lambda x: x[0])
     k8s_core_service_ids = sorted([c for c in TAP_core_services.keys()])

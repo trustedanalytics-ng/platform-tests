@@ -24,7 +24,7 @@ from ...http_client.http_client_factory import HttpClientFactory
 from ...constants import Guid
 
 
-def onboard(*, context, username=None, password=None, inviting_client=None, check_email=True):
+def onboard(context, username=None, password=None, inviting_client=None, check_email=True):
     """
     Onboard new user. Check email for registration code and register.
     Returns objects for newly created user and org.
@@ -38,7 +38,7 @@ def onboard(*, context, username=None, password=None, inviting_client=None, chec
     return register(context=context, code=code, username=invitation.username, password=password)
 
 
-def register(*, context, code, username, password=None):
+def register(context, code, username, password=None):
     """
     Set password for new user. Returns objects for newly created user.
     """
