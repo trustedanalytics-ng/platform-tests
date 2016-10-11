@@ -261,4 +261,4 @@ class Application(ApiModelSuperclass):
     def _ensure_has_id(self):
         """ Waits for the application to receive an id. If no id is found, assertion is raised """
         self._refresh()
-        assert self.id != "", "App {} hasn't received id in 60s. State: {}".format(self.name, format(self._state))
+        assert self.id != "", "App {} hasn't received id yet. State: {}".format(self.name, format(self._state))
