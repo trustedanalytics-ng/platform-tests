@@ -14,32 +14,23 @@
 # limitations under the License.
 #
 
-import functools
-
 from retry import retry
 
-from modules.constants import TapEntityState
 import modules.http_calls.platform.catalog as catalog_api
+from ._tap_object_superclass import TapObjectSuperclass
 
 
-@functools.total_ordering
-class CatalogImage(object):
+class CatalogImage(TapObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["id", "type", "state", "blob_type"]
 
     def __init__(self, *, image_id: str, image_type: str, state: str, blob_type: str):
-        self.id = image_id
+        super().__init__(object_id=image_id)
         self.type = image_type
         self.state = state
         self.blob_type = blob_type
 
-    def __eq__(self, other):
-        return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
-
-    def __lt__(self, other):
-        return self.id < other.id
-
     def __repr__(self):
-        return "{} (id={})".format(self.__class__.__name__, self.id)
+        return "{} (type={}, id={})".format(self.__class__.__name__, self.type, self.id)
 
     @classmethod
     def _from_response(cls, response):
@@ -61,24 +52,17 @@ class CatalogImage(object):
     @classmethod
     def get_list(cls):
         response = catalog_api.get_images()
-        images = []
-        for item in response:
-            image = cls._from_response(item)
-            images.append(image)
-        return images
+        return cls._list_from_response(response)
 
-    @retry(AssertionError, tries=3, delay=2)
-    def ensure_ready(self):
+    @retry(AssertionError, tries=10, delay=2)
+    def ensure_in_state(self, expected_state):
         image = self.get(image_id=self.id)
         self.state = image.state
-        assert self.state == TapEntityState.READY
-
-    def delete(self):
-        catalog_api.delete_image(image_id=self.id)
-
-    def cleanup(self):
-        self.delete()
+        assert self.state == expected_state, "State is {}, expected {}".format(self.state, expected_state)
 
     def update(self, *, field_name, value):
         setattr(self, field_name, value)
         catalog_api.update_image(image_id=self.id, field_name=field_name, value=value)
+
+    def delete(self):
+        catalog_api.delete_image(image_id=self.id)

@@ -14,48 +14,34 @@
 # limitations under the License.
 #
 
-import functools
 import uuid
 
-import config
-import modules.http_calls.platform.blob_store as blob_store
-from modules.constants.urls import Urls
+import modules.http_calls.platform.blob_store as blob_store_api
+from ._tap_object_superclass import TapObjectSuperclass
 
 
-@functools.total_ordering
-class Blob(object):
+class Blob(TapObjectSuperclass):
+    _COMPARABLE_ATTRIBUTES = ["id"]
 
-    def __init__(self, blob_id: str, file_path: str):
-        self.id = blob_id
-        self.file_path = file_path
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    def __lt__(self, other):
-        return self.id < other.id
+    def __init__(self, *, blob_id: str):
+        super().__init__(object_id=blob_id)
 
     def __repr__(self):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, blob_id=None, file_path=None):
+    def create(cls, context, *, file_path, blob_id=None):
         if blob_id is None:
             blob_id = str(uuid.uuid4())
-        if file_path is None:
-            file_path = Urls.nodejs_app_url
-        blob_store.create_blob(blob_id, file_path)
-        new_blob = cls(blob_id, file_path)
+        blob_store_api.create_blob(blob_id=blob_id, file_path=file_path)
+        new_blob = cls(blob_id=blob_id)
         context.blob_store.append(new_blob)
         return new_blob
 
     @classmethod
-    def get(cls, blob_id: str):
-        blob_store.get_blob(blob_id)
-        return cls(blob_id, None)
+    def get(cls, *, blob_id: str):
+        blob_store_api.get_blob(blob_id=blob_id)
+        return cls(blob_id=blob_id)
 
     def delete(self):
-        blob_store.delete_blob(self.id)
-
-    def cleanup(self):
-        self.delete()
+        blob_store_api.delete_blob(blob_id=self.id)

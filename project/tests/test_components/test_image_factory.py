@@ -15,86 +15,69 @@
 #
 
 import pytest
+from retry import retry
 
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus
 from modules.file_utils import download_file
-from modules.tap_logger import step
-from modules.markers import priority, incremental
-from modules.tap_object_model.catalog_image import CatalogImage
-from modules.tap_object_model.blob import Blob
-from modules.tap_object_model.image import Image
-from modules.tap_object_model.image_repository import ImageRepository
-from modules.constants import ImageFactoryHttpStatus
-from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry
+from modules.tap_logger import step, log_fixture
+from modules.markers import priority
+from modules.tap_object_model import Blob, CatalogImage, Image, ImageRepository
+from tests.fixtures import assertions
 
 logged_components = (TAP.image_factory, TAP.blob_store, TAP.catalog)
 pytestmark = [pytest.mark.components(TAP.image_factory)]
 
 
-@incremental
 @priority.medium
 @pytest.mark.usefixtures("open_tunnel")
 class TestImageFactory:
 
     NODEJS_APP_NAME = "test_blob"
     NODEJS_APP_TYPE = TapApplicationType.NODEJS
-    NODEJS_APP_STATE = TapEntityState.PENDING
+    INITIAL_IMAGE_STATE = TapEntityState.PENDING
     catalog_image = None
 
-    @pytest.fixture(scope="class")
-    def download_nodejs_example(self):
-        download_file(Urls.nodejs_app_url, self.NODEJS_APP_NAME)
+    @pytest.fixture(scope="function")
+    def nodejs_example(self):
+        return download_file(url=Urls.nodejs_app_url, save_file_name=self.NODEJS_APP_NAME)
 
-    def test_0_send_metadata_to_catalog(self, class_context):
-        step("Send application metadata to catalog")
-        self.__class__.catalog_image = CatalogImage.create(class_context, image_type=self.NODEJS_APP_TYPE,
-                                                           state=self.NODEJS_APP_STATE)
-        assert self.catalog_image.id is not None
+    @pytest.fixture(scope="function")
+    def catalog_image(self, context):
+        log_fixture("CATALOG: Send application metadata - create an image")
+        catalog_image = CatalogImage.create(context, image_type=self.NODEJS_APP_TYPE, state=self.INITIAL_IMAGE_STATE)
 
-    def test_1_check_metadata_in_catalog_list(self):
-        step("Check that metadata are available in catalog - get all images")
+        log_fixture("CATALOG: Wait for the image to be in state {}".format(TapEntityState.RUNNING))
+        catalog_image.ensure_in_state(TapEntityState.READY)
+
+        log_fixture("CATALOG: Check tha the image is on the image list")
         catalog_images = CatalogImage.get_list()
-        assert self.catalog_image in catalog_images
+        assert catalog_image in catalog_images
+        return catalog_image
 
-    def test_2_check_catalog_metadata(self):
-        step("Check that metadata are available in catalog - get image by id")
-        image = CatalogImage.get(image_id=self.catalog_image.id)
-        assert image.state == self.NODEJS_APP_STATE
+    @pytest.fixture(scope="function")
+    def blob_store_artifact(self, context, catalog_image, nodejs_example):
+        log_fixture("BLOB-STORE: Create an artifact for application")
+        created_blob = Blob.create(context, blob_id=catalog_image.id, file_path="@{}".format(nodejs_example))
 
-    def test_3_create_artifact_blob_store(self, class_context, download_nodejs_example):
-        step("Create artifact for application in blob-store")
-        blob = Blob.create(class_context, self.catalog_image.id, "@/tmp/{}".format(self.NODEJS_APP_NAME))
-        assert blob is not None
+        log_fixture("BLOB-STORE Check that the blob exists")
+        blob = Blob.get(blob_id=catalog_image.id)
+        assert blob == created_blob
 
-    def test_4_create_artifact_blob_store_with_existing_id(self, class_context):
-        step("Create artifact for application in blob-store once again")
-        assert_raises_http_exception(ImageFactoryHttpStatus.CODE_CONFLICT,
-                                     ImageFactoryHttpStatus.MSG_BLOB_ID_ALREADY_IN_USE,
-                                     Blob.create, class_context, self.catalog_image.id,
-                                     "@/tmp/{}".format(self.NODEJS_APP_NAME))
+    @retry(AssertionError, tries=5, delay=2)
+    def assert_blob_deleted(self, blob_id):
+        assertions.assert_raises_http_exception(ImageFactoryHttpStatus.CODE_NOT_FOUND,
+                                                ImageFactoryHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
+                                                Blob.get, blob_id=blob_id)
 
-    def test_5_check_blob_exists_in_blob_store(self):
-        step("Check whether blob exist in blob-store")
-        blob = Blob.get(self.catalog_image.id)
-        assert blob is not None
+    def test_create_image_in_image_factory(self, context, catalog_image):
+        step("IMAGE-FACTORY: Create an image")
+        Image.create(context, image_id=catalog_image.id)
 
-    def test_6_create_image_factory(self, class_context):
-        step("Create image in image-factory")
-        image = Image.create(class_context, self.catalog_image.id)
-        assert image is not None
+        step("IMAGE-REPOSITORY: Wait until the image id appears in image-repository")
+        assertions.assert_in_with_retry(catalog_image.id, ImageRepository.get_repository_ids)
 
-    @pytest.mark.bugs("DPNG-11177 [api-tests] Image Factory check_blob_was_deleted test fails after no attribute 'typename'")
-    def test_7_check_blob_was_deleted(self):
-        step("Check whether blob was successfully removed from blob-store")
-        assert_raises_http_exception(ImageFactoryHttpStatus.CODE_NOT_FOUND,
-                                     ImageFactoryHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
-                                     Blob.get, self.catalog_image.id)
+        step("CATALOG: Check application state")
+        catalog_image.ensure_in_state(TapEntityState.READY)
 
-    def test_8_check_image_exists(self):
-        step("Check whether image exist in image-repository")
-        assert_in_with_retry(self.catalog_image.id, ImageRepository.get_repositories)
-
-    def test_9_check_application_state(self):
-        step("Check state of application in catalog")
-        self.catalog_image.ensure_ready()
-        assert self.catalog_image.type == self.NODEJS_APP_TYPE
+        step("BLOB-STORE: Wait until blob is successfully removed")
+        self.assert_blob_deleted(blob_id=catalog_image.id)

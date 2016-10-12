@@ -18,47 +18,53 @@ import pytest
 
 from modules.constants.urls import Urls
 from modules.file_utils import download_file
-from modules.tap_logger import step
-from modules.tap_object_model.blob import Blob
+from modules.tap_logger import step, log_fixture
+from modules.tap_object_model import Blob
 from modules.constants import BlobStoreHttpStatus
-from modules.markers import incremental
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
-@incremental
 @pytest.mark.usefixtures("open_tunnel")
 class TestBlobStore:
 
-    NODEJS_APP_NAME = "test_blob"
-
     @pytest.fixture(scope="class")
     def nodejs_app_path(self):
-        return download_file(Urls.nodejs_app_url, self.NODEJS_APP_NAME)
+        return download_file(Urls.nodejs_app_url, "test_blob")
 
-    def test_0_create_artifact_in_blob_store(self, class_context, nodejs_app_path):
-        step("Create artifact for an application in blob-store")
-        self.__class__.test_blob = Blob.create(class_context, file_path=nodejs_app_path)
-        step("Get the new blob from blob-store")
-        blob = Blob.get(self.test_blob.id)
-        assert blob == self.test_blob
+    @pytest.fixture(scope="class")
+    def sample_blob(self, class_context, nodejs_app_path):
+        log_fixture("Create sample blob and check it exists")
+        blob = Blob.create(class_context, file_path=nodejs_app_path)
+        return Blob.get(blob_id=blob.id)
 
-    def test_1_cannot_create_artifact_in_blob_store_with_existing_id(self, class_context, nodejs_app_path):
+    def test_create_and_delete_blob(self, context, nodejs_app_path):
+        step("Create artifact in blob-store")
+        test_blob = Blob.create(context, file_path=nodejs_app_path)
+
+        step("Check that the blob exists")
+        blob = Blob.get(blob_id=test_blob.id)
+        assert blob == test_blob
+
+        step("Delete the blob")
+        test_blob.delete()
+
+        step("Check that the blob was successfully removed from blob-store")
+        assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
+                                     BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
+                                     Blob.get, blob_id=test_blob.id)
+
+    def test_cannot_create_artifact_in_blob_store_with_existing_id(self, context, sample_blob, nodejs_app_path):
         step("Creating artifact for application in blob-store with existing id should return an error")
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_CONFLICT,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_ALREADY_IN_USE,
-                                     Blob.create, class_context, self.test_blob.id,
+                                     Blob.create, context, blob_id=sample_blob.id,
                                      file_path=nodejs_app_path)
 
-    def test_2_cannot_get_blob_with_non_existing_id(self):
+    def test_cannot_get_blob_with_non_existing_id(self):
         step("Getting non-existing blob should return an error")
+        non_existing_id = "776a1f91-df7e-4032-4c31-7cd107719afb"
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
-                                     Blob.get, "776a1f91-df7e-4032-4c31-7cd107719afb")
+                                     Blob.get, blob_id=non_existing_id)
 
-    def test_3_delete_blob(self):
-        step("Delete blob from blob-store")
-        self.test_blob.delete()
-        step("Check that blob was successfully removed from blob-store")
-        assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
-                                     BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
-                                     Blob.get, self.test_blob.id)
+

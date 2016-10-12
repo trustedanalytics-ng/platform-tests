@@ -14,13 +14,13 @@
 # limitations under the License.
 #
 
-import modules.http_calls.platform.image_repository as image_repository
+import modules.http_calls.platform.image_repository as image_repository_api
 
 
 class ImageRepository(object):
 
     @classmethod
-    def get_repositories(cls):
-        response = image_repository.get_image_repositories()
+    def get_repository_ids(cls):
+        response = image_repository_api.get_image_repositories()
         return response["repositories"]
 

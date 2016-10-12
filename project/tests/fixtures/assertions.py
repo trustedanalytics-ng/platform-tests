@@ -47,30 +47,20 @@ def assert_in_with_retry(something, get_list_method, *args, **kwargs):
 def assert_raises_http_exception(status, error_message_phrase, callableObj, *args, **kwargs):
     with pytest.raises(UnexpectedResponseError) as e:
         callableObj(*args, **kwargs)
-    status_correct = e.value.status == status
-    assert_http_status(error_message_phrase, status_correct, e, status)
+    _assert_http_exception(exception=e, expected_status=status, expected_error_msg=error_message_phrase)
 
 
-def assert_raises_http_exceptions(status_1, status_2, error_message_phrase, callableObj, *args, **kwargs):
-    with pytest.raises(UnexpectedResponseError) as e:
-        callableObj(*args, **kwargs)
-    status_correct = e.value.status == status_1 or e.value.status == status_2
-    assert_http_status(error_message_phrase, status_correct, e, status_1, status_2)
-
-
-def assert_http_status(error_message_phrase, status_correct, e, status_1, status_2=None):
-    if error_message_phrase == "":
-        error_message_contains_string = error_message_phrase == ""
+def _assert_http_exception(*, exception, expected_status, expected_error_msg):
+    actual_status = exception.value.status
+    actual_msg = exception.value.error_message
+    status_correct = expected_status == actual_status
+    if expected_error_msg == "":
+        msg_correct = expected_error_msg == actual_msg
     else:
-        error_message_contains_string = error_message_phrase in e.value.error_message
-    if status_2 is None:
-        expected_status = status_1
-    else:
-        expected_status = "{} or {}".format(status_1, status_2)
-    assert status_correct and error_message_contains_string, \
-        "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.status, e.value.error_message,
-                                                            expected_status, error_message_phrase)
-
+        msg_correct = expected_error_msg in actual_msg
+    assert status_correct and msg_correct, "Error is {} \"{}\",\nexpected {} \"{}\"".format(actual_status, actual_msg,
+                                                                                           expected_status,
+                                                                                           expected_error_msg)
 
 def assert_user_not_in_org(user, org_guid):
     org_users = User.get_list_in_organization(org_guid=org_guid)

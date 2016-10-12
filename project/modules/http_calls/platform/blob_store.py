@@ -27,7 +27,7 @@ def _get_client():
     return HttpClientFactory.get(configuration)
 
 
-def get_blob(blob_id):
+def get_blob(*, blob_id):
     """ GET /blobs/{blob_id} """
     response = _get_client().request(HttpMethod.GET,
                                      path="blobs/{}".format(blob_id),
@@ -37,7 +37,7 @@ def get_blob(blob_id):
     return response
 
 
-def create_blob(blob_id, file_path):
+def create_blob(*, blob_id, file_path):
     """ POST /blobs """
     file = {"uploadfile": (file_path, "multipart/form-data")}
     params = {"blob_id": blob_id}
@@ -52,7 +52,7 @@ def create_blob(blob_id, file_path):
     return response
 
 
-def delete_blob(blob_id):
+def delete_blob(*, blob_id):
     """ DELETE /blobs/{blob_id} """
     response = _get_client().request(HttpMethod.DELETE, path="blobs/{}".format(blob_id),
                                      msg="BLOB-STORE: delete blob")

@@ -15,6 +15,7 @@
 #
 
 from .application import Application
+from .blob import Blob
 from .buildpack import Buildpack
 from .catalog_application import CatalogApplication
 from .catalog_application_instance import CatalogApplicationInstance
@@ -26,6 +27,8 @@ from .catalog_template import CatalogTemplate
 from .dataset import DataSet, DatasetAccess
 from .user import User
 from .hdfs_job import HdfsJob
+from .image import Image
+from .image_repository import ImageRepository
 from .invitation import Invitation
 from .kubernetes_cluster import KubernetesCluster
 from .kubernetes_instance import KubernetesInstance

@@ -28,7 +28,7 @@ def _get_client():
     return HttpClientFactory.get(configuration)
 
 
-def create_image(image_id):
+def create_image(*, image_id):
     """ POST /image """
     body = {
         "id": image_id
@@ -42,7 +42,7 @@ def create_image(image_id):
     return response
 
 
-def delete_image(image_id):
+def delete_image(*, image_id):
     """ DELETE /image/{image_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="image/{}".format(image_id),

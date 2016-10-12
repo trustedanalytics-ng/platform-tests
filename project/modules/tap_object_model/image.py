@@ -14,39 +14,29 @@
 # limitations under the License.
 #
 
-import functools
 import uuid
 
-import modules.http_calls.platform.image_factory as image_factory
-from modules.constants import HttpStatus
+import modules.http_calls.platform.image_factory as image_factory_api
+from ._tap_object_superclass import TapObjectSuperclass
 
 
-@functools.total_ordering
-class Image(object):
+class Image(TapObjectSuperclass):
+    _COMPARABLE_ATTIBUTES = ["id"]
 
     def __init__(self, image_id: str):
-        self.id = image_id
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    def __lt__(self, other):
-        return self.id < other.id
+        super().__init__(object_id=image_id)
 
     def __repr__(self):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, image_id=None):
+    def create(cls, context, *, image_id=None):
         if image_id is None:
             image_id = str(uuid.uuid4())
-        image_factory.create_image(image_id)
+        image_factory_api.create_image(image_id=image_id)
         new_image = cls(image_id)
         context.image_factory.append(new_image)
         return new_image
 
     def delete(self):
-        image_factory.delete_image(image_id=self.id)
-
-    def cleanup(self):
-        self.delete()
+        image_factory_api.delete_image(image_id=self.id)
