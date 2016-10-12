@@ -14,37 +14,29 @@
 # limitations under the License.
 #
 
-import functools
+from ._tap_object_superclass import TapObjectSuperclass
 
+class ServicePlan(TapObjectSuperclass):
 
-@functools.total_ordering
-class ServicePlan(object):
+    _COMPARABLE_ATTRIBUTES = ["id", "name", "description"]
 
-    COMPARABLE_ATTRIBUTES = ["guid", "name", "description"]
-
-    def __init__(self, guid: str, name: str, description: str):
-        self.guid = guid
+    def __init__(self, plan_id: str, name: str, description: str):
+        super().__init__(object_id=plan_id)
         self.name = name
         self.description = description
 
     def __repr__(self):
-        return "{} (name={}, guid={})".format(self.__class__.__name__, self.name, self.guid)
-
-    def __lt__(self, other):
-        return self.name < other.name
-
-    def __eq__(self, other):
-        return all((getattr(self, a) == getattr(other, a) for a in self.COMPARABLE_ATTRIBUTES))
+        return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
 
     def to_dict(self):
         return {"name": self.name, "description": self.description, "cost": "free"}
 
     @classmethod
     def from_response(cls, response):
-        # workarounds for inconsistent response objects
-        guid = response.get("id")
-        if guid is None:
-            guid = response["metadata"]["guid"]
+        # TODO this workaround for inconsistent responses will not be required
+        plan_id = response.get("id")
+        if plan_id is None:
+            plan_id = response["metadata"]["guid"]
         response = response.get("entity", response)
-        return cls(guid=guid, name=response["name"], description=response["description"])
+        return cls(plan_id=plan_id, name=response["name"], description=response["description"])
 

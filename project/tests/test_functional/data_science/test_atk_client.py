@@ -22,7 +22,7 @@ from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan, Urls
 from modules.markers import incremental, long, priority
 from modules.service_tools.atk import ATKtools
-from modules.tap_object_model import DataSet, ServiceInstance, ServiceType, Transfer
+from modules.tap_object_model import DataSet, ServiceInstance, ServiceOffering, Transfer
 from modules.tap_logger import step
 from modules.test_names import generate_test_object_name, escape_hive_name
 
@@ -55,7 +55,7 @@ class TestAtk:
 
     def test_0_create_atk_instance(self, class_context, test_org, test_space, add_admin_to_test_org):
         step("Check that atk service is available in Marketplace")
-        marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        marketplace = ServiceOffering.get_list()
         atk_service = next((s for s in marketplace if s.label == ServiceLabels.ATK), None)
         assert atk_service is not None, "No atk service found in marketplace."
         step("Create atk service instance")

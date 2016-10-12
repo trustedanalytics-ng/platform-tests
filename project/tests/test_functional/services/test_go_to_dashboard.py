@@ -22,7 +22,7 @@ from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceType
+from modules.tap_object_model import ServiceOffering
 from modules.tap_object_model.flows.services import create_instance, delete_instance
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_no_errors
@@ -40,7 +40,7 @@ class TestGoToDashboard:
 
     @pytest.fixture(scope="class")
     def global_offerings(self, test_marketplace):
-        return [s for s in test_marketplace if ServiceType.TEST_SERVICE_PREFIX not in s.label]
+        return [s for s in test_marketplace if ServiceOffering.TEST_SERVICE_PREFIX not in s.label]
 
     @pytest.fixture(scope="class")
     def non_parametrized_services(self, global_offerings):

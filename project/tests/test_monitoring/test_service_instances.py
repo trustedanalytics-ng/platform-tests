@@ -20,7 +20,7 @@ import pytest
 
 from modules.constants.services import ServiceLabels
 from modules.runner.tap_test_case import TapTestCase
-from modules.tap_object_model import ServiceInstance, ServiceType
+from modules.tap_object_model import ServiceInstance, ServiceOffering
 from tests.fixtures.assertions import assert_no_errors
 
 
@@ -32,7 +32,7 @@ class ServiceInstancesMonitoring(TapTestCase):
     def marketplace_services(cls, test_org, test_space):
         cls.test_org = test_org
         cls.step("Get list of available services from Marketplace")
-        cls.marketplace_services = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        cls.marketplace_services = ServiceOffering.get_list()
 
     def test_service_instances(self, context):
         tested_service_types = [st for st in self.marketplace_services if st.label in self.TESTED_APP_NAMES]

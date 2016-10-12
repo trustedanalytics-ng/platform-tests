@@ -27,7 +27,7 @@ from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, User
+from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User
 from modules.tap_object_model.flows import data_catalog
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from .test_data import TestData
@@ -124,16 +124,8 @@ def sample_java_app(class_context, tap_cli):
 
 
 @pytest.fixture(scope="class")
-def sample_service(class_context, request, test_org, test_space, sample_python_app):
-    log_fixture("sample_service: Register sample app in marketplace")
-    service = ServiceType.register_app_in_marketplace(context=class_context,
-                                                      app_name=sample_python_app.name,
-                                                      app_guid=sample_python_app.guid,
-                                                      org_guid=test_org.guid,
-                                                      space_guid=test_space.guid)
-    log_fixture("sample_service: Get service plans")
-    service.api_get_service_plans()
-    return service
+def sample_service(class_context, request, test_org, sample_python_app):
+    raise NotImplementedError("Test needs refactoring.")
 
 
 @pytest.fixture(scope="session")
@@ -202,7 +194,7 @@ def remove_admin_from_test_org(admin_user, test_org):
 @pytest.fixture(scope="session")
 def test_marketplace():
     log_finalizer("test_marketplace: Get list of marketplace services.")
-    return ServiceType.api_get_catalog()
+    return ServiceOffering.get_list()
 
 
 def delete_or_not_found(delete_method, *args, **kwargs):
@@ -233,8 +225,8 @@ def example_image():
 @pytest.fixture(scope="session")
 def psql_instance(session_context, test_org, test_space):
     log_fixture("create_postgres_instance")
-    marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
-    psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
+    marketplace = ServiceOffering.get_list()
+    psql = next(offering for offering in marketplace if offering.label == ServiceLabels.PSQL)
     TestData.psql_instance = ServiceInstance.api_create(
         context=session_context,
         org_guid=test_org.guid,

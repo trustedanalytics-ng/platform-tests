@@ -60,14 +60,6 @@ class ModelNotFoundException(Exception):
     pass
 
 
-class ServiceTypeNotFoundException(Exception):
-    pass
-
-
-class PlanNotFoundException(Exception):
-    pass
-
-
 class TapCliException(Exception):
     pass
 

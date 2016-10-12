@@ -20,7 +20,7 @@ from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import incremental, priority
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, ServiceType, AtkInstance
+from modules.tap_object_model import Application, ServiceInstance, ServiceOffering, AtkInstance
 
 
 logged_components = (TAP.service_catalog, TAP.service_exposer)
@@ -40,7 +40,7 @@ class TestDataScienceAtkInstance:
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
     def marketplace(cls, test_org, test_space):
-        cls.marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        cls.marketplace = ServiceOffering.get_list()
 
     @pytest.mark.usefixtures("core_space")
     def test_0_get_reference_atk_bindings(self, core_space):

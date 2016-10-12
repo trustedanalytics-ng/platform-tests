@@ -60,7 +60,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         return instance
 
     @classmethod
-    def create_with_name(cls, context, *, offering_label: str, name: str=None, plan_name: str=None, params: dict=None,
+    def create_with_name(cls, context, *, offering_label: str, plan_name: str, name: str=None, params: dict=None,
                          client: HttpClient=None):
         """
         Create service instance using offering label and plan name.

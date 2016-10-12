@@ -27,7 +27,7 @@ import config
 from modules.constants import Path, ParametrizedService
 from modules.mongo_reporter import mongo_reporter
 from modules.tap_logger import get_logger
-from modules.tap_object_model import ServiceType
+from modules.tap_object_model import ServiceOffering
 
 pytest_plugins = ["tests.fixtures.context",
                   "tests.fixtures.fixtures",
@@ -197,23 +197,18 @@ def pytest_runtest_logstart(nodeid, location):
     # TODO implement logging start of a test
 
 
-def _generate_test_cases(services):
-    test_cases = []
-    ids = []
-    for service_type in services:
-        if service_type.service_plans is not None:
-            for plan in service_type.service_plans:
-                if not ParametrizedService.is_parametrized(label=service_type.label, plan_name=plan["name"]):
-                    test_cases.append((service_type, plan))
-                    ids.append("{}_{}".format(service_type.label, plan["name"]))
-    return test_cases, ids
-
-
 def pytest_generate_tests(metafunc):
-    """Parametrize marketplace fixture with tuples of ServiceType and plan dict."""
+    """Parametrize marketplace fixture with tuples of ServiceOffering and plan dict."""
     if "non_parametrized_marketplace_services" in metafunc.funcargnames:
-        marketplace = ServiceType.api_get_catalog()
-        test_cases, ids = _generate_test_cases(marketplace)
+        marketplace = ServiceOffering.get_list()
+        test_cases = []
+        ids = []
+        for offering in marketplace:
+            if offering.service_plans is not None:
+                for plan in offering.service_plans:
+                    if not ParametrizedService.is_parametrized(label=offering.label, plan_name=plan.name):
+                        test_cases.append((offering, plan))
+                        ids.append("{}_{}".format(offering.label, plan.name))
         metafunc.parametrize("non_parametrized_marketplace_services", test_cases, ids=ids)
 
 

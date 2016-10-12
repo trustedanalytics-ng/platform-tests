@@ -17,7 +17,7 @@
 import pytest
 
 from modules.constants import HttpStatus, TapComponent as TAP
-from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceType, \
+from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceOffering, \
     Space, User
 from modules.tap_logger import step
 from tests.fixtures import assertions
@@ -127,7 +127,7 @@ class CFData(object):
     def __init__(self):
         self.apps = len(Application.cf_api_get_list())
         self.service_instances = len(ServiceInstance.cf_api_get_list())
-        self.services = len(ServiceType.cf_api_get_list())
+        self.services = len(ServiceOffering.cf_api_get_list())
         self.buildpacks = len(Buildpack.cf_api_get_list())
         self.orgs = len(Organization.cf_api_get_list())
         self.spaces = len(Space.cf_api_get_list())

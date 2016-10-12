@@ -24,7 +24,7 @@ from modules.exceptions import UnexpectedResponseError
 from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import Organization, ServiceInstance, ServiceType, Space, User
+from modules.tap_object_model import Organization, ServiceInstance, ServiceOffering, Space, User
 from modules.tap_object_model.flows.services import create_instance_and_key_then_delete_key_and_instance
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_no_errors, assert_raises_http_exception, assert_in_with_retry, \
@@ -47,7 +47,7 @@ class TestMarketplaceServices:
     @pytest.fixture(scope="class")
     def marketplace_services(test_space):
         step("Get list of available services from Marketplace")
-        return ServiceType.api_get_list_from_marketplace(test_space.guid)
+        return ServiceOffering.get_list()
 
     @classmethod
     @pytest.fixture(scope="class")
@@ -86,7 +86,7 @@ class TestMarketplaceServices:
     @priority.medium
     def test_check_marketplace_services_list_vs_cloudfoundry(self, test_space, marketplace_services):
         step("Check that services in cf are the same as in Marketplace")
-        cf_marketplace = ServiceType.cf_api_get_list_from_marketplace_by_space(test_space.guid)
+        cf_marketplace = ServiceOffering.cf_api_get_list_from_marketplace_by_space(test_space.guid)
         assert_unordered_list_equal(marketplace_services, cf_marketplace)
 
     @long

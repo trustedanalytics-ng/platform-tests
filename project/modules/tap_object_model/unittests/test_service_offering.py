@@ -166,3 +166,4 @@ class TestServiceOffering:
         assert plan_1.guid == PLAN_1_GUID
         assert plan_1.name == PLAN_1_NAME
         assert plan_1.description == PLAN_1_DESCRIPTION
+

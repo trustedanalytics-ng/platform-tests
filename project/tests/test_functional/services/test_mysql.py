@@ -23,7 +23,7 @@ from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.constants.services import ServicePlan
 from modules.markers import incremental, priority
 from modules.tap_logger import get_logger, step
-from modules.tap_object_model import KubernetesCluster, KubernetesInstance, ServiceInstance, ServiceType
+from modules.tap_object_model import KubernetesCluster, KubernetesInstance, ServiceInstance, ServiceOffering
 
 logger = get_logger(__name__)
 
@@ -62,7 +62,7 @@ class TestMySQLClusteredService:
 
     @pytest.mark.bugs("DPNG-9701 500 Internal Server Error while successful creating organization")
     def test_0_create_mysql_clustered_service(self, class_context, test_org, test_space):
-        marketplace = ServiceType.api_get_list_from_marketplace(space_guid=test_space.guid)
+        marketplace = ServiceOffering.get_list()
         self.__class__.k8s_service = next((s for s in marketplace if s.label == self.service_label), None)
         assert self.k8s_service is not None, "{} not available".format(self.service_label)
         self.__class__.instance = ServiceInstance.api_create_with_plan_name(class_context, test_org.guid,

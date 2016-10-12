@@ -20,7 +20,7 @@ from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance, ServiceType
+from modules.tap_object_model import ServiceInstance, ServiceOffering
 from tests.fixtures.test_data import TestData
 
 logged_components = (TAP.service_catalog, TAP.service_exposer)
@@ -34,7 +34,7 @@ class TestDataScienceInstances(object):
     @pytest.fixture(scope="class", autouse=True)
     def marketplace_services(cls, test_org, test_space):
         step("Get marketplace services")
-        cls.marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        cls.marketplace = ServiceOffering.get_list()
 
     @priority.high
     @pytest.mark.parametrize("service_label", [ServiceLabels.JUPYTER])

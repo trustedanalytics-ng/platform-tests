@@ -22,7 +22,7 @@ from modules.markers import priority, incremental
 from modules.service_tools.orientdb_api import OrientDbApi
 from modules.service_tools.orientdb_dashboard_api import OrientDbDashboardApi
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, ServiceType
+from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
 
 
 @pytest.mark.skip(reason="Not yet adjusted to new TAP")
@@ -43,7 +43,7 @@ class TestOrientdbDashboard:
 
     def test_1_check_orientdb_dashboard_service_is_available_in_marketplace(self, core_space):
         step("Check if orientdb dashboard service is in marketplace")
-        marketplace = ServiceType.api_get_list_from_marketplace(core_space.guid)
+        marketplace = ServiceOffering.get_list()
         orientdb_dashboard_service = next((service for service in marketplace
                                            if service.label == ServiceLabels.ORIENT_DB_DASHBOARD), None)
         assert orientdb_dashboard_service is not None, "OrientDB service not available in marketplace"

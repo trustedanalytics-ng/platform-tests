@@ -21,7 +21,7 @@ import config
 import tests.fixtures.assertions as assertions
 from modules.constants import TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
-from modules.exceptions import UnexpectedResponseError, ServiceTypeNotFoundException
+from modules.exceptions import UnexpectedResponseError
 from modules.file_utils import generate_csv_file
 from modules.http_client import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
@@ -29,9 +29,8 @@ from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import Application, DataSet, Organization, ServiceInstance, Transfer, User
-from modules.tap_object_model import ServiceType
-from modules.tap_object_model import TestSuite
+from modules.tap_object_model import Application, DataSet, Organization, ServiceInstance, Transfer, User,\
+    ServiceOffering, TestSuite
 from modules.tap_object_model.flows import onboarding
 from tap_component_config import offerings
 
@@ -44,7 +43,7 @@ pytestmark = [priority.high]
 
 
 def test_login():
-    entities = ServiceType.api_get_catalog()
+    entities = ServiceOffering.get_list()
     assert entities is not None
 
 
@@ -159,13 +158,9 @@ def _offerings_as_parameters():
 def test_create_and_delete_marketplace_service_instances(context, test_marketplace, service_label, plan_name):
     """Create and Delete Marketplace Service Instance"""
     step("Create instance {} {}".format(service_label, plan_name))
-    service_type = next((s for s in test_marketplace if s.label == service_label), None)
-    if service_type is None:
-        raise ServiceTypeNotFoundException("ServiceType for {} not found in marketplace".format(service_label))
-    plan_id = service_type.get_service_plan_id(plan_name)
-    instance = ServiceInstance.create(context=context, plan_id=plan_id, offering_id=service_type.guid)
+    instance = ServiceInstance.create_with_name(context, offering_label=service_label, plan_name=plan_name)
     step("Check that the instance is running")
-    instance.ensure_running()
+    instance.ensure_created()
     step("Delete the instance")
     instance.delete()
     step("Check that the instance was deleted")

@@ -22,7 +22,7 @@ from modules.exceptions import CommandExecutionException
 from modules.http_calls import cloud_foundry as cf
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, User, ServiceType
+from modules.tap_object_model import Application, ServiceInstance, User, ServiceOffering
 from modules.tap_object_model.flows import summaries
 from tests.fixtures import assertions
 
@@ -154,9 +154,9 @@ class TestTapApp:
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_app_register_in_marketplace(self, context, test_org, test_space, sample_java_app):
-        register_service = ServiceType.register_app_in_marketplace(context, sample_java_app.name, sample_java_app.guid,
+        register_service = ServiceOffering.register_app_in_marketplace(context, sample_java_app.name, sample_java_app.guid,
                                                                    test_org.guid, test_space.guid)
-        services = ServiceType.cf_api_get_list_from_marketplace_by_space(test_space.guid)
+        services = ServiceOffering.cf_api_get_list_from_marketplace_by_space(test_space.guid)
         assert register_service in services
 
     @priority.medium

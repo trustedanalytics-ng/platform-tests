@@ -22,7 +22,7 @@ from modules.constants.application_path import ApplicationPath
 from modules.tap_logger import step
 from modules.markers import priority
 from modules.service_tools.orientdb_api import OrientDbApi
-from modules.tap_object_model import Application, ServiceInstance, ServiceType
+from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
 from modules.test_names import generate_test_object_name
 from modules.constants import ServiceLabels
 
@@ -37,7 +37,7 @@ class TestOrientDB(object):
     def orientdb_service(self, class_context, test_org, test_space):
         """SetUp: OrientDB service creation."""
         step("Create OrientDB service instance.")
-        marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        marketplace = ServiceOffering.get_list()
         orient_db = next((service for service in marketplace if service.label == ServiceLabels.ORIENT_DB), None)
         assert orient_db is not None, "{} service is not available in Marketplace".format(ServiceLabels.ORIENT_DB)
         instance_name = generate_test_object_name()

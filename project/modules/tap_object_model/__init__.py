@@ -43,9 +43,7 @@ from .platform_snapshot import PlatformSnapshot
 from .binding import Binding
 from .service_broker import ServiceBroker
 from .service_instance import AtkInstance, ServiceInstance
-from .service_plan import ServicePlan
 from .service_offering import ServiceOffering
-from .service_type import ServiceType
 from .space import Space
 from .transfer import Transfer
 from .upsi import Upsi

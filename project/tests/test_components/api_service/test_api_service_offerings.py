@@ -32,7 +32,7 @@ class TestApiServiceOfferings:
         catalog = ServiceOffering.get_list()
         assert test_offering in catalog
         step("Get the offering")
-        offering = ServiceOffering.get(test_offering.guid)
+        offering = ServiceOffering.get(offering_id=test_offering.id)
         assert test_offering == offering
         step("Delete the offering")
         test_offering.delete()

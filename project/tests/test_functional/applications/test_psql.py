@@ -21,7 +21,7 @@ from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
 from modules.markers import priority
 from modules.service_tools.psql import PsqlTable, PsqlColumn, PsqlRow
 from modules.tap_logger import step
-from modules.tap_object_model import Application, ServiceInstance, ServiceType
+from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
 from modules.test_names import generate_test_object_name
 from tests.fixtures.db_input import DbInput
 
@@ -39,7 +39,7 @@ class TestPsql(object):
     @pytest.fixture(scope="class", autouse=True)
     def postgres_instance(self, class_context, test_org, test_space):
         step("Create postgres service instance")
-        marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        marketplace = ServiceOffering.get_list()
         psql = next(service for service in marketplace if service.label == ServiceLabels.PSQL)
         instance_name = generate_test_object_name()
         psql_instance = ServiceInstance.api_create(

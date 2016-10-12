@@ -24,7 +24,7 @@ from modules.constants import ServicePlan, ServiceLabels, TapGitHub, TapComponen
 from modules.markers import incremental, priority
 from modules.service_tools.psql import PsqlRow, PsqlTable
 from modules.tap_logger import step
-from modules.tap_object_model import Application, HdfsJob, ServiceInstance, ServiceType
+from modules.tap_object_model import Application, HdfsJob, ServiceInstance, ServiceOffering
 from modules.tap_object_model.hdfs_job import JobStatus
 from modules.test_names import generate_test_object_name
 from modules.webhdfs_tools import WebhdfsTools
@@ -81,7 +81,7 @@ class TestYarnAuthGateway:
     def test_0_create_kerberos_instance(self, class_context, test_org, test_space):
         step("Check kerberos in marketplace")
         service_label = ServiceLabels.KERBEROS
-        marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        marketplace = ServiceOffering.get_list()
         kerberos = next((service for service in marketplace if service.label == service_label), None)
         assert kerberos is not None, "{} not available".format(service_label)
         step("Create instance of kerberos")

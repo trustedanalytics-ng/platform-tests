@@ -25,7 +25,7 @@ from modules.http_client.configuration_provider.service_tool import ServiceToolC
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import priority, incremental
 from modules.tap_logger import step
-from modules.tap_object_model import Application, KubernetesCluster, ServiceInstance, ServiceType
+from modules.tap_object_model import Application, KubernetesCluster, ServiceInstance, ServiceOffering
 from tests.fixtures import assertions
 
 
@@ -52,7 +52,7 @@ class TestMongoDbClustered:
 
     def test_0_check_mongodb_in_marketplace(self, test_space):
         step("Check if mongodb clustered service is in marketplace")
-        marketplace = ServiceType.api_get_list_from_marketplace(test_space.guid)
+        marketplace = ServiceOffering.get_list()
         mongodb = next((service for service in marketplace if service.label == self.MONGODB_SERVICE_LABEL), None)
         assert mongodb is not None, "{} not available".format(self.MONGODB_SERVICE_LABEL)
 
