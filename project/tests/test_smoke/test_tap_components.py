@@ -117,6 +117,7 @@ class TestK8sComponents:
                                          raise_exception=True, msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
+    @pytest.mark.bugs("DPNG-11819 [api-tests] Cannot access kubectl")
     @pytest.mark.parametrize("expected_app", TAP.get_list())
     def test_k8s_component_presence_on_platform(self, expected_app, running_tap_components):
         step("Check that '{}' app is present on platform".format(expected_app))
