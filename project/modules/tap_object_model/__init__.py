@@ -35,7 +35,7 @@ from .kubernetes_instance import KubernetesInstance
 from .kubernetes_secret import KubernetesSecret
 from .latest_event import EventCategory, EventMessage, LatestEvent
 from .k8s_service import K8sService
-from .ng_template import Template
+from .template import Template
 from .organization import Organization
 from .platform import Platform
 from .platform_tests import TestSuite

@@ -17,71 +17,96 @@
 import pytest
 
 from modules.constants import HttpStatus, TemplateRepositoryHttpStatus
-from modules.tap_logger import step
+import modules.http_calls.platform.template_repository as template_repository_api
+from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Template
-from modules.markers import incremental
 from tests.fixtures.assertions import assert_raises_http_exception
 from modules.http_calls.kubernetes import k8s_get_configmap
 
 
-@incremental
 @pytest.mark.usefixtures("open_tunnel")
 class TestTemplateRepository:
-    def test_0_create_template(self, class_context):
+
+    @pytest.fixture(scope="function")
+    def sample_template(self, context):
+        log_fixture("Create sample template")
+        return Template.create(context)
+
+    @pytest.fixture(scope="class")
+    def generic_application_template_id(self):
+        log_fixture("Get generic application template id")
+        response = k8s_get_configmap("template-repository")
+        return response["data"]["generic-application-template-id"]
+
+    def test_create_and_delete_template(self, context):
         step("Create template")
-        self.__class__.test_template = Template.create(class_context)
+        template = Template.create(context)
+
+        step("Check that the template is on the template list")
         templates = Template.get_list()
-        assert self.test_template in templates
+        assert template in templates
 
-    def test_1_cannot_create_template_with_existing_id(self, class_context):
-        step("Create template with existing id")
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "", Template.create, class_context,
-                                     template_id=self.test_template.id)
+        step("Delete the template")
+        template.delete()
 
-    def test_2_get_template(self):
+        step("Check that the template has been deleted")
+        templates = Template.get_list()
+        assert template not in templates
+
+    def test_get_template(self, sample_template):
         step("Get template by id")
-        template = Template.get(template_id=self.test_template.id)
-        assert template == self.test_template
+        template = Template.get(template_id=sample_template.id)
+        assert template == sample_template
 
-    @pytest.mark.bugs("DPNG-10995 [TAP_NG] Incorrect response code on GET parsed_template")
-    def test_3_get_parsed_template(self):
-        step("Check if template is correctly parsed")
-        template = Template.get_parsed(template_id=self.test_template.id,
-                                       service_id="1fef0dfe-16a7-11e6-bde5-00155d3d8812")
-        assert '$' not in str(template.components)
+    def test_cannot_create_template_with_existing_id(self, context, sample_template):
+        step("Attempt to create a template with existing id causes an error")
+        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
+                                     Template.create, context, template_id=sample_template.id)
 
-    def test_4_cannot_get_parsed_template_with_invalid_service_id(self):
-        step("Check service id")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, TemplateRepositoryHttpStatus.MSG_TOO_SHORT_SERVICE_ID,
-                                     Template.get_parsed, template_id=self.test_template.id, service_id="1fef0d")
-
-    def test_5_delete_template(self):
-        step("Delete template")
-        self.test_template.delete()
-        step("Check that the template was deleted")
-        templates = Template.get_list()
-        assert self.test_template not in templates
-
-    def test_6_getting_deleted_template_returns_an_error(self):
+    def test_cannot_get_deleted_template(self, sample_template):
+        sample_template.delete()
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND,
                                      TemplateRepositoryHttpStatus.MSG_TEMPLATE_DOES_NOT_EXIST,
-                                     Template.get, template_id=self.test_template.id)
+                                     Template.get, template_id=sample_template.id)
 
-    def test_7_get_parsed_template_generic_user_prov_application(self):
-        step("Get generic application template id")
-        response = k8s_get_configmap("template-repository")
-        self.__class__.generic_application_template_id = response['data']['generic-application-template-id']
+    @pytest.mark.skip(reason="Ania Miszka, please clarify why there is '$' in response")
+    def test_get_parsed_template(self, sample_template):
+        step("Check that template is correctly parsed")
+        instance_id = "1fef0dfe-16a7-11e6-bde5-00155d3d8812"
+        template = Template.get_parsed(template_id=sample_template.id, instance_id=instance_id)
+        assert '$' not in str(template.components)
+
+    def test_cannot_get_parsed_template_with_invalid_instance_id(self, sample_template):
+        step("Getting parsed template with invalid instanceId causes an error")
+        instance_id = "1fef0d"
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, TemplateRepositoryHttpStatus.MSG_TOO_SHORT_INSTANCE_ID,
+                                     Template.get_parsed, template_id=sample_template.id, instance_id=instance_id)
+
+    def test_get_parsed_template_for_generic_user_provided_application(self, generic_application_template_id):
         step("Get parsed template for generic user-provided application")
-        template = Template.get_parsed(template_id=self.generic_application_template_id,
-                                       service_id="asdf12343sffs321342dsda",
-                                       optional_params={"image": "testImage",
-                                                        "hostname": "testHostname"})
+        instance_id = "asdf12343sffs321342dsda"
+        other_params = {
+            "image": "testImage",
+            "hostname": "testHostname"
+        }
+        template = Template.get_parsed(template_id=generic_application_template_id, instance_id=instance_id,
+                                       optional_params=other_params)
         assert '$' not in str(template.components)
 
-    def test_8_get_parsed_template_empty_params(self):
+    def test_get_parsed_template_with_empty_params(self, generic_application_template_id):
         step("Get parsed template for query with empty image and hostname params")
-        template = Template.get_parsed(template_id=self.generic_application_template_id,
-                                       service_id="asdf12343sffs321342dsda",
-                                       optional_params={"image": "",
-                                                        "hostname": ""})
+        instance_id = "asdf12343sffs321342dsda"
+        other_params = {
+            "image": "",
+            "hostname": ""
+        }
+        template = Template.get_parsed(template_id=generic_application_template_id, instance_id=instance_id,
+                                       optional_params=other_params)
         assert '$' not in str(template.components)
+
+    def test_cannot_get_parsed_template_without_instance_id(self, sample_template):
+        step("Getting parsed template without instanceId parameter should cause an error")
+        assert_raises_http_exception(TemplateRepositoryHttpStatus.CODE_BAD_REQUEST,
+                                     TemplateRepositoryHttpStatus.MSG_UUID_CANNOT_BE_EMPTY,
+                                     template_repository_api.get_parsed_template, template_id=sample_template.id,
+                                     params={})

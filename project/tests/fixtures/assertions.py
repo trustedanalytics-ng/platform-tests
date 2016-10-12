@@ -55,12 +55,12 @@ def _assert_http_exception(*, exception, expected_status, expected_error_msg):
     actual_msg = exception.value.error_message
     status_correct = expected_status == actual_status
     if expected_error_msg == "":
-        msg_correct = expected_error_msg == actual_msg
+        msg_correct = actual_msg == "" or actual_msg == "\"\""
     else:
         msg_correct = expected_error_msg in actual_msg
     assert status_correct and msg_correct, "Error is {} \"{}\",\nexpected {} \"{}\"".format(actual_status, actual_msg,
-                                                                                           expected_status,
-                                                                                           expected_error_msg)
+                                                                                            expected_status,
+                                                                                            expected_error_msg)
 
 def assert_user_not_in_org(user, org_guid):
     org_users = User.get_list_in_organization(org_guid=org_guid)

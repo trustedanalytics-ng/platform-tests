@@ -32,7 +32,7 @@ def get_templates():
     return _get_client().request(HttpMethod.GET, path="templates", msg="TEMPLATE REPOSITORY: get template list")
 
 
-def get_template(template_id):
+def get_template(*, template_id):
     """ GET /templates/{template_id} """
     response = _get_client().request(HttpMethod.GET,
                                      path="templates/{}".format(template_id),
@@ -40,7 +40,7 @@ def get_template(template_id):
     return response
 
 
-def create_template(template_id, template_body, hooks):
+def create_template(*, template_id, template_body, hooks):
     """ POST /templates """
     body = {
         "id": template_id,
@@ -53,7 +53,7 @@ def create_template(template_id, template_body, hooks):
                                  msg="TEMPLATE REPOSITORY: create template")
 
 
-def get_parsed_template(template_id, params):
+def get_parsed_template(*, template_id, params):
     """ GET /parsed_template/{template_id}?param1=value1&param2=value2 """
     return _get_client().request(HttpMethod.GET,
                                  path="parsed_template/{}".format(template_id),
@@ -61,7 +61,7 @@ def get_parsed_template(template_id, params):
                                  msg="TEMPLATE REPOSITORY: get parsed template")
 
 
-def delete_template(template_id):
+def delete_template(*, template_id):
     """ DELETE /templates/{template_id} """
     response = _get_client().request(HttpMethod.DELETE,
                                      path="templates/{}".format(template_id),
