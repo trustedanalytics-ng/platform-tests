@@ -24,8 +24,8 @@ from modules.http_client.configuration_provider.application import ApplicationCo
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider, \
     ProxiedConfigurationProvider, ServiceConfigurationProvider
 from modules.markers import priority
-from modules.ssh_lib import JumpClient
 from modules.tap_logger import step
+from modules.tap_object_model.k8s_service import K8sService
 from tap_component_config import TAP_core_services, third_party_services, api_service
 
 
@@ -41,14 +41,9 @@ class TestK8sComponents:
     @classmethod
     @pytest.fixture(scope="class")
     def running_tap_components(cls):
-        component_name_list = []
         step("Retrieve tap components")
-        jump_client = JumpClient(username=config.ng_jump_user)
-        kubectl_output = jump_client.ssh("kubectl get services")
-        for app in kubectl_output[2:]:
-            name = app.split()[0]
-            component_name_list.append(name)
-        return component_name_list
+        service_list = K8sService.get_list()
+        return [service.name for service in service_list]
 
     def get_client(self, service_name, endpoint=None):
         configuration = K8sServiceConfigurationProvider.get(service_name, api_endpoint=endpoint)

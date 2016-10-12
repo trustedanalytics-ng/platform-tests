@@ -42,10 +42,10 @@ class KubernetesConfigurationProvider(object):
 
         if cls._kube_dir_path is None:
             cls._kube_dir_path = cls._download_config_directory()
-            kube_config_path = os.path.join(cls._kube_dir_path , cls._KUBE_DIR_NAME)
+            kube_config_path = os.path.join(cls._kube_dir_path, cls._KUBE_CONFIG_FILE_NAME)
             cls._host = cls._get_url(kube_config_path)
             cls._certificate = cls._get_certificates(cls._kube_dir_path, kube_config_path)
-            cls._api_version = cls._get_api_version(cls._kube_dir_path)
+            cls._api_version = cls._get_api_version(kube_config_path)
 
         client_configuration = HttpClientConfiguration(
             client_type=HttpClientType.NO_AUTH,
