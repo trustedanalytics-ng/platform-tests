@@ -123,25 +123,24 @@ class TapCli:
         assert service['name'] == service_name
         return service
 
-    def push(self, app_dir_path):
-        """Pushes the application. If the path contains a file, it is assumed
-        it is a gzipped application that will be pushed, otherwise the path
-        is a directory that will be wholy pushed
+    def push(self, *, app_path):
+        """Push an application.
+        If the path is a file, it is assumed it is an archived application, otherwise,
+        that the path is a directory containing the application files.
 
         Args:
-            app_dir_path: Path to gzipped application or path to directory with
-            application
+            app_dir_path: Path to an archived application or to the application directory
 
         Returns:
-            Result of the command
+            Command output
         """
-        file_name = os.path.basename(app_dir_path)
-        if file_name is "":
-            cmd = [self.PUSH]
+        if os.path.isfile(app_path):
+            cmd = [self.PUSH, os.path.basename(app_path)]
+            cwd = os.path.dirname(app_path)
         else:
-            cmd = [self.PUSH, file_name]
-
-        return self._run_command(cmd, cwd=os.path.dirname(app_dir_path))
+            cmd = [self.PUSH]
+            cwd = app_path
+        return self._run_command(cmd, cwd=cwd)
 
     def apps(self):
         return self._run_command([self.APPS])

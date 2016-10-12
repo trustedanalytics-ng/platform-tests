@@ -31,7 +31,7 @@ class CliApplication:
     EXPECTED_DELETE_BODY = 'CODE: 204 BODY'
     EXPECTED_SUCCESS_RESPONSE = 'CODE: 200 BODY: {"message":"success"}'
 
-    def __init__(self, *, app_type, target_directory, tap_cli, name=None, instances=1):
+    def __init__(self, *, app_type, target_directory, tap_cli, name, instances):
         self.app_type = app_type
         self.name = name
         self.instances = instances
@@ -49,15 +49,13 @@ class CliApplication:
         shutil.copyfile(manifest_path, os.path.join(target_directory, "manifest.json"))
 
     @classmethod
-    def push(cls, context, *, tap_cli, manifest_path, target_directory, app_type, name=None, instances=1):
+    def push(cls, context, *, app_path, tap_cli, app_type, name=None, instances=1):
         if name is None:
-            name = "sample{}app{}".format(app_type.lower(), generate_test_object_name(separator="-"))
-        cls._update_manifest(manifest_path=manifest_path, target_directory=target_directory, app_type=app_type,
-                             name=name, instances=instances)
-        new_app = cls(app_type=app_type, target_directory=target_directory, tap_cli=tap_cli, name=name,
-                      instances=instances)
+            name = generate_test_object_name(separator="-")
+        Application.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type)
+        new_app = cls(app_type=app_type, target_directory=app_path, tap_cli=tap_cli, name=name, instances=instances)
         context.apps.append(new_app)
-        push_output = tap_cli.push(app_dir_path=target_directory)
+        push_output = tap_cli.push(app_path=app_path)
         missing_headers = []
         for header in cls.EXPECTED_PUSH_HEADERS:
             if header not in push_output:

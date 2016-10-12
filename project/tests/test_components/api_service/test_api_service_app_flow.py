@@ -17,41 +17,29 @@
 import pytest
 
 from modules.constants import ApiServiceHttpStatus, TapApplicationType, TapComponent as TAP, Urls
-import modules.http_calls.platform.api_service as api_service
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
-from modules.test_names import generate_test_object_name
 from tests.fixtures import assertions
+
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
-class ApplicationFlow:
-
-    @property
-    def manifest_params(self):
-        return {
-            'instances': 1,
-            'name': generate_test_object_name(separator=''),
-            'type': self.APP_TYPE
-        }
+class ApiServiceApplicationFlow:
 
     @pytest.fixture(scope="class")
-    def sample_application(self, class_context, sample_app_path, sample_manifest_path, tap_cli):
+    def sample_application(self, class_context, sample_app_path, tap_cli):
         log_fixture("Push sample application and check it's running")
-        Application.update_manifest(sample_manifest_path, self.manifest_params)
-        application = Application.push(class_context, app_dir=sample_app_path, tap_cli=tap_cli)
+        application = Application.push(class_context, app_path=sample_app_path, tap_cli=tap_cli, app_type=self.APP_TYPE)
         application.ensure_running()
         return application
 
     @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
-    def test_push_and_delete_application(self, context, sample_app_path, sample_manifest_path, tap_cli):
-        step("Prepare manifest with parameters")
-        Application.update_manifest(sample_manifest_path, self.manifest_params)
+    def test_push_and_delete_application(self, context, sample_app_path, tap_cli):
         step("Push sample application")
-        application = Application.push(context, app_dir=sample_app_path, tap_cli=tap_cli)
+        application = Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=self.APP_TYPE)
         step("Check application is running")
         application.ensure_running()
         step("Delete application")
@@ -88,62 +76,24 @@ class ApplicationFlow:
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 @pytest.mark.bugs("DPNG-11677 Not possible to push PYTHON2.7 or PYTHON3.4 apps")
-class TestPythonApplicationFlow(ApplicationFlow):
+class TestPythonApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_TYPE = TapApplicationType.PYTHON27
 
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestNodeJsApplicationFlow(ApplicationFlow):
+class TestNodeJsApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
     APP_TYPE = TapApplicationType.NODEJS
 
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestGoApplicationFlow(ApplicationFlow):
+class TestGoApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_go_app_url
     APP_TYPE = TapApplicationType.GO
 
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestJavaApplicationFlow(ApplicationFlow):
+class TestJavaApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_TYPE = TapApplicationType.JAVA
-
-
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestApiServiceApp:
-    SAMPLE_APP_URL = Urls.tapng_python_app_url
-
-    MANIFEST_PARAMS = {
-        'instances': 1,
-        'name': "sampleapp{}".format(generate_test_object_name(separator='')),
-        'type': TapApplicationType.PYTHON27
-    }
-
-    @pytest.fixture(scope="class")
-    def sample_app(self, class_context, sample_app_path, sample_manifest_path, tap_cli):
-        log_fixture("Push sample application")
-        Application.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
-        application = Application.push(class_context, app_dir=sample_app_path, tap_cli=tap_cli)
-        application.ensure_running()
-
-    @pytest.mark.bugs("DPNG-11054 [TAP_NG] Response code 409 (name conflict) should be displayed when pushing twice app with the same name")
-    def test_cannot_push_application_twice(self, context, sample_app_path, sample_manifest_path, tap_cli, sample_app):
-        step("Check that pushing the same application again causes an error")
-        Application.update_manifest(sample_manifest_path, self.MANIFEST_PARAMS)
-        with pytest.raises(AssertionError):
-            Application.push(context, app_dir=sample_app_path, tap_cli=tap_cli)
-
-    def test_cannot_scale_application_with_incorrect_id(self):
-        step("Scale application with incorrect id")
-        incorrect_id = "wrong_id"
-        expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(incorrect_id)
-        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
-                                                api_service.scale_application, id=incorrect_id, replicas=3)
-
-    def test_cannot_scale_application_with_incorrect_instance_number(self):
-        step("Scale application with incorrect replicas number")
-        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
-                                                api_service.scale_application, 3, "wrong_number")

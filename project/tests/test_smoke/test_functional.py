@@ -174,7 +174,6 @@ def test_create_and_delete_marketplace_service_instances(context, test_marketpla
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-@pytest.mark.bugs("DPNG-11691 Merge update_manifest, push, ensure_running, ensure_stopped, ensure_not_present methods, start, stop, delete")
 @pytest.mark.parametrize("sample_app_key", ("sample_python_app", "sample_java_app"))
 def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     """Push Sample Application and Test Http Response"""

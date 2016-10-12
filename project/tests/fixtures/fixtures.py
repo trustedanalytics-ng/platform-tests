@@ -22,12 +22,12 @@ import pytest
 
 import config
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub
+from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub, TapApplicationType
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, Space, User
+from modules.tap_object_model import Application, Organization, ServiceType, ServiceInstance, User
 from modules.tap_object_model.flows import data_catalog
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from .test_data import TestData
@@ -101,21 +101,23 @@ def login_to_cf_core(core_org, core_space):
 
 
 @pytest.fixture(scope="class")
-def sample_python_app(class_context, cli_login):
-    log_fixture("sample_python_app: Push app to tap")
-    app = Application.push(context=class_context, source_directory=ApplicationPath.SAMPLE_PYTHON_APP)
+def sample_python_app(class_context, tap_cli):
+    log_fixture("sample_python_app: push sample application")
+    app = Application.push(class_context, app_path=ApplicationPath.SAMPLE_PYTHON_APP, tap_cli=tap_cli,
+                           app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     app.ensure_running()
     return app
 
 
 @pytest.fixture(scope="class")
-def sample_java_app(class_context, cli_login):
+def sample_java_app(class_context, tap_cli):
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
     log_fixture("sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()
     log_fixture("sample_java_app: Push app to tap")
-    app = Application.push(context=class_context, source_directory=ApplicationPath.SAMPLE_JAVA_APP)
+    app = Application.push(context=class_context, app_path=ApplicationPath.SAMPLE_JAVA_APP, tap_cli=tap_cli,
+                           app_type=TapApplicationType.JAVA)
     log_fixture("Check the application is running")
     app.ensure_running()
     return app

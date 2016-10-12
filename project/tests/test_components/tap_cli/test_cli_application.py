@@ -91,10 +91,10 @@ class TestPythonCliApp:
         return os.path.join(os.path.dirname(sample_app_path), "sample_{}_app".format(self.APP_TYPE))
 
     @pytest.fixture(scope="class")
-    def sample_cli_app(self, class_context, sample_manifest_path, sample_app_target_directory, tap_cli):
+    def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
         step("Push application")
-        application = CliApplication.push(class_context, tap_cli=tap_cli, manifest_path=sample_manifest_path,
-                                          target_directory=sample_app_target_directory, app_type=self.APP_TYPE)
+        application = CliApplication.push(class_context, tap_cli=tap_cli, app_type=self.APP_TYPE,
+                                          app_path=sample_app_target_directory)
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")
@@ -114,10 +114,10 @@ class TestPythonCliApp:
         missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
         assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
 
-    def test_push_and_delete_sample_app(self, context, sample_manifest_path, sample_app_target_directory, tap_cli):
+    def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
         step("Push application")
-        application = CliApplication.push(context, tap_cli=tap_cli, manifest_path=sample_manifest_path,
-                                          target_directory=sample_app_target_directory, app_type=self.APP_TYPE)
+        application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
+                                          app_path=sample_app_target_directory)
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")

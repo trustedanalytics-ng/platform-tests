@@ -26,6 +26,7 @@ import modules.http_calls.platform.api_service as api
 from modules.http_client import HttpClient
 from modules.tap_cli import TapCli
 from modules.tap_logger import log_http_request, log_http_response
+from modules import test_names
 from ._api_model_superclass import ApiModelSuperclass
 
 
@@ -35,8 +36,8 @@ class Application(ApiModelSuperclass):
     It enables sending http requests to such applications.
     """
 
-    _COMPARABLE_ATTRIBUTES = ["name", "id", "image_type", "_state", "replication", "running_instances", "urls"]
-    _REFRESH_ATTRIBUTES = ["id", "image_type", "_state", "replication", "running_instances", "urls"]
+    _COMPARABLE_ATTRIBUTES = ["name", "id", "image_type", "state", "replication", "running_instances", "urls"]
+    _REFRESH_ATTRIBUTES = ["id", "image_type", "state", "replication", "running_instances", "urls"]
 
     MANIFEST_NAME = "manifest.json"
 
@@ -57,7 +58,7 @@ class Application(ApiModelSuperclass):
         self.name = name
         self.bindings = bindings
         self.image_type = image_type
-        self._state = state
+        self.state = state
         self.replication = replication
         self.running_instances = running_instances
         self.urls = tuple(urls)
@@ -83,25 +84,51 @@ class Application(ApiModelSuperclass):
             file.write(json.dumps(manifest))
 
     @classmethod
-    def push(cls, context, app_dir: str, tap_cli: TapCli, client: HttpClient=None):
+    def save_manifest(cls, *, app_path, name, instances, app_type):
+        """
+        Fill manifest with parameters, save as file in application directory.
+        Return path to the manifest file.
+        """
+        manifest = {
+            "name": name,
+            "instances": instances,
+            "type": app_type
+        }
+        if os.path.isfile(app_path):
+            manifest_dir = os.path.dirname(app_path)
+        else:
+            manifest_dir = app_path
+        manifest_path = os.path.join(manifest_dir, cls.MANIFEST_NAME)
+        with open(manifest_path, "w") as f:
+            f.write(json.dumps(manifest))
+        return manifest_path
+
+    @classmethod
+    def push(cls, context, *, app_path: str, tap_cli: TapCli, app_type: str, name: str=None, instances: int=1,
+             client: HttpClient=None):
         """Pushes the application from source directory with provided name,
         services and envs. This only pushed the application, but does not
         verify whether the app is running or not.
 
         Args:
             context: context object that will store created applications. It is used later to perform a cleanup.
-            app_dir: path to the gzipped application
+            app_path: path to the application archive or to the application directory
             tap_cli: tap client, that will be used to push the app.
+            app_type: "type" parameter in manifest.json
+            app_name: "name" parameter in manifest.json, if None, will be auto-generatgd
+            instances: "instances" parameter in manifest.json
             client: The Http client to use. If None, default (admin via console)
                     will be used. It will be used to verify if the app was pushed
 
             Returns:
-                Created application object
+                Application class instance
         """
-        name = cls._read_app_name_from_manifest(app_dir)
+        if name is None:
+            name = test_names.generate_test_object_name(separator="")
+        cls.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type)
         tap_cli.login()
         try:
-            tap_cli.push(app_dir)
+            tap_cli.push(app_path=app_path)
         except:
             apps = Application.get_list(client=client)
             application = next((app for app in apps if app.name == name), None)
@@ -122,12 +149,12 @@ class Application(ApiModelSuperclass):
     @property
     def is_stopped(self) -> bool:
         """Returns True if application is stopped."""
-        return self._state.upper() == TapEntityState.STOPPED
+        return self.state.upper() == TapEntityState.STOPPED
 
     @property
     def is_running(self) -> bool:
         """Returns True if any of the application instances are running."""
-        return self._state == TapEntityState.RUNNING
+        return self.state == TapEntityState.RUNNING
 
     @classmethod
     def get(cls, app_id: str, client: HttpClient=None):
@@ -178,7 +205,7 @@ class Application(ApiModelSuperclass):
         If the application hasn't started, assertion kicks in
         """
         self._refresh()
-        assert self.is_running is True, "App {} is not started. App's state: {}".format(self.name, self._state)
+        assert self.is_running is True, "App {} is not started. App state: {}".format(self.name, self.state)
 
     @retry(AssertionError, tries=30, delay=2)
     def ensure_stopped(self):
@@ -187,7 +214,7 @@ class Application(ApiModelSuperclass):
         If the application hasn't stopped, assertion kicks in
         """
         self._refresh()
-        assert self.is_stopped is True, "App {} is not stopped. App's state: {}".format(self.name, self._state)
+        assert self.is_stopped is True, "App {} is not stopped. App state: {}".format(self.name, self.state)
 
     def api_request(self, path: str, method: str="GET", scheme: str="http", hostname: str=None, data: dict=None,
                     params: dict=None, body: dict=None, raw: bool=False):
@@ -261,4 +288,4 @@ class Application(ApiModelSuperclass):
     def _ensure_has_id(self):
         """ Waits for the application to receive an id. If no id is found, assertion is raised """
         self._refresh()
-        assert self.id != "", "App {} hasn't received id yet. State: {}".format(self.name, format(self._state))
+        assert self.id != "", "App {} hasn't received id yet. State: {}".format(self.name, format(self.state))
