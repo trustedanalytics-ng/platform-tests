@@ -17,8 +17,8 @@
 import pytest
 
 import config
-from modules.constants import HttpStatus
-from modules.constants import TapComponent as TAP
+from modules.constants import HttpStatus, TapComponent as TAP
+from modules.exceptions import UnexpectedResponseError
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider, \
@@ -116,7 +116,7 @@ class TestK8sComponents:
     @pytest.mark.parametrize("expected_app", TAP.get_list())
     def test_k8s_component_presence_on_platform(self, expected_app, running_tap_components):
         step("Check that '{}' app is present on platform".format(expected_app))
-        assert expected_app in running_tap_components
+        assert expected_app in running_tap_components, "No such service {}".format(expected_app)
 
 
 @priority.high
@@ -131,12 +131,14 @@ class TestSmokeTrustedAnalyticsComponents:
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.bugs("DPNG-11452 Healthz response returns 200 for non existing application")
-    def test_components_check_healthz_anything(self):
-        component = "anything"
-        url = "http://{}.{}".format(component, config.tap_domain)
+    def test_calling_healthz_on_non_existing_service_returns_404(self):
+        expected_status_code = HttpStatus.CODE_NOT_FOUND
+        url = "http://anything.{}".format(config.tap_domain)
+        step("Check that calling {} returns {}".format(url, expected_status_code))
         client = HttpClientFactory.get(ApplicationConfigurationProvider.get(url))
-        response = client.request(method=HttpMethod.GET, path="healthz", raw_response=True)
-        assert response.status_code == HttpStatus.CODE_NOT_FOUND
+        with pytest.raises(UnexpectedResponseError) as e:
+            client.request(method=HttpMethod.GET, path="healthz")
+        assert e.value.status == expected_status_code
 
     @pytest.mark.parametrize("component", [TAP.console])
     def test_components_root_endpoint(self, component):

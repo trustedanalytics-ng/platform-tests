@@ -16,11 +16,9 @@
 
 import config
 
-from .. import HttpClientConfiguration, HttpClientType, HttpClientFactory, HttpMethod
-from modules.tap_object_model.k8s_service import K8sService
+from .. import HttpClientFactory, HttpMethod
 from .. import HttpClientConfiguration, HttpClientType
-from tap_component_config import TAP_core_services
-from modules.constants import TapComponent
+from .kubernetes import KubernetesConfigurationProvider
 
 
 class ProxiedConfigurationProvider(object):
@@ -44,12 +42,7 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
 
     @classmethod
     def _get_service_info(cls):
-        socks_proxy = "socks5://localhost:{}".format(config.ng_socks_proxy_port)
-        client_configuration = HttpClientConfiguration(
-            client_type = HttpClientType.NO_AUTH,
-            url="http://localhost:{}/api/{}".format(config.ng_kubernetes_api_port, config.ng_kubernetes_api_version),
-            proxies={"http": socks_proxy, "https": socks_proxy})
-        client = HttpClientFactory.get(client_configuration)
+        client = HttpClientFactory.get(KubernetesConfigurationProvider.get())
         response = client.request(
             method=HttpMethod.GET,
             path="namespaces/default/services",

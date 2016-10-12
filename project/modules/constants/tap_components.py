@@ -65,7 +65,7 @@ class TapComponent:
     space_shuttle_demo = "space-shuttle-demo"
 
     # ---- TAP NG components ---- #
-    api_service = "api-service"
+    api_service = "api"
     blob_store = "blob-store"
     ca = "ca"
     catalog = "catalog"

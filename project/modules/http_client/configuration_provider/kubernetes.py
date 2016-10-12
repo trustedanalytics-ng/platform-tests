@@ -37,7 +37,7 @@ class KubernetesConfigurationProvider(object):
     @classmethod
     def get(cls):
         """
-        When called for the first time, retrieve kubernetes service cofiguration from jumpbox.
+        When called for the first time, retrieve kubernetes service configuration from jumpbox.
         """
 
         if cls._kube_dir_path is None:
