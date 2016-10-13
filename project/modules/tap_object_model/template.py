@@ -34,7 +34,7 @@ class Template(TapObjectSuperclass):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, *, template_id=None, body=template_example.ng_template_example_body, hooks=None):
+    def create(cls, context, *, template_id=None, body=template_example.example_template_body, hooks=None):
         if template_id is None:
             template_id = str(uuid.uuid4())
         template_repository_api.create_template(template_id=template_id, template_body=body, hooks=hooks)

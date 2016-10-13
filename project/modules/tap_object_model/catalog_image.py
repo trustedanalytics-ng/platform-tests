@@ -54,7 +54,7 @@ class CatalogImage(TapObjectSuperclass):
         response = catalog_api.get_images()
         return cls._list_from_response(response)
 
-    @retry(AssertionError, tries=10, delay=2)
+    @retry(AssertionError, tries=15, delay=2)
     def ensure_in_state(self, expected_state):
         image = self.get(image_id=self.id)
         self.state = image.state

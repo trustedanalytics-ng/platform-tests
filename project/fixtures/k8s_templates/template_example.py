@@ -14,68 +14,195 @@
 # limitations under the License.
 #
 
-ng_template_example_body = {
-    "componentType": "",
+
+example_template_body = {
+    "componentType": "instance",
     "persistentVolumeClaims": None,
     "deployments": [
         {
             "kind": "Deployment",
             "apiVersion": "extensions/v1beta1",
             "metadata": {
-                "name": "$idx_and_short_serviceid",
+                "name": "$short_instance_id",
                 "creationTimestamp": None,
-                "labels": {
-                    "catalog_plan_id": "$catalog_plan_id",
-                    "catalog_service_id": "$catalog_service_id",
-                    "idx_and_short_serviceid": "$idx_and_short_serviceid",
-                    "managed_by": "TAP",
-                    "org": "$org",
-                    "service_id": "$service_id",
-                    "space": "$space"
-                }
+                "labels":
+                    {
+                        "instance_id": "$instance_id",
+                        "managed_by": "TAP",
+                        "org": "$org",
+                        "short_instance_id": "$short_instance_id",
+                        "space": "$space"
+                    }
             },
             "spec": {
                 "replicas": 1,
                 "selector": {
                     "matchLabels": {
-                        "idx_and_short_serviceid": "$idx_and_short_serviceid",
-                        "service_id": "$service_id"
+                        "instance_id": "$instance_id",
+                        "managed_by": "TAP",
+                        "short_instance_id": "$short_instance_id"
                     }
                 },
                 "template": {
                     "metadata": {
                         "creationTimestamp": None,
                         "labels": {
-                            "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                            "instance_id": "$instance_id",
                             "managed_by": "TAP",
-                            "service_id": "$service_id"
+                            "short_instance_id": "$short_instance_id"
                         }
                     },
                     "spec": {
                         "volumes": None,
                         "containers": [
                             {
-                                "name": "k-ipython",
-                                "image": "ipython/scipyserver",
+                                "name": "tapng-gateway",
+                                "image": "127.0.0.1:30000/tapng-gateway",
                                 "ports": [
                                     {
-                                        "containerPort": 8888,
+                                        "containerPort": 8080,
                                         "protocol": "TCP"
                                     }
                                 ],
                                 "env": [
                                     {
-                                        "name": "MANAGED_BY",
-                                        "value": "TAP"
-                                    },
-                                    {
-                                        "name": "PASSWORD",
+                                        "name": "GATEWAY_ID",
                                         "valueFrom": {
                                             "secretKeyRef": {
-                                                "Name": "$short_serviceid-ipython-credentials",
-                                                "key": "password"
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "id"
                                             }
                                         }
+                                    },
+                                    {
+                                        "name": "GATEWAY_INDEX",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "index"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_TRACE",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "trace"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_ROOT",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.root"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_HOST",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.host"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_PORT",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.port"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_TOKEN",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.token"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_AUTHMETHOD",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.authmethod"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_DEVICEKEYSURI",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.devicekeysuri"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_SERVER_TOLERABLEJWTAGE",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "server.tolerablejwtage"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_PUB_URI",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "pub.uri"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_PUB_TOPIC",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "pub.topic"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_PUB_ACK",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "pub.ack"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_PUB_COMPRESS",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "pub.compress"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "GATEWAY_PUB_FLUSHFREQ",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "Name": "$short_instance_id-gateway-args",
+                                                "key": "pub.flushfreq"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "MANAGED_BY",
+                                        "value": "TAP"
                                     }
                                 ],
                                 "resources": {},
@@ -92,20 +219,19 @@ ng_template_example_body = {
             "status": {}
         }
     ],
+    "ingresses": None,
     "services": [
         {
             "kind": "Service",
             "apiVersion": "v1",
             "metadata": {
-                "name": "$idx_and_short_serviceid",
+                "name": "$short_instance_id",
                 "creationTimestamp": None,
                 "labels": {
-                    "catalog_plan_id": "$catalog_plan_id",
-                    "catalog_service_id": "$catalog_service_id",
-                    "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                    "instance_id": "$instance_id",
                     "managed_by": "TAP",
                     "org": "$org",
-                    "service_id": "$service_id",
+                    "short_instance_id": "$short_instance_id",
                     "space": "$space"
                 }
             },
@@ -115,13 +241,13 @@ ng_template_example_body = {
                     {
                         "name": "",
                         "protocol": "TCP",
-                        "port": 8888,
+                        "port": 8080,
                         "targetPort": 0,
                         "nodePort": 0
                     }
                 ],
                 "selector": {
-                    "service_id": "$service_id"
+                    "instance_id": "$instance_id"
                 }
             },
             "status": {
@@ -133,19 +259,19 @@ ng_template_example_body = {
         {
             "kind": "ServiceAccount",
             "apiVersion": "v1",
-            "metadata": {
-                "name": "$idx_and_short_serviceid",
-                "creationTimestamp": None,
-                "labels": {
-                    "catalog_plan_id": "$catalog_plan_id",
-                    "catalog_service_id": "$catalog_service_id",
-                    "idx_and_short_serviceid": "$idx_and_short_serviceid",
-                    "managed_by": "TAP",
-                    "org": "$org",
-                    "service_id": "$service_id",
-                    "space": "$space"
-                }
-            },
+            "metadata":
+                {
+                    "name": "$short_instance_id",
+                    "creationTimestamp": None,
+                    "labels":
+                        {
+                            "instance_id": "$instance_id",
+                            "managed_by": "TAP",
+                            "org": "$org",
+                            "short_instance_id": "$short_instance_id",
+                            "space": "$space"
+                        }
+                },
             "secrets": None
         }
     ],
@@ -154,16 +280,32 @@ ng_template_example_body = {
             "kind": "Secret",
             "apiVersion": "v1",
             "metadata": {
-                "name": "$short_serviceid-ipython-credentials",
+                "name": "$short_instance_id-gateway-args",
                 "creationTimestamp": None,
                 "labels": {
-                    "idx_and_short_serviceid": "$idx_and_short_serviceid",
+                    "instance_id": "$instance_id",
                     "managed_by": "TAP",
-                    "service_id": "$service_id"
+                    "org": "$org",
+                    "short_instance_id": "$short_instance_id",
+                    "space": "$space"
                 }
             },
             "data": {
-                "password": "JHJhbmRvbTE="
+                "id": "ZzE=",
+                "index": "MA==",
+                "pub.ack": "ZmFsc2U=",
+                "pub.compress": "dHJ1ZQ==",
+                "pub.flushfreq": "MQ==",
+                "pub.topic": "bWVzc2FnZXM=",
+                "pub.uri": "a2Fma2EtbW9jazo5MDky",
+                "server.authmethod": "bm9uZQ==",
+                "server.devicekeysuri": "",
+                "server.host": "MC4wLjAuMA==",
+                "server.port": "ODA4MA==",
+                "server.root": "L3dz",
+                "server.token": "",
+                "server.tolerablejwtage": "NQ==",
+                "trace": "dHJ1ZQ=="
             }
         }
     ]

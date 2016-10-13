@@ -32,19 +32,19 @@ pytestmark = [pytest.mark.components(TAP.image_factory)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestImageFactory:
 
-    NODEJS_APP_NAME = "test_blob"
-    NODEJS_APP_TYPE = TapApplicationType.NODEJS
+    APP_TYPE = TapApplicationType.NODEJS
+    APP_URL = Urls.nodejs_app_url
     INITIAL_IMAGE_STATE = TapEntityState.PENDING
     catalog_image = None
 
     @pytest.fixture(scope="function")
     def nodejs_example(self):
-        return download_file(url=Urls.nodejs_app_url, save_file_name=self.NODEJS_APP_NAME)
+        return download_file(url=self.APP_URL, save_file_name="test_blob")
 
     @pytest.fixture(scope="function")
     def catalog_image(self, context):
         log_fixture("CATALOG: Send application metadata - create an image")
-        catalog_image = CatalogImage.create(context, image_type=self.NODEJS_APP_TYPE, state=self.INITIAL_IMAGE_STATE)
+        catalog_image = CatalogImage.create(context, image_type=self.APP_TYPE, state=self.INITIAL_IMAGE_STATE)
 
         log_fixture("CATALOG: Wait for the image to be in state {}".format(TapEntityState.RUNNING))
         catalog_image.ensure_in_state(TapEntityState.READY)

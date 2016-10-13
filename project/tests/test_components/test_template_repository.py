@@ -69,7 +69,6 @@ class TestTemplateRepository:
                                      TemplateRepositoryHttpStatus.MSG_TEMPLATE_DOES_NOT_EXIST,
                                      Template.get, template_id=sample_template.id)
 
-    @pytest.mark.skip(reason="Ania Miszka, please clarify why there is '$' in response")
     def test_get_parsed_template(self, sample_template):
         step("Check that template is correctly parsed")
         instance_id = "1fef0dfe-16a7-11e6-bde5-00155d3d8812"
