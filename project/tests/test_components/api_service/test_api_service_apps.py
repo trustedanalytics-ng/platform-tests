@@ -36,6 +36,7 @@ class TestApiServiceApplication:
         application = Application.push(class_context, app_path=sample_app_path, tap_cli=tap_cli,
                                        app_type=TapApplicationType.PYTHON27)
         application.ensure_running()
+        return application
 
     @pytest.mark.bugs("DPNG-11054 [TAP_NG] Response code 409 (name conflict) should be displayed when pushing twice app with the same name")
     def test_cannot_push_application_twice(self, context, sample_app_path, tap_cli, sample_app):
