@@ -56,7 +56,7 @@ class CliOffering:
         if name is None:
             name = generate_test_object_name(short=True, separator="")
         if plans is None:
-            plans = [ServicePlan(id=None, name="test", description="test")]
+            plans = [ServicePlan(plan_id=None, name="test", description="test")]
         assert all([isinstance(sp, ServicePlan) for sp in plans])
         offering_template = cls._create_offering_template(
             template_body=template_body,

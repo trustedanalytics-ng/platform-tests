@@ -48,13 +48,13 @@ class TestApiServiceApplication:
         incorrect_id = "wrong_id"
         expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(incorrect_id)
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
-                                                api_service.scale_application, id=incorrect_id, replicas=3)
+                                                api_service.scale_application, app_id=incorrect_id, replicas=3)
 
     def test_cannot_scale_application_with_incorrect_instance_number(self):
         step("Scale application with incorrect replicas number")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
-                                                api_service.scale_application, 3, "wrong_number")
+                                                api_service.scale_application, app_id=3, replicas="wrong_number")
 
     def test_get_application(self, sample_app):
         step("Get application")
