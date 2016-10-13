@@ -102,4 +102,4 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         service_plans = []
         for item in service_plans_json:
             service_plans.append(ServicePlan.from_response(item))
-        return cls(guid=offering_id, label=label, service_plans=service_plans, client=client)
+        return cls(offering_id=offering_id, label=label, service_plans=service_plans, client=client)
