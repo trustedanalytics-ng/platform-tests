@@ -28,9 +28,10 @@ from modules.tap_cli import TapCli
 from modules.tap_logger import log_http_request, log_http_response
 from modules import test_names
 from ._api_model_superclass import ApiModelSuperclass
+from ._tap_object_superclass import TapObjectSuperclass
 
 
-class Application(ApiModelSuperclass):
+class Application(ApiModelSuperclass, TapObjectSuperclass):
     """ Application represents an Application on TAP.
     It allows to push, delete, retrieve TAP applications using 'console' or 'api-service' REST APIs.
     It enables sending http requests to such applications.

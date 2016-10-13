@@ -196,9 +196,9 @@ class BlobStoreHttpStatus(HttpStatus):
 
 
 class TemplateRepositoryHttpStatus(HttpStatus):
-    MSG_TOO_SHORT_INSTANCE_ID = "instanceId has to be longer than 15 characters!"
+    MSG_TOO_SHORT_INSTANCE_ID = "UUID has to be longer than 15 characters!"
     MSG_TEMPLATE_DOES_NOT_EXIST = "Template doesn't exist!"
-    MSG_UUID_CANNOT_BE_EMPTY = "uuid can't be empty!"
+    MSG_UUID_CANNOT_BE_EMPTY = "UUID can't be empty!"
 
 
 class CatalogHttpStatus(HttpStatus):

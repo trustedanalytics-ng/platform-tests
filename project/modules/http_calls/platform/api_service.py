@@ -45,7 +45,7 @@ def get_offerings(*, client: HttpClient=None):
 
 def create_offering(*, client: HttpClient, template_body: dict, service_name: str, description: str, bindable: bool,
                     tags: list, plans: list):
-    """ POST /offering """
+    """ POST /offerings """
     # TODO will be changed to POST /offerings
     body = {
         "template": {
@@ -63,7 +63,7 @@ def create_offering(*, client: HttpClient, template_body: dict, service_name: st
     }
     if client is None:
         client = _get_client()
-    response = client.request(HttpMethod.POST, path="offering", body=body, raw_response=True)
+    response = client.request(HttpMethod.POST, path="offerings", body=body, raw_response=True)
     assert response.status_code == HttpStatus.CODE_CREATED
     # TODO should return response.json()
     return response.json()
