@@ -26,6 +26,7 @@ from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGit
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
+from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User
 from modules.tap_object_model.flows import data_catalog
@@ -35,6 +36,11 @@ from .test_data import TestData
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables
 # TODO logger in fixtures should have special format
+
+
+@pytest.fixture(scope="session")
+def api_service_admin_client():
+    return HttpClientFactory.get(ServiceConfigurationProvider.get())
 
 
 @pytest.fixture(scope="session")

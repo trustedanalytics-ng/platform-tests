@@ -14,73 +14,55 @@
 # limitations under the License.
 #
 
-from modules.http_client import HttpClientFactory
-from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
-from ..http_calls.platform import api_service
+from modules.constants import TapMessage
+from modules.http_client import HttpClient
+import modules.http_calls.platform.api_service as api
+from ._api_model_superclass import ApiModelSuperclass
+from ._tap_object_superclass import TapObjectSuperclass
 
 
-class Binding(object):
-    COMPARABLE_ATTRIBUTES = ["app_guid", "service_instance_guid", "service_instance_name"]
+class Binding(ApiModelSuperclass, TapObjectSuperclass):
+    _COMPARABLE_ATTRIBUTES = ["app_id", "service_instance_id"]
 
-    def __init__(self, app_guid, service_instance_guid, service_instance_name):
-        self.app_guid = app_guid
-        self.service_instance_guid = service_instance_guid
-        self.service_instance_name = service_instance_name
-
-    def __eq__(self, other):
-        return all([getattr(self, attribute) == getattr(other, attribute) for attribute in self.COMPARABLE_ATTRIBUTES])
-
-    def __lt__(self, other):
-        return self.app_guid < other.app_guid and self.service_instance_guid < other.service_instance_guid
+    def __init__(self, *, app_id, service_instance_id, client: HttpClient=None):
+        super().__init__(object_id=hash(app_id + service_instance_id), client=client)
+        self.app_id = app_id
+        self.service_instance_id = service_instance_id
 
     @classmethod
-    def _from_response(cls, response):
+    def _from_response(cls, response: dict, client: HttpClient):
         entity = response["entity"]
-        binding = cls(entity["app_guid"], entity["service_instance_guid"], entity["service_instance_name"])
+        binding = cls(app_id=entity["app_guid"], service_instance_id=entity["service_instance_guid"], client=client)
         return binding
 
     @classmethod
-    def get_list(cls, app_guid, client=None):
-        client = cls._get_client(client)
-        response = api_service.get_app_bindings(app_id=app_guid, client=client)
-        bindings = []
-        # Response is None when there are no bindings
-        if response is not None:
-            for instance in response:
-                bindings.append(cls._from_response(instance))
+    def get_list(cls, *, app_id: str, client: HttpClient=None) -> list:
+        if client is None:
+            client = cls._get_default_client()
+        response = api.get_app_bindings(client=client, app_id=app_id)
+        if response is None:
+            bindings = []
+        else:
+            bindings = cls._list_from_response(response, client)
         return bindings
 
     @classmethod
-    def find_on_list(cls, app_guid, service_instance_guid, client=None):
-        client = cls._get_client(client)
-        service_bindings = cls.get_list(app_guid, client)
-        binding_found = None
-        for binding in service_bindings:
-            if binding.app_guid == app_guid and binding.service_instance_guid == service_instance_guid:
-                binding_found = binding
-        assert binding_found is not None,\
-            "Binding of app {} and instance {} doesn't exists".format(app_guid, service_instance_guid)
-        return binding_found
+    def _find_on_list(cls, app_id: str, service_instance_id: str, client: HttpClient):
+        bindings = cls.get_list(app_id=app_id, client=client)
+        assert len(bindings) > 0, "No bindings for app {} found".format(app_id)
+        binding = next((b for b in bindings if b.service_instance_id == service_instance_id), None)
+        assert binding is not None, "Binding of app {} to instance {} not found".format(app_id, service_instance_id)
+        return binding
 
     @classmethod
-    def create(cls, context, app_guid, service_instance_guid, client=None):
-        client = cls._get_client(client)
-        response = api_service.bind(service_instance_guid=service_instance_guid, app_id=app_guid, client=client)
-        assert response["message"] == "success"
-        binding = cls.find_on_list(app_guid, service_instance_guid, client)
+    def create(cls, context, *, app_id: str, service_instance_id: str, client: HttpClient=None):
+        if client is None:
+            client = cls._get_default_client()
+        response = api.bind_app(client=client, app_id=app_id, service_id=service_instance_id)
+        assert response["message"] == TapMessage.SUCCESS
+        binding = cls._find_on_list(app_id=app_id, service_instance_id=service_instance_id, client=client)
         context.bindings.append(binding)
         return binding
 
-    def delete(self, client=None):
-        client = self._get_client(client)
-        api_service.unbind(app_id=self.app_guid, service_instance_guid=self.service_instance_guid, client=client)
-
-    def cleanup(self):
-        self.delete()
-
-    @staticmethod
-    def _get_client(client=None):
-        if client is None:
-            configuration = ConsoleConfigurationProvider.get()
-            client = HttpClientFactory.get(configuration)
-        return client
+    def delete(self, client: HttpClient=None):
+        api.unbind_app(app_id=self.app_id, service_id=self.service_instance_id, client=self._get_client(client))

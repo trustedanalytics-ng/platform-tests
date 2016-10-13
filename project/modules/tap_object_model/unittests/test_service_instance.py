@@ -167,7 +167,7 @@ class TestServiceInstance:
         Test create_with_plan_name command
         """
         context = Context()
-        self.mock_api_service.get_catalog.return_value = self.GET_CATALOG_RESPONSE
+        self.mock_api_service.get_offerings.return_value = self.GET_CATALOG_RESPONSE
         self.mock_api_service.create_service_instance.return_value = self.get_service_with_state(self.RUNNING)
         service_instance = ServiceInstance.create_with_name(context, offering_label=self.OFFERING_LABEL,
                                                             name=self.SERVICE_NAME, plan_name=self.SERVICE_PLAN_NAME)

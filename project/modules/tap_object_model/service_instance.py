@@ -53,7 +53,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
             name = generate_test_object_name(short=True)
         if client is None:
             client = cls._get_default_client()
-        response = api.create_service(name=name, service_plan_id=plan_id, params=params,
+        response = api.create_service(name=name, plan_id=plan_id, params=params,
                                       offering_id=offering_id, client=client)
         instance = cls._from_response(response, client)
         context.service_instances.append(instance)
@@ -66,13 +66,25 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         Create service instance using offering label and plan name.
         First, make call to retrieve offering id and plan id.
         """
+        if client is None:
+            client = cls._get_default_client()
         offering_id, plan_id = cls._get_offering_id_and_plan_id_by_names(offering_label=offering_label,
-                                                                         plan_name=plan_name)
+                                                                         plan_name=plan_name, client=client)
         return cls.create(context, offering_id=offering_id, plan_id=plan_id, name=name, params=params, client=client)
+
+    @classmethod
+    def get(cls, *, service_id: str, client: HttpClient=None):
+        if client is None:
+            client = cls._get_default_client()
+        response = api.get_service(client=client, service_id=service_id)
+        return cls._from_response(response, client)
+
 
     @classmethod
     def get_list(cls, *, name: str=None, offering_id: str=None, plan_name: str=None, limit: int=None, skip: int=None,
                  client: HttpClient=None) -> list:
+        if client is None:
+            client = cls._get_default_client()
         response = api.get_services(name=name, offering_id=offering_id, plan_name=plan_name, limit=limit, skip=skip,
                                     client=client)
         return cls._list_from_response(response, client)
@@ -90,8 +102,8 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         assert self.state == TapEntityState.RUNNING, "Instance state is {}, expected {}".format(self.state,
                                                                                                 TapEntityState.RUNNING)
 
-    def delete(self):
-        api.delete_service(service_id=self.id, client=self._client)
+    def delete(self, client: HttpClient=None):
+        api.delete_service(service_id=self.id, client=self._get_client(client))
 
     @classmethod
     def _from_response(cls, response, client=None):
@@ -107,11 +119,11 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         return this_instance
 
     @classmethod
-    def _get_offering_id_and_plan_id_by_names(cls, offering_label: str, plan_name: str, client: HttpClient=None) -> tuple:
+    def _get_offering_id_and_plan_id_by_names(cls, offering_label: str, plan_name: str, client: HttpClient) -> tuple:
         """
         From the list of offerings, retrieve offering_id by label and plan_id by name.
         """
-        response = api.get_catalog(client=client)
+        response = api.get_offerings(client=client)
 
         # find offering in the response
         offering_data = next((i for i in response if i["entity"]["label"] == offering_label), None)

@@ -81,7 +81,7 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
     def get_list(cls, *, client: HttpClient=None):
         if client is None:
             client = cls._get_default_client()
-        response = api.get_catalog(client=client)
+        response = api.get_offerings(client=client)
         return cls._list_from_response(response, client)
 
     def delete(self, client=None):

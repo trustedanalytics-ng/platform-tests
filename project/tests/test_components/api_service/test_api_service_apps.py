@@ -22,6 +22,7 @@ from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
 from tests.fixtures import assertions
 
+
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
 
@@ -44,18 +45,20 @@ class TestApiServiceApplication:
         with pytest.raises(AssertionError):
             Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=TapApplicationType.PYTHON27)
 
-    def test_cannot_scale_application_with_incorrect_id(self):
+    def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
         step("Scale application with incorrect id")
         incorrect_id = "wrong_id"
         expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(incorrect_id)
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
-                                                api_service.scale_application, app_id=incorrect_id, replicas=3)
+                                                api_service.scale_application, app_id=incorrect_id, replicas=3,
+                                                client=api_service_admin_client)
 
-    def test_cannot_scale_application_with_incorrect_instance_number(self):
+    def test_cannot_scale_application_with_incorrect_instance_number(self, api_service_admin_client):
         step("Scale application with incorrect replicas number")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
-                                                api_service.scale_application, app_id=3, replicas="wrong_number")
+                                                api_service.scale_application, app_id=3, replicas="wrong_number",
+                                                client=api_service_admin_client)
 
     def test_get_application(self, sample_app):
         step("Get application")

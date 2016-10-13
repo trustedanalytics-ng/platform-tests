@@ -181,23 +181,23 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         """
         if client is None:
             client = cls._get_default_client()
-        response = api.get_applications(client=client).json()
+        response = api.get_applications(client=client)
         return cls._list_from_response(response, client)
 
     def delete(self, client: HttpClient=None):
         """ Deletes the application from TAP """
-        client = self._get_client(client)
-        api.delete_application(app_id=self.id, client=client)
+        api.delete_application(client=self._get_client(client), app_id=self.id)
 
     def start(self, client: HttpClient=None):
         """ Sends the start command to application """
-        client = self._get_client(client)
-        api.start_application(app_id=self.id, client=client)
+        api.start_application(app_id=self.id, client=self._get_client(client))
 
     def stop(self, client: HttpClient=None):
         """ Sends the stop command to application """
-        client = self._get_client(client)
-        api.stop_application(app_id=self.id, client=client)
+        api.stop_application(app_id=self.id, client=self._get_client(client))
+
+    def restart(self, client: HttpClient=None):
+        api.restart_application(app_id=self.id, client=self._get_client(client))
 
     @retry(AssertionError, tries=30, delay=2)
     def ensure_running(self):

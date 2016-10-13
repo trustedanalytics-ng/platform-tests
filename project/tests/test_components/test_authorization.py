@@ -38,4 +38,4 @@ class TestApiServiceAuthorization:
     def test_cannot_get_catalog_with_basic_auth(self):
         step("Check that basic auth does not work with api service")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
-                                     api.get_catalog, client=self.basic_auth_client)
+                                     api.get_offerings, client=self.basic_auth_client)

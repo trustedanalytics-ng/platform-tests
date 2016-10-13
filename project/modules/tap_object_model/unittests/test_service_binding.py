@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+from unittest import mock
+
 from modules.tap_object_model import Binding
 
 APP_GUID = "e7b9e322-5c25-4a12-41e8-e2b69133b4ab"
@@ -22,7 +24,6 @@ SERVICE_INSTANCE_NAME = "bindtest"
 
 GET_RESPONSE = {
     'entity': {
-        'service_instance_name': SERVICE_INSTANCE_NAME,
         'app_guid': APP_GUID,
         'service_instance_guid': SERVICE_INSTANCE_GUID
     }
@@ -31,7 +32,6 @@ GET_RESPONSE = {
 
 class TestServiceBinding:
     def test_binding_from_response(self):
-        binding = Binding._from_response(GET_RESPONSE)
-        assert binding.app_guid == APP_GUID
-        assert binding.service_instance_guid == SERVICE_INSTANCE_GUID
-        assert binding.service_instance_name == SERVICE_INSTANCE_NAME
+        binding = Binding._from_response(GET_RESPONSE, client=mock.Mock())
+        assert binding.app_id == APP_GUID
+        assert binding.service_instance_id == SERVICE_INSTANCE_GUID
