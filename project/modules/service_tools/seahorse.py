@@ -48,7 +48,7 @@ class Seahorse:
             name=generate_test_object_name(short=True, prefix=ServiceLabels.SEAHORSE),
             service_plan_name=ServicePlan.FREE
         )
-        self.service_instance.ensure_created()
+        self.service_instance.ensure_running()
         self.seahorse_url = "{}-{}.{}".format(self.service_instance.name.replace("_", "-"), self.service_instance.guid,
                                               self.tap_domain)
         self.seahorse_http_url = "https://{}".format(self.seahorse_url)

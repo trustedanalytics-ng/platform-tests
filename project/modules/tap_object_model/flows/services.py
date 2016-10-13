@@ -42,7 +42,7 @@ def create_instance(context, org_guid, space_guid, service_label, plan_guid, nam
                                           service_label=service_label, name=name, service_plan_guid=plan_guid,
                                           params=params)
     step("Check that the instance was created")
-    instance.ensure_created()
+    instance.ensure_running()
     return instance
 
 

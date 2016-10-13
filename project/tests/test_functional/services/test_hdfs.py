@@ -87,7 +87,7 @@ class TestHdfsUserDirectoryPlans(object):
             service_label=label,
             service_plan_guid=create_directory_plan_guid
         )
-        self.instance_cud.ensure_created()
+        self.instance_cud.ensure_running()
 
     def test_1_hdfs_key_for_create_user_directory_instance(self):
         # This functionality changed in new TAP
@@ -121,7 +121,7 @@ class TestHdfsUserDirectoryPlans(object):
             service_plan_guid=get_directory_plan_guid,
             params={"uri": uri}
         )
-        self.instance_gud.ensure_created()
+        self.instance_gud.ensure_running()
 
     def test_4_hdfs_delete_key_and_instances(self):
         step("Delete {} instance with plan {}".format(label, ServicePlan.GET_USER_DIRECTORY))

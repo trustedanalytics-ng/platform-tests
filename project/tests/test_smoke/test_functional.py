@@ -160,11 +160,11 @@ def test_create_and_delete_marketplace_service_instances(context, test_marketpla
     step("Create instance {} {}".format(service_label, plan_name))
     instance = ServiceInstance.create_with_name(context, offering_label=service_label, plan_name=plan_name)
     step("Check that the instance is running")
-    instance.ensure_created()
+    instance.ensure_running()
     step("Delete the instance")
     instance.delete()
     step("Check that the instance was deleted")
-    assertions.assert_not_in_with_retry(instance, ServiceInstance.get_list)
+    instance.ensure_deleted()
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")

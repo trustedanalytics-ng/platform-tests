@@ -53,8 +53,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
             name = generate_test_object_name(short=True)
         if client is None:
             client = cls._get_default_client()
-        response = api.create_service(name=name, plan_id=plan_id, params=params,
-                                      offering_id=offering_id, client=client)
+        response = api.create_service(name=name, plan_id=plan_id, params=params, offering_id=offering_id, client=client)
         instance = cls._from_response(response, client)
         context.service_instances.append(instance)
         return instance
@@ -79,7 +78,6 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         response = api.get_service(client=client, service_id=service_id)
         return cls._from_response(response, client)
 
-
     @classmethod
     def get_list(cls, *, name: str=None, offering_id: str=None, plan_name: str=None, limit: int=None, skip: int=None,
                  client: HttpClient=None) -> list:
@@ -89,18 +87,19 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
                                     client=client)
         return cls._list_from_response(response, client)
 
-    @retry(AssertionError, tries=6, delay=5)
-    def ensure_created(self):
-        self._refresh()
-
-    @retry(AssertionError, tries=5, delay=5)
+    @retry(AssertionError, tries=60, delay=5)
     def ensure_running(self):
-        this_instance = self._refresh()
-        self.state = this_instance.state
+        self._refresh()
         if self.state == TapEntityState.FAILURE:
             raise ServiceInstanceCreationFailed()
         assert self.state == TapEntityState.RUNNING, "Instance state is {}, expected {}".format(self.state,
                                                                                                 TapEntityState.RUNNING)
+
+    @retry(AssertionError, tries=10, delay=2)
+    def ensure_deleted(self):
+        instances = self.get_list()
+        this_instance = next((i for i in instances if i.id == self.id), None)
+        assert this_instance is None, "Instance is is still on the list with status {}".format(this_instance.state)
 
     def delete(self, client: HttpClient=None):
         api.delete_service(service_id=self.id, client=self._get_client(client))
@@ -116,7 +115,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         instances = self.get_list()
         this_instance = next((i for i in instances if i.id == self.id), None)
         assert this_instance is not None, "Instance {} not found on the list".format(self.name)
-        return this_instance
+        self.state = this_instance.state
 
     @classmethod
     def _get_offering_id_and_plan_id_by_names(cls, offering_label: str, plan_name: str, client: HttpClient) -> tuple:

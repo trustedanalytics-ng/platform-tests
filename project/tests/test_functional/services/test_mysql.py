@@ -68,7 +68,7 @@ class TestMySQLClusteredService:
         self.__class__.instance = ServiceInstance.api_create_with_plan_name(class_context, test_org.guid,
                                                                             test_space.guid, self.service_label,
                                                                             service_plan_name=ServicePlan.CLUSTERED)
-        self.instance.ensure_created()
+        self.instance.ensure_running()
 
     def test_1_get_key_for_instance(self):
         # This functionality changed in new TAP
