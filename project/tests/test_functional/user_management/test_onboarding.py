@@ -155,31 +155,3 @@ class TestOnboarding:
         username_list = [user.username for user in User.get_all_users()]
         assert invitation.username not in username_list, "User was created"
 
-    @priority.medium
-    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
-    def test_user_cannot_register_already_existing_organization(self, context, test_org):
-        step("Invite a new user")
-        invitation = Invitation.api_send(context)
-        step("Check that an error is returned when the user registers with an already-existing org name")
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT,
-                                     HttpStatus.MSG_ORGANIZATION_ALREADY_EXISTS.format(test_org.name),
-                                     onboarding.register, context=context, code=invitation.code,
-                                     username=invitation.username, org_name=test_org.name)
-        step("Check that the user was not created")
-        username_list = [user.username for user in User.get_all_users()]
-        assert invitation.username not in username_list, "User was created"
-
-    @priority.low
-    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
-    def test_user_cannot_register_with_no_organization_name(self, context):
-        step("Invite a new user")
-        invitation = Invitation.api_send(context)
-        step("Check that an error is returned when user registers without passing an org name")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST,
-                                     HttpStatus.MSG_ORGANIZATION_CANNOT_CONTAIN_ONLY_WHITESPACES,
-                                     user_management.api_register_new_user, code=invitation.code,
-                                     password=User.generate_password())
-        step("Check that the user was not created")
-        username_list = [user.username for user in User.get_all_users()]
-        assert invitation.username not in username_list, "User was created"
-

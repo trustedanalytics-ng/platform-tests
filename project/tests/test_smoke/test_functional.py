@@ -14,11 +14,10 @@
 # limitations under the License.
 #
 
-import pytest
 import itertools
 
-import config
-import tests.fixtures.assertions as assertions
+import pytest
+
 from modules.constants import TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
 from modules.exceptions import UnexpectedResponseError
@@ -27,13 +26,10 @@ from modules.http_client import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
-from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import Application, DataSet, Organization, ServiceInstance, Transfer, User,\
-    ServiceOffering, TestSuite
+from modules.tap_object_model import DataSet, ServiceInstance, Transfer, User, ServiceOffering, TestSuite
 from modules.tap_object_model.flows import onboarding
 from tap_component_config import offerings
-
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
@@ -53,21 +49,6 @@ def sample_app(sample_python_app, sample_java_app):
         "sample_python_app": sample_python_app,
         "sample_java_app": sample_java_app
     }
-
-
-@pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
-@pytest.mark.components(TAP.auth_gateway, TAP.user_management)
-def test_create_and_delete_organization(context):
-    """Create and Delete Organization"""
-    step("Create organization")
-    test_org = Organization.create(context)
-    step("Check that organization is on the list")
-    orgs = Organization.get_list()
-    assert test_org in orgs
-    step("Delete organization")
-    test_org.delete()
-    step("Check that the organization is not on the list")
-    assertions.assert_not_in_with_retry(test_org, Organization.api_get_list)
 
 
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
@@ -174,45 +155,6 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
     assert response is not None
     assert response.status_code == 200
-
-
-@pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - ATK as app??")
-@pytest.mark.components(TAP.atk)
-def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, core_space, test_space, test_org,
-                                                              admin_user):
-    """Connect to Atk from Jupyter using Default Atk Client"""
-    step("Get atk app from core space")
-    atk_app = next((app for app in Application.get_list() if app.name == "atk"), None)
-    if atk_app is None:
-        raise AssertionError("Atk app not found in core space")
-    atk_url = atk_app.urls[0]
-    step("Add admin to test space")
-    admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid, roles=User.SPACE_ROLES["developer"])
-    step("Create instance of Jupyter service")
-    jupyter = Jupyter(context=context, org_guid=test_org.guid, space_guid=test_space.guid)
-    assertions.assert_in_with_retry(jupyter.instance, ServiceInstance.api_get_list, space_guid=test_space.guid)
-    step("Get credentials for the new jupyter service instance")
-    jupyter.get_credentials()
-    step("Login into Jupyter")
-    jupyter.login()
-    request.addfinalizer(lambda: jupyter.instance.api_delete())
-    step("Create new Jupyter notebook")
-    notebook = jupyter.create_notebook()
-    step("import atk client in the notebook")
-    notebook.send_input("import trustedanalytics as ta")
-    assert notebook.check_command_status() == "ok"
-    step("Create credentials file using atk client")
-    notebook.send_input("ta.create_credentials_file('./cred_file')")
-    assert "URI of the ATK server" in notebook.get_prompt_text()
-    notebook.send_input(atk_url, reply=True)
-    assert "User name" in notebook.get_prompt_text()
-    notebook.send_input(config.admin_username, reply=True)
-    assert "" in notebook.get_prompt_text()
-    notebook.send_input(config.admin_password, reply=True, obscure_from_log=True)
-    assert "Connect now?" in notebook.get_prompt_text()
-    notebook.send_input("y", reply=True)
-    assert "Connected." in str(notebook.get_stream_result())
-    notebook.ws.close()
 
 
 @pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR PLATFORM-TESTS TEST ADJUSTMENT")

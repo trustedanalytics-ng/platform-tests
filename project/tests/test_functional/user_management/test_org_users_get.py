@@ -52,17 +52,6 @@ class TestGetOrganizationUsers:
         expected_users = User.get_list_in_organization(org_guid=test_org.guid, client=admin_client)
         user_list = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(user_list) == sorted(expected_users)
-    
-    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
-    @pytest.mark.parametrize("client_key", ("test_org_admin_client", "test_org_user_client"))
-    @priority.low
-    def test_cannot_get_users_in_another_org(self, context, test_org_user_clients, client_key):
-        step("Create new organization")
-        org = Organization.create(context)
-        step("Check that a user or org admin not in an org cannot get list of users in the org")
-        client = test_org_user_clients[client_key]
-        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
-                                     User.get_list_in_organization, org_guid=org.guid, client=client)
 
     @priority.low
     def test_org_user_cannot_get_org_users(self, test_org_user_client, test_org):

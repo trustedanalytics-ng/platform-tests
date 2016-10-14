@@ -26,7 +26,7 @@ loged_components = (TAP.auth_gateway, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.user_management)]
 
 
-@pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
+@pytest.mark.skip(reason="OUT OF SCOPE FOR 0.8 - multiple orgs")
 class TestAddExistingUserToOrganization:
 
     @pytest.fixture(scope="class")
