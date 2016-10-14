@@ -25,7 +25,7 @@ from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
 
 
-@pytest.mark.skip("OUT OF SCOPE FOR 0.8 - orientb??")
+@pytest.mark.skip("DPNG-8773 [api-tests] Adjust test_orientdb tests to TAP NG")
 @incremental
 @priority.low
 class TestOrientdbDashboard:

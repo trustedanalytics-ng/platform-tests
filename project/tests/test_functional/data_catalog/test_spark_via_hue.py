@@ -40,7 +40,7 @@ logged_components = (TAP.data_catalog, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
-@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR SPARK + HUE")
+@pytest.mark.skip(reason="DPNG-11943 [api-tests] Adjust test_spark_via_hue to new TAP")
 @priority.low
 @incremental
 class TestSparkViaHue:

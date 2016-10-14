@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, T
                                      TAP.zookeeper_wssb_broker)]
 
 
-@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR GO TO DASHBOARD TEST ADJUSTMENT")
+@pytest.mark.skip(reason="DPNG-11947 [api-tests] Adjust tests_go_to_dashboard to new TAP")
 class TestGoToDashboard:
 
     @pytest.fixture(scope="class")

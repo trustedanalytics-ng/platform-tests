@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.components(TAP.ingestion_ws_kafka_hdfs, TAP.service_ca
 @incremental
 @priority.medium
 @pytest.mark.sample_apps_test
-@pytest.mark.skip("OUT OF SCOPE FOR 0.8 (DPNG-8781)")
+@pytest.mark.skip("DPNG-8781 [api-tests] Adjust test_ws2kafka2hdfs tests to TAP NG")
 class TestWs2kafka2hdfs:
 
     REPO_OWNER = TapGitHub.intel_data

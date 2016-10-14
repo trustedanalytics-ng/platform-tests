@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.components(TAP.platform_snapshot)]
 
 @incremental
 @priority.medium
-@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR PLATFORM-SNAPSHOT TESTS ADJUSTMENT")
+@pytest.mark.skip(reason="DPNG-11945 [api-tests] Adjust test_snapshot tests to new TAP")
 class TestSnapshotDiff:
     def test_0_create_platform_snapshot_before_changes(self):
         step("Save number of snapshots")

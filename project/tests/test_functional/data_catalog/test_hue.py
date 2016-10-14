@@ -32,8 +32,7 @@ logged_components = (TAP.data_catalog, TAP.dataset_publisher, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
-@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR HUE")
-@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
+@pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
 @priority.medium
 @incremental
 class TestHue:

@@ -157,7 +157,7 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     assert response.status_code == 200
 
 
-@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR PLATFORM-TESTS TEST ADJUSTMENT")
+@pytest.mark.skip(reason="DPNG-11944 [api-tests] adjust test_platform_tests to new TAP")
 @pytest.mark.components(TAP.platform_tests)
 def test_start_tests_or_get_suite_in_progress():
     """Start Tests or get Suite in Progress"""

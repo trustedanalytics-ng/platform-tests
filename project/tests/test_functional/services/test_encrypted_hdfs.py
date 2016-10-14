@@ -27,7 +27,7 @@ logged_components = (TAP.hdfs_broker,)
 pytestmark = [pytest.mark.components(TAP.hdfs_broker)]
 
 
-@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR ENCRYPTED HDFS TEST ADJUSTMENT")
+@pytest.mark.skip(reason="DPNG-11946 [api-tests] Adjust test_encrypted_hdfs to new TAP")
 @incremental
 @priority.medium
 class TestEncryptedHdfs:

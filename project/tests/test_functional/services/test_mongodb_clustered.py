@@ -33,7 +33,7 @@ logged_components = (TAP.kubernetes_broker, TAP.demiurge, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.kubernetes_broker, TAP.demiurge)]
 
 
-@pytest.mark.skip("OUT OF SCOPE FOR 0.8 - mongodb??")
+@pytest.mark.skip("DPNG-11951 [api-tests] Adjust test_mongodb_clustered to new TAP")
 @incremental
 @priority.medium
 @pytest.mark.skipif(not config.kubernetes, reason="No point to run without kubernetes")
