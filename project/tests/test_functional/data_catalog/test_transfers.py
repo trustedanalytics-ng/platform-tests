@@ -74,18 +74,6 @@ class TestSubmitTransfer:
         datasets = DataSet.api_get_list(org_guid_list=[test_org.guid])
         assert dataset not in datasets
 
-    @pytest.mark.skip(reason="Multiple organizations are not implemented for TAP_NG yet")
-    def test_transfer_and_dataset_are_not_visible_in_other_org(self, context, core_org, test_org):
-        step("Create transfer and get dataset")
-        transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid)
-        dataset = DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
-        step("Check transfer is not visible on other organization")
-        transfers = Transfer.api_get_list(org_guid_list=[core_org.guid])
-        assert transfer not in transfers
-        step("Check dataset is not visible on other organization")
-        datasets = DataSet.api_get_list(org_guid_list=[core_org.guid])
-        assert dataset not in datasets
-
     @priority.low
     def test_create_transfer_with_new_category(self, context, test_org):
         new_category = "user_category"
@@ -137,13 +125,6 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
                                                       file_path=file_path)
         transfer.ensure_finished()
         return transfer
-
-    @priority.high
-    @pytest.mark.skip(reason="DPNG-8748 - Multiple organizations are not implemented for TAP_NG yet")
-    def test_cannot_submit_transfer_in_foreign_org(self, context):
-        foreign_org = Organization.api_create(context=context)
-        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN, self._create_transfer,
-                                     context, org_guid=foreign_org.guid, category=self.DEFAULT_CATEGORY)
 
     @priority.low
     @pytest.mark.parametrize("category", DataSet.CATEGORIES)

@@ -51,14 +51,6 @@ class TestModelAdd:
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
         assert new_model in models
 
-    @pytest.mark.skip(reason="Multiple organizations are not implemented for TAP_NG yet")
-    @priority.low
-    def test_cannot_add_model_to_non_existing_org(self, context):
-        non_existing_org = Guid.NON_EXISTING_GUID
-        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
-                                     ScoringEngineModel.create, context, org_guid=non_existing_org,
-                                     **self.TEST_METADATA)
-
     @pytest.mark.bugs("DPNG-11756 Internal server error when creating model for incorrect organization")
     @priority.low
     def test_cannot_add_model_to_org_with_incorrect_guid(self, context):
