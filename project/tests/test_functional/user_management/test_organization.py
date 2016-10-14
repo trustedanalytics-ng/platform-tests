@@ -32,7 +32,7 @@ logged_components = (TAP.user_management, TAP.auth_gateway)
 pytestmark = [pytest.mark.components(TAP.auth_gateway, TAP.user_management)]
 
 
-@pytest.mark.skip(reason="Not supported in TAP 0.8")
+@pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
 class TestOrganization:
 
     @priority.high

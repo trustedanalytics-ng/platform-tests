@@ -28,7 +28,7 @@ logged_components = (TAP.user_management, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.user_management, TAP.service_catalog)]
 
 
-@pytest.mark.skip(reason="DPNG-8777 Skip test_apps_org_space_deletion tests")
+@pytest.mark.skip(reason="OUT OF SCOPE FOR 0.8 (org deletion)")
 class TestDeleteSpaceAndOrg:
 
     @pytest.fixture(scope="function")

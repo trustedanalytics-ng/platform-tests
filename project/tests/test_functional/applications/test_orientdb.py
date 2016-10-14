@@ -27,7 +27,7 @@ from modules.test_names import generate_test_object_name
 from modules.constants import ServiceLabels
 
 
-@pytest.mark.skip(reason="DPNG-8773 Adjust test_orientdb tests to TAP NG")
+@pytest.mark.skip("OUT OF SCOPE FOR 0.8 - orientb?? (DPNG-8773)")
 class TestOrientDB(object):
     """OrientDB functional tests."""
 

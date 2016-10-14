@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.components(TAP.dataset_publisher, TAP.das, TAP.hdfs_do
 
 @incremental
 @priority.high
-@pytest.mark.skipif(config.kerberos, reason="Not enabled on kerberos environment")
+@pytest.mark.skip(reason="OUT OF SCOPE FOR 0.8")
 class ArcadiaTest:
     arcadia = None
 

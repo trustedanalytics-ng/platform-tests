@@ -35,7 +35,7 @@ logged_components = (TAP.hive_broker,)
 pytestmark = [pytest.mark.components(TAP.hive_broker)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR HIVE TESTS ADJUSTMENT")
 @incremental
 @priority.medium
 @pytest.mark.skipif(not config.kerberos, reason="No point to run without kerberos")

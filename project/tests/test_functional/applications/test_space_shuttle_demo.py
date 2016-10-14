@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
 
 @incremental
 @priority.low
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip("DPNG-8659: Adjust Space-shuttle & mqtt: functional tests")
 class TestSpaceShuttleDemo:
     MODEL_TITLE = "model"
     MODEL_SOURCE_FILE_NAME = "space-shuttle-model.tar"

@@ -69,7 +69,7 @@ class TestUpdateOrganizationUser:
         assert_user_in_org_and_role(updated_user, test_org.guid, role_expected)
 
     @priority.low
-    @pytest.mark.skip(reason="Not implemented yet in user-management")
+    @pytest.mark.skip(reason="DPNG-10987 User-management is not able to add admin user")
     def test_cannot_remove_org_admin_role_from_the_last_org_admin(self, test_org, test_org_admin):
         test_org_users = User.get_list_in_organization(org_guid=test_org.guid)
         admins = [u for u in test_org_users
@@ -136,7 +136,7 @@ class TestUpdateOrganizationUser:
                                                      role=User.ORG_ROLE["user"])
 
     @priority.low
-    @pytest.mark.skip(reason="Multiple orgs are not supported")
+    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
     def test_org_admin_cannot_update_user_in_another_org(self, context, another_org, another_org_user,
                                                          test_org_admin_client):
         step("Check that user not in org cannot update another user")
@@ -146,7 +146,7 @@ class TestUpdateOrganizationUser:
         assert_user_in_org_and_role(another_org_user, another_org.guid, User.ORG_ROLE["user"])
 
     @priority.low
-    @pytest.mark.skip(reason="Multiple orgs are not supported")
+    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
     def test_cannot_update_user_which_is_not_in_org(self, test_org, another_org, another_org_user):
         step("Check that user not in org cannot be updated")
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done

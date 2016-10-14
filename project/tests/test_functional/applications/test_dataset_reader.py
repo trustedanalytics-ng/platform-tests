@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.components(TAP.dataset_reader)]
 @incremental
 @priority.medium
 @pytest.mark.sample_apps_test
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip("OUT OF SCOPE FOR 0.8 (DPNG-8875)")
 class TestDatasetReader:
 
     HDFS_INSTANCE_NAME = "hdfs-instance"

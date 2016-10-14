@@ -27,7 +27,7 @@ logged_components = (TAP.service_catalog, TAP.service_exposer)
 pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-10954 adjust test_service_instances to TAP NG")
 class TestDataScienceInstances(object):
 
     @classmethod

@@ -73,7 +73,7 @@ class TestSubmitTransfer:
         datasets = DataSet.api_get_list(org_guid_list=[test_org.guid])
         assert dataset not in datasets
 
-    @pytest.mark.skip(reason="DPNG-8748 - Multiple organizations are not implemented for TAP_NG yet")
+    @pytest.mark.skip(reason="Multiple organizations are not implemented for TAP_NG yet")
     def test_transfer_and_dataset_are_not_visible_in_other_org(self, context, core_org, test_org):
         step("Create transfer and get dataset")
         transfer = self._create_transfer(context, category=self.DEFAULT_CATEGORY, org_guid=test_org.guid)

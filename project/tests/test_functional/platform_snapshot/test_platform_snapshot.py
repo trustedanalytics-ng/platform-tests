@@ -25,7 +25,7 @@ logged_components = (TAP.platform_snapshot,)
 pytestmark = [pytest.mark.components(TAP.platform_snapshot)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR PLATFORM-SNAPSHOT TESTS ADJUSTMENT")
 class TestSnapshot:
 
     @retry(AssertionError, tries=10, delay=3)

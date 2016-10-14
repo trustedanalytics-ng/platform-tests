@@ -33,6 +33,7 @@ logged_components = (TAP.mqtt_demo, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.mqtt_demo, TAP.service_catalog)]
 
 
+@pytest.mark.skip("DPNG-8659: Adjust Space-shuttle & mqtt: functional tests")
 class Mqtt:
 
     SOURCES_OWNER = TapGitHub.intel_data
@@ -44,7 +45,6 @@ class Mqtt:
     MQTT_TOPIC_NAME = "space-shuttle/test-data"
 
     @priority.medium
-    @pytest.mark.skip("DPNG-7402 Push mqtt app to cf failed due to SSL error")
     @pytest.mark.sample_apps_test
     def test_mqtt_demo(self, context, test_org, test_space, login_to_cf, class_context):
         step("Clone repository")

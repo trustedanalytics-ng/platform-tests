@@ -156,7 +156,7 @@ class TestOnboarding:
         assert invitation.username not in username_list, "User was created"
 
     @priority.medium
-    @pytest.mark.skip(reason="DPNG-10888 - Onboarding with org creation not implemented for TAP NG yet")
+    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
     def test_user_cannot_register_already_existing_organization(self, context, test_org):
         step("Invite a new user")
         invitation = Invitation.api_send(context)
@@ -170,7 +170,7 @@ class TestOnboarding:
         assert invitation.username not in username_list, "User was created"
 
     @priority.low
-    @pytest.mark.skip(reason="DPNG-10888 - Onboarding with org creation not implemented for TAP NG yet")
+    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
     def test_user_cannot_register_with_no_organization_name(self, context):
         step("Invite a new user")
         invitation = Invitation.api_send(context)

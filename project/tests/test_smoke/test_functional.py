@@ -55,7 +55,7 @@ def sample_app(sample_python_app, sample_java_app):
     }
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
+@pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_create_and_delete_organization(context):
     """Create and Delete Organization"""
@@ -98,7 +98,6 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     assert test_user not in users
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 def transfer_flow(transfer, core_org):
     step("Check that the transfer is finished")
     transfer.ensure_finished()
@@ -121,7 +120,6 @@ def transfer_flow(transfer, core_org):
     assert transfer not in transfers
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_link(core_org, context):
     """Create and Delete Transfer from Link"""
@@ -130,7 +128,6 @@ def test_add_and_delete_transfer_from_link(core_org, context):
     transfer_flow(transfer, core_org)
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_file(core_org, context):
     """Create and Delete Transfer from File"""
@@ -179,7 +176,7 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     assert response.status_code == 200
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
+@pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - ATK as app??")
 @pytest.mark.components(TAP.atk)
 def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, core_space, test_space, test_org,
                                                               admin_user):
@@ -218,7 +215,7 @@ def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, 
     notebook.ws.close()
 
 
-@pytest.mark.skip(reason="Not implemented for TAP NG yet")
+@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR PLATFORM-TESTS TEST ADJUSTMENT")
 @pytest.mark.components(TAP.platform_tests)
 def test_start_tests_or_get_suite_in_progress():
     """Start Tests or get Suite in Progress"""

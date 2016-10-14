@@ -40,7 +40,7 @@ logged_components = (TAP.data_catalog, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
-@pytest.mark.skip(reason="Not yet adjusted to new TAP")
+@pytest.mark.skip(reason="DPNG-XXXX NEW TASK FOR SPARK + HUE")
 @priority.low
 @incremental
 class TestSparkViaHue:

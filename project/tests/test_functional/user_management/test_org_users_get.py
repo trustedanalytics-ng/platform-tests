@@ -53,7 +53,7 @@ class TestGetOrganizationUsers:
         user_list = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(user_list) == sorted(expected_users)
     
-    @pytest.mark.skip(reason="Multiple organization are not implemented for TAP yet")
+    @pytest.mark.skip(reason="NOT IN SCOPE FOR 0.8 - multiple orgs")
     @pytest.mark.parametrize("client_key", ("test_org_admin_client", "test_org_user_client"))
     @priority.low
     def test_cannot_get_users_in_another_org(self, context, test_org_user_clients, client_key):
