@@ -25,56 +25,54 @@ from tests.fixtures.assertions import assert_in_with_retry, assert_raises_http_e
 
 logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog),
-              pytest.mark.skip(reason="DPNG-8761 Adjust test_create_service tests to TAP NG")]
+              pytest.mark.skip(reason="DPNG-11125 api-service: endpoint for adding offerings from jar archives")]
 
 
-@pytest.mark.bugs("DPNG-7436 Internal Server Error (500) when trying to create a service at marketplace without a name or description")
+@pytest.fixture(scope="class")
+def test_users(test_org_admin_client, test_org_user_client):
+    return {
+        "user": test_org_user_client,
+        "admin": test_org_admin_client
+    }
+
+
 @priority.low
 @pytest.mark.sample_apps_test
-def test_cannot_create_service_with_no_name(context, test_org, test_space, sample_python_app):
+def test_cannot_create_service_with_no_name(context, test_org):
     step("Attempt to create service with empty name")
     assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                 ServiceOffering.register_app_in_marketplace, context, app_name=sample_python_app.name,
-                                 app_guid=sample_python_app.guid, org_guid=test_org.guid, space_guid=test_space.guid,
-                                 service_name="")
+                                 ServiceOffering.create_from_binary, context, org_guid=test_org.guid, service_name="")
 
 
-@pytest.mark.bugs("DPNG-7436 Internal Server Error (500) "
-                  "when trying to create a service at marketplace without a name or description")
 @priority.low
 @pytest.mark.sample_apps_test
-def test_cannot_create_service_with_no_description(context, test_org, test_space, sample_python_app):
+def test_cannot_create_service_with_no_description(context, test_org):
     step("Attempt to create service with empty description")
     assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                 ServiceOffering.register_app_in_marketplace, context,
-                                 app_name=sample_python_app.name, app_guid=sample_python_app.guid,
-                                 org_guid=test_org.guid, space_guid=test_space.guid,
+                                 ServiceOffering.create_from_binary, context, org_guid=test_org.guid,
                                  service_description="")
 
 
 @priority.high
 @pytest.mark.sample_apps_test
-@pytest.mark.parametrize("role", ["developer", "auditor", "manager", "admin"])
-def test_create_and_delete_service(context, test_org, test_space, sample_python_app, role, space_users_clients):
+@pytest.mark.parametrize("role", ["admin", "user"])
+def test_create_and_delete_service_offering(context, test_org, test_users, role):
+    client = test_users[role]
     step("Register in marketplace")
-    service = ServiceOffering.register_app_in_marketplace(context, app_name=sample_python_app.name,
-                                                          app_guid=sample_python_app.guid,
-                                                          org_guid=test_org.guid)
+    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, client=client)
     step("Check that service is in marketplace")
     assert_in_with_retry(service, ServiceOffering.get_list)
     step("Delete service")
-    service.api_delete(client=space_users_clients[role])
+    service.api_delete(client=client)
     step("Check that service isn't in marketplace")
     assert_not_in_with_retry(service, ServiceOffering.get_list)
 
 
 @priority.medium
 @pytest.mark.sample_apps_test
-def test_create_service_with_icon(context, test_org, test_space, sample_python_app, example_image):
+def test_create_service_with_icon(context, test_org, example_image):
     step("Register in marketplace")
-    service = ServiceOffering.register_app_in_marketplace(context, app_name=sample_python_app.name,
-                                                          app_guid=sample_python_app.guid,
-                                                          org_guid=test_org.guid, image=example_image)
+    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, image=example_image)
     step("Check that service is in marketplace")
     assert_in_with_retry(service, ServiceOffering.get_list)
     step("Check that images are the same")
@@ -83,12 +81,10 @@ def test_create_service_with_icon(context, test_org, test_space, sample_python_a
 
 @priority.medium
 @pytest.mark.sample_apps_test
-def test_create_service_with_display_name(context, test_org, test_space, sample_python_app):
+def test_create_service_with_display_name(context, test_org):
     display_name = generate_test_object_name()
     step("Register in marketplace")
-    service = ServiceOffering.register_app_in_marketplace(context, app_name=sample_python_app.name,
-                                                          app_guid=sample_python_app.guid,
-                                                          org_guid=test_org.guid, display_name=display_name)
+    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, display_name=display_name)
     step("Check that service is in marketplace")
     assert_in_with_retry(service, ServiceOffering.get_list)
     step("Check that display names are the same")
@@ -97,13 +93,11 @@ def test_create_service_with_display_name(context, test_org, test_space, sample_
 
 @priority.medium
 @pytest.mark.sample_apps_test
-def test_create_service_with_tag(context, test_org, test_space, sample_python_app):
+def test_create_service_with_tag(context, test_org):
     tags = [generate_test_object_name(short=True)]
     step("Register in marketplace")
-    service = ServiceOffering.register_app_in_marketplace(context, app_name=sample_python_app.name,
-                                                          app_guid=sample_python_app.guid,
-                                                          org_guid=test_org.guid, tags=tags)
+    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, tags=tags)
     step("Check that service is in marketplace")
-    assert_in_with_retry(service, ServiceOffering.api_get_list_from_marketplace, test_space.guid)
+    assert_in_with_retry(service, ServiceOffering.get_list)
     step("Check that tags names are the same")
     assert tags == service.tags

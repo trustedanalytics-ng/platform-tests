@@ -66,7 +66,9 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         return new_offering
 
     @classmethod
-    def create_from_binary(cls, context, *, path):
+    def create_from_binary(cls, context, *, org_guid: str, path=None, service_name: str=None,
+                           service_description: str=None, image: str=None, display_name: str=None, tags: list=None,
+                           client: HttpClient=None):
         # TODO will call POST /offerings/binary in api-service
         raise NotImplemented
 
