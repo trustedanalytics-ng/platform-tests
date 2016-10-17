@@ -19,13 +19,14 @@
 
 
 import os
+
 import flask
 
 APP = flask.Flask(__name__)
-VCAP_APP_PORT = "VCAP_APP_PORT"
-APP_PORT = int(os.environ.get(VCAP_APP_PORT, "80"))
+APP_PORT = int(os.environ.get("PORT", "80"))
 APP_HOST = "0.0.0.0"
 APP.debug = True
+
 
 @APP.route("/")
 def index():

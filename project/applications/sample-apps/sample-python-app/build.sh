@@ -1,3 +1,4 @@
+#!/bin/bash -e
 #
 # Copyright (c) 2016 Intel Corporation
 #
@@ -14,7 +15,12 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.334'
+VENDOR=vendor
 
+# prepare dependencies
+if [ -d $VENDOR ]; then
+    rm -rf $VENDOR
+fi
+mkdir $VENDOR
 
+python2 -m pip install --download $VENDOR -r requirements.txt

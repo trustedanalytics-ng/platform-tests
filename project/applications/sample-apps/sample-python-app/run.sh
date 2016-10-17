@@ -22,9 +22,5 @@
 #  writing.                                                                #
 ############################################################################
 
-# If pip cannot download files, enable the proxy
-#export http_proxy=http://address:port
-#export https_proxy=http://address:port
-
-pip install -r requirements.txt
+python2 -m pip install --no-index --find-links=./vendor -r requirements.txt
 python main.py

@@ -1,5 +1,5 @@
 {
-    "type": "PYTHON",
+    "type": "PYTHON2.7",
     "name": "sample-python-app",
     "instances": 1
 }

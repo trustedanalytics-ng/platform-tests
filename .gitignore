@@ -11,6 +11,7 @@
 *appstack.yml
 /project/modules/gatling_runner/download/*
 /project/applications/sample-apps/sample-java-application/target/*
+/project/applications/**/vendor/
 .cache
 *.iml
 project/target/*
