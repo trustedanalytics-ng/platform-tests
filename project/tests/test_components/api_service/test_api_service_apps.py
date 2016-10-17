@@ -74,12 +74,12 @@ class TestApiServiceApplication:
 
         updated_state = TapEntityState.FAILURE
         step("Update app state to {} using catalog api".format(updated_state))
-        catalog_api.update_instance(instance_id=self.app.id, field_name="state", value=updated_state)
+        catalog_api.update_instance(instance_id=application.id, field_name="state", value=updated_state)
         step("Check that the app state was updated")
         app = Application.get(app_id=application.id)
         assert app.state == updated_state, "Application is not in the expected state. App state: {}".format(app.state)
         step("Check that the application can be deleted")
-        self.app.delete()
+        application.delete()
         step("Check that application has been removed")
         apps = Application.get_list()
         assert application not in apps
