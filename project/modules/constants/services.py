@@ -51,7 +51,7 @@ class ServiceLabels(object):
     PSQL = "postgresql93"
     PSQL94_MULTINODE = "postgresql94-multinode"
     RABBIT_MQ = "rabbitmq36"
-    REDIS = "redis28"
+    REDIS = "redis30"
     RETHINK_DB = "rethinkdb"
     RSTUDIO = "rstudio"
     SCORING_ENGINE = "scoring-engine"
