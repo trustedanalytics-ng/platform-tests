@@ -16,29 +16,27 @@
 
 import pytest
 
-from modules.constants import Guid, ModelCatalogHttpStatus
+from modules.constants import Guid, HttpStatus
 import modules.http_calls.platform.model_catalog as model_catalog_api
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
+from modules.tap_object_model.model_artifact import ModelArtifact
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
 class TestModelDelete:
 
-    @pytest.fixture(scope="class")
-    def clients(self, admin_client, test_org_user_client):
-        # TODO change test case to use test_org_admin_client instead of admin_client - when DPNG-10987 is done
-        return {
-            "admin_client": admin_client,
-            "test_org_user_client": test_org_user_client
-        }
+    ARTIFACT_METADATA = {
+        "filename": "example_artifact.txt",
+        "actions": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]]
+    }
 
     @priority.high
-    @pytest.mark.parametrize("test_client_key", ("admin_client", "test_org_user_client"))
-    def test_delete_model(self, sample_model, clients, test_client_key):
-        step("Delete model organization using {}".format(test_client_key))
-        client = clients[test_client_key]
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_delete_model(self, sample_model, test_user_clients, role):
+        step("Delete model organization using {}".format(role))
+        client = test_user_clients[role]
         sample_model.delete(client=client)
         step("Check that the deleted model is not on the list of models")
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
@@ -49,11 +47,36 @@ class TestModelDelete:
         step("Delete sample model")
         sample_model.delete()
         step("Try to delete the same model from organization for the second time")
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
                                      sample_model.delete)
 
     @priority.low
     def test_cannot_delete_non_existing_model(self):
         step("Check that an attempt to delete model which does not exist returns an error")
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
                                      model_catalog_api.delete_model, model_id=Guid.NON_EXISTING_GUID)
+
+    @priority.low
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_delete_artifact_and_file(self, model_with_artifact, test_user_clients, role):
+        client = test_user_clients[role]
+        artifact_id = model_with_artifact.artifacts[0].get("id")
+        step("Delete artifact {} of model {} using {}".format(artifact_id, model_with_artifact.id, client))
+        ModelArtifact.delete_artifact(model_id=model_with_artifact.id, artifact_id=artifact_id,
+                                      client=client)
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
+                                     model_catalog_api.get_model_artifact_file, model_id=model_with_artifact.id,
+                                     artifact_id=artifact_id)
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
+                                     model_catalog_api.get_model_artifact_metadata, model_id=model_with_artifact.id,
+                                     artifact_id=artifact_id)
+
+    @priority.low
+    def test_cannot_delete_artifact_twice(self, model_with_artifact):
+        artifact_id = model_with_artifact.artifacts[0].get("id")
+        step("Delete artifact {} of model {}".format(artifact_id, model_with_artifact.id))
+        ModelArtifact.delete_artifact(model_id=model_with_artifact.id, artifact_id=artifact_id)
+        step("Try to delete the same artifact from model for the second time")
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
+                                     ModelArtifact.delete_artifact, model_id=model_with_artifact.id,
+                                     artifact_id=artifact_id)

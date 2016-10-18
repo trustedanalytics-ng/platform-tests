@@ -20,6 +20,7 @@ from modules.constants import Guid, HttpStatus
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
+from modules.tap_object_model.model_artifact import ModelArtifact
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
@@ -33,19 +34,23 @@ class TestModelAdd:
         "creation_tool": "creation-tool"
     }
 
+    ARTIFACT_METADATA = {
+        "filename": "example_artifact.txt",
+        "actions": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]]
+    }
+
     @pytest.fixture(scope="class")
-    def clients(self, admin_client, test_org_user_client):
-        # TODO change test case to use test_org_admin_client instead of admin_client - when DPNG-10987 is done
+    def actions(self):
         return {
-            "admin_client": admin_client,
-            "test_org_user_client": test_org_user_client
+            "publish_to_marketplace": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]],
+            "publish_to_tap_scoring_engine": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_tap_scoring_engine"]]
         }
 
     @priority.high
-    @pytest.mark.parametrize("test_client_key", ("admin_client", "test_org_user_client"))
-    def test_add_new_model_to_organization(self, context, clients, test_client_key):
-        client = clients[test_client_key]
-        step("Add model to organization using {}".format(test_client_key))
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_add_new_model_to_organization(self, context, test_user_clients, role):
+        client = test_user_clients[role]
+        step("Add model to organization using {}".format(role))
         new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, client=client, **self.TEST_METADATA)
         step("Check that the model is on model list")
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
@@ -101,3 +106,96 @@ class TestModelAdd:
         new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, **metadata)
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
         assert new_model in models
+
+    @priority.high
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_add_new_artifact_to_model(self, sample_model, test_user_clients, role):
+        client = test_user_clients[role]
+        step("Add new artifact to model using {}".format(role))
+        new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, client=client,
+                                                     **self.ARTIFACT_METADATA)
+        step("Get artifact {} metadata of model {}".format(new_artifact.id, sample_model.id))
+        artifact = ModelArtifact.get_artifact(model_id=sample_model.id, artifact_id=new_artifact.id)
+        model_artifacts = ScoringEngineModel.get(model_id=sample_model.id).artifacts
+        assert artifact in model_artifacts
+
+    @priority.low
+    @pytest.mark.parametrize("artifact_actions_key", ("publish_to_marketplace", "publish_to_tap_scoring_engine"))
+    def test_add_new_artifact_to_model_different_actions(self, sample_model, artifact_actions_key, actions):
+        action = actions[artifact_actions_key]
+        artifact_metadata = self.ARTIFACT_METADATA.copy()
+        artifact_metadata["actions"] = action
+        step("Add new artifact to model with action {}".format(artifact_actions_key))
+        new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **artifact_metadata)
+        new_artifact_actions = new_artifact.actions
+        assert new_artifact_actions == artifact_metadata["actions"]
+
+    @pytest.mark.bug(reason="DPNG-12068 Internal server error when add artifact without required field")
+    @priority.medium
+    def test_cannot_add_new_artifact_without_artifact_file_field(self, sample_model):
+        artifact_metadata = self.ARTIFACT_METADATA.copy()
+        del artifact_metadata["filename"]
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
+                                     ModelArtifact.upload_artifact, model_id=sample_model.id, **artifact_metadata)
+
+    @pytest.mark.bugs("DPNG-11930 Model-catalog - make artifactAction field optional")
+    @priority.low
+    def test_add_new_artifact_without_actions_filed(self, sample_model):
+        artifact_metadata = self.ARTIFACT_METADATA.copy()
+        del artifact_metadata["actions"]
+        step("Add new artifact to model")
+        new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **artifact_metadata)
+        artifact_actions = new_artifact.actions
+        expected_actions = None
+        assert artifact_actions == expected_actions
+
+    @priority.low
+    def test_cannot_add_new_artifact_to_non_existing_model(self):
+        non_existing_model = Guid.NON_EXISTING_GUID
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
+                                     ModelArtifact.upload_artifact, model_id=non_existing_model,
+                                     **self.ARTIFACT_METADATA)
+
+    @priority.medium
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_artifact_file_has_been_properly_added(self, sample_model, test_user_clients, role):
+        client = test_user_clients[role]
+        step("Add new artifact to model using {}".format(role))
+        new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, client=client, **self.ARTIFACT_METADATA)
+        added_file_content = ModelArtifact.get_artifact_file(model_id=sample_model.id, artifact_id=new_artifact.id)
+        with open("fixtures/{}".format(self.ARTIFACT_METADATA["filename"]), 'r') as text:
+            expected_content = text.read()
+        assert added_file_content == expected_content
+
+    @pytest.mark.bugs("DPNG-11673 Model-catalog: required fields")
+    @priority.low
+    def test_cannot_add_artifact_with_invalid_action(self, sample_model):
+        step("Try to add artifact with invalid action")
+        artifact_metadata = self.ARTIFACT_METADATA.copy()
+        artifact_metadata["actions"] = ["invalid-action"]
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
+                                     ModelArtifact.upload_artifact, model_id=sample_model.id,
+                                     **artifact_metadata)
+
+    @pytest.mark.bugs("DPNG-11673 Model-catalog: required fields")
+    @priority.low
+    def test_cannot_add_artifact_with_two_actions(self, sample_model):
+        step("Try to add artifact with two actions")
+        artifact_metadata = self.ARTIFACT_METADATA.copy()
+        artifact_metadata["actions"].append(ModelArtifact.ARTIFACT_ACTIONS["publish_to_tap_scoring_engine"])
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
+                                     ModelArtifact.upload_artifact, model_id=sample_model.id,
+                                     **artifact_metadata)
+
+    @pytest.mark.bugs("DPNG-11673 Model-catalog: required fields")
+    @priority.low
+    def test_cannot_add_more_than_one_artifacts_to_model(self, sample_model):
+        step("Add new artifact to model")
+        ModelArtifact.upload_artifact(model_id=sample_model.id, **self.ARTIFACT_METADATA)
+        step("Try to add second artifact to model")
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
+                                     ModelArtifact.upload_artifact, model_id=sample_model.id,
+                                     **self.ARTIFACT_METADATA)
+
+
+

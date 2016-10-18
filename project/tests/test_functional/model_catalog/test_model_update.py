@@ -34,20 +34,12 @@ class TestModelUpdate:
         "description": "updated-description"
     }
 
-    @pytest.fixture(scope="class")
-    def clients(self, admin_client, test_org_user_client):
-        # TODO change test case to use test_org_admin_client instead of admin_client - when DPNG-10987 is done
-        return {
-            "admin_client": admin_client,
-            "test_org_user_client": test_org_user_client
-        }
-
     @priority.high
-    @pytest.mark.parametrize("test_client_key", ("admin_client", "test_org_user_client"))
-    def test_update_model(self, sample_model, clients, test_client_key):
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_update_model(self, sample_model, test_user_clients, role):
         # TODO change test case to use test_org_admin_client instead of admin_client - when DPNG-10987 is done
-        step("Update model using {}".format(test_client_key))
-        client = clients[test_client_key]
+        step("Update model using {}".format(role))
+        client = test_user_clients[role]
         sample_model.update(client=client, **self.UPDATED_METADATA)
         step("Check that the model is updated")
         model = ScoringEngineModel.get(model_id=sample_model.id)
@@ -70,10 +62,10 @@ class TestModelUpdate:
                                      model_catalog_api.update_model, model_id=model_id, **self.UPDATED_METADATA)
 
     @priority.high
-    @pytest.mark.parametrize("test_client_key", ("admin_client", "test_org_user_client"))
-    def test_update_model_metadata(self, sample_model, clients, test_client_key):
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_update_model_metadata(self, sample_model, test_user_clients, role):
         step("Update model name and creation_tool")
-        client = clients[test_client_key]
+        client = test_user_clients[role]
         metadata = {
             "name": "updated-model",
             "creation_tool": "updated-tool"

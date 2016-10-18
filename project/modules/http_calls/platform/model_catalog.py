@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import json
+
 from ...http_client import HttpMethod, HttpClientFactory
 from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
 
@@ -30,7 +32,7 @@ def get_models(*, org_guid, client=None):
 
 
 def insert_model(*, org_guid, name=None, creation_tool=None, revision=None, algorithm=None, description=None,
-                 added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
+                 artifacts=None, added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
     """POST /models"""
     body = {
         'name': name,
@@ -38,6 +40,7 @@ def insert_model(*, org_guid, name=None, creation_tool=None, revision=None, algo
         'revision': revision,
         'algorithm': algorithm,
         'description': description,
+        'artifacts': artifacts,
         'addedBy': added_by,
         'addedOn': added_on,
         'modifiedBy': modified_by,
@@ -65,7 +68,7 @@ def get_model_metadata(*, model_id, client=None):
 
 
 def update_model(*, model_id, name=None, creation_tool=None, revision=None, algorithm=None, description=None,
-                 added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
+                 artifacts=None, added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
     """PUT /models/{model_id}"""
     body = {
         'name': name,
@@ -73,6 +76,7 @@ def update_model(*, model_id, name=None, creation_tool=None, revision=None, algo
         'revision': revision,
         'algorithm': algorithm,
         'description': description,
+        'artifacts': artifacts,
         'addedBy': added_by,
         'addedOn': added_on,
         'modifiedBy': modified_by,
@@ -99,7 +103,7 @@ def delete_model(*, model_id, client=None):
 
 
 def update_model_fields(*, model_id, name=None, creation_tool=None, revision=None, algorithm=None, description=None,
-                        added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
+                        artifacts=None, added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
     """PATCH /models/{model_id}"""
     body = {
         'name': name,
@@ -107,6 +111,7 @@ def update_model_fields(*, model_id, name=None, creation_tool=None, revision=Non
         'revision': revision,
         'algorithm': algorithm,
         'description': description,
+        'artifacts': artifacts,
         'addedBy': added_by,
         'addedOn': added_on,
         'modifiedBy': modified_by,
@@ -122,13 +127,22 @@ def update_model_fields(*, model_id, name=None, creation_tool=None, revision=Non
     )
 
 
-def upload_model_artifact(model_id, artifact=None, client=None):
+def upload_model_artifact(model_id, filename=None, actions=None, client=None):
     """POST /models/{model_id}/artifacts"""
+    if filename is not None:
+        files = {
+            "artifactFile": (filename, open("fixtures/{}".format(filename), 'rb'), "application/octet-stream"),
+            "artifactActions": (None, json.dumps(actions), "application/json")
+        }
+    else:
+        files = {
+            "artifactActions": (None, json.dumps(actions), "application/json")
+        }
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="models/{}/artifacts".format(model_id),
-        body=artifact,
+        path="models/{}/artifacts/".format(model_id),
+        files=files,
         msg="PLATFORM: upload model artifact"
     )
 

@@ -31,6 +31,7 @@ from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User
 from modules.tap_object_model.flows import data_catalog
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
+from modules.tap_object_model.model_artifact import ModelArtifact
 from .test_data import TestData
 
 
@@ -101,6 +102,16 @@ def sample_model(request, context, core_org):
     log_fixture("test_model: Create test model")
     return ScoringEngineModel.create(context, org_guid=core_org.guid, name="test-model", description="Test model",
                                      revision="revision", algorithm="algorithm", creation_tool="creationTool")
+
+@pytest.fixture(scope="function")
+def model_with_artifact(request, context, core_org):
+    log_fixture("test_model: Create test model and add artifact")
+    model = ScoringEngineModel.create(context, org_guid=core_org.guid, name="test-model", description="Test model",
+                                      revision="revision", algorithm="algorithm", creation_tool="creationTool")
+    ModelArtifact.upload_artifact(model_id=model.id, filename="example_artifact.txt",
+                                  actions=[ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]])
+    return ScoringEngineModel.get(model_id=model.id)
+
 
 @pytest.fixture(scope="class")
 def login_to_cf(test_org, test_space):

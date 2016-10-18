@@ -221,4 +221,4 @@ class ApiServiceHttpStatus(HttpStatus):
 
 
 class ModelCatalogHttpStatus(HttpStatus):
-    MSG_MODEL_NOT_FOUND = "Model with given id not found"
+    MSG_MODEL_NOT_FOUND = "Model with given {} not found"
