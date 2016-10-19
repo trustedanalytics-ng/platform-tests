@@ -16,36 +16,26 @@
 
 import pytest
 
-from modules.constants import ServiceCatalogHttpStatus as HttpStatus, TapComponent as TAP
+from modules.constants import TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
-from tests.fixtures.assertions import assert_in_with_retry, assert_raises_http_exception
+from tests.fixtures.assertions import assert_in_with_retry
 
 logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog),
-              pytest.mark.skip(reason="DPNG-10953 Adjust test_create_instance tests to TAP NG")]
+              pytest.mark.skip(reason="DPNG-11125 api-service: endpoint for adding offerings from jar archives")]
+
+TESTED_ROLES = ["user", "admin"]
 
 
 @priority.high
-@pytest.mark.parametrize("role", ["auditor", "manager"])
-def test_cannot_create_instance_as_an_unauthorized_user(context, space_users_clients, role, test_org, test_space,
-                                                        sample_service):
-    client = space_users_clients[role]
-    step("Attempt to create an instance")
-    assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_NOT_AUTHORIZED,
-                                 ServiceInstance.api_create, context, test_org.guid, test_space.guid,
-                                 sample_service.label, service_plan_guid=sample_service.service_plans[0]["guid"],
-                                 client=client)
-
-
-@priority.high
-@pytest.mark.parametrize("role", ["developer", "admin"])
-def test_create_instance_as_authorized_user(context, space_users_clients, role, test_org, test_space, sample_service):
-    client = space_users_clients[role]
+@pytest.mark.parametrize("role", TESTED_ROLES)
+def test_create_instance_as_authorized_user(context, role, sample_service, test_user_clients):
+    client = test_user_clients[role]
     step("Create an instance")
-    instance = ServiceInstance.api_create(context, test_org.guid, test_space.guid, sample_service.label,
-                                          service_plan_guid=sample_service.service_plans[0]["guid"], client=client)
+    instance = ServiceInstance.create_with_name(context, offering_label=sample_service.label,
+                                                plan_name=sample_service.service_plans[0]["entity"]["name"],
+                                                client=client)
     step("Check that service instance is present")
-    assert_in_with_retry(instance, ServiceInstance.api_get_list, test_space.guid, sample_service.guid,
-                         client=client)
+    assert_in_with_retry(instance, ServiceInstance.get_list, client=client)

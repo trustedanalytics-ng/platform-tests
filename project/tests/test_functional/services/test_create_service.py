@@ -28,14 +28,6 @@ pytestmark = [pytest.mark.components(TAP.service_catalog),
               pytest.mark.skip(reason="DPNG-11125 api-service: endpoint for adding offerings from jar archives")]
 
 
-@pytest.fixture(scope="class")
-def test_users(test_org_admin_client, test_org_user_client):
-    return {
-        "user": test_org_user_client,
-        "admin": test_org_admin_client
-    }
-
-
 @priority.low
 @pytest.mark.sample_apps_test
 def test_cannot_create_service_with_no_name(context, test_org):
@@ -56,8 +48,8 @@ def test_cannot_create_service_with_no_description(context, test_org):
 @priority.high
 @pytest.mark.sample_apps_test
 @pytest.mark.parametrize("role", ["admin", "user"])
-def test_create_and_delete_service_offering(context, test_org, test_users, role):
-    client = test_users[role]
+def test_create_and_delete_service_offering(context, test_org, test_user_clients, role):
+    client = test_user_clients[role]
     step("Register in marketplace")
     service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, client=client)
     step("Check that service is in marketplace")

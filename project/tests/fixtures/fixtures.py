@@ -130,8 +130,8 @@ def sample_java_app(class_context, tap_cli):
 
 
 @pytest.fixture(scope="class")
-def sample_service(class_context, request, test_org, sample_python_app):
-    raise NotImplementedError("Test needs refactoring.")
+def sample_service(class_context, test_org):
+    return ServiceOffering.create_from_binary(class_context, org_guid=test_org.guid)
 
 
 @pytest.fixture(scope="session")
@@ -264,4 +264,12 @@ def model_hdfs_path(core_org):
     if model_dataset is None:
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
     return model_dataset.target_uri
+
+
+@pytest.fixture(scope="class")
+def test_user_clients(test_org_admin_client, test_org_user_client):
+    return {
+        "user": test_org_user_client,
+        "admin": test_org_admin_client
+    }
 
