@@ -23,8 +23,7 @@ from modules.tap_object_model import ServiceInstance
 from tests.fixtures.assertions import assert_in_with_retry
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [pytest.mark.components(TAP.service_catalog),
-              pytest.mark.skip(reason="DPNG-11125 api-service: endpoint for adding offerings from jar archives")]
+pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 TESTED_ROLES = ["user", "admin"]
 
@@ -35,7 +34,8 @@ def test_create_instance_as_authorized_user(context, role, sample_service, test_
     client = test_user_clients[role]
     step("Create an instance")
     instance = ServiceInstance.create_with_name(context, offering_label=sample_service.label,
-                                                plan_name=sample_service.service_plans[0]["entity"]["name"],
+                                                plan_name=sample_service.service_plans[0].name,
                                                 client=client)
+    instance.ensure_running()
     step("Check that service instance is present")
     assert_in_with_retry(instance, ServiceInstance.get_list, client=client)

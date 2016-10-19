@@ -17,22 +17,20 @@
 import base64
 import io
 import os
-import tarfile
 
 import pytest
 
 import config
-from modules import file_utils
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, \
-    TapComponent, Urls
+    TapComponent
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
-    ScoringEngineModel, ModelArtifact, Binding
+    ScoringEngineModel, ModelArtifact
 from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
 from tap_component_config import api_service
