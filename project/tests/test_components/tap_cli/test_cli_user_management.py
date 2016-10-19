@@ -27,7 +27,6 @@ from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_r
 
 @incremental
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
-@pytest.mark.bugs("DPNG-11086 API SERVICE - User Management endpoints")
 class TestCLIInvitingUser:
     @staticmethod
     @pytest.fixture(scope="class")
@@ -51,7 +50,6 @@ class TestCLIInvitingUser:
         log_fixture("Accepting invitation and registering user")
         return CliUser.register(class_context, invitation)
 
-    @pytest.mark.usefixtures("accept_invitation")
     def test_1_user_registered(self, tap_cli, user):
         users = CliUser.get_list(tap_cli)
         matched_user = next((u for u in users if u == user), None)
@@ -59,7 +57,6 @@ class TestCLIInvitingUser:
 
 
 @pytest.mark.usefixtures("cli_login")
-@pytest.mark.bugs("DPNG-11086 API SERVICE - User Management endpoints")
 class TestCLILongShortCommands:
 
     @staticmethod
@@ -83,7 +80,7 @@ class TestCLILongShortCommands:
 
     @pytest.mark.parametrize("short", (True, False))
     def test_invitations(self, tap_cli, invitation, short):
-        assert_in_with_retry(invitation, tap_cli.invitations, short=short)
+        assert_in_with_retry(invitation.username, tap_cli.invitations, short=short)
 
     @pytest.mark.parametrize("short", (True, False))
     def test_delete_invitations(self, tap_cli, invitation, short):

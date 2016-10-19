@@ -47,7 +47,7 @@ class CliInvitation:
         output = tap_cli.invitations()
         pending_invitations = []
         for line in output.split("\n"):
-            match = re.search("^([a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-])$", line)
+            match = re.search("^([a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+)$", line)
             if match:
                 pending_invitations.append(cls(tap_cli=tap_cli, username=match.group(0)))
         return pending_invitations
