@@ -25,5 +25,5 @@ from .sources import TapGitHub, RelativeRepositoryPaths
 from .tap_components import TapComponent
 from .urls import Urls
 from .guid import Guid
-from .tap_constants import TapApplicationType, TapEntityState, TapMessage
+from .tap_constants import TapApplicationType, TapEntityState, TapMessage, TapOfferingState
 

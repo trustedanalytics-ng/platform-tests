@@ -354,7 +354,7 @@ etcd_template = {
                             "containers": [
                                 {
                                     "name": "k-etcd",
-                                    "image": "127.0.0.1:30000/coreos/etcd:v2.3.6",
+                                    "image": "127.0.0.1:30000/coreos/etcd:v3.0.10",
                                     "ports": [
                                         {
                                             "containerPort": 4001,

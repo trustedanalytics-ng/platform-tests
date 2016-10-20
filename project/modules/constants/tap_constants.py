@@ -33,6 +33,12 @@ class TapEntityState:
     UNAVAILABLE = "UNAVAILABLE"
 
 
+class TapOfferingState:
+    DEPLOYING = "DEPLOYING"
+    READY = "READY"
+    OFFLINE = "OFFLINE"
+
+
 class TapMessage:
     AUTHENTICATION_FAILED = "Authentication failed"
     AUTHENTICATION_SUCCEEDED = "Authentication succeeded"

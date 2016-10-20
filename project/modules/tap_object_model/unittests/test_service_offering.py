@@ -100,6 +100,7 @@ POST_RESPONSE_ONE_PLAN = {
 GET_RESPONSE_ONE_PLAN = {
     "entity": {
         "label": OFFERING_LABEL,
+        "state": "READY",
         "provider": "",
         "url": "",
         "description": "Test test test",

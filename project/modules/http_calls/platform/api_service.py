@@ -40,7 +40,7 @@ def get_offerings(*, client: HttpClient) -> list:
 
 def create_offering(*, client: HttpClient, template_body: dict, service_name: str, description: str, bindable: bool,
                     tags: list, plans: list):
-    """ POST /offerings """
+    """ POST /offering """
     # TODO will be changed to POST /offerings
     body = {
         "template": {
@@ -56,7 +56,7 @@ def create_offering(*, client: HttpClient, template_body: dict, service_name: st
             "metadata": []
         }]
     }
-    response = client.request(HttpMethod.POST, path="offerings", body=body, raw_response=True)
+    response = client.request(HttpMethod.POST, path="offering", body=body, raw_response=True)
     assert response.status_code == HttpStatus.CODE_CREATED
     return response.json()
 
@@ -73,9 +73,9 @@ def get_offering(*, client: HttpClient, offering_id: str):
 
 
 def delete_offering(*, client: HttpClient, offering_id):
-    """ DELETE /catalog/{offering_id} """
-    # TODO will be changed to GET /offerings/{offering_id}
-    response = client.request(HttpMethod.DELETE, path="catalog/{}".format(offering_id), raw_response=True)
+    """ DELETE /offering/{offering_id} """
+    # TODO will be changed to DELETE /offerings/{offering_id}
+    response = client.request(HttpMethod.DELETE, path="offering/{}".format(offering_id), raw_response=True)
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 

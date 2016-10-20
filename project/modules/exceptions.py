@@ -66,3 +66,6 @@ class TapCliException(Exception):
 
 class ServiceInstanceCreationFailed(Exception):
     pass
+
+class ServiceOfferingCreationFailed(Exception):
+    pass

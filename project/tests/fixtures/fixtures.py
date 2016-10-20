@@ -89,6 +89,12 @@ def test_org_admin_client(test_org_admin):
     TestData.test_org_admin_client = test_org_admin_client
     return test_org_admin_client
 
+@pytest.fixture(scope="class")
+def test_user_clients(test_org_admin_client, test_org_user_client):
+    return {
+        "user": test_org_user_client,
+        "admin": test_org_admin_client
+    }
 
 @pytest.fixture(scope="function")
 def sample_model(request, context, core_org):
@@ -128,10 +134,22 @@ def sample_java_app(class_context, tap_cli):
     app.ensure_running()
     return app
 
+@pytest.mark.bugs("DPNG-12120 missing offering endpoint")
+@pytest.fixture(scope="class")
+def sample_service_from_template(class_context):
+    log_fixture("Create new example service")
+    sample_service = ServiceOffering.create(context=class_context)
+    log_fixture("Check the service is ready")
+    sample_service.ensure_ready()
+    return sample_service
 
 @pytest.fixture(scope="class")
 def sample_service(class_context, test_org):
-    return ServiceOffering.create_from_binary(class_context, org_guid=test_org.guid)
+    log_fixture("Create new example service from binary")
+    sample_service = ServiceOffering.create_from_binary(class_context, org_guid=test_org.guid)
+    log_fixture("Check the service is ready")
+    sample_service.ensure_ready()
+    return sample_service
 
 
 @pytest.fixture(scope="session")
@@ -264,12 +282,4 @@ def model_hdfs_path(core_org):
     if model_dataset is None:
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
     return model_dataset.target_uri
-
-
-@pytest.fixture(scope="class")
-def test_user_clients(test_org_admin_client, test_org_user_client):
-    return {
-        "user": test_org_user_client,
-        "admin": test_org_admin_client
-    }
 

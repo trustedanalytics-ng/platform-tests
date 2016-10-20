@@ -16,7 +16,11 @@
 
 import functools
 
+from retry import retry
+
 from fixtures.k8s_templates import template_example
+from modules.constants import TapOfferingState
+from modules.exceptions import ServiceOfferingCreationFailed
 from modules.http_calls.platform import api_service as api
 from modules.http_client import HttpClient
 from modules.test_names import generate_test_object_name
@@ -31,11 +35,12 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["guid", "label", "service_plans"]
     TEST_SERVICE_PREFIX = "test_service"
 
-    def __init__(self, *, offering_id: str, label: str, service_plans: list, client: HttpClient=None):
+    def __init__(self, *, offering_id: str, label: str, service_plans: list, state: str, client: HttpClient=None):
         # TODO add fields necessary for tests
         super().__init__(object_id=offering_id, client=client)
         self.label = label
         self.service_plans = service_plans
+        self.state = state
 
     def __repr__(self):
         return "{} (label={}, guid={})".format(self.__class__.__name__, self.label, self.id)
@@ -64,6 +69,20 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         context.append(new_offering)
         assert new_offering == offering_from_response
         return new_offering
+
+    @retry(AssertionError, tries=60, delay=3)
+    def ensure_ready(self):
+        self._refresh()
+        if self.state == TapOfferingState.OFFLINE:
+            raise ServiceOfferingCreationFailed()
+        assert self.state == TapOfferingState.READY, "Offiline state is {}, expected {}".format(self.state,
+                                                                                                TapEntityState.READY)
+
+    def _refresh(self):
+        offerings = self.get_list()
+        this_offering = next((i for i in offerings if i.id == self.id), None)
+        assert this_offering is not None, "Offering {} not found on the list".format(self.label)
+        self.state = this_offering.state
 
     @classmethod
     def create_from_binary(cls, context, *, org_guid: str, path=None, service_name: str=None,
@@ -95,6 +114,9 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         offering_id = response.get("id")
         if offering_id is None:
             offering_id = response["metadata"]["guid"]
+        state = response.get("state")
+        if state is None:
+            state = response["entity"]["state"]
         label = response.get("name")
         if label is None:
             label = response["entity"]["label"]
@@ -104,4 +126,4 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         service_plans = []
         for item in service_plans_json:
             service_plans.append(ServicePlan.from_response(item))
-        return cls(offering_id=offering_id, label=label, service_plans=service_plans, client=client)
+        return cls(offering_id=offering_id, label=label, service_plans=service_plans, client=client, state=state)

@@ -26,33 +26,39 @@ logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
-@pytest.mark.skip(reason="DPNG-8762 Adjust test_delete_service tests to TAP NG")
 @priority.medium
 class TestDeleteService:
 
     @pytest.fixture(scope="class")
-    def public_service(self, request, test_space):
+    def public_service(self, request):
         services = ServiceOffering.get_list()
         return next(s for s in services if s.label == ServiceLabels.ZOOKEEPER)
 
-    @pytest.mark.parametrize("role", ["developer", "auditor", "manager"])
-    def test_cannot_delete_public_service_as_non_admin(self, space_users_clients, role, public_service):
-        client = space_users_clients[role]
+    @pytest.mark.bugs(reason="DPNG-11781 TAP-NG doesn't support user roles yet")
+    @pytest.mark.parametrize("role", ["user"])
+    def test_cannot_delete_public_service_as_non_admin(self, test_user_clients, role, public_service):
+        client = test_user_clients[role]
         step("Attempt to delete public service")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE,
                                      public_service.api_delete, client=client)
 
-    @pytest.mark.parametrize("role", ["developer", "auditor", "manager", "admin"])
-    def test_cannot_remove_service_with_instance(self, context, test_org, test_space, space_users_clients, role,
-                                                 sample_service):
+    @pytest.mark.skip(reason="DPNG-12120 can't remove offering - missing endpoint")
+    @pytest.mark.parametrize("role", ["admin"])
+    def test_cannot_remove_service_with_instance(self, context, sample_service_from_template, test_user_clients, role):
+        client = test_user_clients[role]
+        offering_id = sample_service_from_template.id
+        plan_id = sample_service_from_template.service_plans[0].id
+
         step("Create an instance")
-        instance = ServiceInstance.api_create(context, test_org.guid, test_space.guid, sample_service.label,
-                                              service_plan_guid=sample_service.service_plans[0]["guid"])
+        instance = ServiceInstance.create(context, offering_id=offering_id, plan_id=plan_id, client=client)
+
+        step("Ensure that instance is running")
+        instance.ensure_running()
+
         step("Check that service instance is present")
-        assert_in_with_retry(instance, ServiceInstance.api_get_list, test_space.guid, sample_service.guid)
-        client = space_users_clients[role]
-        step("Attempt to delete sample service")
+        assert_in_with_retry(instance, ServiceInstance.get_list, name=instance.name)
+
+        step("Attempt to delete public service with instnace")
         assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR,
                                      HttpStatus.MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE,
-                                     sample_service.api_delete,
-                                     client=client)
+                                     sample_service_from_template.delete)
