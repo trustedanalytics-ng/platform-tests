@@ -16,6 +16,7 @@
 
 import os
 import tarfile
+import shutil
 
 import pytest
 
@@ -29,6 +30,24 @@ from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
+
+
+def copy_dir_as_symlinks(*, src_root, dst_root):
+    """ Copies a directory using symbolic links.
+        - directories are copied as directories
+        - files are copied as symbolic links to the files
+        - symbolic links are copied as symbolic links to the symbolic links
+    """
+    shutil.rmtree(dst_root, ignore_errors=True)
+    for current_root, dirs, files in os.walk(src_root):
+        for d in dirs:
+            src_dir = os.path.join(current_root, d)
+            tgt_dir = src_dir.replace(src_root, dst_root)
+            os.makedirs(tgt_dir)
+        for file in files:
+            src_file = os.path.join(current_root, file)
+            tgt_file = src_file.replace(src_root, dst_root)
+            os.symlink(src_file, tgt_file)
 
 
 class TestCheckAppPushHelp:
@@ -92,10 +111,54 @@ class TestPythonCliApp:
     EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
     APP_URL_MESSAGE = "TEST APP v.1.0 READY"
 
-    @pytest.fixture(scope="class")
-    def sample_app_target_directory(self, sample_app_path):
+    @pytest.yield_fixture(scope="class")
+    def sample_app_source_dir(self, sample_app_path):
+        """ Download and extract sample application. The archive may contain symbolic links. """
         sample_app_path = os.path.abspath(sample_app_path)
-        return os.path.join(os.path.dirname(sample_app_path), "sample_{}_app".format(self.APP_TYPE))
+        sample_app_source_dir = os.path.join(os.path.dirname(sample_app_path),
+                                             "sample_{}_app_source".format(self.APP_TYPE))
+        step("Extract application archive")
+        with tarfile.open(sample_app_path) as tar:
+            tar.extractall(path=sample_app_source_dir)
+            sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
+        step("Check content of the archive")
+        missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
+        assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
+        yield sample_app_source_dir
+        # Fixture finalization
+        shutil.rmtree(sample_app_source_dir, ignore_errors=True)
+
+    @pytest.yield_fixture(scope="class")
+    def sample_app_target_directory(self, sample_app_source_dir):
+        """ Prepare sample application directory WITHOUT symbolic links """
+
+        sample_app_target_directory = os.path.join(os.path.dirname(os.path.normpath(sample_app_source_dir)),
+                                                   "sample_{}_app_target".format(self.APP_TYPE))
+        step("Make copy of application directory with symbolic links dereferenced")
+        shutil.rmtree(sample_app_target_directory, ignore_errors=True)
+        shutil.copytree(sample_app_source_dir,
+                        sample_app_target_directory,
+                        symlinks=False)
+        yield sample_app_target_directory
+        # Fixture finalization
+        shutil.rmtree(sample_app_target_directory, ignore_errors=True)
+
+    @pytest.yield_fixture(scope="class")
+    def sample_app_target_directory_with_symlinks(self, sample_app_source_dir):
+        """ Prepare sample application directory WITH symbolic links """
+
+        sample_app_target_directory_with_symlinks = os.path.join(os.path.dirname(os.path.normpath(sample_app_source_dir)),
+                                                                 "sample_{}_app_target_with_symlinks".format(self.APP_TYPE))
+        copy_dir_as_symlinks(src_root=sample_app_source_dir,
+                             dst_root=sample_app_target_directory_with_symlinks)
+        step("Create internal directory symlink")
+        run_sh = os.path.join(sample_app_target_directory_with_symlinks, "run.sh")
+        runfile = os.path.join(sample_app_target_directory_with_symlinks, "test-copy-of-run.sh")
+        shutil.move(src=run_sh, dst=runfile)
+        os.symlink(src=runfile, dst=run_sh)
+        yield sample_app_target_directory_with_symlinks
+        # Fixture finalization
+        shutil.rmtree(sample_app_target_directory_with_symlinks, ignore_errors=True)
 
     @pytest.fixture(scope="class")
     def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
@@ -110,23 +173,28 @@ class TestPythonCliApp:
         application.ensure_app_is_ready()
         return application
 
-    @priority.medium
-    def test_check_sample_app_content(self, sample_app_path, sample_app_target_directory):
-        step("Extract application archive")
-
-        with tarfile.open(sample_app_path) as tar:
-            tar.extractall(path=sample_app_target_directory)
-            sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
-
-        step("Check content of the archive")
-        missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
-        assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
-
     @priority.high
     def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
         step("Push application")
         application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
                                           app_path=sample_app_target_directory)
+        step("Ensure app is on the app list")
+        application.ensure_on_app_list()
+        step("Ensure app is running")
+        application.ensure_app_state(state=TapEntityState.RUNNING)
+        step("Ensure app is ready")
+        application.ensure_app_is_ready()
+
+        step("Delete app")
+        application.delete()
+        step("Ensure app is not on the app list")
+        application.ensure_not_on_app_list()
+
+    @pytest.mark.bugs("DPNG-12158 Tap client fails when pushing directory containing symbolic links")
+    def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
+        step("Push application")
+        application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
+                                          app_path=sample_app_target_directory_with_symlinks)
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")
