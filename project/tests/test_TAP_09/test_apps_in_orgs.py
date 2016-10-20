@@ -13,8 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.331'
+from tests.fixtures import assertions
+from modules.tap_object_model import Application
 
 
+@pytest.mark.skip(reason="DPNG-11178 multiorg not implemented yet")
+@pytest.mark.parametrize("role", ["user_org_Y"])
+def test_user_can_not_manage_app_from_different_org(self, sample_java_app, test_user_clients, role):
+    client = test_user_clients[role]
+    assertions.assert_not_in_by_id_with_retry(sample_java_app.id, Application.get_list, client=client)

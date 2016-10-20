@@ -36,12 +36,25 @@ def assert_not_in_with_retry(something, get_list_method, *args, **kwargs):
     obj_list = get_list_method(*args, **kwargs)
     assert something not in obj_list, "{} was found on the list".format(something)
 
+@retry(AssertionError, tries=30, delay=2)
+def assert_not_in_by_id_with_retry(id, get_list_method, *args, **kwargs):
+    """Use when adding something takes longer"""
+    obj_list = get_list_method(*args, **kwargs)
+    ids = [o.id for o in obj_list]
+    assert id not in ids, "{} was found on the list".format(id)
 
 @retry(AssertionError, tries=30, delay=2)
 def assert_in_with_retry(something, get_list_method, *args, **kwargs):
     """Use when adding something takes longer"""
     obj_list = get_list_method(*args, **kwargs)
     assert something in obj_list, "{} was not found on the list".format(something)
+
+@retry(AssertionError, tries=30, delay=2)
+def assert_in_by_id_with_retry(id, get_list_method, *args, **kwargs):
+    """Use when adding something takes longer"""
+    obj_list = get_list_method(*args, **kwargs)
+    ids = [o.id for o in obj_list]
+    assert id in ids, "{} was not found on the list".format(id)
 
 
 def assert_raises_http_exception(status, error_message_phrase, callableObj, *args, **kwargs):

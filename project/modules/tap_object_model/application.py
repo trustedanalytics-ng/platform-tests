@@ -41,6 +41,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     _REFRESH_ATTRIBUTES = ["id", "image_type", "state", "replication", "running_instances", "urls"]
 
     MANIFEST_NAME = "manifest.json"
+    RUN_SH_NAME = "run.sh"
 
     def __init__(self, app_id: str, name: str, bindings: list, image_type: str, state: str, replication: int,
                  running_instances: int, urls: list, client: HttpClient=None):
@@ -85,7 +86,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             file.write(json.dumps(manifest))
 
     @classmethod
-    def save_manifest(cls, *, app_path, name, instances, app_type):
+    def save_manifest(cls, *, app_path, name, instances, app_type, bindings):
         """
         Fill manifest with parameters, save as file in application directory.
         Return path to the manifest file.
@@ -93,7 +94,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         manifest = {
             "name": name,
             "instances": instances,
-            "type": app_type
+            "type": app_type,
+            "bindings": bindings
         }
         if os.path.isfile(app_path):
             manifest_dir = os.path.dirname(app_path)
@@ -105,8 +107,18 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         return manifest_path
 
     @classmethod
+    def set_run_sh_access(cls, *, app_path):
+        if os.path.isfile(app_path):
+            run_sh_dir = os.path.dirname(app_path)
+        else:
+            run_sh_dir = app_path
+
+        run_sh_path = os.path.join(run_sh_dir, cls.RUN_SH_NAME)
+        os.chmod(run_sh_path, 0o777)
+
+    @classmethod
     def push(cls, context, *, app_path: str, tap_cli: TapCli, app_type: str, name: str=None, instances: int=1,
-             client: HttpClient=None):
+             client: HttpClient=None, bindings: list=None):
         """Pushes the application from source directory with provided name,
         services and envs. This only pushed the application, but does not
         verify whether the app is running or not.
@@ -126,7 +138,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         """
         if name is None:
             name = test_names.generate_test_object_name(separator="")
-        cls.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type)
+        cls.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type, bindings=bindings)
+        cls.set_run_sh_access(app_path=app_path)
         tap_cli.login()
         try:
             tap_cli.push(app_path=app_path)

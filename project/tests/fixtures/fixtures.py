@@ -134,7 +134,6 @@ def sample_java_app(class_context, tap_cli):
     app.ensure_running()
     return app
 
-@pytest.mark.bugs("DPNG-12120 missing offering endpoint")
 @pytest.fixture(scope="class")
 def sample_service_from_template(class_context):
     log_fixture("Create new example service")

@@ -117,7 +117,8 @@ def get_application(*, client: HttpClient, app_id: str):
 
 def delete_application(*, client: HttpClient, app_id: str):
     """ DELETE /applications/{app_id} """
-    return client.request(HttpMethod.DELETE, path="applications/{}".format(app_id), msg="Delete application")
+    response = client.request(HttpMethod.DELETE, path="applications/{}".format(app_id), msg="Delete application", raw_response=True)
+    assert response.status_code == HttpStatus.CODE_NO_CONTENT
 
 
 def get_application_logs(*, client: HttpClient, app_id: str):
