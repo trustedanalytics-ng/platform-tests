@@ -37,10 +37,11 @@ class TestSubmitTransfer:
 
     DEFAULT_CATEGORY = "other"
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
+    TEST_FILE_URL = Urls.test_transfer_link
 
     def _create_transfer(self, context, org_guid, category):
         step("Create new transfer and wait until it's finished")
-        transfer = Transfer.api_create(context, category=category, source=Urls.test_transfer_link, org_guid=org_guid)
+        transfer = Transfer.api_create(context, category=category, source=self.TEST_FILE_URL, org_guid=org_guid)
         transfer.ensure_finished()
         return transfer
 
@@ -112,7 +113,7 @@ class TestSubmitTransfer:
     def test_no_token_in_create_transfer_response(self, test_org):
         step("Create new transfer and check that 'token' field was not returned in response")
         response = das.api_create_transfer(
-            source=Urls.test_transfer_link,
+            source=self.TEST_FILE_URL,
             title=generate_test_object_name(),
             is_public=False,
             org_guid=test_org.guid,

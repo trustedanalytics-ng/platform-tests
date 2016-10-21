@@ -19,7 +19,7 @@ import pytest
 from modules.constants import TapComponent as TAP, Urls
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Organization, Transfer
+from modules.tap_object_model import DataSet, Transfer
 
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
 pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloa
 class TestGetDataSets(object):
 
     data_sample = ["COL_0", "COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6", "COL_7"]
+    TEST_FILE_URL = Urls.test_transfer_link
 
     @classmethod
     @pytest.fixture(scope="class", autouse=True)
@@ -37,10 +38,10 @@ class TestGetDataSets(object):
         cls.transfers = []
         for category in DataSet.CATEGORIES:
             cls.transfers.append(Transfer.api_create(class_context, category, is_public=False, org_guid=test_org.guid,
-                                                     source=Urls.test_transfer_link))
+                                                     source=cls.TEST_FILE_URL))
         for category in DataSet.CATEGORIES:
             cls.transfers.append(Transfer.api_create(class_context, category, is_public=True, org_guid=test_org.guid,
-                                                     source=Urls.test_transfer_link))
+                                                     source=cls.TEST_FILE_URL))
         step("Ensure that transfers are finished")
         for transfer in cls.transfers:
             transfer.ensure_finished()
@@ -124,21 +125,6 @@ class TestGetDataSets(object):
         assert dataset.source_uri == transfer.source
 
     @priority.medium
-    def test_get_data_sets_from_another_org(self, context):
-        step("Create another test organization")
-        org = Organization.api_create(context)
-        step("Retrieve datasets from the new org")
-        public_datasets = [ds for ds in self.datasets if ds.is_public]
-        private_datasets = [ds for ds in self.datasets if not ds.is_public]
-        datasets = [ds for ds in DataSet.api_get_list(org_guid_list=[org.guid])]
-        step("Check that no private data sets are visible in another org")
-        found_private_ds = [ds for ds in private_datasets if ds in datasets]
-        assert found_private_ds == [], "Private datasets from another org returned"
-        step("Check that all public data sets are visible in another org")
-        missing_public_ds = [ds for ds in public_datasets if ds not in datasets]
-        assert missing_public_ds == [], "Not all public data sets from another org returned"
-
-    @priority.medium
     def test_get_datasets_by_keyword_title(self, test_org):
         title = self.transfer_titles[0]
         step("Retrieve datasets by title keyword")
@@ -149,7 +135,7 @@ class TestGetDataSets(object):
     @priority.medium
     def test_get_datasets_by_keyword_source_uri(self, test_org):
         step("Retrieve datasets by source uri keyword")
-        filtered_datasets = self._filter_datasets(test_org, query=Urls.test_transfer_link)
+        filtered_datasets = self._filter_datasets(test_org, query=self.TEST_FILE_URL)
         assert sorted(filtered_datasets) == sorted(self.datasets)
 
     @priority.medium

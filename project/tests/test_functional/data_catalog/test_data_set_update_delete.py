@@ -18,11 +18,11 @@ import pytest
 from retry import retry
 
 from modules.constants import HttpStatus, TapComponent as TAP, Urls
+from modules.exceptions import UnexpectedResponseError
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet
 from modules.tap_object_model.flows import data_catalog
-from tests.fixtures import assertions
 
 logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
 pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
@@ -30,6 +30,7 @@ pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloa
 
 @pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestUpdateDeleteDataSet:
+    TEST_FILE_URL = Urls.test_transfer_link
 
     @retry(AssertionError, tries=10, delay=3)
     def _assert_updated(self, data_set_id, updated_attribute_name, expected_value):
@@ -41,7 +42,7 @@ class TestUpdateDeleteDataSet:
     def dataset(self, test_org, context):
         step("Create data set")
         _, dataset = data_catalog.create_dataset_from_link(context, org_guid=test_org.guid,
-                                                           source=Urls.test_transfer_link)
+                                                           source=self.TEST_FILE_URL)
         return dataset
 
     @priority.high
@@ -57,7 +58,9 @@ class TestUpdateDeleteDataSet:
         step("Delete data set")
         dataset.api_delete()
         step("Try to delete the dataset again")
-        assertions.assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY, dataset.api_delete)
+        with pytest.raises(UnexpectedResponseError) as e:
+            dataset.api_delete()
+        assert e.value.status == HttpStatus.CODE_NOT_FOUND
 
     @priority.medium
     @pytest.mark.public_dataset

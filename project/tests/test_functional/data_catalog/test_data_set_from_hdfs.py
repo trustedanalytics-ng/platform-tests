@@ -33,10 +33,12 @@ pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloa
 @pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestDataSetFromHdfs(object):
 
+    TEST_FILE_URL = Urls.test_transfer_link
+
     @priority.medium
     def test_create_dataset_from_hdfs_uri(self, context, test_org):
         step("Create source dataset")
-        _, source_dataset = data_catalog.create_dataset_from_link(context, test_org.guid, Urls.test_transfer_link)
+        _, source_dataset = data_catalog.create_dataset_from_link(context, test_org.guid, self.TEST_FILE_URL)
         step("Create dataset from hdfs uri")
         _, dataset = data_catalog.create_dataset_from_link(context, test_org.guid, source_dataset.target_uri)
         assert dataset.source_uri == source_dataset.target_uri

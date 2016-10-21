@@ -39,16 +39,14 @@ class TestCreateDataSets(object):
         "sourceUri",
         "size",
         "orgUUID",
-        "targetUri",
         "format",
         "dataSample",
         "isPublic",
         "creationTime",
     }
-    FROM_FILE = False
 
     @classmethod
-    @pytest.fixture(scope="class", autouse=True)
+    @pytest.fixture(scope="class", autouse=False)
     def target_uri(cls, test_org):
         step("Get target uri from hdfs instance")
         hdfs = next(app for app in Application.get_list() if "hdfs-downloader" in app.name)
@@ -56,71 +54,87 @@ class TestCreateDataSets(object):
         cls.target_uri = cls.target_uri.replace("%{organization}", test_org.guid)
 
     @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def data_set_file_path(cls):
-        source = Urls.test_transfer_link
-        cls.file_path = download_file(source)
+    @pytest.fixture(scope="class")
+    def file_source(cls):
+        return Urls.test_transfer_link
 
-    def _get_expected_dataset_details(self, org_uuid, format, access, file_path, transfer, from_file=False):
+    @classmethod
+    @pytest.fixture(scope="class")
+    def local_file_path(cls, file_source):
+        return download_file(file_source)
+
+    @pytest.fixture(scope="class")
+    def transfer(self, class_context, test_org, file_source):
+        step("Create transfer by providing a csv from url")
+        transfer = Transfer.api_create(class_context, org_guid=test_org.guid, source=file_source)
+        transfer.ensure_finished()
+        return transfer
+
+    @pytest.fixture(scope="class")
+    def dataset(self, transfer, test_org):
+        step("Get data set matching to transfer {}".format(transfer.title))
+        return DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
+
+    @pytest.fixture(scope="class")
+    def expected_dataset_details(self, test_org, file_source, local_file_path, transfer):
         return {
-            'accessibility': access.name,
+            'accessibility': Access.PRIVATE.name,
             'title': transfer.title,
             'category': transfer.category,
-            'recordCount': get_csv_record_count(file_path),
-            'sourceUri': os.path.split(file_path)[1] if from_file else Urls.test_transfer_link,
-            'size': os.path.getsize(file_path),
-            'orgUUID': org_uuid,
-            'targetUri': self.target_uri + "{}".format(transfer.id_in_object_store),
-            'format': format,
-            'dataSample': ",".join(get_csv_data(file_path)),
-            'isPublic': access.value,
+            'recordCount': get_csv_record_count(local_file_path),
+            'sourceUri': file_source,
+            'size': os.path.getsize(local_file_path),
+            'orgUUID': test_org.guid,
+            'format': "CSV",
+            'dataSample': ",".join(get_csv_data(local_file_path)),
+            'isPublic': Access.PRIVATE.value,
             'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
         }
 
-    def _get_transfer_and_dataset(self, org_guid, file_source, access, context):
-        step("Create transfer by providing a csv from url")
-        transfer = Transfer.api_create(context, DataSet.CATEGORIES[0], access.value, org_guid, file_source)
+    @priority.medium
+    @pytest.mark.parametrize("key", DETAILS_TO_COMPARE)
+    def test_create_dataset(self, key, dataset, expected_dataset_details):
+        step("Compare dataset details with expected values")
+        assert expected_dataset_details[key] == dataset.get_details()[key]
+
+    @priority.medium
+    def test_create_dataset_recordcount(self, dataset, local_file_path):
+        step("Check that record count is valid")
+        assert dataset.record_count == get_csv_record_count(local_file_path)
+
+
+class TestCreateDataSetsFromFile(TestCreateDataSets):
+
+    @classmethod
+    @pytest.fixture(scope="class")
+    def file_source(cls):
+        source = Urls.test_transfer_link
+        return download_file(source)
+
+    @classmethod
+    @pytest.fixture(scope="class")
+    def local_file_path(cls, file_source):
+        return file_source
+
+    @pytest.fixture(scope="class")
+    def expected_dataset_details(self, test_org, file_source, local_file_path, transfer):
+        return {
+            'accessibility': Access.PRIVATE.name,
+            'title': transfer.title,
+            'category': transfer.category,
+            'recordCount': get_csv_record_count(local_file_path),
+            'sourceUri': os.path.split(local_file_path)[1],
+            'size': os.path.getsize(local_file_path),
+            'orgUUID': test_org.guid,
+            'format': "CSV",
+            'dataSample': ",".join(get_csv_data(local_file_path)),
+            'isPublic': Access.PRIVATE.value,
+            'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
+        }
+
+    @pytest.fixture(scope="class")
+    def transfer(self, class_context, test_org, file_source):
+        step("Create transfer by uploading csv file")
+        transfer = Transfer.api_create_by_file_upload(class_context, test_org.guid, file_path=file_source)
         transfer.ensure_finished()
-        step("Get data set matching to transfer {}".format(transfer.title))
-        data_set = DataSet.api_get_matching_to_transfer(org_guid=org_guid, transfer_title=transfer.title)
-        return transfer, data_set
-
-    def _get_dataset_current_and_expected_details(self, org_guid, access, context):
-        transfer, dataset = self._get_transfer_and_dataset(org_guid, Urls.test_transfer_link, access, context)
-        step("Generate expected dataset summary and get real dataset summary")
-        expected_details = self._get_expected_dataset_details(org_guid, "CSV", access, self.file_path, transfer,
-                                                              from_file=self.FROM_FILE)
-        ds_details = dataset.get_details()
-        return ds_details, expected_details
-
-    @priority.medium
-    @pytest.mark.parametrize("key", DETAILS_TO_COMPARE)
-    def test_create_private_dataset(self, key, context, test_org):
-        ds_details, expected_details = self._get_dataset_current_and_expected_details(test_org.guid, Access.PRIVATE,
-                                                                                      context)
-        step("Compare private dataset details with expected values")
-        assert expected_details[key] == ds_details[key]
-
-    @priority.medium
-    @pytest.mark.public_dataset
-    @pytest.mark.parametrize("key", DETAILS_TO_COMPARE)
-    def test_create_public_dataset(self, key, context, test_org):
-        ds_details, expected_details = self._get_dataset_current_and_expected_details(test_org.guid, Access.PUBLIC,
-                                                                                      context)
-        step("Compare public dataset details with expected values")
-        assert expected_details[key] == ds_details[key]
-
-    @priority.medium
-    def test_create_private_dataset_recordcount(self, context, test_org):
-        transfer, dataset = self._get_transfer_and_dataset(test_org.guid, Urls.test_transfer_link, Access.PRIVATE,
-                                                           context)
-        step("Check that record count is valid")
-        assert dataset.record_count == get_csv_record_count(self.file_path)
-
-    @priority.medium
-    @pytest.mark.public_dataset
-    def test_create_public_dataset_recordcount(self, context, test_org):
-        transfer, dataset = self._get_transfer_and_dataset(test_org.guid, Urls.test_transfer_link, Access.PUBLIC,
-                                                           context)
-        step("Check that record count is valid")
-        assert dataset.record_count == get_csv_record_count(self.file_path)
+        return transfer
