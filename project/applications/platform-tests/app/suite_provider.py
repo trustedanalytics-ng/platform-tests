@@ -16,9 +16,10 @@
 
 import ast
 import os
-
 import dateutil.parser
 import math
+
+from .config import Paths
 
 
 class SuiteProvider(object):
@@ -46,7 +47,10 @@ class SuiteProvider(object):
     @classmethod
     def _get_tests(cls, suite: dict):
         """Get suite available tests"""
-        suite_file_name = "{}.py".format(str(suite["id"]).replace('.', os.path.sep))
+        suite_file_name = os.path.join(
+            Paths.PLATFORM_TESTS_DIR,
+            "{}.py".format(str(suite["id"]).replace('.', os.path.sep))
+        )
         with open(suite_file_name) as f:
             file_contents = f.read()
         module = ast.parse(file_contents)

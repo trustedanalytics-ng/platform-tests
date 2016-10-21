@@ -41,7 +41,7 @@ logger = get_logger(__name__)
 
 INCREMENTAL_KEYWORD = "incremental"
 
-mongo_reporter = MongoReporter()
+mongo_reporter = MongoReporter(run_id=config.test_run_id)
 
 
 def _log_test_configuration():

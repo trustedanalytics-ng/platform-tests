@@ -15,18 +15,24 @@
 #
 
 import abc
-import json
 import os
+import sys
+
+
+class Paths:
+
+    PLATFORM_TESTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+    PROJECT_DIR = os.path.join(PLATFORM_TESTS_DIR, "project")
 
 
 class _BaseConfig(object):
     """
     example environment variable setting:
     required:
-        VCAP_APPLICATION={"uris": ["platform-tests.<tapdomain>"]}
+        PT_TAP_DOMAIN=environment_address
     """
     _default_config = {}
-    VCAP_APPLICATION = "VCAP_APPLICATION"
+    PT_TAP_DOMAIN = "PT_TAP_DOMAIN"
 
     def __init__(self):
         self._config = self._default_config.copy()
@@ -37,11 +43,10 @@ class _BaseConfig(object):
         pass
 
     def _parse_tap_domain(self):
-        try:
-            vcap_application = json.loads(os.environ[self.VCAP_APPLICATION])
-            return vcap_application["uris"][0].split(".", 1)[1]
-        except KeyError:
-            raise IncorrectConfigurationException()
+        tap_domain = os.environ.get(self.PT_TAP_DOMAIN)
+        if not tap_domain:
+            raise IncorrectConfigurationException("Missing env {}".format(self.PT_TAP_DOMAIN))
+        return tap_domain
 
     def __getattr__(self, item):
         return self._config.get(item)
@@ -50,44 +55,69 @@ class _BaseConfig(object):
 class DatabaseConfig(_BaseConfig):
     """
     example environment variable setting:
-        VCAP_SERVICES={
-            "mongodb26": [{
-                "credentials": {
-                    "dbname": <db_name>,
-                    "hostname": <db_host_name>,
-                    "password": <user_password>,
-                    "username": <user_name>,
-                    "port": <db_connection_port_number>,
-                    "uri": "mongodb://username:password@hostname:port/dbname"
-                }
-            }]
-        }
+        MONGODB_HOST=localhost
+        MONGODB_PORT=27017
     """
-    VCAP_SERVICES = "VCAP_SERVICES"
+    MONGODB_HOST = "MONGODB_HOST"
+    MONGODB_PORT = "MONGODB_PORT"
+    MONGODB_DBNAME = "MONGODB_DBNAME"
+    MONGODB_USERNAME = "MONGODB_USERNAME"
+    MONGODB_PASSWORD = "MONGODB_PASSWORD"
     _default_config = {
-        "uri": "mongodb://localhost:27017/test_results",
         "dbname": "test_results",
         "hostname": "localhost",
         "port": 27017,
         "test_suite_collection": "test_run",
         "test_result_collection": "test_result",
+        "username": None,
+        "password": None
     }
 
+    @property
+    def uri(self):
+        credentials = ""
+        if self._are_credentials_present():
+            credentials = "{}:{}@".format(self.username, self.password)
+        return "mongodb://{}{}:{}/{}".format(credentials, self.hostname, self.port, self.dbname)
+
     def _parse_environment_variables(self) -> dict:
-        environment_config = os.environ.get(self.VCAP_SERVICES, {})
-        if environment_config != {}:
-            environment_config = json.loads(environment_config)
-            environment_config = environment_config["mongodb26"][0]["credentials"]
-            environment_config["port"] = int(environment_config["port"])
+        environment_config = {}
+
+        hostname = os.environ.get(self.MONGODB_HOST)
+        if hostname:
+            environment_config['hostname'] = hostname
+
+        port = os.environ.get(self.MONGODB_PORT)
+        if port:
+            environment_config['port'] = int(port)
+
+        dbname = os.environ.get(self.MONGODB_DBNAME)
+        if dbname:
+            environment_config['dbname'] = dbname
+
+        username = os.environ.get(self.MONGODB_USERNAME)
+        if username:
+            environment_config['username'] = username
+
+        password = os.environ.get(self.MONGODB_PASSWORD)
+        if password:
+            environment_config['password'] = password
+
         return environment_config
+
+    def _are_credentials_present(self) -> bool:
+        if None not in [self.username, self.password]:
+            return True
+        return False
 
 
 class AppConfig(_BaseConfig):
     """
     example environment variable setting:
-        VCAP_APP_PORT=8080
+        PORT=80
     """
-    VCAP_APP_PORT = "VCAP_APP_PORT"
+    PORT = "PORT"
+    DEBUG = "DEBUG"
     _default_config = {
         "hostname": "0.0.0.0",
         "port": 8080,
@@ -95,45 +125,30 @@ class AppConfig(_BaseConfig):
     }
 
     def _parse_environment_variables(self) -> dict:
-        environment_config = {}
-        environment_config["tap_domain"] = self._parse_tap_domain()
-        vcap_app_port = os.environ.get(self.VCAP_APP_PORT)
-        if vcap_app_port is not None:
-            environment_config["port"] = int(vcap_app_port)
+        environment_config = {"tap_domain": self._parse_tap_domain()}
+        port = os.environ.get(self.PORT)
+        if port:
+            environment_config["port"] = int(port)
+        debug = os.environ.get(self.DEBUG)
+        if debug and debug in ["1", "True", "true"]:
+                environment_config["port"] = True
         return environment_config
 
 
 class RunnerConfig(_BaseConfig):
-    """
-    example environment variable setting:
-    CORE_ORG_NAME=<core_org_name>
-    CORE_SPACE_NAME=<core_space_name>
-    """
-    CORE_ORG_NAME = "CORE_ORG_NAME"
-    CORE_SPACE_NAME = "CORE_SPACE_NAME"
+
     _default_config = {
-        "core_org_name": "trustedanalytics",
-        "core_space_name": "platform",
-        "pytest_command": "py.test",
-        "cwd": "project",
-        "suite_name": os.path.abspath("project/tests/test_smoke/test_functional.py"),
+        "pytest_command": [sys.executable, "-m", "pytest"],
+        "cwd": Paths.PROJECT_DIR,
+        "suite_path": os.path.join(Paths.PROJECT_DIR, "tests/test_smoke/test_functional.py"),
         "max_execution_time": 1800,  # 30 minutes
     }
 
     def _parse_environment_variables(self) -> dict:
-        environment_config = {}
-        environment_config["tap_domain"] = self._parse_tap_domain()
-        core_org_name = os.environ.get(self.CORE_ORG_NAME)
-        if core_org_name is not None:
-            environment_config["core_org_name"] = core_org_name
-        core_space_name = os.environ.get(self.CORE_SPACE_NAME)
-        if core_space_name is not None:
-            environment_config["core_space_name"] = core_space_name
-
-        return environment_config
+        return {"tap_domain": self._parse_tap_domain()}
 
 
 class IncorrectConfigurationException(Exception):
 
-    def __init__(self):
-        super().__init__("Environment variables not set properly")
+    def __init__(self, msg="Environment variables not set properly"):
+        super().__init__(msg)

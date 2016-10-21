@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import config
 
 from ...http_client.client_auth.http_method import HttpMethod
 from ...http_client.configuration_provider.console import ConsoleConfigurationProvider
@@ -21,7 +22,9 @@ from ...http_client.http_client_factory import HttpClientFactory
 
 def api_get_test_suites(client=None):
     """GET /platform_tests/tests"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    client = client or HttpClientFactory.get(
+        ConsoleConfigurationProvider.get(url=config.console_url_for_platform_tests_app)
+    )
     return client.request(
         method=HttpMethod.GET,
         path="platform_tests/tests",
@@ -31,7 +34,9 @@ def api_get_test_suites(client=None):
 
 def api_get_test_suite_results(suite_id, client=None):
     """GET /platform_tests/tests/{suite_id}/results"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    client = client or HttpClientFactory.get(
+        ConsoleConfigurationProvider.get(url=config.console_url_for_platform_tests_app)
+    )
     return client.request(
         method=HttpMethod.GET,
         path="platform_tests/tests/{}/results".format(suite_id),
@@ -45,7 +50,9 @@ def api_create_test_suite(username, password, client=None):
         "username": username,
         "password": password
     }
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
+    client = client or HttpClientFactory.get(
+        ConsoleConfigurationProvider.get(url=config.console_url_for_platform_tests_app)
+    )
     return client.request(
         method=HttpMethod.POST,
         path="platform_tests/tests",

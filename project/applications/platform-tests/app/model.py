@@ -17,8 +17,8 @@
 from bson.objectid import ObjectId
 import pymongo
 
-from config import DatabaseConfig
-from suite_provider import SuiteProvider
+from .config import DatabaseConfig
+from .suite_provider import SuiteProvider
 
 
 class DatabaseClient(object):

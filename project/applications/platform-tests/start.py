@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.4
 #
 # Copyright (c) 2016 Intel Corporation
 #
@@ -14,15 +15,16 @@
 # limitations under the License.
 #
 
-from abc import ABCMeta, abstractclassmethod
+import logging
+import sys
 
-from ..http_client_configuration import HttpClientConfiguration
+from app.main import start
 
 
-# noinspection PyMethodParameters
-class BaseConfigurationProvider(object, metaclass=ABCMeta):
-    """Base class that all configuration provider implementations derive from."""
+def initialize_logging():
+    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s: %(message)s",
+                        stream=sys.stdout, level=logging.INFO)
 
-    @abstractclassmethod
-    def get(cls, *, username=None, password=None, url=None) -> HttpClientConfiguration:
-        """Return http client configuration."""
+
+initialize_logging()
+start()

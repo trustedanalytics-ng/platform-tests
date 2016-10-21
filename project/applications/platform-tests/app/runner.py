@@ -23,12 +23,10 @@ import subprocess
 import sys
 import time
 
-from config import RunnerConfig, DatabaseConfig
-from model import TestSuiteModel
+from .config import RunnerConfig, DatabaseConfig
+from .model import TestSuiteModel
 
-logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class Runner(object):
@@ -49,7 +47,7 @@ class Runner(object):
         self._username = None
         self._password = None
         self._start_time = 0
-        self.command = [self._config.pytest_command, self._config.suite_name]
+        self.command = self._config.pytest_command + [self._config.suite_path]
 
     @property
     def is_busy(self):
@@ -62,11 +60,10 @@ class Runner(object):
             "PT_TAP_DOMAIN": self._config.tap_domain,
             "PT_ADMIN_USERNAME": self._username,
             "PT_ADMIN_PASSWORD": self._password,
-            "PT_CORE_ORG_NAME": self._config.core_org_name,
-            "PT_CORE_SPACE_NAME": self._config.core_space_name,
             "PT_DATABASE_URL": self._db_config.uri,
             "PT_TEST_RUN_ID": str(self._current_suite.id),
-            "PT_COLLECT_LOGSEARCH_LOGS": "False"  # environment variables must be strings
+            "PT_COLLECT_LOGSEARCH_LOGS": "False",  # environment variables must be strings
+            "PT_DISABLE_ENVIRONMENT_CHECK": "true"
         }
 
     def run(self, username, password):
@@ -101,7 +98,7 @@ class Runner(object):
             env = dict(os.environ).copy()
             env.update(self.env)
             process = subprocess.Popen(self.command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                       universal_newlines=True, env=env)
+                                       universal_newlines=True, env=env, cwd=self._test_cwd)
             self._pid.value = process.pid
             while True:
                 output = process.stdout.readline().strip()
@@ -117,6 +114,6 @@ class Runner(object):
                 logger.error("Subprocess failed with exit code {}".format(return_code))
         except:
             self._current_suite.set_interrupted()
-            logger.error(sys.exc_info()[0])
+            logger.exception("Error occurred during running tests.")
         finally:
             self._is_busy.value = False

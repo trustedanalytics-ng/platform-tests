@@ -1,0 +1,11 @@
+.git*/
+project/user_config.py
+# https://github.com/docker/docker/issues/13113
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+*/*/*/*/__pycache__/
+*/*/*/*/*/__pycache__/
+*/*/*/*/*/*/__pycache__/
+*/*/*/*/*/*/*/__pycache__/

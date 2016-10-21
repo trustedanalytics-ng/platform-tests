@@ -24,14 +24,16 @@ class ConsoleConfigurationProvider(BaseConfigurationProvider):
     """Provide configuration for console http client."""
 
     @classmethod
-    def get(cls, username=None, password=None) -> HttpClientConfiguration:
+    def get(cls, username=None, password=None, url=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
         if username is None:
             username = config.admin_username
             password = config.admin_password
+        if url is None:
+            url = config.console_url
         return HttpClientConfiguration(
             client_type=HttpClientType.CONSOLE,
-            url="{}/rest".format(config.console_url),
+            url="{}/rest".format(url),
             username=username,
             password=password
         )

@@ -26,7 +26,6 @@ logged_components = (TAP.platform_tests,)
 pytestmark = [pytest.mark.components(TAP.platform_tests)]
 
 
-@pytest.mark.skip(reason="DPNG-11944 [api-tests] adjust test_platform_tests to new TAP")
 @incremental
 @priority.high
 class TestSelfTests:

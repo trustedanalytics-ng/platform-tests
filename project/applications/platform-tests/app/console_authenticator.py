@@ -15,14 +15,11 @@
 #
 
 import logging
-import sys
 
 import bs4
 import requests
 
-logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class AuthenticationException(Exception):
@@ -33,7 +30,7 @@ class ConsoleAuthenticator(object):
     csrf_data_key = "X-Uaa-Csrf"
 
     def __init__(self, tap_domain):
-        self._login_url = "http://login.{}/login.do".format(tap_domain)
+        self._login_url = "http://uaa.{}/login.do".format(tap_domain)
 
     def _get_csrf_token(self, response):
         soup = bs4.BeautifulSoup(response.text, "html.parser")

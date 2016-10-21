@@ -134,6 +134,8 @@ console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://uaa.{}".format(
 auth_gateway_url = os.environ.get("PT_AUTH_GATEWAY_URL", "http://auth-gateway.{}".format(tap_domain))
 # TAP services
 console_url = os.environ.get("PT_CONSOLE_URL", "http://console.{}".format(tap_domain))
+console_url_for_platform_tests_app = os.environ.get("PT_CONSOLE_URL_FOR_PLATFORM_TESTS_APP",
+                                                    "http://console.{}".format(tap_domain))
 arcadia_url = os.environ.get("PT_ARCADIA_URL", "http://arcadia.{}".format(tap_domain))
 hue_url = os.environ.get("PT_HUE_URL", "http://hue.{}".format(tap_domain))
 demiurge_url = os.environ.get("PT_DEMIURGE_URL", "http://demiurge.{}".format(tap_domain))
