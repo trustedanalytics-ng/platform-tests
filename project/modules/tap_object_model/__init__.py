@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+from .auth_gateway_user import AuthGatewayUser
+from .auth_gateway_organization import AuthGatewayOrganization
 from .application import Application
 from .blob import Blob
 from .buildpack import Buildpack

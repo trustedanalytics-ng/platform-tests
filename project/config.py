@@ -131,6 +131,7 @@ uaa_url = os.environ.get("PT_UAA_URL", "http://uaa.{}".format(tap_domain))
 uaa_oauth_token_url = os.environ.get("PT_UAA_OAUTH_TOKEN_URL", "http://uaa.{}/oauth/token".format(tap_domain))
 login_do_scheme = os.environ.get("PT_LOGIN_DO_SCHEME", "http")
 console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://uaa.{}".format(login_do_scheme, tap_domain))
+auth_gateway_url = os.environ.get("PT_AUTH_GATEWAY_URL", "http://auth-gateway.{}".format(tap_domain))
 # TAP services
 console_url = os.environ.get("PT_CONSOLE_URL", "http://console.{}".format(tap_domain))
 arcadia_url = os.environ.get("PT_ARCADIA_URL", "http://arcadia.{}".format(tap_domain))
