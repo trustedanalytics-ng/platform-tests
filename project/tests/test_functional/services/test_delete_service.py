@@ -42,12 +42,12 @@ class TestDeleteService:
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE,
                                      public_service.api_delete, client=client)
 
-    @pytest.mark.skip(reason="DPNG-12120 can't remove offering - missing endpoint")
+    @pytest.mark.skip(reason="DPNG-11414 Create offering from binary - not supported yet")
     @pytest.mark.parametrize("role", ["admin"])
-    def test_cannot_remove_service_with_instance(self, context, sample_service_from_template, test_user_clients, role):
+    def test_cannot_remove_service_with_instance(self, context, sample_service, test_user_clients, role):
         client = test_user_clients[role]
-        offering_id = sample_service_from_template.id
-        plan_id = sample_service_from_template.service_plans[0].id
+        offering_id = sample_service.id
+        plan_id = sample_service.service_plans[0].id
 
         step("Create an instance")
         instance = ServiceInstance.create(context, offering_id=offering_id, plan_id=plan_id, client=client)
@@ -61,4 +61,4 @@ class TestDeleteService:
         step("Attempt to delete public service with instnace")
         assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR,
                                      HttpStatus.MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE,
-                                     sample_service_from_template.delete)
+                                     sample_service.delete)
