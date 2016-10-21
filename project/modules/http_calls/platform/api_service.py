@@ -230,6 +230,7 @@ def delete_service(*, client: HttpClient, service_id: str):
 
 
 def get_service_credentials(*, client: HttpClient, service_id: str):
+    # TODO not implemented yet DPNG-10885
     """ GET /services/{service_id}/credentials """
     return client.request(method=HttpMethod.GET, path="services/{}/credentials".format(service_id),
                           msg="Get service instance credentials")

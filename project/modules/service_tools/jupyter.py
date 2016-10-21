@@ -154,7 +154,7 @@ class JupyterNotebook(JupyterWSBase):
 class Jupyter(object):
     """Jupyter service instance."""
 
-    def __init__(self, context, org_guid, space_guid, instance_name=None, params=None):
+    def __init__(self, context, instance_name=None, params=None):
         self.client = None
         self.cookie = None
         self.password = None
@@ -162,15 +162,14 @@ class Jupyter(object):
         self.ws_sslopt = self._get_ws_ssl_options()
         if instance_name is None:
             instance_name = generate_test_object_name(short=True, prefix=ServiceLabels.JUPYTER)
-        self.instance = ServiceInstance.api_create_with_plan_name(
+        self.instance = ServiceInstance.create_with_name(
             context=context,
-            org_guid=org_guid,
-            space_guid=space_guid,
             name=instance_name,
-            service_label=ServiceLabels.JUPYTER,
-            service_plan_name=ServicePlan.FREE,
+            offering_label=ServiceLabels.JUPYTER,
+            plan_name=ServicePlan.FREE,
             params=params
         )
+        self.instance.ensure_running()
 
     def __repr__(self):
         return "{} (instance_url={})".format(self.__class__.__name__, self.instance_url)
@@ -178,7 +177,7 @@ class Jupyter(object):
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
         """Set jupyter instance credentials."""
-        response = self.instance.api_get_credentials()
+        response = self.instance.get_credentials()
         self.password = response["password"]
         self.instance_url = response["hostname"]
 

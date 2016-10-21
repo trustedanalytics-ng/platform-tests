@@ -111,6 +111,10 @@ def login_to_cf(test_org, test_space):
 def login_to_cf_core(core_org, core_space):
     raise NotImplementedError("Test needs refactoring. CF is no longer a part of TAP")
 
+@pytest.fixture(scope="class")
+def marketplace_offerings():
+    log_fixture("Get list of available services from Marketplace")
+    return ServiceOffering.get_list()
 
 @pytest.fixture(scope="class")
 def sample_python_app(class_context, tap_cli):

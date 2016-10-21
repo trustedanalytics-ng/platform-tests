@@ -27,13 +27,15 @@ from tests.fixtures.assertions import assert_equal_with_retry, assert_instance_i
 
 
 def create_instance_and_key_then_delete_key_and_instance(context, org, space, other_space, service_label, plan, client=None):
-    step("Testing service {} plan {}".format(service_label, plan["name"]))
-    instance = create_instance(context, org.guid, space.guid, service_label, plan["guid"], client=client)
-    assert_instance_in_space(instance, space)
-    assert_instance_not_in_space(instance, other_space)
-    instance_key = create_key(instance, space.guid, client=client)
-    delete_key(instance, instance_key, space.guid, client=client)
-    delete_instance(instance, space.guid, client=client)
+    # This functionality changed in new TAP
+    # step("Testing service {} plan {}".format(service_label, plan["name"]))
+    # instance = create_instance(context, org.guid, space.guid, service_label, plan["guid"], client=client)
+    # assert_instance_in_space(instance, space)
+    # assert_instance_not_in_space(instance, other_space)
+    # instance_key = create_key(instance, space.guid, client=client)
+    # delete_key(instance, instance_key, space.guid, client=client)
+    # delete_instance(instance, space.guid, client=client)
+    pass
 
 
 def create_instance(context, org_guid, space_guid, service_label, plan_guid, name=None, params=None, client=None):

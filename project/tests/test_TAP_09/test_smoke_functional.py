@@ -52,7 +52,7 @@ def test_connect_to_atk_from_jupyter_using_default_atk_client(context, request, 
     step("Add admin to test space")
     admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid, roles=User.SPACE_ROLES["developer"])
     step("Create instance of Jupyter service")
-    jupyter = Jupyter(context=context, org_guid=test_org.guid, space_guid=test_space.guid)
+    jupyter = Jupyter(context=context)
     assertions.assert_in_with_retry(jupyter.instance, ServiceInstance.api_get_list, space_guid=test_space.guid)
     step("Get credentials for the new jupyter service instance")
     jupyter.get_credentials()
