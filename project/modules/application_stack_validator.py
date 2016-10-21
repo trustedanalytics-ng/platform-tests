@@ -22,8 +22,7 @@ from tests.fixtures.assertions import assert_in_with_retry
 class ApplicationStackValidator(object):
     def __init__(self, service: ServiceInstance):
         self.__validate_property("name", service.name)
-        self.__validate_property("guid", service.guid)
-        self.__validate_property("space_guid", service.space_guid)
+        self.__validate_property("guid", service.id)
         self.__service = service
         self.__application = None
         self.__application_bindings = {}
@@ -55,12 +54,12 @@ class ApplicationStackValidator(object):
     def _validate_instance_created(self):
         """Check if service instance has been properly created."""
         step("Check that service instance has been created")
-        assert_in_with_retry(self.__service, ServiceInstance.api_get_list, self.__service.space_guid)
+        assert_in_with_retry(self.__service, ServiceInstance.get_list)
 
     def _validate_application_created(self):
         """Check if application for service instance has been properly created and started."""
         step("Check that application has been created and started")
-        app_list = Application.api_get_list(self.__service.space_guid)
+        app_list = Application.get_list()
         self.__application = next((app for app in app_list if app.name.startswith(self.__service.name)), None)
         assert self.__application is not None, "Application for {} not found".format(self.__service.name)
         self.__application.ensure_started()
