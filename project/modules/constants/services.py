@@ -80,6 +80,8 @@ class ServicePlan(object):
     WORKER_2 = "2 workers"
     WORKER_3 = "3 workers"
     MEM128MB = "128Mb"
+    MEM256MB = "256Mb"
+    MEM512MB = "512Mb"
 
 
 class ParametrizedService(object):
