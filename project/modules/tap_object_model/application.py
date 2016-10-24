@@ -114,7 +114,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             run_sh_dir = app_path
 
         run_sh_path = os.path.join(run_sh_dir, cls.RUN_SH_NAME)
-        os.chmod(run_sh_path, 0o777)
+        if os.path.isfile(run_sh_path):
+            os.chmod(run_sh_path, 0o777)
 
     @classmethod
     def push(cls, context, *, app_path: str, tap_cli: TapCli, app_type: str, name: str=None, instances: int=1,
