@@ -15,7 +15,6 @@
 #
 
 import pytest
-import itertools
 
 from modules.constants import TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
@@ -28,7 +27,7 @@ from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, ServiceInstance, Transfer, User, ServiceOffering, TestSuite
 from modules.tap_object_model.flows import onboarding
-from tap_component_config import offerings
+from tap_component_config import offerings_as_parameters
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
@@ -119,19 +118,12 @@ def test_add_and_delete_transfer_from_file(core_org, context):
     transfer_flow(transfer, core_org)
 
 
-def _offerings_as_parameters():
-    parameters = []
-    for key, val in offerings.items():
-        parameters += list(itertools.product([key], val))
-    return parameters
-
-
 @long
 @pytest.mark.bugs("DPNG-11638 Creation of some service-instances from Marketplace end with failure")
 @pytest.mark.components(TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
-@pytest.mark.parametrize("service_label,plan_name", _offerings_as_parameters())
+@pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
 def test_create_and_delete_marketplace_service_instances(context, service_label, plan_name):
     """Create and Delete Marketplace Service Instance"""
     step("Create instance {} {}".format(service_label, plan_name))

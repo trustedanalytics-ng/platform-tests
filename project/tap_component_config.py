@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import itertools
 
 import config
 from modules.constants import ServiceLabels, ServicePlan as Plan, TapComponent as TAP
@@ -82,3 +83,8 @@ offerings = {
     ServiceLabels.SEAHORSE: [Plan.FREE],
     ServiceLabels.ZOOKEEPER: [Plan.SHARED],
 }
+
+
+offerings_as_parameters = []
+for key, val in offerings.items():
+    offerings_as_parameters += list(itertools.product([key], val))

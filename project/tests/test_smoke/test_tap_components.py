@@ -26,7 +26,7 @@ from modules.http_client.configuration_provider.k8s_service import K8sServiceCon
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_service import K8sService
-from tap_component_config import TAP_core_services, third_party_services, api_service
+from tap_component_config import TAP_core_services, third_party_services, api_service, offerings_as_parameters
 
 
 @priority.high
@@ -92,6 +92,13 @@ class TestK8sComponents:
     def test_k8s_component_presence_on_platform(self, expected_app, running_tap_components):
         step("Check that '{}' app is present on platform".format(expected_app))
         assert expected_app in running_tap_components, "No such service {}".format(expected_app)
+
+    @pytest.mark.parametrize("expected_offering,plan_name", offerings_as_parameters)
+    def test_available_offerings(self, expected_offering, plan_name, test_marketplace):
+        offering = next((o for o in test_marketplace if o.label == expected_offering), None)
+        assert offering is not None, "Offering '{}' was not found in marketplace".format(expected_offering)
+        plan_name = next((plan for plan in offering.service_plans if plan.name == plan_name), None)
+        assert plan_name is not None, "Plan '{}' for offering '{}' was not found".format(plan_name, expected_offering)
 
 
 @priority.high
