@@ -31,6 +31,8 @@ pytestmark = [pytest.mark.components(TAP.blob_store)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestBlobStore:
 
+    non_existing_id = "776a1f91-df7e-4032-4c31-7cd107719afb"
+
     @pytest.fixture(scope="class")
     def nodejs_app_path(self):
         return download_file(Urls.nodejs_app_url, "test_blob")
@@ -88,11 +90,9 @@ class TestBlobStore:
                                      blob_id=blob_id)
 
     @priority.medium
-    def test_multiple_blobs(self, context):
-        """Check whether blob operations do not affect other blobs"""
+    def test_operations_on_one_blob_do_not_affect_others(self, context):
         NUM_BLOBS = 5
-        BLOB_CONTENTS = [bytes("test_blob_content_{0}".format(i), "utf-8")
-                         for i in range(NUM_BLOBS)]
+        BLOB_CONTENTS = [bytes("test_blob_content_{0}".format(i), "utf-8") for i in range(NUM_BLOBS)]
 
         stored_blobs = []
         for i, content in enumerate(BLOB_CONTENTS):
@@ -112,13 +112,8 @@ class TestBlobStore:
                                          BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                          Blob.get, blob_id=blob_id)
 
-
-@pytest.mark.usefixtures("open_tunnel")
-class TestBadBlobParameters:
-
     @priority.low
     def test_cannot_create_blob_if_blob_id_is_empty(self, context):
-        """Test: blob_id parameter is empty"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_MISSING,
                                      Blob.create_from_data,
@@ -126,22 +121,15 @@ class TestBadBlobParameters:
 
     @priority.low
     def test_cannot_create_blob_if_blob_id_is_missing(self):
-        """Test: blob_id parameter is missing"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_MISSING,
                                      Blob.try_create_blob_with_no_id)
 
     @priority.low
     def test_cannot_create_blob_if_uploadfile_is_missing(self):
-        """Test: uploadfile parameter is missing"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_CONTENT_MISSING,
                                      Blob.try_create_blob_with_no_content)
-
-
-@pytest.mark.usefixtures("open_tunnel")
-class TestNonexistentBlob:
-    non_existing_id = "776a1f91-df7e-4032-4c31-7cd107719afb"
 
     @priority.low
     def test_cannot_retrieve_nonexistent_blob(self):
@@ -149,7 +137,7 @@ class TestNonexistentBlob:
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.get,
-                                     blob_id=TestNonexistentBlob.non_existing_id)
+                                     blob_id=self.non_existing_id)
 
     @priority.low
     def test_cannot_delete_nonexistent_blob(self):
@@ -157,4 +145,4 @@ class TestNonexistentBlob:
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.delete_by_id,
-                                     blob_id=TestNonexistentBlob.non_existing_id)
+                                     blob_id=self.non_existing_id)

@@ -18,9 +18,12 @@ from retry import retry
 
 from modules import test_names
 from modules.constants import TapEntityState
+from ._cli_object_superclass import CliObjectSuperclass
 
 
-class CliService(object):
+class CliService(CliObjectSuperclass):
+    _COMPARABLE_ATTRIBUTES = ["name", "offering_name", "plane"]
+
     MESSAGE_SUCCESS = "CODE: 200 BODY: {\"message\":\"success\"}\nOK"
 
     FIELD_ID = "id"
@@ -31,12 +34,11 @@ class CliService(object):
     FIELD_PLAN_NAME = "planName"
 
     def __init__(self, offering_name, plan, name, tap_cli, service_id=None, state=None):
+        super().__init__(tap_cli=tap_cli, name=name)
         self.id = service_id
         self.state = state
         self.offering_name = offering_name
         self.plan = plan
-        self.name = name
-        self.tap_cli = tap_cli
 
     @classmethod
     def get(cls, name, tap_cli):
@@ -79,9 +81,6 @@ class CliService(object):
 
     def delete(self):
         return self.tap_cli.delete_service([self.name])
-
-    def cleanup(self):
-        self.delete()
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_service_state(self, state):

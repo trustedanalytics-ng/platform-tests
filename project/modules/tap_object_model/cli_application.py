@@ -24,18 +24,19 @@ from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 from modules.tap_object_model import Application
 from modules.test_names import generate_test_object_name
+from ._cli_object_superclass import CliObjectSuperclass
 
 
-class CliApplication:
+class CliApplication(CliObjectSuperclass):
+    _COMPARABLE_ATTRIBUTES = ["name", "app_type"]
     EXPECTED_PUSH_HEADERS = ["NAME", "IMAGE ID", "DESCRIPTION", "REPLICATION"]
     EXPECTED_DELETE_BODY = 'CODE: 204 BODY'
     EXPECTED_SUCCESS_RESPONSE = 'CODE: 200 BODY: {"message":"success"}'
 
     def __init__(self, *, app_type, target_directory, tap_cli, name, instances):
+        super().__init__(tap_cli=tap_cli, name=name)
         self.app_type = app_type
-        self.name = name
         self.instances = instances
-        self.tap_cli = tap_cli
         self.target_directory = target_directory
 
     @classmethod
@@ -86,9 +87,6 @@ class CliApplication:
         assert self.EXPECTED_DELETE_BODY in delete
         self.ensure_not_on_app_list()
         return delete
-
-    def cleanup(self):
-        self.delete()
 
     def get_details(self):
         return self.tap_cli.app(application_name=self.name)

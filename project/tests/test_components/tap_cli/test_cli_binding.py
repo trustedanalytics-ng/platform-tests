@@ -88,34 +88,26 @@ class TestCliBinding:
     @priority.low
     def test_cannot_bind_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to bind invalid service instance will return error")
-        assert_raises_command_execution_exception(1,
-                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
-                                                      nonexistent_service.name),
-                                                  nonexistent_service.bind, service_instance_1)
+        expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
+        assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.bind, service_instance_1)
 
     @priority.low
     def test_cannot_bind_service_to_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to bind to invalid service instance will return error")
-        assert_raises_command_execution_exception(1,
-                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
-                                                      nonexistent_service.name),
-                                                  service_instance_1.bind, nonexistent_service)
+        expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
+        assert_raises_command_execution_exception(1, expected_msg, service_instance_1.bind, nonexistent_service)
 
     @priority.low
     def test_cannot_unbind_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to unbind invalid service instance will return error")
-        assert_raises_command_execution_exception(1,
-                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
-                                                      nonexistent_service.name),
-                                                  nonexistent_service.unbind, service_instance_1)
+        expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
+        assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.unbind, service_instance_1)
 
     @priority.low
     def test_cannot_unbind_service_from_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to unbind from invalid service instance will return error")
-        assert_raises_command_execution_exception(1,
-                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
-                                                      nonexistent_service.name),
-                                                  service_instance_1.unbind, nonexistent_service)
+        expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
+        assert_raises_command_execution_exception(1, expected_msg, service_instance_1.unbind, nonexistent_service)
 
     @priority.low
     @pytest.mark.usefixtures("cleanup_bindings")
@@ -124,12 +116,10 @@ class TestCliBinding:
         service_instance_2.bind(service_instance_1)
         assert service_instance_2.name in service_instance_1.get_bindings()
         step("Check that an attempt to delete bound service instance fails with an error")
-        assert_raises_command_execution_exception(1,
-                                                  TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(
-                                                      service_instance_2.name,
-                                                      service_instance_1.name,
-                                                      service_instance_1.id),
-                                                  service_instance_2.delete)
+        expected_msg = TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(service_instance_2.name,
+                                                                             service_instance_1.name,
+                                                                             service_instance_1.id)
+        assert_raises_command_execution_exception(1, expected_msg, service_instance_2.delete)
         step("Check that the service still exists")
         service_instance_2.ensure_on_service_list()
         step("Check that the services are still bound")

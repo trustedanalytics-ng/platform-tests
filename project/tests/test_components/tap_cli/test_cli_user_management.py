@@ -17,11 +17,10 @@
 import pytest
 
 from modules.constants import TapComponent as TAP
-from modules.markers import incremental, priority
-from modules.tap_logger import log_fixture
+from modules.markers import priority
+from modules.tap_logger import log_fixture, step
 from modules.tap_object_model import CliInvitation, User, CliUser
 from modules.tap_object_model.flows.onboarding import onboard
-from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_retry
 
 
@@ -29,69 +28,50 @@ logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
 
 
-@incremental
-@priority.high
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
-class TestCLIInvitingUser:
-    @staticmethod
+class TestCliInvitationsShort:
+    SHORT = True
+
     @pytest.fixture(scope="class")
-    def email():
-        return generate_test_object_name(email=True)
+    def invitation(self, class_context, tap_cli, cli_login):
+        log_fixture("Send invitation")
+        invitation = CliInvitation.send(class_context, tap_cli=tap_cli)
+        assert_in_with_retry(invitation, CliInvitation.get_list, tap_cli)
+        return invitation
 
-    @staticmethod
-    @pytest.fixture(scope="class")
-    def invitation(class_context, tap_cli, email, cli_login):
-        log_fixture("Sending invitation")
-        return CliInvitation.send(class_context, tap_cli, email)
-
-    def test_0_sent_invitation_is_on_pending_list(self, tap_cli, invitation):
-        pending_invitations = CliInvitation.get_list(tap_cli)
-        invitation = next((i for i in pending_invitations if i == invitation), None)
-        assert invitation is not None, "Sent invitation not found on pending list"
-
-    @staticmethod
-    @pytest.fixture(scope="class")
-    def user(class_context, invitation):
-        log_fixture("Accepting invitation and registering user")
-        return CliUser.register(class_context, invitation)
-
-    def test_1_user_registered(self, tap_cli, user):
-        users = CliUser.get_list(tap_cli)
-        matched_user = next((u for u in users if u == user), None)
-        assert matched_user is not None, "User not registered"
-
-
-@pytest.mark.usefixtures("cli_login")
-class TestCLILongShortCommands:
-
-    @staticmethod
-    @pytest.fixture
-    def user(context):
+    @pytest.fixture(scope="function")
+    def user(self, context):
         return onboard(context=context, check_email=False)
 
     @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
     @priority.high
-    @pytest.mark.parametrize("short", (True, False))
-    def test_delete_user(self, tap_cli, user, short):
+    def test_invite_user(self, context, tap_cli):
+        step("Send invitation")
+        invitation = CliInvitation.send(context, tap_cli=tap_cli)
+        step("User accepts invitation and registers")
+        user = CliUser.register(context, tap_cli=tap_cli, username=invitation.name)
+        step("Check that user is on the list of users")
+        users = CliUser.get_list(tap_cli=tap_cli)
+        assert user in users
+
+    @priority.medium
+    def test_sent_invitation_is_on_pending_list(self, tap_cli, invitation):
+        pending_invitations = CliInvitation.get_list(tap_cli, short_cmd=self.SHORT)
+        invitation = next((i for i in pending_invitations if i == invitation), None)
+        assert invitation is not None, "Sent invitation not found on pending invitations list"
+
+    @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
+    @priority.high
+    def test_delete_user(self, tap_cli, user):
         assert_in_with_retry(user, User.get_all_users)
-        tap_cli.delete_user(user.username, short=short)
+        tap_cli.delete_user(user.username, short=self.SHORT)
         assert_not_in_with_retry(user, User.get_all_users)
 
-    @staticmethod
-    @pytest.fixture
-    def invitation(context, tap_cli):
-        return CliInvitation.send(context=context,
-                                  tap_cli=tap_cli,
-                                  username=generate_test_object_name(email=True))
-
-    @priority.high
-    @pytest.mark.parametrize("short", (True, False))
-    def test_invitations(self, tap_cli, invitation, short):
-        assert_in_with_retry(invitation.username, tap_cli.invitations, short=short)
-
-    @priority.high
-    @pytest.mark.parametrize("short", (True, False))
-    def test_delete_invitations(self, tap_cli, invitation, short):
-        assert_in_with_retry(invitation, CliInvitation.get_list, tap_cli)
-        invitation.delete(short_cmd=short)
+    @priority.medium
+    def test_delete_invitation(self, tap_cli, invitation):
+        invitation.delete(short_cmd=self.SHORT)
         assert_not_in_with_retry(invitation, CliInvitation.get_list, tap_cli)
+
+
+class TestCliInvitationsLong(TestCliInvitationsShort):
+    SHORT = False

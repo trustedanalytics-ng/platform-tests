@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.exceptions import UnexpectedResponseError
+from modules.exceptions import UnexpectedResponseError, CommandExecutionException
 from modules.tap_logger import get_logger
 from modules.tap_object_model import DataSet
 
@@ -49,7 +49,7 @@ class Context(object):
             try:
                 self.logger.info("cleaning: {}".format(item))
                 item.cleanup()
-            except (UnexpectedResponseError, AssertionError) as e:
+            except (UnexpectedResponseError, AssertionError, CommandExecutionException) as e:
                 self.logger.warning("Error while deleting {}: {}".format(item, e))
 
     def cleanup(self):

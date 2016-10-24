@@ -20,7 +20,6 @@ import pytest
 
 import config
 from modules.constants import TapMessage, TapComponent as TAP
-from modules.exceptions import TapCliException
 from modules.markers import priority
 from modules.tap_logger import step
 from tests.fixtures.assertions import assert_raises_command_execution_exception

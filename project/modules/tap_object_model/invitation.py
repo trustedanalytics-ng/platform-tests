@@ -32,7 +32,7 @@ class Invitation(object):
         self.code = code
 
     def __repr__(self):
-        return "Invitation (username={})".format(self.username)
+        return "{} (username={})".format(self.__class__.__name__, self.username)
 
     def __eq__(self, other):
         return self.username == other.username

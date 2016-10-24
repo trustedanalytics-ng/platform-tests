@@ -20,17 +20,18 @@ from retry import retry
 
 from fixtures.k8s_templates import template_example
 from modules.file_utils import save_text_file
-from modules.tap_object_model._service_plan import ServicePlan
 from modules.test_names import generate_test_object_name
+from ._cli_object_superclass import CliObjectSuperclass
+from ._service_plan import ServicePlan
 
 
-class CliOffering:
+class CliOffering(CliObjectSuperclass):
     EXPECTED_CREATE_OFFERING_SUCCESS = 'CODE: 202 BODY: '
+    _COMPARABLE_ATTRIBUTES = ["name", "plans"]
 
     def __init__(self, name, plans, tap_cli):
-        self.name = name
+        super().__init__(tap_cli=tap_cli, name=name)
         self.plans = plans
-        self.tap_cli = tap_cli
 
     @staticmethod
     def _create_offering_template(template_body: dict, service_name: str, description: str, bindable: bool,
@@ -83,6 +84,3 @@ class CliOffering:
 
     def delete(self):
         self.tap_cli.delete_offering([self.name])
-
-    def cleanup(self):
-        self.delete()
