@@ -20,6 +20,7 @@ import os
 import teamcity
 
 
+
 class TeamCityConfiguration(object):
     _TC_BUILD_PROPERTIES_FILE_ENV_KEY = "TEAMCITY_BUILD_PROPERTIES_FILE"
     _CONFIG_FILE_PATH_KEY = "teamcity.configuration.properties.file"
@@ -34,10 +35,12 @@ class TeamCityConfiguration(object):
         assert os.path.isfile(path), "No such file {}".format(path)
         with open(path) as f:
             content = f.read()
+
         # add dummy default section which allows TC config to be read using configparser
         # http://stackoverflow.com/a/2885753
         config_string = "[{}]\n{}".format(cls._DEFAULT_SECTION, content)
         config = configparser.RawConfigParser(delimiters="=")
+        config.optionxform = str
         config.read_string(config_string)
         return {k: v for k, v in config.items(section=cls._DEFAULT_SECTION)}
 
