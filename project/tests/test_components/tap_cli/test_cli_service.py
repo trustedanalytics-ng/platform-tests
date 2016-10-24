@@ -56,18 +56,25 @@ class TestCliService:
 
     def test_cannot_get_logs_for_non_existing_service(self, tap_cli):
         step("Check error when getting logs for non-existing service")
-        logs_output = tap_cli.service_log(self.INVALID_SERVICE_NAME, self.short)
-        assert TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(self.INVALID_SERVICE_NAME) in logs_output
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
+                                                      self.INVALID_SERVICE_NAME),
+                                                  tap_cli.service_log, self.INVALID_SERVICE_NAME, self.short)
 
     def test_cannot_delete_non_existing_service(self, tap_cli):
         step("Check error when deleting non-existing service")
-        output = tap_cli.delete_service([self.INVALID_SERVICE_NAME], self.short)
-        assert TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(self.INVALID_SERVICE_NAME) in output
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
+                                                      self.INVALID_SERVICE_NAME),
+                                                  tap_cli.delete_service, [self.INVALID_SERVICE_NAME], self.short)
 
     def test_cannot_create_service_instance_with_invalid_plan(self, tap_cli, offering):
         step("Check error message when creating instance with invalid plan")
-        output = tap_cli.create_service([offering.name, self.INVALID_SERVICE_PLAN, 'test1'], self.short)
-        assert TapMessage.CANNOT_FIND_PLAN_FOR_SERVICE.format(self.INVALID_SERVICE_PLAN, offering.name) in output
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_PLAN_FOR_SERVICE.format(
+                                                      self.INVALID_SERVICE_PLAN, offering.name),
+                                                  tap_cli.create_service,
+                                                  [offering.name, self.INVALID_SERVICE_PLAN, 'test1'], self.short)
 
     def test_cannot_create_service_instance_without_instance_name(self, offering, tap_cli):
         step("Check error message when creating instance without instance name")
@@ -78,7 +85,7 @@ class TestCliService:
     def test_cannot_create_service_instance_without_plan(self, offering, tap_cli):
         step("Check error message when creating instance without plan name")
         assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_SERVICE,
-                                                  tap_cli.create_service,[offering.name, "test"], self.short)
+                                                  tap_cli.create_service, [offering.name, "test"], self.short)
 
     def test_cannot_create_service_instance_without_offering(self, offering, tap_cli):
         step("Check error message when creating instance without offering name")
@@ -87,8 +94,9 @@ class TestCliService:
 
     def test_cannot_create_service_instance_for_non_existing_offering(self, tap_cli):
         step("Check error message when creating instance for non-existing offering")
-        output = tap_cli.create_service([self.INVALID_SERVICE_NAME, 'free', 'test1'], self.short)
-        assert TapMessage.CANNOT_FIND_SERVICE.format(self.INVALID_SERVICE_NAME) in output
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_FIND_SERVICE.format(self.INVALID_SERVICE_NAME),
+                                                  tap_cli.create_service, [self.INVALID_SERVICE_NAME, 'free', 'test1'],
+                                                  self.short)
 
     def test_cannot_delete_service_without_providing_all_required_arguments(self, tap_cli):
         step("Check error message when deleting instance without instance name")

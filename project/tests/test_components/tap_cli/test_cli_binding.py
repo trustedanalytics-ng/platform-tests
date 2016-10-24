@@ -20,6 +20,7 @@ from modules.tap_logger import step
 from modules.tap_object_model import CliService, CliOffering
 from modules.test_names import generate_test_object_name
 from modules.constants import TapMessage
+from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 
 @pytest.fixture(scope="module")
@@ -80,41 +81,44 @@ class TestCliBinding:
 
     def test_cannot_bind_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to bind invalid service instance will return error")
-        with pytest.raises(AssertionError) as e:
-            nonexistent_service.bind(service_instance_1)
-        assert TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name) in e.value.msg
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
+                                                      nonexistent_service.name),
+                                                  nonexistent_service.bind, service_instance_1)
 
     def test_cannot_bind_service_to_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to bind to invalid service instance will return error")
-        with pytest.raises(AssertionError) as e:
-            service_instance_1.bind(nonexistent_service)
-        assert TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name) in e.value.msg
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
+                                                      nonexistent_service.name),
+                                                  service_instance_1.bind, nonexistent_service)
 
     def test_cannot_unbind_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to unbind invalid service instance will return error")
-        with pytest.raises(AssertionError) as e:
-            nonexistent_service.unbind(service_instance_1)
-        assert TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name) in e.value.msg
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
+                                                      nonexistent_service.name),
+                                                  nonexistent_service.unbind, service_instance_1)
 
     def test_cannot_unbind_service_from_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to unbind from invalid service instance will return error")
-        with pytest.raises(AssertionError) as e:
-            service_instance_1.unbind(nonexistent_service)
-        assert TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name) in e.value.msg
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(
+                                                      nonexistent_service.name),
+                                                  service_instance_1.unbind, nonexistent_service)
 
     @pytest.mark.usefixtures("cleanup_bindings")
     def test_cannot_delete_bound_service(self, service_instance_1, service_instance_2):
         step("Bind service instances")
         service_instance_2.bind(service_instance_1)
         assert service_instance_2.name in service_instance_1.get_bindings()
-
         step("Check that an attempt to delete bound service instance fails with an error")
-        output = service_instance_2.delete()
-        error_message = TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(
-            service_instance_2.name,
-            service_instance_1.name,
-            service_instance_1.id)
-        assert error_message in output
+        assert_raises_command_execution_exception(1,
+                                                  TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(
+                                                      service_instance_2.name,
+                                                      service_instance_1.name,
+                                                      service_instance_1.id),
+                                                  service_instance_2.delete)
         step("Check that the service still exists")
         service_instance_2.ensure_on_service_list()
         step("Check that the services are still bound")

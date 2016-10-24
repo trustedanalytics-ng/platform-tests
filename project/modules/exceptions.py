@@ -43,6 +43,9 @@ class CommandExecutionException(Exception):
         self.output = output
         self.command = command
 
+    def __str__(self):
+        return str([self.command, self.return_code, self.output])
+
 
 class YouMustBeJokingException(Exception):
     pass

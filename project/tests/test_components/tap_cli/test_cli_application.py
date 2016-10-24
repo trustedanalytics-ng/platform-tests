@@ -24,6 +24,7 @@ from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
 from modules.test_names import generate_test_object_name
+from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
@@ -46,33 +47,34 @@ class TestCliCommandsWithNonExistingApplication:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_stop_non_existing_app(self, tap_cli, cli_login):
         step("Try to stop app with non existing name")
-        stop = tap_cli.stop_app(application_name=self.NON_EXISTING_APP_NAME)
-        assert self.CANNOT_FIND_MSG in stop
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.stop_app,
+                                                  application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_start_non_existing_app(self, tap_cli, cli_login):
         step("Try to start app with non existing name")
-        start = tap_cli.start_app(application_name=self.NON_EXISTING_APP_NAME)
-        assert self.CANNOT_FIND_MSG in start
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.start_app,
+                                                  application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
         scaled_instances = '3'
         step("Try to scale app with non existing name")
-        scale = tap_cli.scale_app(application_name=self.NON_EXISTING_APP_NAME, instances=scaled_instances)
-        assert self.CANNOT_FIND_MSG in scale
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.scale_app,
+                                                  application_name=self.NON_EXISTING_APP_NAME,
+                                                  instances=scaled_instances)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_check_logs_for_non_existing_app(self, tap_cli, cli_login):
         step("Try to check logs for non existing app name")
-        logs = tap_cli.app_logs(application_name=self.NON_EXISTING_APP_NAME)
-        assert self.CANNOT_FIND_MSG in logs
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_logs,
+                                                  application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     def test_try_delete_non_existing_app(self, tap_cli, cli_login):
         step("Try to delete with non existing app name")
-        delete = tap_cli.delete_app(application_name=self.NON_EXISTING_APP_NAME)
-        assert self.CANNOT_FIND_MSG in delete
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG,
+                                                  tap_cli.delete_app, application_name=self.NON_EXISTING_APP_NAME)
 
 
 @priority.high

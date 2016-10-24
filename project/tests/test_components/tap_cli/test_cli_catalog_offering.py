@@ -45,13 +45,13 @@ class TestCliCatalogOffering:
 
     def test_cannot_create_offering_without_json(self, tap_cli):
         invalid_json = generate_test_object_name(separator="-")
-        output = tap_cli.create_offering([invalid_json], self.short)
-        assert TapMessage.NO_SUCH_FILE_OR_DIRECTORY.format(invalid_json) in output
+        assert_raises_command_execution_exception(1, TapMessage.NO_SUCH_FILE_OR_DIRECTORY.format(invalid_json),
+                                                  tap_cli.create_offering, [invalid_json], self.short)
 
     def test_create_offering_with_already_used_name(self, context, offering, tap_cli):
-        with pytest.raises(AssertionError) as e:
-            CliOffering.create(context=context, tap_cli=tap_cli, name=offering.name, plans=offering.plans)
-        assert TapMessage.SERVICE_ALREADY_EXISTS.format(offering.name) in e.value.msg
+        assert_raises_command_execution_exception(1, TapMessage.SERVICE_ALREADY_EXISTS.format(offering.name),
+                                                  CliOffering.create, context=context, tap_cli=tap_cli,
+                                                  name=offering.name, plans=offering.plans)
 
 
 class TestCliCatalogOfferingShortCommand(TestCliCatalogOffering):
