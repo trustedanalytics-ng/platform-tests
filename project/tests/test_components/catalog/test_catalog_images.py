@@ -16,15 +16,21 @@
 
 import pytest
 
+from modules.constants import CatalogHttpStatus, TapEntityState, TapApplicationType, TapComponent as TAP
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CatalogImage
-from modules.constants import CatalogHttpStatus, TapEntityState, TapApplicationType
 from tests.fixtures.assertions import assert_raises_http_exception
+
+
+logged_components = (TAP.catalog, )
+pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogImages:
 
+    @priority.high
     def test_create_and_delete_catalog_image(self, context):
         step("Create catalog image")
         catalog_image = CatalogImage.create(context, image_type=TapApplicationType.JAVA, state=TapEntityState.PENDING)
@@ -45,6 +51,7 @@ class TestCatalogImages:
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogImage.get, image_id=catalog_image.id)
 
+    @priority.high
     def test_update_catalog_image(self, context):
         step("Create catalog image")
         test_image = CatalogImage.create(context, image_type=TapApplicationType.JAVA, state=TapEntityState.PENDING)

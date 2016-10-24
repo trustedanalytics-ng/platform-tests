@@ -16,11 +16,16 @@
 
 import pytest
 
+from modules.constants import TapMessage, TapComponent as TAP
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliService, CliOffering
 from modules.test_names import generate_test_object_name
-from modules.constants import TapMessage
 from tests.fixtures.assertions import assert_raises_command_execution_exception
+
+
+logged_components = (TAP.api_service,)
+pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
 
 
 @pytest.fixture(scope="module")
@@ -67,6 +72,7 @@ class TestCliBinding:
         request.addfinalizer(fin)
 
     @pytest.mark.usefixtures("cleanup_bindings")
+    @priority.high
     def test_bind_and_unbind_services(self, service_instance_1, service_instance_2):
         step("Bind one service instance to another")
         service_instance_2.bind(service_instance_1)
@@ -79,6 +85,7 @@ class TestCliBinding:
         output = service_instance_1.get_bindings()
         assert service_instance_2.name not in output
 
+    @priority.low
     def test_cannot_bind_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to bind invalid service instance will return error")
         assert_raises_command_execution_exception(1,
@@ -86,6 +93,7 @@ class TestCliBinding:
                                                       nonexistent_service.name),
                                                   nonexistent_service.bind, service_instance_1)
 
+    @priority.low
     def test_cannot_bind_service_to_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to bind to invalid service instance will return error")
         assert_raises_command_execution_exception(1,
@@ -93,6 +101,7 @@ class TestCliBinding:
                                                       nonexistent_service.name),
                                                   service_instance_1.bind, nonexistent_service)
 
+    @priority.low
     def test_cannot_unbind_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to unbind invalid service instance will return error")
         assert_raises_command_execution_exception(1,
@@ -100,6 +109,7 @@ class TestCliBinding:
                                                       nonexistent_service.name),
                                                   nonexistent_service.unbind, service_instance_1)
 
+    @priority.low
     def test_cannot_unbind_service_from_invalid_service(self, service_instance_1, nonexistent_service):
         step("Check that attempt to unbind from invalid service instance will return error")
         assert_raises_command_execution_exception(1,
@@ -107,6 +117,7 @@ class TestCliBinding:
                                                       nonexistent_service.name),
                                                   service_instance_1.unbind, nonexistent_service)
 
+    @priority.low
     @pytest.mark.usefixtures("cleanup_bindings")
     def test_cannot_delete_bound_service(self, service_instance_1, service_instance_2):
         step("Bind service instances")

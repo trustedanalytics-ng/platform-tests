@@ -16,12 +16,16 @@
 
 import pytest
 
-from modules.constants.urls import Urls
+from modules.constants import Urls, TapComponent as TAP, BlobStoreHttpStatus
 from modules.file_utils import download_file
+from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Blob
-from modules.constants import BlobStoreHttpStatus
 from tests.fixtures.assertions import assert_raises_http_exception
+
+
+logged_components = (TAP.blob_store, )
+pytestmark = [pytest.mark.components(TAP.blob_store)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
@@ -37,6 +41,7 @@ class TestBlobStore:
         blob = Blob.create_from_file(class_context, file_path=nodejs_app_path)
         return Blob.get(blob_id=blob.id)
 
+    @priority.high
     def test_create_and_delete_blob(self, context, nodejs_app_path):
         step("Create artifact in blob-store")
         test_blob = Blob.create_from_file(context, file_path=nodejs_app_path)
@@ -53,6 +58,7 @@ class TestBlobStore:
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.get, blob_id=test_blob.id)
 
+    @priority.low
     def test_cannot_create_artifact_in_blob_store_with_existing_id(self, context, sample_blob, nodejs_app_path):
         step("Creating artifact for application in blob-store with existing id should return an error")
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_CONFLICT,
@@ -60,6 +66,7 @@ class TestBlobStore:
                                      Blob.create_from_file, context, blob_id=sample_blob.id,
                                      file_path=nodejs_app_path)
 
+    @priority.low
     def test_empty_blob(self, context):
 
         step("Create blob of size 0")
@@ -80,6 +87,7 @@ class TestBlobStore:
                                      Blob.get,
                                      blob_id=blob_id)
 
+    @priority.medium
     def test_multiple_blobs(self, context):
         """Check whether blob operations do not affect other blobs"""
         NUM_BLOBS = 5
@@ -108,6 +116,7 @@ class TestBlobStore:
 @pytest.mark.usefixtures("open_tunnel")
 class TestBadBlobParameters:
 
+    @priority.low
     def test_cannot_create_blob_if_blob_id_is_empty(self, context):
         """Test: blob_id parameter is empty"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
@@ -115,12 +124,14 @@ class TestBadBlobParameters:
                                      Blob.create_from_data,
                                      context, blob_id="", blob_content=b'anything')
 
+    @priority.low
     def test_cannot_create_blob_if_blob_id_is_missing(self):
         """Test: blob_id parameter is missing"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_MISSING,
                                      Blob.try_create_blob_with_no_id)
 
+    @priority.low
     def test_cannot_create_blob_if_uploadfile_is_missing(self):
         """Test: uploadfile parameter is missing"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
@@ -132,6 +143,7 @@ class TestBadBlobParameters:
 class TestNonexistentBlob:
     non_existing_id = "776a1f91-df7e-4032-4c31-7cd107719afb"
 
+    @priority.low
     def test_cannot_retrieve_nonexistent_blob(self):
         """Try retrieve nonexistent blob_id"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
@@ -139,6 +151,7 @@ class TestNonexistentBlob:
                                      Blob.get,
                                      blob_id=TestNonexistentBlob.non_existing_id)
 
+    @priority.low
     def test_cannot_delete_nonexistent_blob(self):
         """Try delete nonexistent blob_id"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,

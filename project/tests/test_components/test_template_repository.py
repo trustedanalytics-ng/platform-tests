@@ -16,12 +16,17 @@
 
 import pytest
 
-from modules.constants import HttpStatus, TemplateRepositoryHttpStatus
+from modules.constants import HttpStatus, TemplateRepositoryHttpStatus, TapComponent as TAP
+from modules.http_calls.kubernetes import k8s_get_configmap
 import modules.http_calls.platform.template_repository as template_repository_api
+from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Template
 from tests.fixtures.assertions import assert_raises_http_exception
-from modules.http_calls.kubernetes import k8s_get_configmap
+
+
+logged_components = (TAP.template_repository,)
+pytestmark = [pytest.mark.components(TAP.template_repository)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
@@ -38,6 +43,7 @@ class TestTemplateRepository:
         response = k8s_get_configmap("template-repository")
         return response["data"]["generic-application-template-id"]
 
+    @priority.high
     def test_create_and_delete_template(self, context):
         step("Create template")
         template = Template.create(context)
@@ -53,34 +59,40 @@ class TestTemplateRepository:
         templates = Template.get_list()
         assert template not in templates
 
+    @priority.high
     def test_get_template(self, sample_template):
         step("Get template by id")
         template = Template.get(template_id=sample_template.id)
         assert template == sample_template
 
+    @priority.low
     def test_cannot_create_template_with_existing_id(self, context, sample_template):
         step("Attempt to create a template with existing id causes an error")
         assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
                                      Template.create, context, template_id=sample_template.id)
 
+    @priority.low
     def test_cannot_get_deleted_template(self, sample_template):
         sample_template.delete()
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND,
                                      TemplateRepositoryHttpStatus.MSG_TEMPLATE_DOES_NOT_EXIST,
                                      Template.get, template_id=sample_template.id)
 
+    @priority.high
     def test_get_parsed_template(self, sample_template):
         step("Check that template is correctly parsed")
         instance_id = "1fef0dfe-16a7-11e6-bde5-00155d3d8812"
         template = Template.get_parsed(template_id=sample_template.id, instance_id=instance_id)
         assert '$' not in str(template.components)
 
+    @priority.high
     def test_cannot_get_parsed_template_with_invalid_instance_id(self, sample_template):
         step("Getting parsed template with invalid instanceId causes an error")
         instance_id = "1fef0d"
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, TemplateRepositoryHttpStatus.MSG_TOO_SHORT_INSTANCE_ID,
                                      Template.get_parsed, template_id=sample_template.id, instance_id=instance_id)
 
+    @priority.medium
     def test_get_parsed_template_for_generic_user_provided_application(self, generic_application_template_id):
         step("Get parsed template for generic user-provided application")
         instance_id = "asdf12343sffs321342dsda"
@@ -92,6 +104,7 @@ class TestTemplateRepository:
                                        optional_params=other_params)
         assert '$' not in str(template.components)
 
+    @priority.low
     def test_get_parsed_template_with_empty_params(self, generic_application_template_id):
         step("Get parsed template for query with empty image and hostname params")
         instance_id = "asdf12343sffs321342dsda"
@@ -103,6 +116,7 @@ class TestTemplateRepository:
                                        optional_params=other_params)
         assert '$' not in str(template.components)
 
+    @priority.low
     def test_cannot_get_parsed_template_without_instance_id(self, sample_template):
         step("Getting parsed template without instanceId parameter should cause an error")
         assert_raises_http_exception(TemplateRepositoryHttpStatus.CODE_BAD_REQUEST,

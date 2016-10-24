@@ -14,12 +14,20 @@
 # limitations under the License.
 #
 
+
+import pytest
+
 import config
-from modules.constants import ApiServiceHttpStatus
+from modules.constants import ApiServiceHttpStatus, TapComponent as TAP
 from modules.http_client import HttpClientFactory, HttpClientConfiguration, HttpClientType
 from modules.http_calls.platform import api_service as api
+from modules.markers import priority
 from modules.tap_logger import step
 from tests.fixtures.assertions import assert_raises_http_exception
+
+
+logged_components = (TAP.api_service, )
+pytestmark = [pytest.mark.components(TAP.api_service)]
 
 
 class TestApiServiceAuthorization:
@@ -35,6 +43,7 @@ class TestApiServiceAuthorization:
         )
         return HttpClientFactory.get(configuration)
 
+    @priority.high
     def test_cannot_get_catalog_with_basic_auth(self):
         step("Check that basic auth does not work with api service")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,

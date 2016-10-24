@@ -16,16 +16,21 @@
 
 import pytest
 
-from modules.markers import incremental
+from modules.constants import TapComponent as TAP
+from modules.markers import incremental, priority
 from modules.tap_logger import log_fixture
-from modules.tap_object_model import CliInvitation, User
-from modules.tap_object_model.cli_user import CliUser
+from modules.tap_object_model import CliInvitation, User, CliUser
 from modules.tap_object_model.flows.onboarding import onboard
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_retry
 
 
+logged_components = (TAP.api_service,)
+pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
+
+
 @incremental
+@priority.high
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 class TestCLIInvitingUser:
     @staticmethod
@@ -65,6 +70,7 @@ class TestCLILongShortCommands:
         return onboard(context=context, check_email=False)
 
     @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
+    @priority.high
     @pytest.mark.parametrize("short", (True, False))
     def test_delete_user(self, tap_cli, user, short):
         assert_in_with_retry(user, User.get_all_users)
@@ -78,10 +84,12 @@ class TestCLILongShortCommands:
                                   tap_cli=tap_cli,
                                   username=generate_test_object_name(email=True))
 
+    @priority.high
     @pytest.mark.parametrize("short", (True, False))
     def test_invitations(self, tap_cli, invitation, short):
         assert_in_with_retry(invitation.username, tap_cli.invitations, short=short)
 
+    @priority.high
     @pytest.mark.parametrize("short", (True, False))
     def test_delete_invitations(self, tap_cli, invitation, short):
         assert_in_with_retry(invitation, CliInvitation.get_list, tap_cli)

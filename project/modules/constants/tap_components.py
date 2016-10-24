@@ -81,6 +81,8 @@ class TapComponent:
     uaa_client_register_job = "tap-uaa-client-register-job"
     uaa = "uaa"
 
+    cli = "cli"  # not a HTTP service, but a command-line utility
+
     # ---- TAP NG components - 3rd party ---- #
     image_repository = "image-repository"
     message_queue = "queue"

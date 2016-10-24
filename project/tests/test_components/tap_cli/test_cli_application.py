@@ -26,12 +26,14 @@ from modules.tap_object_model import CliApplication
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
+
 logged_components = (TAP.api_service,)
-pytestmark = [pytest.mark.components(TAP.api_service)]
+pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
 
 
-@priority.medium
 class TestCheckAppPushHelp:
+
+    @priority.medium
     def test_check_app_push_help(self, tap_cli):
         step("Check output from tap cli push help")
         output = tap_cli.push_help()
@@ -39,24 +41,26 @@ class TestCheckAppPushHelp:
         assert "USAGE" in output
 
 
-@priority.medium
 class TestCliCommandsWithNonExistingApplication:
     NON_EXISTING_APP_NAME = "non_existing_app_name_{}".format(generate_test_object_name())
     CANNOT_FIND_MSG = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.low
     def test_try_stop_non_existing_app(self, tap_cli, cli_login):
         step("Try to stop app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.stop_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.low
     def test_try_start_non_existing_app(self, tap_cli, cli_login):
         step("Try to start app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.start_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.low
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
         scaled_instances = '3'
         step("Try to scale app with non existing name")
@@ -65,19 +69,20 @@ class TestCliCommandsWithNonExistingApplication:
                                                   instances=scaled_instances)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.low
     def test_try_check_logs_for_non_existing_app(self, tap_cli, cli_login):
         step("Try to check logs for non existing app name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_logs,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.low
     def test_try_delete_non_existing_app(self, tap_cli, cli_login):
         step("Try to delete with non existing app name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG,
                                                   tap_cli.delete_app, application_name=self.NON_EXISTING_APP_NAME)
 
 
-@priority.high
 @pytest.mark.usefixtures("cli_login")
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestPythonCliApp:
@@ -105,6 +110,7 @@ class TestPythonCliApp:
         application.ensure_app_is_ready()
         return application
 
+    @priority.medium
     def test_check_sample_app_content(self, sample_app_path, sample_app_target_directory):
         step("Extract application archive")
 
@@ -116,6 +122,7 @@ class TestPythonCliApp:
         missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
         assert len(missing_files) == 0, "Missing files: {}".format(", ".join(missing_files))
 
+    @priority.high
     def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
         step("Push application")
         application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
@@ -132,6 +139,7 @@ class TestPythonCliApp:
         step("Ensure app is not on the app list")
         application.ensure_not_on_app_list()
 
+    @priority.high
     def test_stop_and_start_app(self, sample_cli_app):
         step("Stop app")
         sample_cli_app.stop()
@@ -142,6 +150,7 @@ class TestPythonCliApp:
         step("Ensure app is running")
         sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
 
+    @priority.high
     def test_scale_app(self, sample_cli_app):
         scaled_instances = '3'
         step("Scale app to {} instance(s)".format(scaled_instances))
@@ -159,12 +168,12 @@ class TestPythonCliApp:
         step("Check there are/is {} instance(s)".format(scaled_instances))
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
+    @priority.medium
     def test_check_app_logs(self, sample_cli_app):
         step("Check logs")
         assert sample_cli_app.name in sample_cli_app.logs()
 
 
-@priority.high
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestGoCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
@@ -174,7 +183,6 @@ class TestGoCliApp(TestPythonCliApp):
     APP_URL_MESSAGE = "OK"
 
 
-@priority.high
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestJavaCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
@@ -184,7 +192,6 @@ class TestJavaCliApp(TestPythonCliApp):
     APP_URL_MESSAGE = "OK"
 
 
-@priority.high
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestNodeJsCliApp(TestPythonCliApp):
     SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"

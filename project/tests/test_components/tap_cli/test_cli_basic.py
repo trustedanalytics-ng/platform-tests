@@ -19,9 +19,15 @@ import re
 import pytest
 
 import config
-from modules.constants import TapMessage
+from modules.constants import TapMessage, TapComponent as TAP
+from modules.exceptions import TapCliException
+from modules.markers import priority
 from modules.tap_logger import step
 from tests.fixtures.assertions import assert_raises_command_execution_exception
+
+
+logged_components = (TAP.api_service,)
+pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
 
 
 class TestCliBasicFlow:
@@ -30,6 +36,7 @@ class TestCliBasicFlow:
         request.addfinalizer(tap_cli.login)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.high
     def test_target(self, tap_cli, cli_login):
         step("Run tap target")
         output = tap_cli.target()
@@ -37,6 +44,7 @@ class TestCliBasicFlow:
         assert config.admin_username in output
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.medium
     def test_help(self, tap_cli, cli_login):
         step("Check output from tap cli help")
         output = tap_cli.help()
@@ -47,6 +55,7 @@ class TestCliBasicFlow:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @pytest.mark.bugs("DPNG-10167 [TAP-NG] CLI - help improvements required")
+    @priority.low
     def test_version(self, tap_cli, cli_login):
         step("Check tap cli version")
         output = tap_cli.version()
@@ -55,6 +64,7 @@ class TestCliBasicFlow:
         assert "0.0.0" not in output
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @priority.low
     def test_cannot_login_with_incorrect_password(self, tap_cli, restore_login):
         step("Check that login with incorrect password returns Unauthorized")
         assert_raises_command_execution_exception(1, TapMessage.AUTHENTICATION_FAILED,
@@ -63,6 +73,7 @@ class TestCliBasicFlow:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")    
     @pytest.mark.bugs("DPNG-10120 [TAP-NG] CLI - ./tap target should be enable only for console-service ip")
+    @priority.low
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):
         step("Check that user cannot login to tap cli using incorrect domain")
         incorrect_domain = "incorrect.domain"

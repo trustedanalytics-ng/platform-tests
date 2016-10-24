@@ -16,10 +16,15 @@
 
 import pytest
 
+from modules.constants import CatalogHttpStatus, TapComponent as TAP
+from modules.markers import priority
 from modules.tap_logger import step, log_fixture
-from modules.constants import CatalogHttpStatus
 from modules.tap_object_model import CatalogInstance, CatalogServiceInstance
 from tests.fixtures.assertions import assert_raises_http_exception
+
+
+logged_components = (TAP.catalog, )
+pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
@@ -38,6 +43,7 @@ class TestCatalogInstances:
         assert instance is not None, "Service instance was not found on the list of all instances"
         return instance
 
+    @priority.high
     def test_update_instance(self, catalog_instance):
         step("Update the instance")
         catalog_instance.update(field_name="class_id", value="testupdate")
@@ -46,6 +52,7 @@ class TestCatalogInstances:
         # assert instance.classId == catalog_instance.classId
         assert catalog_instance == instance
 
+    @priority.high
     def test_delete_instance(self, catalog_instance):
         step("Delete instance")
         catalog_instance.delete()

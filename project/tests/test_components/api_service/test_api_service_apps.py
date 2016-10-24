@@ -18,12 +18,13 @@ import pytest
 
 from modules.constants import ApiServiceHttpStatus, TapApplicationType, Urls, TapEntityState, TapComponent as TAP
 from modules.http_calls.platform import api_service, catalog as catalog_api
+from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
 from tests.fixtures import assertions
 
 
-logged_components = (TAP.api_service,)
+logged_components = (TAP.api_service, TAP.catalog)
 pytestmark = [pytest.mark.components(TAP.api_service)]
 
 
@@ -40,11 +41,13 @@ class TestApiServiceApplication:
         return application
 
     @pytest.mark.bugs("DPNG-11054 [TAP_NG] Response code 409 (name conflict) should be displayed when pushing twice app with the same name")
+    @priority.low
     def test_cannot_push_application_twice(self, context, sample_app_path, tap_cli, sample_app):
         step("Check that pushing the same application again causes an error")
         with pytest.raises(AssertionError):
             Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=TapApplicationType.PYTHON27)
 
+    @priority.low
     def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
         step("Scale application with incorrect id")
         incorrect_id = "wrong_id"
@@ -53,6 +56,7 @@ class TestApiServiceApplication:
                                                 api_service.scale_application, app_id=incorrect_id, replicas=3,
                                                 client=api_service_admin_client)
 
+    @priority.low
     def test_cannot_scale_application_with_incorrect_instance_number(self, api_service_admin_client):
         step("Scale application with incorrect replicas number")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
@@ -60,12 +64,14 @@ class TestApiServiceApplication:
                                                 api_service.scale_application, app_id=3, replicas="wrong_number",
                                                 client=api_service_admin_client)
 
+    @priority.high
     def test_get_application(self, sample_app):
         step("Get application")
         app = Application.get(app_id=sample_app.id)
         step("Check that the apps are the same")
         assert sample_app == app
 
+    @priority.medium
     def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path, tap_cli):
         log_fixture("Push sample application and check it's running")
         application = Application.push(context, app_path=sample_app_path, tap_cli=tap_cli,

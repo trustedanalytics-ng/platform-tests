@@ -16,15 +16,21 @@
 
 import pytest
 
+from modules.constants import CatalogHttpStatus, TapEntityState, TapComponent as TAP
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CatalogTemplate
-from modules.constants import CatalogHttpStatus, TapEntityState
 from tests.fixtures.assertions import assert_raises_http_exception
+
+
+logged_components = (TAP.catalog, )
+pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogTemplates:
 
+    @priority.high
     def test_create_and_delete_catalog_template(self, context):
         step("Create catalog template")
         catalog_template = CatalogTemplate.create(context, state=TapEntityState.IN_PROGRESS)
@@ -44,6 +50,7 @@ class TestCatalogTemplates:
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogTemplate.get, template_id=catalog_template.id)
 
+    @priority.high
     def test_update_catalog_template(self, context):
         step("Create catalog template")
         catalog_template = CatalogTemplate.create(context, state=TapEntityState.IN_PROGRESS)

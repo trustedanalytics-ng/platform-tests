@@ -17,6 +17,7 @@
 import pytest
 
 from modules.constants import ApiServiceHttpStatus, TapApplicationType, TapComponent as TAP, Urls
+from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
 from tests.fixtures import assertions
@@ -37,6 +38,7 @@ class ApiServiceApplicationFlow:
         return application
 
     @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
+    @priority.high
     def test_push_and_delete_application(self, context, sample_app_path, tap_cli):
         step("Push sample application")
         application = Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=self.APP_TYPE)
@@ -47,6 +49,7 @@ class ApiServiceApplicationFlow:
         step("Check that application is not on the list")
         assertions.assert_not_in_with_retry(application, Application.get_list)
 
+    @priority.high
     def test_stop_and_start_application(self, sample_application):
         step("Stop application")
         sample_application.stop()
@@ -58,6 +61,7 @@ class ApiServiceApplicationFlow:
         sample_application.ensure_running()
 
     @pytest.mark.skip("DPNG-11693: Checking logs in applications don't work yet")
+    @priority.medium
     def test_get_application_logs(self, sample_application):
         step("Check that getting application logs returns no error")
         response = sample_application.get_logs()
@@ -65,6 +69,7 @@ class ApiServiceApplicationFlow:
         assert response.status_code == ApiServiceHttpStatus.CODE_OK
 
     @pytest.mark.skip("DPNG-11694: Scaling applications don't work yet")
+    @priority.medium
     def test_scale_application(self, sample_application):
         step("Scale application")
         replicas_number = 3

@@ -16,11 +16,16 @@
 
 import pytest
 
-from modules.constants import TapMessage
+from modules.constants import TapMessage, TapComponent as TAP
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliOffering
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
+
+
+logged_components = (TAP.api_service,)
+pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
 
 
 class TestCliCatalogOffering:
@@ -31,6 +36,7 @@ class TestCliCatalogOffering:
     def offering(cls, class_context, tap_cli):
         return CliOffering.create(context=class_context, tap_cli=tap_cli)
 
+    @priority.high
     def test_create_and_delete_offering(self, context, tap_cli):
         step("Create offering and check it's in catalog")
         offering = CliOffering.create(context=context, tap_cli=tap_cli)
@@ -39,15 +45,18 @@ class TestCliCatalogOffering:
         offering.delete()
         offering.ensure_not_in_catalog()
 
+    @priority.low
     def test_cannot_create_offering_without_parameters(self, tap_cli):
         assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_OFFERING,
                                                   tap_cli.create_offering, [], self.short)
 
+    @priority.low
     def test_cannot_create_offering_without_json(self, tap_cli):
         invalid_json = generate_test_object_name(separator="-")
         assert_raises_command_execution_exception(1, TapMessage.NO_SUCH_FILE_OR_DIRECTORY.format(invalid_json),
                                                   tap_cli.create_offering, [invalid_json], self.short)
 
+    @priority.low
     def test_create_offering_with_already_used_name(self, context, offering, tap_cli):
         assert_raises_command_execution_exception(1, TapMessage.SERVICE_ALREADY_EXISTS.format(offering.name),
                                                   CliOffering.create, context=context, tap_cli=tap_cli,

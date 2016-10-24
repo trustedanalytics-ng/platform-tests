@@ -19,12 +19,12 @@ from retry import retry
 
 from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus
 from modules.file_utils import download_file
-from modules.tap_logger import step, log_fixture
 from modules.markers import priority
+from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Blob, CatalogImage, Image, ImageRepository
 from tests.fixtures import assertions
 
-logged_components = (TAP.image_factory, TAP.blob_store, TAP.catalog)
+logged_components = (TAP.image_factory, TAP.blob_store, TAP.catalog, TAP.image_repository)
 pytestmark = [pytest.mark.components(TAP.image_factory)]
 
 
@@ -69,6 +69,7 @@ class TestImageFactory:
                                                 ImageFactoryHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                                 Blob.get, blob_id=blob_id)
 
+    @priority.high
     def test_create_image_in_image_factory(self, context, catalog_image):
         step("IMAGE-FACTORY: Create an image")
         Image.create(context, image_id=catalog_image.id)

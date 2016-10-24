@@ -16,16 +16,22 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus
+from modules.constants import CatalogHttpStatus, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CatalogApplication
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
+logged_components = (TAP.catalog, )
+pytestmark = [pytest.mark.components(TAP.catalog)]
+
+
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogApplications:
 
+    @priority.high
     def test_create_and_delete_application(self, context, catalog_template, catalog_image):
         step("Create application in catalog")
         catalog_application = CatalogApplication.create(context, template_id=catalog_template.id,
@@ -46,6 +52,7 @@ class TestCatalogApplications:
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogApplication.get, application_id=catalog_application.id)
 
+    @priority.high
     def test_update_application(self, context, catalog_template, catalog_image):
         step("Create catalog application")
         catalog_application = CatalogApplication.create(context, template_id=catalog_template.id,
@@ -56,6 +63,7 @@ class TestCatalogApplications:
         application = CatalogApplication.get(application_id=catalog_application.id)
         assert catalog_application == application
 
+    @priority.low
     def test_cannot_get_application_with_invalid_id(self):
         step("Check application with invalid application id")
         invalid_id = "90982774-09198298"

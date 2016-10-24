@@ -16,11 +16,16 @@
 
 import pytest
 
-from modules.tap_logger import step, log_fixture
-from modules.constants import CatalogHttpStatus
+from modules.constants import CatalogHttpStatus, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
+from modules.markers import priority
+from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import CatalogInstance, CatalogServiceInstance
 from tests.fixtures.assertions import assert_raises_http_exception
+
+
+logged_components = (TAP.catalog, )
+pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
@@ -31,6 +36,7 @@ class TestCatalogServiceInstances:
         log_fixture("Create sample catalog service instance")
         return CatalogServiceInstance.create(class_context, service_id=catalog_service.id)
 
+    @priority.high
     def test_create_and_delete_service_instance_in_catalog(self, context, catalog_service):
         step("Create service instance in catalog")
         catalog_service_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id)
@@ -56,6 +62,7 @@ class TestCatalogServiceInstances:
                                      CatalogServiceInstance.get, service_id=catalog_service.id,
                                      instance_id=catalog_service_instance.id)
 
+    @priority.low
     def test_cannot_update_service_instance_name(self, context, catalog_service_instance):
         step("Check that it's not possible to update name instance by service")
         assert_raises_http_exception(CatalogHttpStatus.CODE_INTERNAL_SERVER_ERROR,
@@ -68,6 +75,7 @@ class TestCatalogServiceInstances:
                                               instance_id=catalog_service_instance.id)
         assert catalog_service_instance == instance
 
+    @priority.low
     def test_cannot_get_instance_of_not_existing_service(self, context, catalog_service_instance):
         incorrect_service_id = "badServiceId"
         step("Check that getting instance with incorrect service id causes an error")
@@ -75,6 +83,7 @@ class TestCatalogServiceInstances:
                                      CatalogServiceInstance.get, service_id=incorrect_service_id,
                                      instance_id=incorrect_service_id)
 
+    @priority.low
     def test_cannot_create_instance_with_invalid_name(self, context, catalog_service):
         invalid_name = "instance!#"
         step("Try to create instance with name '{}'".format(invalid_name))
@@ -83,6 +92,7 @@ class TestCatalogServiceInstances:
                                      CatalogServiceInstance.create, context, service_id=catalog_service.id,
                                      name=invalid_name)
 
+    @priority.low
     def test_cannot_create_instance_with_empty_body(self, context, catalog_service):
         step("Check create instance with empty body")
         expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format("")

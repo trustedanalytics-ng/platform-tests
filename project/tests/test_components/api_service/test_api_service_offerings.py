@@ -16,15 +16,21 @@
 
 import pytest
 
-from modules.constants import ApiServiceHttpStatus
+from modules.constants import ApiServiceHttpStatus, TapComponent as TAP
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceOffering
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
+logged_components = (TAP.api_service, )
+pytestmark = [pytest.mark.components(TAP.api_service)]
+
+
 class TestApiServiceOfferings:
 
     @pytest.mark.bugs("DPNG-10996 [TAP-NG] Unable to delete service offering")
+    @priority.high
     def test_create_and_delete_new_offering(self, context):
         step("Create new offering")
         test_offering = ServiceOffering.create(context)
@@ -43,6 +49,7 @@ class TestApiServiceOfferings:
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
                                      test_offering.delete)
 
+    @priority.low
     def test_cannot_create_the_same_offering_twice(self, context):
         step("Create new offering")
         test_offering = ServiceOffering.create(context)

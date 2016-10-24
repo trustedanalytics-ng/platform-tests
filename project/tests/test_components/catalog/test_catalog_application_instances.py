@@ -16,16 +16,22 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapEntityState
+from modules.constants import CatalogHttpStatus, TapEntityState, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CatalogApplicationInstance
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
+logged_components = (TAP.catalog, )
+pytestmark = [pytest.mark.components(TAP.catalog)]
+
+
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogApplicationInstances:
 
+    @priority.high
     def test_create_and_delete_application_instance(self, context, catalog_application):
         step("Create application instance")
         app_instance = CatalogApplicationInstance.create(context, application_id=catalog_application.id)
@@ -47,6 +53,7 @@ class TestCatalogApplicationInstances:
                                      CatalogApplicationInstance.get, application_id=catalog_application.id,
                                      instance_id=app_instance.id)
 
+    @priority.high
     def test_update_application_instance(self, context, catalog_application):
         step("Create application instance")
         test_instance = CatalogApplicationInstance.create(context, application_id=catalog_application.id)
@@ -58,6 +65,7 @@ class TestCatalogApplicationInstances:
         instance = CatalogApplicationInstance.get(application_id=catalog_application.id, instance_id=test_instance.id)
         assert test_instance == instance
 
+    @priority.low
     def test_cannot_create_application_instance_without_name(self, context, catalog_application):
         step("Create application instance without name")
         empty_name = ""
@@ -66,6 +74,7 @@ class TestCatalogApplicationInstances:
                                      CatalogApplicationInstance.create, context, application_id=catalog_application.id,
                                      name=empty_name)
 
+    @priority.low
     def test_cannot_get_application_instances_with_invalid_application_id(self):
         invalid_id = "90982774-09198298"
         step("List instances with invalid application id")
