@@ -192,9 +192,11 @@ def pytest_runtest_setup(item):
             pytest.skip("previous test failed ({})".format(previous_fail.name))
 
 
-def pytest_runtest_logstart(nodeid, location):
-    """ signal the start of running a single test item. """
-    # TODO implement logging start of a test
+def pytest_runtest_call(item):
+    """ Log test start """
+    test_name = item.location[2]
+    separator = "*" * len(test_name)
+    logger.info("\n{0}\n\n{1}\n\n{0}\n".format(separator, test_name))
 
 
 def pytest_generate_tests(metafunc):
@@ -214,3 +216,4 @@ def pytest_generate_tests(metafunc):
 
 def pytest_sessionfinish(session, exitstatus):
     mongo_reporter.on_run_end()
+
