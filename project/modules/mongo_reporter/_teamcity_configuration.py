@@ -36,6 +36,7 @@ class TeamCityConfiguration(object):
         with open(path) as f:
             content = f.read()
 
+        content = content.replace(r"\:", ":")
         # add dummy default section which allows TC config to be read using configparser
         # http://stackoverflow.com/a/2885753
         config_string = "[{}]\n{}".format(cls._DEFAULT_SECTION, content)
