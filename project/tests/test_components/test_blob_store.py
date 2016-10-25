@@ -70,7 +70,6 @@ class TestBlobStore:
 
     @priority.low
     def test_empty_blob(self, context):
-
         step("Create blob of size 0")
         stor_blob = Blob.create_from_data(context, blob_content=bytes())
         assert stor_blob.content == bytes()
@@ -133,7 +132,6 @@ class TestBlobStore:
 
     @priority.low
     def test_cannot_retrieve_nonexistent_blob(self):
-        """Try retrieve nonexistent blob_id"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.get,
@@ -141,7 +139,6 @@ class TestBlobStore:
 
     @priority.low
     def test_cannot_delete_nonexistent_blob(self):
-        """Try delete nonexistent blob_id"""
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.delete_by_id,

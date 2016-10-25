@@ -168,7 +168,6 @@ class TestBindingErrors:
 
     @pytest.mark.bugs("DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid")
     def test_cannot_delete_binding_using_incorrect_binding_guid(self):
-        """ DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid """
         test_binding = Binding(self.INCORRECT_GUID, self.INCORRECT_GUID, self.INCORRECT_GUID)
         step("Try to delete service binding by providing incorrect binding guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
