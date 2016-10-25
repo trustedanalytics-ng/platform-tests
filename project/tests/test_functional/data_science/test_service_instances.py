@@ -21,7 +21,6 @@ from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance, ServiceOffering
-from tests.fixtures.test_data import TestData
 
 logged_components = (TAP.service_catalog, TAP.service_exposer)
 pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
@@ -38,15 +37,15 @@ class TestDataScienceInstances(object):
 
     @priority.high
     @pytest.mark.parametrize("service_label", [ServiceLabels.JUPYTER])
-    def test_create_and_delete_service_instances(self, context, service_label):
+    def test_create_and_delete_service_instances(self, context, test_org, test_space, service_label):
         service_type = next((s for s in self.marketplace if s.label == service_label), None)
         assert service_type is not None, "{} service is not available in Marketplace".format(service_label)
         plan = next(iter(service_type.service_plans))
         step("Create service instance")
         instance = ServiceInstance.api_create(
             context=context,
-            org_guid=TestData.test_org.guid,
-            space_guid=TestData.test_space.guid,
+            org_guid=test_org.guid,
+            space_guid=test_space.guid,
             service_label=service_type.label,
             service_plan_guid=plan["guid"]
         )

@@ -28,11 +28,9 @@ from modules.http_client.configuration_provider.console import ConsoleConfigurat
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
 from modules.tap_logger import log_fixture, log_finalizer
-from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User
+from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
+    ScoringEngineModel, ModelArtifact
 from modules.tap_object_model.flows import data_catalog
-from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
-from modules.tap_object_model.model_artifact import ModelArtifact
-from .test_data import TestData
 
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables
@@ -48,17 +46,14 @@ def api_service_admin_client():
 def test_org(request, core_org):
     # Workaround due to limited org management in TAP v0.8
     log_fixture("test_org: Returns core org")
-    TestData.test_org = core_org
     return core_org
 
 
 @pytest.fixture(scope="session")
 def test_org_user(request, session_context, test_org):
     log_fixture("test_org_user: Add user to test org")
-    test_org_user = User.create_by_adding_to_organization(context=session_context, org_guid=test_org.guid,
-                                                          role=User.ORG_ROLE["user"])
-    TestData.test_org_user = test_org_user
-    return test_org_user
+    return User.create_by_adding_to_organization(context=session_context, org_guid=test_org.guid,
+                                                 role=User.ORG_ROLE["user"])
 
 
 @pytest.fixture(scope="session")
@@ -70,25 +65,20 @@ def test_space(request, test_org):
 def test_org_user_client(test_org_user):
     log_fixture("test_org_user_client: Login as test org user")
     test_org_user_client = test_org_user.login()
-    TestData.test_org_user_ng_client = test_org_user_client
     return test_org_user_client
 
 
 @pytest.fixture(scope="session")
 def test_org_admin(request, session_context, test_org):
     log_fixture("test_org_user: Add admin to test org")
-    test_org_admin = User.create_by_adding_to_organization(context=session_context, org_guid=test_org.guid,
-                                                           role=User.ORG_ROLE["admin"])
-    TestData.test_org_user = test_org_admin
-    return test_org_admin
+    return User.create_by_adding_to_organization(context=session_context, org_guid=test_org.guid,
+                                                 role=User.ORG_ROLE["admin"])
 
 
 @pytest.fixture(scope="session")
 def test_org_admin_client(test_org_admin):
     log_fixture("test_org_admin_client: Login as test org admin")
-    test_org_admin_client = test_org_admin.login()
-    TestData.test_org_admin_client = test_org_admin_client
-    return test_org_admin_client
+    return test_org_admin.login()
 
 @pytest.fixture(scope="class")
 def test_user_clients(test_org_admin_client, test_org_user_client):
@@ -171,15 +161,13 @@ def admin_user():
     log_fixture("admin_user: Retrieve admin user")
     admin_user = User.get_admin()
     admin_user.password = config.admin_password
-    TestData.admin_user = admin_user
     return admin_user
 
 
 @pytest.fixture(scope="session")
 def admin_client():
     log_fixture("admin_client: Get http client for admin")
-    TestData.admin_client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return TestData.admin_client
+    return HttpClientFactory.get(ConsoleConfigurationProvider.get())
 
 
 @pytest.fixture(scope="session")
@@ -208,8 +196,9 @@ def core_org():
     log_fixture("core_org: Create object for core org")
     ref_org_name = config.core_org_name
     orgs = Organization.get_list()
-    TestData.core_org = next(o for o in orgs if o.name == ref_org_name)
-    return TestData.core_org
+    core_org = next((o for o in orgs if o.name == ref_org_name), None)
+    assert core_org is not None, "Could not find org {}".format(ref_org_name)
+    return core_org
 
 
 @pytest.fixture(scope="session")
@@ -265,26 +254,24 @@ def psql_instance(session_context, test_org, test_space):
     log_fixture("create_postgres_instance")
     marketplace = ServiceOffering.get_list()
     psql = next(offering for offering in marketplace if offering.label == ServiceLabels.PSQL)
-    TestData.psql_instance = ServiceInstance.api_create(
+    return ServiceInstance.api_create(
         context=session_context,
         org_guid=test_org.guid,
         space_guid=test_space.guid,
         service_label=ServiceLabels.PSQL,
         service_plan_guid=psql.service_plan_guids[0]
     )
-    return TestData.psql_instance
 
 
 @pytest.fixture(scope="session")
-def psql_app(psql_instance, session_context):
+def psql_app(test_space, psql_instance, session_context):
     sql_api_sources = AppSources.get_repository(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data)
-    TestData.psql_app = Application.push(
+    return Application.push(
         context=session_context,
-        space_guid=TestData.test_space.guid,
+        space_guid=test_space.guid,
         source_directory=sql_api_sources.path,
         bound_services=(psql_instance.name,)
     )
-    return TestData.psql_app
 
 
 @pytest.fixture(scope="session")

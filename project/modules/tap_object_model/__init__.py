@@ -36,11 +36,13 @@ from .kubernetes_secret import KubernetesSecret
 from .latest_event import EventCategory, EventMessage, LatestEvent
 from .k8s_service import K8sService
 from .template import Template
+from .model_artifact import ModelArtifact
 from .organization import Organization
 from .platform import Platform
 from .platform_tests import TestSuite
 from .platform_snapshot import PlatformSnapshot
 from .binding import Binding
+from .scoring_engine_model import ScoringEngineModel
 from .service_broker import ServiceBroker
 from .service_instance import AtkInstance, ServiceInstance
 from .service_offering import ServiceOffering

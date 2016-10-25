@@ -17,7 +17,6 @@
 import functools
 
 import modules.http_calls.platform.model_catalog as model_catalog_api
-import modules.tap_object_model.model_artifact as artifact
 
 
 @functools.total_ordering
