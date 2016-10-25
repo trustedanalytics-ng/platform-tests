@@ -88,10 +88,14 @@ class TapComponent:
     message_queue = "queue"
 
     @classmethod
-    def get_list(cls):
-        return [cls.api_service, cls.blob_store, cls.ca, cls.catalog, cls.console, cls.container_broker, cls.das,
+    def get_list_internal(cls):
+        return [cls.blob_store, cls.ca, cls.catalog, cls.container_broker, cls.das,
                 cls.data_catalog, cls.dataset_publisher, cls.h2o_broker, cls.h2o_model_provider,
                 cls.h2o_scoring_engine_publisher, cls.hdfs_downloader, cls.hdfs_uploader, cls.image_factory,
                 cls.metadata_parser, cls.metrics_collector_ambassador, cls.metrics_presenter,
                 cls.metrics_tap_catalog_collector, cls.model_catalog, cls.monitor, cls.nginx_ingress,
                 cls.template_repository, cls.user_management]
+
+    @classmethod
+    def get_list_all(cls):
+        return cls.get_list_internal() + [cls.api_service, cls.console]

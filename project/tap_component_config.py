@@ -32,7 +32,7 @@ api_service = {
     }
 }
 
-TAP_core_services = {name: {} for name in TAP.get_list()}
+TAP_core_services = {name: {} for name in TAP.get_list_internal()}
 
 TAP_core_services.update({
     TAP.catalog: {"get_endpoint": "images"},

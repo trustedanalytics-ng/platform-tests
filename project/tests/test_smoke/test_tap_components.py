@@ -31,7 +31,6 @@ from tap_component_config import TAP_core_services, third_party_services, api_se
 
 @priority.high
 @pytest.mark.usefixtures("open_tunnel")
-@pytest.mark.bugs("DPNG-11629 [api-tests] Create list of endpoints and api version for components that desn't have such information")
 class TestK8sComponents:
     k8s_core_service_params = sorted(TAP_core_services.items(), key=lambda x: x[0])
     k8s_core_service_ids = sorted([c for c in TAP_core_services.keys()])
@@ -75,30 +74,6 @@ class TestK8sComponents:
                                       msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
-    @pytest.mark.parametrize("service,service_params", k8s_core_service_params, ids=k8s_core_service_ids)
-    def test_k8s_component_api_check_availability(self, service, service_params):
-        if service_params["get_endpoint"] is None or service_params["api_version"] is None:
-            pytest.skip("Service {} does not have get endpoint or api version configured".format(service))
-        step("Check k8s component api get endpoint for {}".format(service))
-        api_client = self.get_client(service, "api/{}".format(service_params["api_version"]))
-        response = api_client.request(HttpMethod.GET,
-                                      path=service_params["get_endpoint"],
-                                      raw_response=True, raise_exception=True,
-                                      msg="get")
-        assert response.status_code == HttpStatus.CODE_OK
-
-    @pytest.mark.parametrize("service,service_params", k8s_core_service_params, ids=k8s_core_service_ids)
-    def test_k8s_component_api_check_version_alias(self, service, service_params):
-        if service_params["get_endpoint"] is None or service_params["api_version_alias"] is None:
-            pytest.skip("Service {} does not have get endpoint or api version alias configured".format(service))
-        step("Check k8s component api get endpoint alias for {}".format(service))
-        api_client = self.get_client(service, "api/{}".format(service_params["api_version_alias"]))
-        response = api_client.request(HttpMethod.GET,
-                                      path=service_params["get_endpoint"],
-                                      raw_response=True, raise_exception=True,
-                                      msg="get using version alias")
-        assert response.status_code == HttpStatus.CODE_OK
-
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
     def test_3rd_party_component_check_availability(self, service, service_params):
         if service_params["get_endpoint"] is None or service_params["api_version"] is None:
@@ -113,7 +88,7 @@ class TestK8sComponents:
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.bugs("DPNG-11819 [api-tests] Cannot access kubectl")
-    @pytest.mark.parametrize("expected_app", TAP.get_list())
+    @pytest.mark.parametrize("expected_app", TAP.get_list_internal())
     def test_k8s_component_presence_on_platform(self, expected_app, running_tap_components):
         step("Check that '{}' app is present on platform".format(expected_app))
         assert expected_app in running_tap_components, "No such service {}".format(expected_app)
