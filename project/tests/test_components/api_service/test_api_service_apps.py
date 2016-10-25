@@ -17,6 +17,7 @@
 import pytest
 
 from modules.constants import ApiServiceHttpStatus, TapApplicationType, Urls, TapEntityState, TapComponent as TAP
+from modules.exceptions import CommandExecutionException
 from modules.http_calls.platform import api_service, catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -31,6 +32,7 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestApiServiceApplication:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
+    EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
 
     @pytest.fixture(scope="class")
     def sample_app(self, class_context, sample_app_path, tap_cli):
@@ -40,12 +42,13 @@ class TestApiServiceApplication:
         application.ensure_running()
         return application
 
-    @pytest.mark.bugs("DPNG-11054 [TAP_NG] Response code 409 (name conflict) should be displayed when pushing twice app with the same name")
     @priority.low
     def test_cannot_push_application_twice(self, context, sample_app_path, tap_cli, sample_app):
         step("Check that pushing the same application again causes an error")
-        with pytest.raises(AssertionError):
-            Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=TapApplicationType.PYTHON27)
+        with pytest.raises(CommandExecutionException) as e:
+            Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=TapApplicationType.PYTHON27,
+                             name=sample_app.name)
+        assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in e.value.output
 
     @priority.low
     def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
