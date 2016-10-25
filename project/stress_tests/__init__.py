@@ -13,3 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
+import sys
+from locust import events
+
+from stress_tests.tap_locust.failed_stats import log_on_test_fail, print_failed_tests_stats
+
+
+project_path = os.path.abspath(os.path.join(__file__, "..", ".."))
+sys.path.append(project_path)
+
+
+events.request_failure += log_on_test_fail
+events.quitting += print_failed_tests_stats

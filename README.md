@@ -135,6 +135,13 @@ To run only tests that failed on TC:
 
 Due to issues with mongo reporter it might be necessary to specify a tests path. In this case just use a directory that contains all failed tests (e.g. `platform-tests/project/tests`). Full command should looks like ```./run_tests.sh tests --lf```.
 
+#### Running parametrized tests with single parameter only
+
+In order to run test with only single parameter it is possible to run pytest with `--only-with-param` argument.
+
+For example to run `test_create_and_delete_marketplace_service_instances` only for gateway with free plan run:
+```./run_tests.sh tests/test_smoke/test_functional.py::test_create_and_delete_marketplace_service_instances --only-with-param [gateway-free]```
+
 ### Run smoke tests on bastion
 
 Ssh to your bastion using, most likely, auto-deploy-virginia.pem key (if you don't know bastion address, but you know the environment is deployed automatically on TeamCity, you'll find bastion address in platform-deployment-tests/deployment-init configuration, step Update domain IP addresses)

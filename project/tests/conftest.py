@@ -78,16 +78,24 @@ def pytest_sessionstart(session):
             raise
 
 
+def pytest_addoption(parser):
+    parser.addoption("--only-with-param", type=str, action="store",
+                     help="run only tests with parameter (for performance test)")
+
+
 def pytest_collection_modifyitems(config, items):
     """
     Support for running tests with component tags.
     Report all test component markers to mongo_reporter.
     """
-    all_component_markers = []
+    only_param = config.getoption("only_with_param")
+    if only_param is not None:
+        items[:] = [i for i in items if only_param in i.name]
 
     if config.option.collectonly:
         _log_skip_statistic(items)
 
+    all_component_markers = []
     for item in items:
         components = item.get_marker("components")
         if components is not None:

@@ -14,18 +14,13 @@
 # limitations under the License.
 #
 
+import os
+
 from locust import TaskSet, task
 
-import os
-import sys
-
-# workaround allowing import from framework modules
 from modules.constants import Path
-
-project_path = os.path.abspath(os.path.join(__file__, "..", ".."))
-sys.path.append(project_path)
-
 from stress_tests.tap_locust import tap_locust
+from stress_tests.tap_locust.task_set_utils import PytestSelector
 
 
 class UserBehaviorMetrics(TaskSet):
@@ -34,7 +29,8 @@ class UserBehaviorMetrics(TaskSet):
 
     @task(1)
     def get_org_metrics(self):
-        self.client.run(self.locust, self.TEST_MODULE_PATH, self.TEST_CLASS_NAME, "test_get_org_metrics")
+        pytest_selector = PytestSelector(self.TEST_MODULE_PATH, self.TEST_CLASS_NAME, "test_get_org_metrics")
+        self.client.run(pytest_selector)
 
 
 class MetricsUser(tap_locust.TapLocust):

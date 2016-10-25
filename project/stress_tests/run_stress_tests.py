@@ -28,6 +28,11 @@ sys.path.append(project_path)
 
 from config import get_int
 
+try:
+    import user_config
+except ImportError:
+    pass
+
 
 locust_file = os.environ["PT_LOCUST_FILE"]
 num_clients = os.environ.get("PT_NUM_CLIENTS", "2")
@@ -37,7 +42,7 @@ locust_port = os.environ.get("PT_LOCUST_PORT", "8089")
 locust_address = "http://localhost:{}/".format(locust_port)
 
 
-def start_locust_process(locust_file):
+def start_locust_process(locust_file, locust_port):
     command = ["locust", "-P", locust_port, "-f", locust_file]
     return subprocess.Popen(command, universal_newlines=True)
 
@@ -58,7 +63,7 @@ def get_stats():
 
 locust_process = None
 try:
-    locust_process = start_locust_process(locust_file)
+    locust_process = start_locust_process(locust_file, locust_port)
     start_test(num_clients, hatch_rate)
     sleep(test_duration)
     stop_test()

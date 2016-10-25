@@ -27,9 +27,10 @@ class UserBehaviorUserManagement(TaskSet):
     SMOKE_TESTS_MODULE = os.path.join(Path.test_directories["test_smoke"], "test_functional.py")
 
     @task(1)
-    def login(self):
-        pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE, test_name="test_login")
-        self.client.run(pytest_selector=pytest_selector)
+    def push_sample_app(self):
+        pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE,
+                                         test_name="test_push_sample_app_and_check_response")
+        self.client.run(pytest_selector)
 
 
 class UserManagementUser(tap_locust.TapLocust):

@@ -15,14 +15,8 @@
 #
 
 import os
-import sys
 
 from locust import TaskSet, task, events
-
-# workaround allowing import from framework modules
-project_path = os.path.abspath(os.path.join(__file__, "..", ".."))
-# print("adding {} to PYTHONPATH".format(project_path))
-sys.path.append(project_path)
 
 # sys.stderr.flush = lambda: None
 # sys.stdout.flush = lambda: None

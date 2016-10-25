@@ -16,21 +16,22 @@
 
 import os
 
-from locust import TaskSet, task
+from locust import TaskSet
 
 from modules.constants.project_paths import Path
 from stress_tests.tap_locust import tap_locust
-from stress_tests.tap_locust.task_set_utils import PytestSelector
+from stress_tests.tap_locust.task_set_utils import tasks_from_parametrized_test, PytestSelector
+from tap_component_config import offerings_as_parameters
 
 
-class UserBehaviorUserManagement(TaskSet):
+class UserBehaviorCreatingMarketplaceServices(TaskSet):
     SMOKE_TESTS_MODULE = os.path.join(Path.test_directories["test_smoke"], "test_functional.py")
+    TEST_NAME = "test_create_and_delete_marketplace_service_instances"
 
-    @task(1)
-    def login(self):
-        pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE, test_name="test_login")
-        self.client.run(pytest_selector=pytest_selector)
+    def on_start(self):
+        pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE, test_name=self.TEST_NAME)
+        self.tasks = tasks_from_parametrized_test(pytest_selector, offerings_as_parameters)
 
 
-class UserManagementUser(tap_locust.TapLocust):
-    task_set = UserBehaviorUserManagement
+class MarketplaceUser(tap_locust.TapLocust):
+    task_set = UserBehaviorCreatingMarketplaceServices

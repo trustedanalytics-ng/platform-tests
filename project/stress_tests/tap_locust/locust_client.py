@@ -16,16 +16,16 @@
 
 import logging
 import os
+import signal
 import subprocess
 import sys
 import time
 
-import signal
-
-from locust import events, Locust
 import pytest
 import _pytest.main as pytest_main
+from locust import events
 
+from stress_tests.tap_locust.task_set_utils import PytestSelector
 from ._stream_capture import StreamCapture
 
 project_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
@@ -54,24 +54,20 @@ class LocustClient(object):
             return out, err
         return "", ""
 
-    def run(self, locust_instance: Locust, test_module_path: str, test_class_name: str=None, test_name: str=None,
-            pytest_params: list=None):
+    def run(self, pytest_selector: PytestSelector, pytest_params: list=None, name: str=None):
+        name = name or pytest_selector
         pytest_params = pytest_params or []
-        pytest_selector = [s for s in (test_module_path, test_class_name, test_name) if s is not None]
-        pytest_selector = "::".join(pytest_selector)
 
         logger.info("Starting pytest with {}".format(str([pytest_selector]+pytest_params)))
         ret_code, out, err, exec_time = self.run_pytest(pytest_selector, pytest_params)
         logger.info("Pytest exit with code: {}".format(ret_code))
 
         if ret_code == pytest_main.EXIT_OK:
-            events.request_success.fire(request_type="test", name=pytest_selector, response_time=exec_time,
+            events.request_success.fire(request_type="test", name=name, response_time=exec_time,
                                         response_length=0)
         elif ret_code == pytest_main.EXIT_TESTSFAILED:
-            events.request_failure.fire(request_type="test", name=pytest_selector, response_time=exec_time,
+            events.request_failure.fire(request_type="test", name=name, response_time=exec_time,
                                         exception=out+err)
-        else:
-            events.locust_error(locust_instance, exception=None, tb=out+err)
 
     def run_pytest(self, selector, params):
         process = None

@@ -30,6 +30,10 @@ Before starting tests it is required to set several env variables:
 
 After setting required env variables test can be run by `python run_stress_tests.py`.
 
+#### How to run parametrized tests separately
+
+For measuring test execution separately with each parameter it is possible to run pytest with `--only-with-param` argument. For more details see README.md in platform-tests root directory.
+
 ### Locust documentation 
 
 Documentation is rather minimal, but the source code is clean and
