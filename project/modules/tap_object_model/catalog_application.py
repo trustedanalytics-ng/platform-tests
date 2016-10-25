@@ -55,7 +55,7 @@ class CatalogApplication(object):
         response = catalog.create_application(name=name, template_id=template_id, image_id=image_id,
                                               replication=replication)
         new_application = cls._from_response(response)
-        context.catalog.append(new_application)
+        context.test_objects.append(new_application)
         return new_application
 
     @classmethod

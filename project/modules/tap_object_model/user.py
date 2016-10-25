@@ -76,7 +76,7 @@ class User(object):
         new_user = next((user for user in org_users if user.username == username), None)
         if new_user is None:
             raise AssertionError("New user was not found in the organization")
-        context.users.append(new_user)
+        context.test_objects.append(new_user)
         new_user.password = password
         return new_user
 

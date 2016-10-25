@@ -25,23 +25,8 @@ class Context(object):
     logger = get_logger("context")
 
     def __init__(self):
-        self.orgs = []
-        self.users = []
-        self.invitations = []
         self.transfers = []
-        self.apps = []
-        self.service_instances = []
-        self.bindings = []
-        self.service_offerings = []
-        self.templates = []
-        self.catalog = []
-        self.blob_store = []
-        self.image_factory = []
-        self.k8s_apps = []
-        self.models = []
-        self.cli_applications = []
-        self.cli_services = []
-        self.cli_offerings = []
+        self.test_objects = []
 
     def _cleanup_test_objects(self, object_list: list):
         while len(object_list) > 0:
@@ -53,29 +38,13 @@ class Context(object):
                 self.logger.warning("Error while deleting {}: {}".format(item, e))
 
     def cleanup(self):
-        self._cleanup_test_objects(self.users)
-        self._cleanup_test_objects(self.invitations)
         transfer_titles = [t.title for t in self.transfers]
         if len(transfer_titles) > 0:
             data_sets = DataSet.api_get_matching_to_transfer_list(transfer_titles)
             self._cleanup_test_objects(data_sets)
             self._cleanup_test_objects(self.transfers)
-        self._cleanup_test_objects(self.apps)
-        self._cleanup_test_objects(self.service_instances)
-        self._cleanup_test_objects(self.bindings)
-        self._cleanup_test_objects(self.service_offerings)
-        self._cleanup_test_objects(self.orgs)
 
-        # TAP NG
-        self._cleanup_test_objects(self.templates)
-        self._cleanup_test_objects(self.catalog)
-        self._cleanup_test_objects(self.blob_store)
-        self._cleanup_test_objects(self.image_factory)
-        self._cleanup_test_objects(self.k8s_apps)
-        self._cleanup_test_objects(self.models)
-        self._cleanup_test_objects(self.cli_applications)
-        self._cleanup_test_objects(self.cli_offerings)
-        self._cleanup_test_objects(self.cli_services)
+        self._cleanup_test_objects(self.test_objects)
 
 
 @pytest.fixture(scope="function")

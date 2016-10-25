@@ -75,7 +75,7 @@ class ScoringEngineModel(object):
                                                   artifacts=artifacts, added_by=added_by, added_on=added_on,
                                                   modified_by=modified_by, modified_on=modified_on, client=client)
         new_model = cls._from_response(response=response)
-        context.models.append(new_model)
+        context.test_objects.append(new_model)
         return new_model
 
     @classmethod

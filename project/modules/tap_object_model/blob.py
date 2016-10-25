@@ -37,7 +37,7 @@ class Blob(TapObjectSuperclass):
         blob_content = open(file_path, "rb").read()
         blob_store_api.create_blob_from_file(blob_id=blob_id, file_path=file_path)
         new_blob = cls(blob_id=blob_id, blob_content=blob_content)
-        context.blob_store.append(new_blob)
+        context.test_objects.append(new_blob)
         return new_blob
 
     @classmethod
@@ -46,7 +46,7 @@ class Blob(TapObjectSuperclass):
             blob_id = str(uuid.uuid4())
         blob_store_api.create_blob_from_data(blob_id=blob_id, blob_content=blob_content)
         new_blob = cls(blob_id=blob_id, blob_content=blob_content)
-        context.blob_store.append(new_blob)
+        context.test_objects.append(new_blob)
         return new_blob
 
     @classmethod

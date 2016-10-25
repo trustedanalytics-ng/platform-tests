@@ -35,7 +35,7 @@ class Image(TapObjectSuperclass):
             image_id = str(uuid.uuid4())
         image_factory_api.create_image(image_id=image_id)
         new_image = cls(image_id)
-        context.image_factory.append(new_image)
+        context.test_objects.append(new_image)
         return new_image
 
     def delete(self):

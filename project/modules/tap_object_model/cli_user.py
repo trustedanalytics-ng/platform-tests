@@ -33,7 +33,7 @@ class CliUser(CliObjectSuperclass):
         code = gmail_api.get_invitation_code_for_user(username)
         onboarding.register(context=context, code=code, username=username)
         cli_user = cls(tap_cli=tap_cli, username=username)
-        context.users.append(cli_user)
+        context.test_objects.append(cli_user)
         return cli_user
 
     @classmethod

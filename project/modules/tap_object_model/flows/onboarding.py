@@ -55,5 +55,5 @@ def register(context, code, username, password=None):
         raise
     new_user = User(guid=response["userGuid"], username=username, password=response["password"],
                     org_role={Guid.CORE_ORG_GUID: User.ORG_ROLE["admin"]})
-    context.users.append(new_user)
+    context.test_objects.append(new_user)
     return new_user

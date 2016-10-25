@@ -45,7 +45,7 @@ class CatalogTemplate(object):
     def create(cls, context, *, state=TapEntityState.READY):
         response = catalog_api.create_template(state=state)
         new_template = cls._from_response(response)
-        context.catalog.append(new_template)
+        context.test_objects.append(new_template)
         return new_template
 
     @classmethod

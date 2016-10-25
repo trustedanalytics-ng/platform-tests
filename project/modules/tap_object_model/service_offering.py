@@ -66,7 +66,7 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
 
         offering_from_response = cls._from_response(response[0], client)
         new_offering = cls(offering_id=offering_from_response.id, label=label, plans=service_plans)
-        context.append(new_offering)
+        context.test_objects.append(new_offering)
         assert new_offering == offering_from_response
         return new_offering
 

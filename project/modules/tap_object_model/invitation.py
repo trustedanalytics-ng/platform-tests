@@ -50,7 +50,7 @@ class Invitation(object):
         except AssertionError:  # Not all responses include code
             code = None
         invitation = cls(username=username, code=code)
-        context.invitations.append(invitation)
+        context.test_objects.append(invitation)
         return invitation
 
     @classmethod

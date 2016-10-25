@@ -52,7 +52,7 @@ class Organization(object):
                     org.cleanup()
             raise
         org = cls(name=name, guid=response)
-        context.orgs.append(org)
+        context.test_objects.append(org)
         return org
 
     @classmethod

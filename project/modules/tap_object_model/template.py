@@ -39,7 +39,7 @@ class Template(TapObjectSuperclass):
             template_id = str(uuid.uuid4())
         template_repository_api.create_template(template_id=template_id, template_body=body, hooks=hooks)
         # POST returns empty body
-        context.templates.append(cls(template_id=template_id, components=body, hooks=hooks))
+        context.test_objects.append(cls(template_id=template_id, components=body, hooks=hooks))
         new_template = cls.get(template_id=template_id)
         return new_template
 

@@ -57,7 +57,7 @@ class CliService(CliObjectSuperclass):
             name = test_names.generate_test_object_name(separator="-")
         tap_cli.create_service([offering_name, plan.name, name])
         cli_service = cls.get(name, tap_cli)
-        context.cli_services.append(cli_service)
+        context.test_objects.append(cli_service)
         cli_service.ensure_service_state(TapEntityState.RUNNING)
         return cli_service
 

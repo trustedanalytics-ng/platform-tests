@@ -61,7 +61,7 @@ class Binding(ApiModelSuperclass, TapObjectSuperclass):
         response = api.bind_app(client=client, app_id=app_id, service_id=service_instance_id)
         assert response["message"] == TapMessage.SUCCESS
         binding = cls._find_on_list(app_id=app_id, service_instance_id=service_instance_id, client=client)
-        context.bindings.append(binding)
+        context.test_objects.append(binding)
         return binding
 
     def delete(self, client: HttpClient=None):

@@ -30,7 +30,7 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
         response = catalog_api.create_service_instance(service_id=service_id, name=name, instance_type=instance_type,
                                                        state=state)
         new_instance = cls._from_response(response)
-        context.catalog.append(new_instance)
+        context.test_objects.append(new_instance)
         return new_instance
 
     @classmethod

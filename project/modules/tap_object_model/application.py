@@ -158,7 +158,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
 
         # Wait for the application to receive id
         app._ensure_has_id()
-        context.apps.append(app)
+        context.test_objects.append(app)
         return app
 
     @property

@@ -51,7 +51,7 @@ class CatalogService(object):
             name = generate_test_object_name().replace("_", "-")
         response = catalog_api.create_service(template_id=template_id, name=name, bindable=bindable, plans=plans)
         new_service = cls._from_response(response)
-        context.catalog.append(new_service)
+        context.test_objects.append(new_service)
         return new_service
 
     @classmethod

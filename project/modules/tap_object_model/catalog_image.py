@@ -41,7 +41,7 @@ class CatalogImage(TapObjectSuperclass):
     def create(cls, context, *, image_type=None, state=None):
         response = catalog_api.create_image(image_type=image_type, state=state)
         new_image = cls._from_response(response)
-        context.catalog.append(new_image)
+        context.test_objects.append(new_image)
         return new_image
 
     @classmethod

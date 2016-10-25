@@ -55,7 +55,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
             client = cls._get_default_client()
         response = api.create_service(name=name, plan_id=plan_id, params=params, offering_id=offering_id, client=client)
         instance = cls._from_response(response, client)
-        context.service_instances.append(instance)
+        context.test_objects.append(instance)
         return instance
 
     @classmethod

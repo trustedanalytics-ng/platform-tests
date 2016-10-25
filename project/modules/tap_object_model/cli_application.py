@@ -55,7 +55,7 @@ class CliApplication(CliObjectSuperclass):
             name = generate_test_object_name(separator="-")
         Application.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type, bindings=bindings)
         new_app = cls(app_type=app_type, target_directory=app_path, tap_cli=tap_cli, name=name, instances=instances)
-        context.apps.append(new_app)
+        context.test_objects.append(new_app)
         push_output = tap_cli.push(app_path=app_path)
         missing_headers = []
         for header in cls.EXPECTED_PUSH_HEADERS:
