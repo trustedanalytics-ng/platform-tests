@@ -30,10 +30,10 @@ class Image(TapObjectSuperclass):
         return "{} (id={})".format(self.__class__.__name__, self.id)
 
     @classmethod
-    def create(cls, context, *, image_id=None):
+    def create(cls, context, body=None, *, image_id=None):
         if image_id is None:
             image_id = str(uuid.uuid4())
-        image_factory_api.create_image(image_id=image_id)
+        image_factory_api.create_image(body=body, image_id=image_id)
         new_image = cls(image_id)
         context.test_objects.append(new_image)
         return new_image

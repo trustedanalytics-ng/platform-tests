@@ -28,11 +28,12 @@ def _get_client():
     return HttpClientFactory.get(configuration)
 
 
-def create_image(*, image_id):
+def create_image(body=None, *, image_id):
     """ POST /image """
-    body = {
-        "id": image_id
-    }
+    if body is None:
+        body = {
+            "id": image_id
+            }
     response = _get_client().request(HttpMethod.POST,
                                      path="image",
                                      body=body,

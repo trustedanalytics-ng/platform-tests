@@ -16,13 +16,16 @@
 
 import pytest
 from retry import retry
+from mock import Mock
 
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus, HttpStatus
 from modules.file_utils import download_file
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Blob, CatalogImage, Image, ImageRepository
+from modules.http_calls.platform import image_factory
 from tests.fixtures import assertions
+from tests.fixtures.assertions import assert_raises_http_exception
 
 logged_components = (TAP.image_factory, TAP.blob_store, TAP.catalog, TAP.image_repository)
 pytestmark = [pytest.mark.components(TAP.image_factory)]
@@ -35,6 +38,8 @@ class TestImageFactory:
     APP_TYPE = TapApplicationType.NODEJS
     APP_URL = Urls.nodejs_app_url
     INITIAL_IMAGE_STATE = TapEntityState.PENDING
+    CREATE_IMAGE_WITH_INVALID_BODY_MSG = "json: cannot unmarshal string into Go value of type " \
+                                         "models.BuildImagePostRequest"
     catalog_image = None
 
     @pytest.fixture(scope="function")
@@ -82,3 +87,11 @@ class TestImageFactory:
 
         step("BLOB-STORE: Wait until blob is successfully removed")
         self.assert_blob_deleted(blob_id=catalog_image.id)
+
+    @pytest.mark.parametrize("body", ["invalid body", ""])
+    def test_create_image_factory_with_wrong_body(self, class_context, body, catalog_image, monkeypatch):
+        step("Create image in image-factory with invalid body")
+        assert_raises_http_exception(
+            HttpStatus.CODE_BAD_REQUEST,
+            self.CREATE_IMAGE_WITH_INVALID_BODY_MSG,
+            Image.create, class_context, body=body, image_id=catalog_image.id)
