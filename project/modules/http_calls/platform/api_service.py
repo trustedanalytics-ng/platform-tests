@@ -129,12 +129,12 @@ def get_application_logs(*, client: HttpClient, app_id: str):
     return response.json()
 
 
-def scale_application(*, client: HttpClient, app_id, replicas):
+def scale_application(*, client: HttpClient, app_id: str, replicas):
     """ PUT /applications/{app_id}/scale """
     body = {
         "replicas": replicas
     }
-    response = client.request(HttpMethod.PUT, path="applications/{}/scale".format(id), body=body, raw_response=True,
+    response = client.request(HttpMethod.PUT, path="applications/{}/scale".format(app_id), body=body, raw_response=True,
                               msg="Scale application")
     return response.json()
 
