@@ -122,8 +122,8 @@ class TapCli:
         output_lines = [line.strip() for line in output.split("\n")]
         try:
             json_start = output_lines.index("{")
-            json_stop = output_lines.index("}", -1)
-        except ValueError:
+            json_stop = [i for i, item in enumerate(output_lines) if item == "}"][-1]
+        except (ValueError, IndexError):
             raise AssertionError("Cannot parse command output as json: {}".format(output))
         output_json = json.loads("\n".join(output_lines[json_start:json_stop+1]))
         assert output_json["name"] == service_name

@@ -32,21 +32,18 @@ class TestTapCli(unittest.TestCase):
     gibberish_string = 'XphlIEv55DOEo6udmPim GSKu0b8GkK2z4pNb2J4w Aq0E5ZGegtEk0M65sA4d'
 
     def _run_command_get_service(self, cmd: list):
-        return 'CODE: 200 BODY:\nCODE: 200 BODY: {"name":"test1",' \
-               '"state":"RUNNING","serviceName":"etcd","planName":"free"}\n'
+        return '{\n"name":"test1",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
 
     def _run_command_get_service_command(self, cmd: list):
         assert ['service', 'test1'] == cmd
-        return ''
+        return '{\n"name":"test1",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
 
     def _run_command_get_service_short_command(self, cmd: list):
-        print(cmd)
         assert ['s', 'test1'] == cmd
-        return ''
+        return '{\n"name":"test1",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
 
     def _run_command_get_wrong_service_name(self, cmd: list):
-        return 'CODE: 200 BODY:\nCODE: 200 BODY: {"name":"test2",' \
-               '"state":"RUNNING","serviceName":"etcd","planName":"free"}\n'
+        return '{\n"name":"test2",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
 
     def _run_command_empty_response(self, cmd: list):
         return ''
@@ -73,18 +70,18 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_empty_response)
     def test_get_service_empty_response(self):
-        service = self.tap_cli.get_service("test1")
-        assert service is None
+        with self.assertRaises(AssertionError):
+             self.tap_cli.get_service("test1")
 
     @patch.object(TapCli, "_run_command", _run_command_get_service_command)
     def test_get_service_command(self):
         service = self.tap_cli.get_service("test1")
-        assert service is None
+        assert service["name"] == "test1"
 
     @patch.object(TapCli, "_run_command", _run_command_get_service_short_command)
     def test_get_service_short_command(self):
         service = self.tap_cli.get_service("test1", short=True)
-        assert service is None
+        assert service["name"] == "test1"
 
     @patch.object(TapCli, "_run_command", _run_command_get_wrong_service_name)
     def test_get_service_wrong_name(self):
