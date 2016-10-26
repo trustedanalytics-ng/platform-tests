@@ -16,6 +16,7 @@
 
 from retry import retry
 
+from modules.exceptions import ServiceInstanceCreationFailed
 from modules import test_names
 from modules.constants import TapEntityState
 from ._cli_object_superclass import CliObjectSuperclass
@@ -56,8 +57,8 @@ class CliService(CliObjectSuperclass):
         if name is None:
             name = test_names.generate_test_object_name(separator="-")
         tap_cli.create_service([offering_name, plan.name, name])
+        context.test_objects.append(cls(offering_name=offering_name, plan=plan, name=name, tap_cli=tap_cli))
         cli_service = cls.get(name, tap_cli)
-        context.test_objects.append(cli_service)
         cli_service.ensure_service_state(TapEntityState.RUNNING)
         return cli_service
 
@@ -82,9 +83,11 @@ class CliService(CliObjectSuperclass):
     def delete(self):
         return self.tap_cli.delete_service([self.name])
 
-    @retry(AssertionError, tries=12, delay=5)
+    @retry(AssertionError, tries=20, delay=5)
     def ensure_service_state(self, state):
         self.state = self.get(self.name, self.tap_cli).state
+        if state != TapEntityState.FAILURE and self.state == TapEntityState.FAILURE:
+            raise ServiceInstanceCreationFailed("Instance {} is in state {}".format(self.name, TapEntityState.FAILURE))
         assert self.state == state, "expected state '{}' but was '{}'".format(state, self.state)
 
     @retry(AssertionError, tries=12, delay=5)

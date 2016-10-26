@@ -42,21 +42,20 @@ class TapOfferingState:
 class TapMessage:
     AUTHENTICATION_FAILED = "Authentication failed"
     AUTHENTICATION_SUCCEEDED = "Authentication succeeded"
+    CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     CANNOT_FIND_PLAN_FOR_SERVICE = "cannot find plan: '{}' for service: '{}'"
     CANNOT_FIND_SERVICE = "cannot find service: '{}'"
+    CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
     INSTANCE_IS_BOUND_TO_OTHER_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
     NO_SUCH_FILE_OR_DIRECTORY = "open {}: no such file or directory"
     NOT_ENOUGH_ARGS_CREATE_OFFERING = "not enough args: create-offering <path to json with service definition>"
     NOT_ENOUGH_ARGS_CREATE_SERVICE = "not enough args: create-service <service_name> <plan_name> <custom_name>"
     NOT_ENOUGH_ARGS_DELETE_SERVICE = "not enough args: delete-service <service_custom_name>"
     NO_SUCH_HOST = "no such host"
+    OK = "OK"
     SERVICE_ALREADY_EXISTS = "service with name: {} already exists!"
     SUCCESS = "success"
-    MSG_CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
-    CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
-    
-    
 
 
 class TapApplicationType:

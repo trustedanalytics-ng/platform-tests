@@ -119,13 +119,15 @@ class TapCli:
 
     def get_service(self, service_name, short=False):
         output = self._run_command([self.SERVICE[1] if short else self.SERVICE[0], service_name])
+        output_lines = [line.strip() for line in output.split("\n")]
         try:
-            service_json = output.split(sep="BODY:")[2].split(sep="\n")[0]
-        except IndexError:
-            return None
-        service = json.loads(service_json)
-        assert service['name'] == service_name
-        return service
+            json_start = output_lines.index("{")
+            json_stop = output_lines.index("}", -1)
+        except ValueError:
+            raise AssertionError("Cannot parse command output as json: {}".format(output))
+        output_json = json.loads("\n".join(output_lines[json_start:json_stop+1]))
+        assert output_json["name"] == service_name
+        return output_json
 
     def push(self, *, app_path):
         """Push an application.
