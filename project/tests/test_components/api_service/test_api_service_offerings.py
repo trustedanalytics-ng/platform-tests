@@ -29,8 +29,8 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 
 class TestApiServiceOfferings:
 
-    @pytest.mark.bugs("DPNG-10996 [TAP-NG] Unable to delete service offering")
     @priority.high
+    @pytest.mark.bugs("DPNG-11864 [api-tests] create new offering - problem to compare created offering with offering from response")
     def test_create_and_delete_new_offering(self, context, api_service_admin_client):
         step("Create new offering")
         test_offering = ServiceOffering.create(context, client=api_service_admin_client)
@@ -50,6 +50,7 @@ class TestApiServiceOfferings:
                                      test_offering.delete)
 
     @priority.low
+    @pytest.mark.bugs("DPNG-11864 [api-tests] create new offering - problem to compare created offering with offering from response")
     def test_cannot_create_the_same_offering_twice(self, context, api_service_admin_client):
         step("Create new offering")
         test_offering = ServiceOffering.create(context, client=api_service_admin_client)
