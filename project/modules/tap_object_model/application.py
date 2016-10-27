@@ -157,7 +157,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         assert app is not None, "App {} has not been created on the platform".format(name)
 
         # Wait for the application to receive id
-        app._ensure_has_id()
+        app._ensure_has_id(client=client)
         context.test_objects.append(app)
         return app
 
@@ -214,21 +214,21 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         api.restart_application(app_id=self.id, client=self._get_client(client))
 
     @retry(AssertionError, tries=30, delay=2)
-    def ensure_running(self):
+    def ensure_running(self, client: HttpClient=None):
         """Waits for the application to start for a given number of tries.
 
         If the application hasn't started, assertion kicks in
         """
-        self._refresh()
+        self._refresh(client=client)
         assert self.is_running is True, "App {} is not started. App state: {}".format(self.name, self.state)
 
     @retry(AssertionError, tries=30, delay=2)
-    def ensure_stopped(self):
+    def ensure_stopped(self, client: HttpClient=None):
         """Waits for the application to stop for a given number of tries.
 
         If the application hasn't stopped, assertion kicks in
         """
-        self._refresh()
+        self._refresh(client=client)
         assert self.is_stopped is True, "App {} is not stopped. App state: {}".format(self.name, self.state)
 
     def api_request(self, path: str, method: str="GET", scheme: str="http", hostname: str=None, data: dict=None,
@@ -290,9 +290,9 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             manifest = json.loads(file.read())
         return manifest['name']
 
-    def _refresh(self):
+    def _refresh(self, client: HttpClient=None):
         """ Updates the state of the application. If the application is not present, assertion kicks in """
-        apps = self.get_list()
+        apps = self.get_list(client=self._get_client(client))
         app = next((a for a in apps if a.name == self.name), None)
         assert app is not None, "Cannot find application {}".format(self.name)
         for attr_name in self._REFRESH_ATTRIBUTES:
@@ -300,7 +300,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             setattr(self, attr_name, new_value)
 
     @retry(AssertionError, tries=30, delay=2)
-    def _ensure_has_id(self):
+    def _ensure_has_id(self, client: HttpClient=None):
         """ Waits for the application to receive an id. If no id is found, assertion is raised """
-        self._refresh()
+        self._refresh(client=client)
         assert self.id != "", "App {} hasn't received id yet. State: {}".format(self.name, format(self.state))

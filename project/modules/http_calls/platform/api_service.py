@@ -14,19 +14,13 @@
 # limitations under the License.
 #
 from modules.constants import HttpStatus
-from modules.http_client import HttpClientFactory, HttpMethod
-from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
+from modules.http_client import HttpMethod
 from modules.http_client.http_client import HttpClient
 
 """
 This module implements api-service HTTP methods.
 Most of them are shared also by console.
 """
-
-
-def _get_client():
-    configuration = ServiceConfigurationProvider.get()
-    return HttpClientFactory.get(configuration)
 
 
 # --------------------------------------- offerings --------------------------------------- #

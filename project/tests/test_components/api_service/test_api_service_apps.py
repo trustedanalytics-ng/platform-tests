@@ -35,19 +35,20 @@ class TestApiServiceApplication:
     EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
 
     @pytest.fixture(scope="class")
-    def sample_app(self, class_context, sample_app_path, tap_cli):
+    def sample_app(self, class_context, sample_app_path, tap_cli, api_service_admin_client):
         log_fixture("Push sample application")
         application = Application.push(class_context, app_path=sample_app_path, tap_cli=tap_cli,
-                                       app_type=TapApplicationType.PYTHON27)
+                                       app_type=TapApplicationType.PYTHON27, client=api_service_admin_client)
         application.ensure_running()
         return application
 
     @priority.low
-    def test_cannot_push_application_twice(self, context, sample_app_path, tap_cli, sample_app):
+    def test_cannot_push_application_twice(self, context, sample_app_path, tap_cli, sample_app,
+                                           api_service_admin_client):
         step("Check that pushing the same application again causes an error")
         with pytest.raises(CommandExecutionException) as e:
             Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=TapApplicationType.PYTHON27,
-                             name=sample_app.name)
+                             name=sample_app.name, client=api_service_admin_client)
         assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in e.value.output
 
     @priority.low
@@ -68,27 +69,28 @@ class TestApiServiceApplication:
                                                 client=api_service_admin_client)
 
     @priority.high
-    def test_get_application(self, sample_app):
+    def test_get_application(self, sample_app, api_service_admin_client):
         step("Get application")
-        app = Application.get(app_id=sample_app.id)
+        app = Application.get(app_id=sample_app.id, client=api_service_admin_client)
         step("Check that the apps are the same")
         assert sample_app == app
 
     @priority.medium
-    def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path, tap_cli):
+    def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path, tap_cli,
+                                                       api_service_admin_client):
         log_fixture("Push sample application and check it's running")
         application = Application.push(context, app_path=sample_app_path, tap_cli=tap_cli,
-                                       app_type=TapApplicationType.PYTHON27)
+                                       app_type=TapApplicationType.PYTHON27, client=api_service_admin_client)
         application.ensure_running()
 
         updated_state = TapEntityState.FAILURE
         step("Update app state to {} using catalog api".format(updated_state))
         catalog_api.update_instance(instance_id=application.id, field_name="state", value=updated_state)
         step("Check that the app state was updated")
-        app = Application.get(app_id=application.id)
+        app = Application.get(app_id=application.id, client=api_service_admin_client)
         assert app.state == updated_state, "Application is not in the expected state. App state: {}".format(app.state)
         step("Check that the application can be deleted")
         application.delete()
         step("Check that application has been removed")
-        apps = Application.get_list()
+        apps = Application.get_list(client=api_service_admin_client)
         assert application not in apps

@@ -31,35 +31,36 @@ class TestApiServiceOfferings:
 
     @pytest.mark.bugs("DPNG-10996 [TAP-NG] Unable to delete service offering")
     @priority.high
-    def test_create_and_delete_new_offering(self, context):
+    def test_create_and_delete_new_offering(self, context, api_service_admin_client):
         step("Create new offering")
-        test_offering = ServiceOffering.create(context)
+        test_offering = ServiceOffering.create(context, client=api_service_admin_client)
         step("Check that the new offering is in catalog")
-        catalog = ServiceOffering.get_list()
+        catalog = ServiceOffering.get_list(client=api_service_admin_client)
         assert test_offering in catalog
         step("Get the offering")
-        offering = ServiceOffering.get(offering_id=test_offering.id)
+        offering = ServiceOffering.get(offering_id=test_offering.id, client=api_service_admin_client)
         assert test_offering == offering
         step("Delete the offering")
-        test_offering.delete()
+        test_offering.delete(client=api_service_admin_client)
         step("Check that the offering is no longer in catalog")
-        catalog = ServiceOffering.get_list()
+        catalog = ServiceOffering.get_list(client=api_service_admin_client)
         assert test_offering not in catalog
         step("Check that requesting the deleted offering returns an error")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
                                      test_offering.delete)
 
     @priority.low
-    def test_cannot_create_the_same_offering_twice(self, context):
+    def test_cannot_create_the_same_offering_twice(self, context, api_service_admin_client):
         step("Create new offering")
-        test_offering = ServiceOffering.create(context)
+        test_offering = ServiceOffering.create(context, client=api_service_admin_client)
         step("Check that the offering exists")
-        catalog = ServiceOffering.get_list()
+        catalog = ServiceOffering.get_list(client=api_service_admin_client)
         assert test_offering in catalog
         step("Try creating offering with name of an already existing offering")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_CONFLICT,
                                      ApiServiceHttpStatus.MSG_SERVICE_ALREADY_EXISTS.format(test_offering.label),
-                                     ServiceOffering.create, context, label=test_offering.label)
+                                     ServiceOffering.create, context, label=test_offering.label,
+                                     client=api_service_admin_client)
         step("Check that catalog has not changed")
-        assert sorted(ServiceOffering.get_list()) == sorted(catalog)
+        assert sorted(ServiceOffering.get_list(client=api_service_admin_client)) == sorted(catalog)
 
