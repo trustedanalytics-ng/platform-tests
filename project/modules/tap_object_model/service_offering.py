@@ -19,7 +19,7 @@ import functools
 from retry import retry
 
 from fixtures.k8s_templates import template_example
-from modules.constants import TapOfferingState
+from modules.constants import TapEntityState, TapOfferingState
 from modules.exceptions import ServiceOfferingCreationFailed
 from modules.http_calls.platform import api_service as api
 from modules.http_client import HttpClient
@@ -35,7 +35,7 @@ logger = get_logger(__name__)
 @functools.total_ordering
 class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
 
-    _COMPARABLE_ATTRIBUTES = ["guid", "label", "service_plans"]
+    _COMPARABLE_ATTRIBUTES = ["id", "label"]
     TEST_SERVICE_PREFIX = "test_service"
 
     def __init__(self, *, offering_id: str, label: str, service_plans: list, state: str, client: HttpClient=None):
@@ -68,7 +68,8 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         assert len(response) == 1, "Incorrect number of offerings returned: {}, should be: 1".format(len(response))
 
         offering_from_response = cls._from_response(response[0], client)
-        new_offering = cls(offering_id=offering_from_response.id, label=label, plans=service_plans)
+        new_offering = cls(offering_id=offering_from_response.id, label=label, service_plans=service_plans,
+                           state=offering_from_response.state)
         context.test_objects.append(new_offering)
         assert new_offering == offering_from_response
         return new_offering

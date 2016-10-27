@@ -33,15 +33,13 @@ def _get_client():
 
 
 def get_offerings(*, client: HttpClient) -> list:
-    """ GET /catalog """
-    # TODO will be changed to GET /offerings
-    return client.request(HttpMethod.GET, path="catalog", msg="List offerings in marketplace")
+    """ GET /offerings """
+    return client.request(HttpMethod.GET, path="offerings", msg="List offerings in marketplace")
 
 
 def create_offering(*, client: HttpClient, template_body: dict, service_name: str, description: str, bindable: bool,
                     tags: list, plans: list):
-    """ POST /offering """
-    # TODO will be changed to POST /offerings
+    """ POST /offerings """
     body = {
         "template": {
             "body": template_body,
@@ -56,8 +54,8 @@ def create_offering(*, client: HttpClient, template_body: dict, service_name: st
             "metadata": []
         }]
     }
-    response = client.request(HttpMethod.POST, path="offering", body=body, raw_response=True)
-    assert response.status_code == HttpStatus.CODE_CREATED
+    response = client.request(HttpMethod.POST, path="offerings", body=body, raw_response=True)
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 
@@ -67,15 +65,13 @@ def create_offering_from_binary(*, client: HttpClient):
 
 
 def get_offering(*, client: HttpClient, offering_id: str):
-    """ GET /catalog/{offering_id} """
-    # TODO will be changed to GET /offerings/{offering_id}
-    return client.request(HttpMethod.GET, path="catalog/{}".format(offering_id))
+    """ GET /offerings/{offering_id} """
+    return client.request(HttpMethod.GET, path="offerings/{}".format(offering_id))
 
 
 def delete_offering(*, client: HttpClient, offering_id):
-    """ DELETE /offering/{offering_id} """
-    # TODO will be changed to DELETE /offerings/{offering_id}
-    response = client.request(HttpMethod.DELETE, path="offering/{}".format(offering_id), raw_response=True)
+    """ DELETE /offerings/{offering_id} """
+    response = client.request(HttpMethod.DELETE, path="offerings/{}".format(offering_id), raw_response=True)
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
