@@ -127,7 +127,8 @@ class TapCli:
 
     def get_service(self, service_name, short=False):
         output = self._run_command([self.SERVICE[1] if short else self.SERVICE[0], service_name])
-        output_lines = [line.strip() for line in output.split("\n")]
+        # TODO: Fix ".replace('}OK', '}')" (workaround for JSON diversity)
+        output_lines = [line.strip().replace('}OK', '}') for line in output.split("\n")]
         try:
             json_start = output_lines.index("{")
             json_stop = [i for i, item in enumerate(output_lines) if item == "}"][-1]

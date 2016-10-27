@@ -24,5 +24,7 @@ class ApplicationPath(object):
     ORIENTDB_API = os.path.join(BASE_PATH, "orientdb-api")
     MONGODB_API = os.path.join(BASE_PATH, "mongodb-api")
     SAMPLE_APPS_PATH = os.path.join(BASE_PATH, "sample-apps")
+    SQL_API_EXAMPLE = os.path.join(BASE_PATH, "sql-api-example")
     SAMPLE_PYTHON_APP = os.path.join(SAMPLE_APPS_PATH, "sample-python-app")
     SAMPLE_JAVA_APP = os.path.join(SAMPLE_APPS_PATH, "sample-java-application")
+

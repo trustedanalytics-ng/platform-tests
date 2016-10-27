@@ -1,0 +1,15 @@
+Flask==0.10.1
+Jinja2==2.8
+MarkupSafe==0.23
+SQLAlchemy==1.0.12
+jsonschema==2.5.1
+Werkzeug==0.11
+argparse==1.2.1
+ddt==1.0.1
+functools32==3.2.3-2
+itsdangerous==0.24
+pg8000==1.10.6
+mysql-connector-python-rf==2.2.1
+requests==2.8.1
+wsgiref==0.1.2
+enum34==1.1.2

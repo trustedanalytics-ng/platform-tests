@@ -22,14 +22,14 @@ import pytest
 
 import config
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, TapGitHub, TapApplicationType
+from modules.constants import ApplicationPath, HttpStatus, TapApplicationType, ServiceLabels
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
-    ScoringEngineModel, ModelArtifact
+    ScoringEngineModel, ModelArtifact, Binding
 from modules.tap_object_model.flows import data_catalog
 
 
@@ -80,6 +80,7 @@ def test_org_admin_client(test_org_admin):
     log_fixture("test_org_admin_client: Login as test org admin")
     return test_org_admin.login()
 
+
 @pytest.fixture(scope="class")
 def test_user_clients(test_org_admin_client, test_org_user_client):
     return {
@@ -87,11 +88,13 @@ def test_user_clients(test_org_admin_client, test_org_user_client):
         "admin": test_org_admin_client
     }
 
+
 @pytest.fixture(scope="function")
 def sample_model(request, context, core_org):
     log_fixture("test_model: Create test model")
     return ScoringEngineModel.create(context, org_guid=core_org.guid, name="test-model", description="Test model",
                                      revision="revision", algorithm="algorithm", creation_tool="creationTool")
+
 
 @pytest.fixture(scope="function")
 def model_with_artifact(request, context, core_org):
@@ -112,15 +115,18 @@ def login_to_cf(test_org, test_space):
 def login_to_cf_core(core_org, core_space):
     raise NotImplementedError("Test needs refactoring. CF is no longer a part of TAP")
 
+
 @pytest.fixture(scope="class")
 def marketplace_offerings():
     log_fixture("Get list of available services from Marketplace")
     return ServiceOffering.get_list()
 
+
 @pytest.fixture(scope="class")
 def sample_python_app(class_context, tap_cli):
     log_fixture("sample_python_app: push sample application")
-    app = Application.push(class_context, app_path=ApplicationPath.SAMPLE_PYTHON_APP, tap_cli=tap_cli,
+    cwd = ApplicationPath.SAMPLE_PYTHON_APP
+    app = Application.push(class_context, app_path=cwd, tap_cli=tap_cli,
                            app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     app.ensure_running()
@@ -135,9 +141,34 @@ def sample_java_app(class_context, tap_cli):
     log_fixture("sample_java_app: Push app to tap")
     app = Application.push(context=class_context, app_path=ApplicationPath.SAMPLE_JAVA_APP, tap_cli=tap_cli,
                            app_type=TapApplicationType.JAVA)
+    return app
+
+
+@pytest.fixture(scope="session")
+def psql_instance(session_context, api_service_admin_client):
+    log_fixture("create_postgres_instance")
+    psql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
+                                            offering_label=ServiceLabels.PSQL, plan_name='free')
+    log_fixture("Check the service instance is running")
+    psql.ensure_running()
+    return psql
+
+
+@pytest.fixture(scope="class")
+def psql_app(class_context, psql_instance, tap_cli, api_service_admin_client):
+    log_fixture("psql_app: push sample application")
+    app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
+    app_src.run_build_sh()
+    app = Application.push(class_context, app_path=app_src.path, tap_cli=tap_cli,
+                           app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     app.ensure_running()
+    Binding.create(client=api_service_admin_client, context=class_context,
+                   app_id=app.id, service_instance_id=psql_instance.id)
+    log_fixture("Check the application is responding")
+    app.ensure_responding()
     return app
+
 
 @pytest.fixture(scope="class")
 def sample_service_from_template(class_context):
@@ -146,6 +177,7 @@ def sample_service_from_template(class_context):
     log_fixture("Check the service is ready")
     sample_service.ensure_ready()
     return sample_service
+
 
 @pytest.fixture(scope="class")
 def sample_service(class_context, test_org):
@@ -250,31 +282,6 @@ def example_image():
 
 
 @pytest.fixture(scope="session")
-def psql_instance(session_context, test_org, test_space):
-    log_fixture("create_postgres_instance")
-    marketplace = ServiceOffering.get_list()
-    psql = next(offering for offering in marketplace if offering.label == ServiceLabels.PSQL)
-    return ServiceInstance.api_create(
-        context=session_context,
-        org_guid=test_org.guid,
-        space_guid=test_space.guid,
-        service_label=ServiceLabels.PSQL,
-        service_plan_guid=psql.service_plan_guids[0]
-    )
-
-
-@pytest.fixture(scope="session")
-def psql_app(test_space, psql_instance, session_context):
-    sql_api_sources = AppSources.get_repository(repo_name=TapGitHub.sql_api_example, repo_owner=TapGitHub.intel_data)
-    return Application.push(
-        context=session_context,
-        space_guid=test_space.guid,
-        source_directory=sql_api_sources.path,
-        bound_services=(psql_instance.name,)
-    )
-
-
-@pytest.fixture(scope="session")
 def model_hdfs_path(core_org):
     log_fixture("Retrieve existing model hdfs path from platform")
     model_dataset_name = "model"
@@ -287,5 +294,5 @@ def model_hdfs_path(core_org):
 
 @pytest.fixture(scope="session")
 def api_service_admin_client():
-    return HttpClientFactory.get(ServiceConfigurationProvider.get())
+    return HttpClientFactory.get(ServiceConfigurationProvider.get(url=config.api_url_full_v2))
 

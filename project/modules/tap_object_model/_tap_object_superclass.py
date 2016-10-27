@@ -36,11 +36,11 @@ class TapObjectSuperclass(object):
         return self.id < other.id
 
     def __repr__(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     @classmethod
     def _from_response(cls, response):
-        raise NotImplemented
+        raise NotImplementedError
 
     @classmethod
     def _list_from_response(cls, response):
@@ -50,7 +50,7 @@ class TapObjectSuperclass(object):
         return items
 
     def delete(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def cleanup(self):
         self.delete()

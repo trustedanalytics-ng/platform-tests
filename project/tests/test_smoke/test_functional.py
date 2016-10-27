@@ -25,7 +25,7 @@ from modules.http_client.configuration_provider.application import ApplicationCo
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, ServiceInstance, Transfer, User, ServiceOffering, TestSuite
+from modules.tap_object_model import DataSet, Transfer, User, ServiceOffering, TestSuite, ServiceInstance
 from modules.tap_object_model.flows import onboarding
 from tap_component_config import offerings_as_parameters
 
@@ -143,6 +143,15 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     sample_app = sample_app[sample_app_key]
     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app.urls[0]))
     step("Check response for HTTP GET to the endpoint")
+    response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
+    assert response is not None
+    assert response.status_code == 200
+
+
+@pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+def test_push_psql_app_check_response(psql_app):
+    """Push Sample Application and Test Http Response"""
+    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(psql_app.urls[0]))
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
     assert response is not None
     assert response.status_code == 200

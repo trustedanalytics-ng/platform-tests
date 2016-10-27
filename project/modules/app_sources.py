@@ -23,6 +23,7 @@ from git import Repo
 import requests
 
 import config
+from modules.command import run
 from .exceptions import CommandExecutionException
 from .tap_logger import log_command, get_logger, log_http_request, log_http_response
 
@@ -116,6 +117,9 @@ class AppSources(object):
         else:
             logger.info("Switch to branch {}".format(branch_name))
             repo.git.checkout(commit_id, B=branch_name)
+
+    def run_build_sh(self):
+        run("./build.sh", cwd=self.path)
 
 
 def github_get_file_content(repository, file_path, owner, ref=None, github_auth=None):

@@ -32,6 +32,6 @@ GET_RESPONSE = {
 
 class TestServiceBinding:
     def test_binding_from_response(self):
-        binding = Binding._from_response(GET_RESPONSE, client=mock.Mock())
+        binding = Binding._from_response(GET_RESPONSE, app_id=APP_GUID, client=mock.Mock())
         assert binding.app_id == APP_GUID
         assert binding.service_instance_id == SERVICE_INSTANCE_GUID

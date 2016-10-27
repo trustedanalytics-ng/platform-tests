@@ -16,6 +16,7 @@
 
 from retry import retry
 
+from modules import test_names
 from modules.constants import TapEntityState
 from modules.http_client import HttpClient
 from modules.exceptions import ServiceInstanceCreationFailed
@@ -66,6 +67,8 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         Create service instance using offering label and plan name.
         First, make call to retrieve offering id and plan id.
         """
+        if name is None:
+            name = test_names.generate_test_object_name(separator="")
         if client is None:
             client = cls._get_default_client()
         offering_id, plan_id = cls._get_offering_id_and_plan_id_by_names(offering_label=offering_label,
@@ -111,7 +114,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         assert plan_id is not None, "No service instance plan id found in the response"
         return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["classId"],
                    bindings=response["bindings"], state=response["state"], name=response["name"],
-                   offering_label=response["serviceName"], client=client)
+                   offering_label=response["name"], client=client)
 
     def _refresh(self):
         instances = self.get_list()
