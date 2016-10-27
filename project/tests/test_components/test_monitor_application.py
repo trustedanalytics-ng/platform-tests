@@ -57,6 +57,7 @@ class TestMonitorApplication:
         return file_list
 
     @pytest.mark.bugs("DPNG-12123 FileNotFoundError: /.kube")
+    @pytest.mark.bugs("DPNG-12343 [api-tests] Tests which push app using cli fail immediately instead of waiting")
     def test_app_deployment(self, context, sample_app_target_directory, tap_cli, sample_app_tar_content):
         step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
         application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
