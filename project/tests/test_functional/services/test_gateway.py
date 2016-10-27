@@ -45,7 +45,7 @@ class TestGateway:
             plan_name=ServicePlan.FREE,
             client=test_org_user_client
         )
-        time.sleep(20)
+        gateway_instance.ensure_running()
         validator = ApplicationStackValidator(gateway_instance)
         self.__class__.gateway_instance = gateway_instance
         self.__class__.gateway_app = validator.application
@@ -68,4 +68,4 @@ class TestGateway:
     def test_2_delete_gateway_instance(self, test_org_user_client):
         step("Delete gateway instance")
         self.gateway_instance.delete(client=test_org_user_client)
-        assertions.assert_not_in_with_retry(self.gateway_instance, ServiceInstance.get_list)
+        self.gateway_instance.ensure_deleted()
