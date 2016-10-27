@@ -23,10 +23,13 @@ from modules.constants import TapOfferingState
 from modules.exceptions import ServiceOfferingCreationFailed
 from modules.http_calls.platform import api_service as api
 from modules.http_client import HttpClient
+from modules.tap_logger import get_logger
 from modules.test_names import generate_test_object_name
 from ._service_plan import ServicePlan
 from ._api_model_superclass import ApiModelSuperclass
 from ._tap_object_superclass import TapObjectSuperclass
+
+logger = get_logger(__name__)
 
 
 @functools.total_ordering
@@ -123,6 +126,10 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         service_plans_json = response.get("plans")
         if service_plans_json is None:
             service_plans_json = response["entity"]["service_plans"]
+        if service_plans_json is None:
+            logger.debug("Why service_plans_json is None?")
+            logger.debug(response)
+            service_plans_json = []
         service_plans = []
         for item in service_plans_json:
             service_plans.append(ServicePlan.from_response(item))
