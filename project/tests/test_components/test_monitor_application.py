@@ -29,6 +29,7 @@ from modules.http_calls.kubernetes import k8s_get_pods, k8s_logs
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service)]
 
+
 @pytest.mark.usefixtures("cli_login")
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestMonitorApplication:

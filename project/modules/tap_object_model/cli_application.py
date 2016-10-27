@@ -33,6 +33,11 @@ class CliApplication(CliObjectSuperclass):
     EXPECTED_DELETE_BODY = 'OK'
     EXPECTED_SUCCESS_RESPONSE = 'success'
 
+    FIELD_ID = "id"
+    FIELD_NAME = "NAME"
+    FIELD_STATE = "state"
+    FIELD_URLS = "urls"
+
     def __init__(self, *, app_type, target_directory, tap_cli, name, instances):
         super().__init__(tap_cli=tap_cli, name=name)
         self.app_type = app_type
@@ -96,21 +101,23 @@ class CliApplication(CliObjectSuperclass):
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_on_app_list(self):
-        self.tap_cli.ensure_app_availability_on_the_list(self.name, should_be_on_the_list=True)
+        app = next((app for app in self.tap_cli.apps() if app[self.FIELD_NAME] == self.name), None)
+        assert app is not None, "App '{}' is not on the list of apps".format(self.name)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_not_on_app_list(self):
-        self.tap_cli.ensure_app_availability_on_the_list(self.name, should_be_on_the_list=False)
+        app = next((app for app in self.tap_cli.apps() if app[self.FIELD_NAME] == self.name), None)
+        assert app is None, "App '{}' is on the list of apps".format(self.name)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_state(self, state):
-        app = self.tap_cli.app(application_name=self.name)
+        app = self.get_details()
         assert app is not None, "Application {} was not found".format(self.name)
-        assert app["state"] == state, "Expected state '{}' but was '{}'".format(state, app['state'])
+        assert app[self.FIELD_STATE] == state, "Expected state '{}' but was '{}'".format(state, app[self.FIELD_STATE])
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_is_ready(self):
-        url = self.get_details()["urls"][0]
+        url = self.get_details()[self.FIELD_URLS][0]
         client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=url))
         response = client.request(
             method=HttpMethod.GET,
@@ -124,5 +131,7 @@ class CliApplication(CliObjectSuperclass):
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_has_id(self):
         app = self.tap_cli.app(self.name)
-        assert app.get("id", None) is not None
-        return app["id"]
+        assert app is not None, "Application {} was not found".format(self.name)
+        assert isinstance(app, dict)
+        assert app[self.FIELD_ID] is not None
+        return app[self.FIELD_ID]

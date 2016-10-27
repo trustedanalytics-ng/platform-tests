@@ -189,33 +189,6 @@ class TapCli:
     def push_help(self):
         return self._run_command(self.PUSH_HELP)
 
-    @retry(AssertionError, tries=12, delay=5)
-    def ensure_app_availability_on_the_list(self, application_name, should_be_on_the_list: bool):
-        apps = self.apps()
-        app_names = [entry["NAME"] for entry in apps]
-        if should_be_on_the_list:
-            assert application_name in app_names, "App '{}' is not on the list of apps".format(application_name)
-        else:
-            assert application_name not in app_names, "App '{}' is still on the list of apps".format(application_name)
-
-    @retry(AssertionError, tries=12, delay=5)
-    def ensure_app_state(self, application_name, state):
-        app = self.app(application_name=application_name)
-        assert app is not None, "App {} does not exist".format(app)
-        assert app["state"] == state, "Expected state '{}' but was '{}'".format(state, app['state'])
-
-    @retry(AssertionError, tries=12, delay=5)
-    def ensure_app_is_ready(self, application_url):
-        client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=application_url))
-        response = client.request(
-            method=HttpMethod.GET,
-            path="",
-            raw_response=True,
-            raise_exception=True,
-            msg="Application: get /{}".format("")
-        )
-        assert response.status_code == HttpStatus.CODE_OK
-
     def invite(self, username):
         return self._run_command([self.INVITE, username])
 
