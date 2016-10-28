@@ -26,7 +26,7 @@ from ._service_plan import ServicePlan
 
 
 class CliOffering(CliObjectSuperclass):
-    EXPECTED_CREATE_OFFERING_SUCCESS = 'CODE: 202 BODY: '
+    EXPECTED_CREATE_OFFERING_SUCCESS = 'OK'
     _COMPARABLE_ATTRIBUTES = ["name", "plans"]
 
     def __init__(self, name, plans, tap_cli):
@@ -69,7 +69,7 @@ class CliOffering(CliObjectSuperclass):
 
         file_path = save_text_file(file_name=name, data=json.dumps(offering_template))
         create_output = tap_cli.create_offering([file_path])
-        assert cls.EXPECTED_CREATE_OFFERING_SUCCESS in create_output, create_output
+        assert cls.EXPECTED_CREATE_OFFERING_SUCCESS in create_output, "Create offering failed: {}".format(create_output)
         new_offering = cls(name=name, plans=plans, tap_cli=tap_cli)
         context.test_objects.append(new_offering)
         return new_offering

@@ -16,6 +16,7 @@
 
 import json
 import os
+import re
 
 from retry import retry
 
@@ -59,12 +60,19 @@ class TapCli:
     DELETE_INVITATION = "delete-invitation", "di"
     DELETE_USER = "delete-user", "du"
 
+    LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
+
     def __init__(self, cli_app_path):
         self.command = cli_app_path
+
+    @staticmethod
+    def is_logline(line):
+        return bool(re.match(TapCli.LOGLINE_PATTERN, line))
 
     def _run_command(self, cmd: list, cwd=None):
         cmd = [self.command] + cmd
         output = command.run(cmd, cwd=cwd)
+        output = [line for line in output if not TapCli.is_logline(line)]
         output = "\n".join(output)
         return output
 
@@ -108,7 +116,7 @@ class TapCli:
 
     def bindings(self, instance_name):
         output = self._run_command([self.BINDINGS, instance_name])
-        bindings = output.split("CODE: 200 BODY:")[-1].split("\n")[0]
+        bindings = self.parse_ascii_table(output)
         return bindings
 
     def bind_service(self, cmd: list, short=False):
@@ -149,14 +157,12 @@ class TapCli:
         return self._run_command(cmd, cwd=cwd)
 
     def apps(self):
-        return self._run_command([self.APPS])
+        ascii_table = self._run_command([self.APPS])
+        return self.parse_ascii_table(ascii_table)
 
     def app(self, application_name):
         output = self._run_command([self.APP, application_name])
-        try:
-            app_json = output.split(sep="BODY:")[2].split(sep="\n")[0]
-        except IndexError:
-            return None
+        app_json = output[output.find("{"):output.rfind("}")+1]
         app = json.loads(app_json)
         assert isinstance(app, dict)
         assert app['name'] == application_name
@@ -183,10 +189,11 @@ class TapCli:
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_availability_on_the_list(self, application_name, should_be_on_the_list: bool):
         apps = self.apps()
+        app_names = [entry["NAME"] for entry in apps]
         if should_be_on_the_list:
-            assert application_name in apps, "App '{}' is not on the list of apps".format(application_name)
+            assert application_name in app_names, "App '{}' is not on the list of apps".format(application_name)
         else:
-            assert application_name not in apps, "App '{}' is still on the list of apps".format(application_name)
+            assert application_name not in app_names, "App '{}' is still on the list of apps".format(application_name)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_state(self, application_name, state):
@@ -224,13 +231,30 @@ class TapCli:
     def delete_user(self, username, short=False):
         return self._run_command([self.DELETE_USER[1] if short else self.DELETE_USER[0], username])
 
-    def ensure_app_has_id(self, application_name):
-        output = self._run_command([self.APP, application_name])
-        try:
-            app_json = output.split(sep="BODY:")[2].split(sep="\n")[0]
-        except IndexError:
-            return None
-        app = json.loads(app_json)
-        assert isinstance(app, dict)
-        assert app['id'] is not None
-        return app
+    def parse_ascii_table(self, ascii_table):
+        cut_pos = []
+        ranges = []
+
+        def assert_frame_line(line):
+            for i in range(len(line)):
+                assert line[i] == ("+" if i in cut_pos else "-"), "Wrong format of ascii table"
+
+        def parse_data_line(line):
+            for i in cut_pos:
+                assert line[i] == "|", "Misaligned ascii table"
+            data = [line[i+1:j].strip() for (i, j) in ranges]
+            return data
+
+        lines = [line.strip() for line in ascii_table.strip().splitlines()]
+        cut_pos = [i for i in range(len(lines[0]))
+                   if lines[0][i] == "+"]
+        ranges = [(cut_pos[i], cut_pos[i+1])
+                  for i in range(len(cut_pos)-1)]
+        assert_frame_line(lines[0])
+        assert_frame_line(lines[2])
+        assert_frame_line(lines[-1])
+        headers = parse_data_line(lines[1])
+        data = [dict(zip(headers,
+                         parse_data_line(line)))
+                for line in lines[3:-1]]
+        return data

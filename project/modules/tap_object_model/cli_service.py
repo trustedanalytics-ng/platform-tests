@@ -25,7 +25,7 @@ from ._cli_object_superclass import CliObjectSuperclass
 class CliService(CliObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["name", "offering_name", "plane"]
 
-    MESSAGE_SUCCESS = "CODE: 200 BODY: {\"message\":\"success\"}\nOK"
+    MESSAGE_SUCCESS = "OK"
 
     FIELD_ID = "id"
     FIELD_NAME = "name"
@@ -76,6 +76,10 @@ class CliService(CliObjectSuperclass):
 
     def get_bindings(self):
         return self.tap_cli.bindings(self.name)
+
+    def get_binding_names(self):
+        bindings = self.get_bindings()
+        return [entry['BINDING NAME'] for entry in bindings]
 
     def logs(self):
         return self.tap_cli.service_log(self.name)

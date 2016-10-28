@@ -31,7 +31,7 @@ class CliApplication(CliObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["name", "app_type"]
     EXPECTED_PUSH_HEADERS = ["NAME", "IMAGE ID", "DESCRIPTION", "REPLICATION"]
     EXPECTED_DELETE_BODY = 'CODE: 204 BODY'
-    EXPECTED_SUCCESS_RESPONSE = 'CODE: 200 BODY: {"message":"success"}'
+    EXPECTED_SUCCESS_RESPONSE = 'success'
 
     def __init__(self, *, app_type, target_directory, tap_cli, name, instances):
         super().__init__(tap_cli=tap_cli, name=name)
@@ -96,15 +96,11 @@ class CliApplication(CliObjectSuperclass):
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_on_app_list(self):
-        assert self.name in self.tap_cli.apps(), "App '{}' is not on the list of apps".format(self.name)
+        self.tap_cli.ensure_app_availability_on_the_list(self.name, should_be_on_the_list=True)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_not_on_app_list(self):
-        assert self.name not in self.tap_cli.apps(), "App '{}' is on the list of apps".format(self.name)
-
-    @retry(AssertionError, tries=12, delay=5)
-    def ensure_not_on_app_list(self):
-        assert self.name not in self.tap_cli.apps(), "App '{}' is on the list of apps".format(self.name)
+        self.tap_cli.ensure_app_availability_on_the_list(self.name, should_be_on_the_list=False)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_state(self, state):
@@ -127,5 +123,6 @@ class CliApplication(CliObjectSuperclass):
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_has_id(self):
-        app = self.tap_cli.ensure_app_has_id(self.name)
+        app = self.tap_cli.app(self.name)
+        assert app.get("id", None) is not None
         return app["id"]

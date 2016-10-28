@@ -202,6 +202,46 @@ class TestTapCli(unittest.TestCase):
     def test_delete_user_short_command(self):
         assert ["du", self.test_user] == self.tap_cli.delete_user(self.test_user, short=True)
 
+    def test_parse_ascii_table(self):
+        ascii_table = """
+            +-----------------+-------------+-------------------+
+            |      NAME       | IMAGE STATE |       STATE       |
+            +-----------------+-------------+-------------------+
+            | data-repo-app   | READY       | RUNNING           |
+            | sample-java-app | PENDING     | WAITING_FOR_IMAGE |
+            +-----------------+-------------+-------------------+
+        """
+        expected_table_data = [
+            {
+                "NAME":        "data-repo-app",
+                "IMAGE STATE": "READY",
+                "STATE":       "RUNNING",
+            },
+            {
+                "NAME":        "sample-java-app",
+                "IMAGE STATE": "PENDING",
+                "STATE":       "WAITING_FOR_IMAGE",
+            },
+        ]
+        assert self.tap_cli.parse_ascii_table(ascii_table) == expected_table_data
+
+    def test_parse_ascii_table_special_chars(self):
+        ascii_table = """
+            +------+-------+------+
+            | PLUS | MINUS | PIPE |
+            +------+-------+------+
+            |  +   |   -   |  |   |
+            +------+-------+------+
+        """
+        expected_table_data = [
+            {
+                "PLUS": "+",
+                "MINUS": "-",
+                "PIPE": "|",
+            },
+        ]
+        assert self.tap_cli.parse_ascii_table(ascii_table) == expected_table_data
+
 
 if __name__ == "__main__":
     unittest.main()

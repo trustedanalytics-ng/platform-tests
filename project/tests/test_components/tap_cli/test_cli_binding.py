@@ -77,13 +77,13 @@ class TestCliBinding:
         step("Bind one service instance to another")
         service_instance_2.bind(service_instance_1)
         step("Check that the services are bound")
-        output = service_instance_1.get_bindings()
-        assert service_instance_2.name in output
+        bound_names = service_instance_1.get_binding_names()
+        assert service_instance_2.name in bound_names
         step("Unbind service instance")
         service_instance_2.unbind(service_instance_1)
         step("Check that the services are not bound")
-        output = service_instance_1.get_bindings()
-        assert service_instance_2.name not in output
+        bound_names = service_instance_1.get_binding_names()
+        assert service_instance_2.name not in bound_names
 
     @priority.low
     def test_cannot_bind_invalid_service(self, service_instance_1, nonexistent_service):
@@ -114,7 +114,7 @@ class TestCliBinding:
     def test_cannot_delete_bound_service(self, service_instance_1, service_instance_2):
         step("Bind service instances")
         service_instance_2.bind(service_instance_1)
-        assert service_instance_2.name in service_instance_1.get_bindings()
+        assert service_instance_2.name in service_instance_1.get_binding_names()
         step("Check that an attempt to delete bound service instance fails with an error")
         expected_msg = TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(service_instance_2.name,
                                                                              service_instance_1.name,
@@ -123,7 +123,7 @@ class TestCliBinding:
         step("Check that the service still exists")
         service_instance_2.ensure_on_service_list()
         step("Check that the services are still bound")
-        assert service_instance_2.name in service_instance_1.get_bindings()
+        assert service_instance_2.name in service_instance_1.get_binding_names()
 
 
 class TestCliBindingShortCommand(TestCliBinding):
