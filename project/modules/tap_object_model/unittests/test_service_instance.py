@@ -48,6 +48,7 @@ class TestServiceInstance:
         "type": TYPE,
         "classId": OFFERING_ID,
         "bindings": BINDINGS,
+        "serviceName": OFFERING_LABEL,
         "metadata": [
             {
                 "key": "PLAN_ID",
