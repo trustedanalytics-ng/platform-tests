@@ -20,25 +20,25 @@ class TapComponent:
     app_dependency_discoverer = "app-dependency-discoverer"
     console = "console"
     cdh_broker = "cdh-broker"
-    das = "das"
+    das = "data-acquisition"
     data_catalog = "data-catalog"
     dataset_publisher = "dataset-publisher"
     demiurge = "demiurge"
     gearpump_broker = "gearpump-broker"
     gearpump_dashboard = "gearpump-dashboard"
     h2o_broker = "h2o-broker"
-    h2o_scoring_engine_publisher = "h2o-scoring-engine-publisher"
+    h2o_scoring_engine_publisher = "h2o-engines-publisher"
     hbase_broker = "hbase-broker"
     hdfs_broker = "hdfs-broker"
-    hdfs_downloader = "hdfs-downloader"
-    hdfs_uploader = "hdfs-uploader"
+    downloader = "downloader"
+    uploader = "uploader"
     hive_broker = "hive-broker"
     kafka_broker = "kafka-broker"
     kerberos_service = "kerberos-service"
     kubernetes_broker = "kubernetes-broker"
     latest_events_service = "latest-events-service"
-    metadata_parser = "metadataparser"
-    metrics_provider = "metrics-provider"
+    metadata_parser = "metadata-parser"
+    metrics_grafana = "metrics-grafana"
     model_catalog = "model-catalog"
     platform_snapshot = "platform-snapshot"
     platform_tests = "platform-tests"
@@ -76,7 +76,7 @@ class TapComponent:
     metrics_presenter = "metrics-presenter"
     metrics_tap_catalog_collector = "metrics-tap-catalog-collector"
     monitor = "monitor"
-    nginx_ingress = "nginx-ingress"
+    nginx_ingress = "tapingress"
     template_repository = "template-repository"
     uaa_client_register_job = "tap-uaa-client-register-job"
     uaa = "uaa"
@@ -91,7 +91,7 @@ class TapComponent:
     def get_list_internal(cls):
         return [cls.blob_store, cls.ca, cls.catalog, cls.container_broker, cls.das,
                 cls.data_catalog, cls.dataset_publisher, cls.h2o_broker, cls.h2o_model_provider,
-                cls.h2o_scoring_engine_publisher, cls.hdfs_downloader, cls.hdfs_uploader, cls.image_factory,
+                cls.h2o_scoring_engine_publisher, cls.downloader, cls.uploader, cls.image_factory,
                 cls.metadata_parser, cls.metrics_collector_ambassador, cls.metrics_presenter,
                 cls.metrics_tap_catalog_collector, cls.model_catalog, cls.monitor, cls.nginx_ingress,
                 cls.template_repository, cls.user_management]

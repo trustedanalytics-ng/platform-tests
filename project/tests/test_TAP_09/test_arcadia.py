@@ -27,8 +27,8 @@ from modules.test_names import escape_hive_name
 from tests.fixtures import assertions
 
 
-logged_components = (TAP.dataset_publisher, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
-pytestmark = [pytest.mark.components(TAP.dataset_publisher, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
+logged_components = (TAP.dataset_publisher, TAP.das, TAP.downloader, TAP.metadata_parser)
+pytestmark = [pytest.mark.components(TAP.dataset_publisher, TAP.das, TAP.downloader, TAP.metadata_parser)]
 
 
 @incremental

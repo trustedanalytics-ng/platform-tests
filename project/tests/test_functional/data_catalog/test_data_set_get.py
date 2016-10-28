@@ -21,8 +21,8 @@ from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Transfer
 
-logged_components = (TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)
-pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
+logged_components = (TAP.data_catalog, TAP.das, TAP.downloader, TAP.metadata_parser)
+pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.downloader, TAP.metadata_parser)]
 
 
 @pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")

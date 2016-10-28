@@ -26,8 +26,8 @@ from modules.gatling_runner.simulation.simulation_name import SimulationName
 from modules.markers import priority
 
 
-logged_components = (Tap.data_catalog, Tap.das, Tap.hdfs_downloader, Tap.metadata_parser)
-pytestmark = [pytest.mark.components(Tap.data_catalog, Tap.das, Tap.hdfs_downloader, Tap.metadata_parser)]
+logged_components = (Tap.data_catalog, Tap.das, Tap.downloader, Tap.metadata_parser)
+pytestmark = [pytest.mark.components(Tap.data_catalog, Tap.das, Tap.downloader, Tap.metadata_parser)]
 
 
 class DataCatalogPerformanceTest(unittest.TestCase):

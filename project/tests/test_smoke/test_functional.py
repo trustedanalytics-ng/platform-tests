@@ -29,7 +29,7 @@ from modules.tap_object_model import DataSet, Transfer, User, ServiceOffering, T
 from modules.tap_object_model.flows import onboarding
 from tap_component_config import offerings_as_parameters
 
-logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.hdfs_downloader, TAP.metadata_parser,
+logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
                      TAP.hbase_broker, TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
                      TAP.zookeeper_broker, TAP.zookeeper_wssb_broker, TAP.platform_tests)
@@ -99,7 +99,7 @@ def transfer_flow(transfer, core_org):
     assert transfer not in transfers
 
 
-@pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
+@pytest.mark.components(TAP.das, TAP.data_catalog, TAP.downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_link(core_org, context):
     """Create and Delete Transfer from Link"""
     step("Create a transfer")
@@ -107,7 +107,7 @@ def test_add_and_delete_transfer_from_link(core_org, context):
     transfer_flow(transfer, core_org)
 
 
-@pytest.mark.components(TAP.das, TAP.data_catalog, TAP.hdfs_downloader, TAP.metadata_parser)
+@pytest.mark.components(TAP.das, TAP.data_catalog, TAP.downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_file(core_org, context):
     """Create and Delete Transfer from File"""
     step("Generate a test csv file")

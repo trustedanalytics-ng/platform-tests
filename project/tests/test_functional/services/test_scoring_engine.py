@@ -24,7 +24,7 @@ from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
 from tests.fixtures import assertions
 
-logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.das, TAP.hdfs_downloader,
+logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.das, TAP.downloader,
                      TAP.metadata_parser)
 pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog)]
 

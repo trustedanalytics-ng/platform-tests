@@ -23,12 +23,12 @@ from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Transfer, Organization
 from tests.fixtures.assertions import assert_raises_http_exception
 
-logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
+logged_components = (TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)
 
 
 @pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransfer:
-    pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
+    pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.metadata_parser)]
 
     DEFAULT_CATEGORY = "other"
 
@@ -52,7 +52,7 @@ class TestSubmitTransfer:
 
 
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
-    pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)]
+    pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)]
 
     def _create_transfer(self, context, org_guid, column_count=10, row_count=10,
                          category=TestSubmitTransfer.DEFAULT_CATEGORY, size=None, file_name=None):

@@ -28,12 +28,12 @@ from modules.tap_object_model.flows.data_catalog import create_dataset_from_file
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
 
-logged_components = (TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)
+logged_components = (TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)
 
 
 @pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransfer:
-    pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.metadata_parser)]
+    pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.metadata_parser)]
 
     DEFAULT_CATEGORY = "other"
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
@@ -112,7 +112,7 @@ class TestSubmitTransfer:
 
 @pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
-    pytestmark = [pytest.mark.components(TAP.das, TAP.hdfs_downloader, TAP.hdfs_uploader, TAP.metadata_parser)]
+    pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)]
 
     MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_BAD_REQUEST
 
