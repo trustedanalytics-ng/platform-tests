@@ -38,8 +38,8 @@ class CatalogImage(TapObjectSuperclass):
                    blob_type=response["blobType"])
 
     @classmethod
-    def create(cls, context, *, image_type=None, state=None):
-        response = catalog_api.create_image(image_type=image_type, state=state)
+    def create(cls, context, *, image_type=None, state=None, blob_type=None):
+        response = catalog_api.create_image(image_type=image_type, state=state, blob_type=blob_type)
         new_image = cls._from_response(response)
         context.test_objects.append(new_image)
         return new_image

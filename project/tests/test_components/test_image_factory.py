@@ -36,6 +36,7 @@ class TestImageFactory:
     APP_TYPE = TapApplicationType.NODEJS
     APP_URL = Urls.nodejs_app_url
     INITIAL_IMAGE_STATE = TapEntityState.PENDING
+    BLOB_TYPE = "TARGZ"
     catalog_image = None
 
     @pytest.fixture(scope="function")
@@ -45,7 +46,8 @@ class TestImageFactory:
     @pytest.fixture(scope="function")
     def catalog_image(self, context):
         log_fixture("CATALOG: Send application metadata - create an image")
-        catalog_image = CatalogImage.create(context, image_type=self.APP_TYPE, state=self.INITIAL_IMAGE_STATE)
+        catalog_image = CatalogImage.create(context, image_type=self.APP_TYPE, state=self.INITIAL_IMAGE_STATE,
+                                            blob_type=self.BLOB_TYPE)
 
         log_fixture("CATALOG: Wait for the image to be in state {}".format(TapEntityState.RUNNING))
         catalog_image.ensure_in_state(TapEntityState.READY)

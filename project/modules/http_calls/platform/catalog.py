@@ -43,11 +43,12 @@ def get_image(*, image_id):
                                  msg="CATALOG: get image")
 
 
-def create_image(*, image_type, state):
+def create_image(*, image_type, state, blob_type):
     """ POST /images """
     body = {
         "type": image_type,
-        "state": state
+        "state": state,
+        "blobType": blob_type
     }
     response = _get_client().request(HttpMethod.POST,
                                      path="images",
