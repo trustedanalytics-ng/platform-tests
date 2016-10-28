@@ -16,6 +16,7 @@
 
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.kubernetes import KubernetesConfigurationProvider
+from modules.http_client.configuration_provider.k8s_service import ProxiedConfigurationProvider
 
 
 DEFAULT_NAMESPACE = "default"
@@ -27,6 +28,15 @@ def k8s_get_pods():
         method=HttpMethod.GET,
         path="namespaces/{}/pods".format(DEFAULT_NAMESPACE),
         msg="KUBERNETES: get pods"
+    )
+
+
+def k8s_get_nodes():
+    """GET /nodes"""
+    return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
+        method=HttpMethod.GET,
+        path="nodes",
+        msg="KUBERNETES: get nodes"
     )
 
 
@@ -64,3 +74,14 @@ def k8s_logs(application_name, params):
         params=params,
         msg="KUBERNETES: get logs {}".format(application_name)
     )
+
+
+def k8s_get_pods_metrics(pod_ip_port):
+    """This method does not call k8s api, but particular pod"""
+    client = HttpClientFactory.get(ProxiedConfigurationProvider.get(url="https://{}".format(pod_ip_port)))
+    return client.request(
+        method=HttpMethod.GET,
+        path="metrics",
+        msg="POD: get metrics for {}".format(pod_ip_port)
+    )
+

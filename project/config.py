@@ -138,6 +138,7 @@ arcadia_url = os.environ.get("PT_ARCADIA_URL", "http://arcadia.{}".format(tap_do
 hue_url = os.environ.get("PT_HUE_URL", "http://hue.{}".format(tap_domain))
 demiurge_url = os.environ.get("PT_DEMIURGE_URL", "http://demiurge.{}".format(tap_domain))
 kubernetes_broker_url = os.environ.get("PT_KUBERNETES_BROKER_URL", "http://kubernetes-broker.{}".format(tap_domain))
+grafana_url = os.environ.get("PT_GRAFANA_URL", "http://grafana.{}".format(tap_domain))
 
 # Test resources
 test_user_email = os.environ.get("PT_TEST_USER_EMAIL", "intel.data.tests@gmail.com")

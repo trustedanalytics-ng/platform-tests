@@ -39,10 +39,11 @@ from .kubernetes_secret import KubernetesSecret
 from .latest_event import EventCategory, EventMessage, LatestEvent
 from .kubernetes_pod import KubernetesPod
 from .k8s_service import K8sService
+from .kubernetes_node import KubernetesNode
+from .metrics import Metrics
 from .template import Template
 from .model_artifact import ModelArtifact
 from .organization import Organization
-from .platform import Platform
 from .platform_tests import TestSuite
 from .platform_snapshot import PlatformSnapshot
 from .binding import Binding

@@ -19,26 +19,6 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 from ...http_client.http_client_factory import HttpClientFactory
 
 
-def api_get_platform_operations(client=None):
-    """GET /platform/summary"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.GET,
-        path="platform/summary",
-        msg="PLATFORM/OPERATIONS: metrics"
-    )
-
-
-def api_refresh_platform_operations(client=None):
-    """POST /platform/summary/refresh_cache"""
-    client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
-    return client.request(
-        method=HttpMethod.POST,
-        path="platform/summary/refresh_cache",
-        msg="PLATFORM/OPERATIONS: refresh"
-    )
-
-
 def api_get_platform_info(client=None):
     """GET /rest/platform_info"""
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())

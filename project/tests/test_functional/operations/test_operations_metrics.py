@@ -17,9 +17,8 @@
 import pytest
 
 from modules.constants import HttpStatus, TapComponent as TAP
-from modules.tap_object_model import Application, Buildpack, Organization, Platform, ServiceInstance, ServiceOffering, \
-    Space, User
 from modules.tap_logger import step
+from modules.tap_object_model import Metrics
 from tests.fixtures import assertions
 
 
@@ -27,108 +26,63 @@ logged_components = (TAP.platform_operations, )
 pytestmark = [pytest.mark.components(TAP.platform_operations)]
 
 
-@pytest.mark.skip(reason="DPNG-8721 Adjust metrics tests to TAP NG")
 class TestNonAdminOperationsMetrics:
 
-    @pytest.mark.skip("DPNG-5904")
+    @pytest.mark.skip("DPNG-5904: Operations/Platform - non-logged-in user get session expired",
+                      "DPNG-12166: http 500 after accepting invite")
     def test_non_admin_cannot_access_platform_operations(self, test_org_manager_client):
         step("Checking if non-admin user cannot retrieve data")
+        metrics = Metrics()
+        ref_metrics = metrics.from_reference()
+        grafana_metrics = metrics.from_grafana()
         assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                                Platform().retrieve_metrics, test_org_manager_client)
-
-    @pytest.mark.skip("DPNG-5904")
-    def test_non_admin_user_cannot_access_refresh(self, test_org_manager_client):
-        step("Checking if non-admin user cannot refresh data")
+                                                ref_metrics, test_org_manager_client)
         assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                                Platform.refresh_data, test_org_manager_client)
+                                                grafana_metrics, test_org_manager_client)
 
 
-@pytest.mark.skip(reason="DPNG-8721 Adjust metrics tests to TAP NG")
+@pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
+@pytest.mark.usefixtures("open_tunnel")
 class TestOperationsMetrics:
     """
     Operations Metrics test can be unstable when run parallel
     with other tests since it check for resources count
     """
-
     MAX_CHECK = 3
-    cf_data = []
-    platform_data = []
+    MARGIN_ERROR = 10  # because grafana use moving-average for last 1-2m
 
-    def test_applications_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: applications count")
-        assert self.assert_values("apps")
+    def _get_metrics(self):
+        """Return metrics from operations platform dashboard and reference metrics"""
+        platform = Metrics.from_grafana(metrics_level="platform")
+        reference_data = Metrics.from_reference()
+        return platform, reference_data
 
-    def test_services_instances_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: services and user provided services count")
-        assert self.assert_values("service_instances")
-
-    def test_services_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: services and user provided services count")
-        assert self.assert_values("services")
-
-    def test_buildpacks_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: buildpack count")
-        assert self.assert_values("buildpacks")
-
-    def test_organizations_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: organizations count")
-        assert self.assert_values("orgs")
-
-    def test_spaces_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: spaces count")
-        assert self.assert_values("spaces")
-
-    def test_user_metrics(self):
-        step("Testing if CF values equals platform data. Data to check: users count")
-        assert self.assert_values("users")
-
-    def assert_values(self, checked_metric):
+    def values_to_compare(self, checked_metrics_attribute):
         """
         this function is created to help with test instability when running in parallel
-        with other tests. It assert if values are correct, if not it gather new data.
+        with other tests. It asserts if values are correct, if not it gathers new data.
         This function should run max=MAX_CHECK times during this TestCase execution
-        :param checked_metric: current metrics to check
+        :param checked_metrics_attribute: current metrics to check
         :return:
         """
-        assert_result = self.check_if_contains(checked_metric)
-        if assert_result:
-            return assert_result,
+        for _ in range(self.MAX_CHECK):
+            operations_metrics, ref_metrics = self._get_metrics()
+            operations_metrics_value = getattr(operations_metrics, checked_metrics_attribute)
+            ref_metrics_value = getattr(ref_metrics, checked_metrics_attribute)
+            if operations_metrics_value == ref_metrics_value:
+                return operations_metrics_value, ref_metrics_value
+        return operations_metrics_value, ref_metrics_value
 
-        if len(self.platform_data) < self.MAX_CHECK:
-            self.gather_all_data()
-            return self.assert_values(checked_metric)
-        else:
-            return False, "Failed checked metrics {}, CF values: {}, platform operation metrics: {}".\
-                format(checked_metric, self.get_cf_metrics(checked_metric), self.get_platform_metrics(checked_metric))
+    @pytest.mark.parametrize("metrics_attribute", ("apps", "services", "service_instances", "orgs", "users_platform"))
+    def test_operations_metrics(self, metrics_attribute):
+        step("Testing if reference values equals platform data. Data to check: {}".format(metrics_attribute))
+        operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute)
+        assert operation_metrics == ref_metrics, "Grafana metrics {} are not equals to references metrics {}" \
+                                                 "".format(operation_metrics, ref_metrics)
 
-    def get_cf_metrics(self, checked_metric):
-        return [getattr(x, checked_metric) for x in self.cf_data]
-
-    def get_platform_metrics(self, checked_metric):
-        return [getattr(x.metrics, checked_metric) for x in self.platform_data]
-
-    def gather_all_data(self):
-        platform = Platform()
-        platform.retrieve_metrics(refresh=True)
-        self.platform_data.append(platform)
-        self.cf_data.append(CFData())
-
-    def check_if_contains(self, checked_metric):
-        cf_values = self.get_cf_metrics(checked_metric)
-        platform_values = self.get_platform_metrics(checked_metric)
-        return any(i in platform_values for i in cf_values)
-
-
-class CFData(object):
-    """
-    helper class to collect all data from CF
-    """
-
-    def __init__(self):
-        self.apps = len(Application.cf_api_get_list())
-        self.service_instances = len(ServiceInstance.cf_api_get_list())
-        self.services = len(ServiceOffering.cf_api_get_list())
-        self.buildpacks = len(Buildpack.cf_api_get_list())
-        self.orgs = len(Organization.cf_api_get_list())
-        self.spaces = len(Space.cf_api_get_list())
-        self.users = len(User.cf_api_get_all_users())
+    @pytest.mark.parametrize("metrics_attribute", ("memory_usage_platform", "cpu_usage_platform"))
+    def test_operations_metrics_cpu_and_memory(self, metrics_attribute):
+        step("Testing if reference values equals platform data. Data to check: {}".format(metrics_attribute))
+        operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute)
+        assert abs(operation_metrics - ref_metrics) < self.MARGIN_ERROR, \
+            "Grafana metrics {} are not equals to references metrics {}".format(operation_metrics, ref_metrics)

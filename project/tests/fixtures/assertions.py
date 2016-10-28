@@ -153,3 +153,11 @@ def assert_command_execution(output, return_code_correct, e, return_code):
         "Error is {0} \"{1}\", expected {2} \"{3}\"".format(e.value.return_code, e.value.output, return_code, output)
 
 
+def assert_dict_values_set(dictionary, expected_keys_list):
+    values_not_set = []
+    for key in dictionary:
+        if key in expected_keys_list and dictionary[key] is None:
+            values_not_set.append(key)
+    assert len(values_not_set) == 0, "Missing value(s): {}".format(values_not_set)
+
+

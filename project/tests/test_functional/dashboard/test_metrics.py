@@ -16,86 +16,101 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, UserManagementHttpStatus
-from modules.http_calls.platform import metrics_provider, router_metrics_provider
+from modules.constants import TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, User
-from modules.tap_object_model.flows import summaries
-from tests.fixtures.assertions import assert_raises_http_exception, assert_returns_http_success_with_retry
+from modules.tap_object_model import DataSet
+from modules.tap_object_model import Metrics
+from modules.tap_logger import log_fixture
+from tests.fixtures.assertions import assert_dict_values_set
 
-logged_components = (TAP.metrics_provider, TAP.router_metrics_provider)
+
+logged_components = (TAP.metrics_provider, TAP.router_metrics_provider, TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.metrics_provider, TAP.router_metrics_provider)]
 
-expected_metrics_keys = ["appsDown", "appsRunning", "datasetCount", "domainsUsage", "domainsUsagePercent",
-                         "latestEvents", "memoryUsage", "memoryUsageAbsolute", "privateDatasets", "publicDatasets",
-                         "serviceUsage", "serviceUsagePercent", "totalUsers"]
+expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
+                         "private_datasets", "public_datasets"]
 
 
-@pytest.mark.skip(reason="DPNG-8721 Adjust metrics tests to TAP NG")
+@pytest.mark.usefixtures("open_tunnel")
 class TestMetrics(object):
-    org_apps = org_services = None
 
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def get_org_metrics(cls, core_org):
-        step("Retrieve metrics for the core organization")
-        core_org.api_get_metrics()
-        cls.org_apps, cls.org_services = summaries.cf_api_get_org_summary(org_guid=core_org.guid)
-        cls.org_guid = core_org.guid
+    MARGIN_ERROR = 10  # because grafana use moving-average for last 1-2m
 
-    @staticmethod
-    def stop_start_application(self, app_name, http_request, *args):
-        step("Turn off the app, then check that it starts properly.")
-        tested_app = next((x for x in self.org_apps if x.name == app_name), None)
-        assert tested_app is not None, "The application does not exist"
-        tested_app.ensure_started()
-        tested_app.stop()
-        tested_app.ensure_stopped()
-        assert_raises_http_exception(UserManagementHttpStatus.CODE_NOT_FOUND, UserManagementHttpStatus.MSG_NOT_FOUND,
-                                     http_request, *args)
-        tested_app.start()
-        tested_app.ensure_started()
-        assert_returns_http_success_with_retry(http_request, *args)
+    @pytest.fixture(scope="class")
+    def org_metrics(self):
+        log_fixture("Retrieve metrics for the organization")
+        reference_metrics = Metrics.from_reference()
+        org_metrics = Metrics.from_grafana()
+        return reference_metrics, org_metrics
 
     @priority.high
-    def test_metrics_contains_all_keys(self, core_org):
-        step("Check that metrics response contains all expected fields")
-        keys = list(core_org.metrics.keys())
-        assert keys.sort() == expected_metrics_keys.sort()
+    def test_metrics_contains_all_values(self, org_metrics):
+        step("Check that metrics response contains all expected values")
+        ref_metrics, grafana_metrics = org_metrics
+        assert_dict_values_set(vars(grafana_metrics), expected_metrics_keys)
+
+    @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
+    @priority.low
+    def test_apps_running(self, org_metrics):
+        step("Get running apps and check that apps down metrics is correct")
+        ref_metrics, grafana_metrics = org_metrics
+        apps = ref_metrics.apps_running
+        dashboard_running_apps = grafana_metrics.apps_running
+        assert apps == dashboard_running_apps, "\nRunning apps in dashboard received from grafana: {}, " \
+                                               "expected from reference: {}".format(dashboard_running_apps, apps)
+
+    @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
+    @priority.low
+    def test_apps_down(self, org_metrics):
+        step("Get down apps and check that apps down metrics is correct")
+        ref_metrics, grafana_metrics = org_metrics
+        apps = ref_metrics.apps_down
+        dashboard_apps_down = grafana_metrics.apps_down
+        assert apps == dashboard_apps_down, "\nDown apps in dashboard received from grafana: {}, expected from " \
+                                            "reference: {}".format(dashboard_apps_down, apps)
 
     @priority.low
-    def test_service_count(self, core_org):
-        step("Get services from cf and check that serviceUsage metrics is correct")
-        assert core_org.metrics["serviceUsage"] == len(self.org_services)
+    def test_user_count(self, org_metrics):
+        step("Get org users and check that total users metrics is correct")
+        ref_metrics, grafana_metrics = org_metrics
+        user_list = ref_metrics.users_org
+        dashboard_total_users = grafana_metrics.users_org
+        assert user_list == dashboard_total_users, "\nUsers in dashboard received from grafana: {}, expected from" \
+                                                   "reference: {}".format(dashboard_total_users, user_list)
+
+    @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
+    @priority.high
+    def test_service_usage(self, org_metrics):
+        step("Get services and check that service usage metrics is correct")
+        ref_metrics, grafana_metrics = org_metrics
+        services = ref_metrics.service_usage
+        dashboard_service_usage = grafana_metrics.service_usage
+        assert services == dashboard_service_usage, "\nService usage in dashboard received from grafana: {}, expected" \
+                                                    "from reference: {}".format(dashboard_service_usage, services)
 
     @priority.low
-    def test_application_metrics(self, core_org):
-        step("Get apps from cf and check that appsRunning and appsDown metrics are correct")
-        cf_apps_up = []
-        cf_apps_down = []
-        for app in self.org_apps:
-            if app.is_started:
-                cf_apps_up.append(app.name)
-            else:
-                cf_apps_down.append(app.name)
-        dashboard_apps_running = core_org.metrics["appsRunning"]
-        dashboard_apps_down = core_org.metrics["appsDown"]
-        metrics_are_equal = (len(cf_apps_up) == dashboard_apps_running and len(cf_apps_down) == dashboard_apps_down)
-        error_msg = "\nApps running: {}, expected: {}\n({})\nApps down: {}, expected: {}\n({})".format(
-            dashboard_apps_running, len(cf_apps_up), cf_apps_up,
-            dashboard_apps_down, len(cf_apps_down), cf_apps_down)
-        assert metrics_are_equal is True, error_msg
+    def test_cpu_usage(self, org_metrics):
+        step("Get CPU and check that cpu usage metrics is correct")
+        ref_metrics, grafana_metrics = org_metrics
+        cpu_metrics_ref = ref_metrics.cpu_usage_org
+        cpu_metrics_dashboard = grafana_metrics.cpu_usage_org
+        assert abs(cpu_metrics_ref - cpu_metrics_dashboard) < self.MARGIN_ERROR, \
+            "\nCPU in dashboard received from grafana: {}, expected from reference: " \
+            "{}".format(cpu_metrics_dashboard, cpu_metrics_ref)
 
     @priority.low
-    def test_user_count(self, core_org):
-        step("Get org users from cf and check that totalUsers metrics is correct")
-        cf_user_list = User.cf_api_get_list_in_organization(org_guid=core_org.guid)
-        dashboard_total_users = core_org.metrics["totalUsers"]
-        assert len(cf_user_list) == dashboard_total_users, "\nUsers: {}, expected: {}".format(
-            dashboard_total_users, len(cf_user_list))
+    def test_memory_usage(self, org_metrics):
+        step("Get memory and check that memory usage metrics is correct")
+        ref_metrics, grafana_metrics = org_metrics
+        memory_metrics_ref = ref_metrics.memory_usage_org
+        memory_metrics_dashboard = grafana_metrics.memory_usage_org
+        assert abs(memory_metrics_ref == memory_metrics_dashboard) < self.MARGIN_ERROR, \
+            "\nMemory in dashboard received from grafana: {}, expected from reference: " \
+            "{}".format(memory_metrics_dashboard, memory_metrics_ref)
 
     @priority.low
+    @pytest.mark.skip("DPNG-11818 [data-catalog] Service metrics instrumentation")
     def test_data_metrics(self, core_org):
         step("Get datasets and check datasetCount, privateDatasets, publicDatasets metrics are correct")
         public_datasets = []
@@ -106,9 +121,9 @@ class TestMetrics(object):
                 public_datasets.append(table)
             else:
                 private_datasets.append(table)
-        dashboard_datasets_count = core_org.metrics['datasetCount']
-        dashboard_private_datasets = core_org.metrics['privateDatasets']
-        dashboard_public_datasets = core_org.metrics['publicDatasets']
+        dashboard_datasets_count = self.org_metrics['datasetCount']
+        dashboard_private_datasets = self.org_metrics['privateDatasets']
+        dashboard_public_datasets = self.org_metrics['publicDatasets']
         metrics_are_equal = (len(datasets) == dashboard_datasets_count and
                              len(private_datasets) == dashboard_private_datasets and
                              len(public_datasets) == dashboard_public_datasets)
@@ -117,14 +132,3 @@ class TestMetrics(object):
             dashboard_private_datasets, len(private_datasets),
             dashboard_public_datasets, len(public_datasets))
         assert metrics_are_equal is True, error_msg
-
-    @priority.low
-    def test_router_metrics_provider(self):
-        self.stop_start_application(self, TAP.router_metrics_provider,
-                                    router_metrics_provider.api_get_router_metrics)
-
-    @priority.low
-    def test_metrics_provider(self, core_org):
-        self.stop_start_application(self, TAP.metrics_provider, metrics_provider.api_get_org_metrics,
-                                    core_org.guid)
-

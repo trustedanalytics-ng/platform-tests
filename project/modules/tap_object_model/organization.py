@@ -19,6 +19,7 @@ import functools
 from ..exceptions import UnexpectedResponseError
 from ..test_names import generate_test_object_name
 from ..http_calls.platform import metrics_provider, user_management
+from ..tap_object_model.metrics import Metrics
 
 
 @functools.total_ordering
@@ -27,7 +28,6 @@ class Organization(object):
     def __init__(self, name, guid=None):
         self.name = name
         self.guid = guid
-        self.metrics = {}
 
     def __repr__(self):
         return "{} (name={}, guid={})".format(self.__class__.__name__, self.name, self.guid)
@@ -70,9 +70,6 @@ class Organization(object):
 
     def delete(self, client=None):
         user_management.api_delete_organization(self.guid, client=client)
-
-    def get_metrics(self, client=None):
-        self.metrics = metrics_provider.api_get_org_metrics(self.guid, client=client)
 
     def cleanup(self):
         # Only one org in TAP NG v1,
