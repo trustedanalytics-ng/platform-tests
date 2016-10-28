@@ -157,23 +157,27 @@ def restart_application(*, client: HttpClient, app_id: str):
 
 
 def get_app_bindings(*, client: HttpClient, app_id: str):
-    """ GET /bindings/{app_id}"""
-    # TODO will be changed to GET /applications/{app_id}/bindings
-    response = client.request(method=HttpMethod.GET, path="bindings/{}".format(app_id), msg="Get application bindings")
+    """ GET /applications/{app_id}/bindings """
+    response = client.request(method=HttpMethod.GET, path="applications/{}/bindings".format(app_id),
+                              msg="Get application bindings")
     return response["resources"]
 
 
-def bind_app(*, client: HttpClient, app_id, service_id: str):
-    """ POST /bind/{service_id}/{app_id} """
-    # TODO will be changed to POST /applications/{app_id}/bindings
-    return client.request(method=HttpMethod.POST, path="bind/{}/{}".format(service_id, app_id),
+def bind_app(*, client: HttpClient, app_id, instance_id: str):
+    """ POST /applications/{app_id}/bindings """
+    body = {
+        "instance_id": instance_id
+    }
+    return client.request(method=HttpMethod.POST, path="applications/{}/bindings".format(app_id), body=body,
                           msg="Bind app and service")
 
 
-def unbind_app(*, client: HttpClient, app_id: str, service_id: str):
-    """ POST /unbind/{app_id}/{service_id} """
-    # TODO will be changed to DELETE /applications/{app_id}/bindings
-    return client.request(method=HttpMethod.POST, path="unbind/{}/{}".format(app_id, service_id),
+def unbind_app(*, client: HttpClient, app_id: str, instance_id: str):
+    """ DELETE /applications/{app_id}/bindings """
+    body = {
+        "instance_id": instance_id
+    }
+    return client.request(method=HttpMethod.DELETE, path="applications/{}/bindings".format(app_id), body=body,
                           msg="Unbind app from service")
 
 
@@ -195,18 +199,17 @@ def get_services(*, client: HttpClient, name: str=None, offering_id: str=None, p
 
 
 def create_service(*, client: HttpClient, name: str, plan_id: str, offering_id: str, params: dict):
-    """POST /services/{offering_id}"""
-    # TODO will be changed to POST /services, with offering_id passed as "classId" in body
+    """POST /services"""
     metadata = [{"key": "PLAN_ID", "value": plan_id}]
     if params is not None:
         metadata = metadata + [{"key": key, "value": val} for key, val in params.items()]
     body = {
+        "classId": offering_id,
         "metadata": metadata,
         "name": name,
         "type": "SERVICE"
     }
-    return client.request(method=HttpMethod.POST, path="services/{}".format(offering_id), body=body,
-                          msg="Create service instance")
+    return client.request(method=HttpMethod.POST, path="services", body=body, msg="Create service instance")
 
 
 def get_service(*, client: HttpClient, service_id: str):
@@ -220,7 +223,6 @@ def delete_service(*, client: HttpClient, service_id: str):
 
 
 def get_service_credentials(*, client: HttpClient, service_id: str):
-    # TODO not implemented yet DPNG-10885
     """ GET /services/{service_id}/credentials """
     return client.request(method=HttpMethod.GET, path="services/{}/credentials".format(service_id),
                           msg="Get service instance credentials")
@@ -322,7 +324,33 @@ def resend_invitation(*, client: HttpClient, email: str):
     return client.request(method=HttpMethod.POST, path="users/invitations/resend", body=body, msg="Resend invitation")
 
 
-
 # --------------------------------------- metrics --------------------------------------- #
 
-# TODO implement metrics methods when they are implemented on TAP
+
+def get_metrics_single(*, client: HttpClient, metric_name: str, time_from: str=None, time_to: str=None):
+    """ GET /metrics/single """
+    body = {
+        "metric": metric_name,
+        "from": time_from,
+        "to": time_to
+    }
+    return client.request(method=HttpMethod.GET, path="metrics/single", body=body, msg="Get single metric")
+
+
+def get_metrics_platform(*, client: HttpClient, time_from: str=None, time_to: str=None):
+    """ GET /metrics/platform """
+    body = {
+        "from": time_from,
+        "to": time_to
+    }
+    return client.request(method=HttpMethod.GET, path="metrics/platform", body=body, msg="Get platform metrics")
+
+
+def get_metrics_organizations(*, client: HttpClient, org_id: str, time_from: str=None, time_to: str=None):
+    """ GET /metrics/organizations/{org_id} """
+    body = {
+        "from": time_from,
+        "to": time_to
+    }
+    return client.request(method=HttpMethod.GET, path="metrics/organizations/{}".format(org_id), body=body,
+                          msg="Get organization metrics")

@@ -58,11 +58,11 @@ class Binding(ApiModelSuperclass, TapObjectSuperclass):
     def create(cls, context, *, app_id: str, service_instance_id: str, client: HttpClient=None):
         if client is None:
             client = cls._get_default_client()
-        response = api.bind_app(client=client, app_id=app_id, service_id=service_instance_id)
+        response = api.bind_app(client=client, app_id=app_id, instance_id=service_instance_id)
         assert response["message"] == TapMessage.SUCCESS
         binding = cls._find_on_list(app_id=app_id, service_instance_id=service_instance_id, client=client)
         context.test_objects.append(binding)
         return binding
 
     def delete(self, client: HttpClient=None):
-        api.unbind_app(app_id=self.app_id, service_id=self.service_instance_id, client=self._get_client(client))
+        api.unbind_app(app_id=self.app_id, instance_id=self.service_instance_id, client=self._get_client(client))
