@@ -97,7 +97,7 @@ class TestAddNewUserToOrganization:
         step("Check that error is raised when trying to add user using incorrect roles")
         role = "i-don't-exist"
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMPTY,
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
                                      User.create_by_adding_to_organization, context=context,
                                      org_guid=test_org.guid, role=role)
         step("Check that no new user was added to the organization")
