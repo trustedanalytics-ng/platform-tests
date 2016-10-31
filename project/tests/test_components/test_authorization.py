@@ -37,7 +37,7 @@ class TestApiServiceAuthorization:
         credentials = config.ng_k8s_service_credentials()
         configuration = HttpClientConfiguration(
             HttpClientType.BASIC_AUTH,
-            url=config.api_url_full,
+            url=config.api_url_full_v2,
             username=credentials[0],
             password=credentials[1]
         )
