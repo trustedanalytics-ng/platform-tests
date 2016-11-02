@@ -98,7 +98,8 @@ class TestTemplateRepository:
         instance_id = "asdf12343sffs321342dsda"
         other_params = {
             "image": "testImage",
-            "hostname": "testHostname"
+            "hostname": "testHostname",
+            "memory_limit": "100M",
         }
         template = Template.get_parsed(template_id=generic_application_template_id, instance_id=instance_id,
                                        optional_params=other_params)
@@ -110,7 +111,8 @@ class TestTemplateRepository:
         instance_id = "asdf12343sffs321342dsda"
         other_params = {
             "image": "",
-            "hostname": ""
+            "hostname": "",
+            "memory_limit": "100M",  # mandatory parameter, mandatory numeric format
         }
         template = Template.get_parsed(template_id=generic_application_template_id, instance_id=instance_id,
                                        optional_params=other_params)
