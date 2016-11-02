@@ -69,10 +69,11 @@ class TapCli:
     def is_logline(line):
         return bool(re.match(TapCli.LOGLINE_PATTERN, line))
 
-    def _run_command(self, cmd: list, cwd=None):
+    def _run_command(self, cmd: list, *, cwd=None, filter_logs=True):
         cmd = [self.command] + cmd
         output = command.run(cmd, cwd=cwd)
-        output = [line for line in output if not TapCli.is_logline(line)]
+        if filter_logs:
+            output = [line for line in output if not TapCli.is_logline(line)]
         output = "\n".join(output)
         return output
 
@@ -112,7 +113,8 @@ class TapCli:
         return self._run_command([self.SERVICES[1] if short else self.SERVICES[0]])
 
     def service_log(self, service_name, short=False):
-        return self._run_command([self.LOGS[1] if short else self.LOGS[0], service_name])
+        return self._run_command([self.LOGS[1] if short else self.LOGS[0], service_name],
+                                 filter_logs=False)
 
     def bindings(self, instance_name):
         output = self._run_command([self.BINDINGS, instance_name])

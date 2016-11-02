@@ -48,7 +48,7 @@ class TestTapCli(unittest.TestCase):
     def _run_command_empty_response(self, cmd: list):
         return ''
 
-    def _run_command_return_cmd(self, cmd: list):
+    def _run_command_return_cmd(self, cmd: list, *, cwd=None, filter_logs=True):
         return cmd
 
     def _run_command_auth_ok(self, cmd: list):

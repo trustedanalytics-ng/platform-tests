@@ -62,7 +62,8 @@ class TestCliService:
     def test_get_service_logs(self, service):
         step("Check that logs are shown for a service instance")
         logs_output = service.logs()
-        assert TapMessage.OK in logs_output.split("\n")[-1]
+        header_line = logs_output.split("\n", 1)[0]
+        assert header_line.startswith("x{}".format(service.id[:8]))
 
     @priority.low
     def test_cannot_get_logs_for_non_existing_service(self, tap_cli):
