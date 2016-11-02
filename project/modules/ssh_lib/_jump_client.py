@@ -74,11 +74,11 @@ class JumpClient(object):
 
     def scp_from_remote(self, source_path, target_path):
         command = self.scp_command + ["{}@{}:{}".format(self._username, self._host, source_path), target_path]
-        self._run_command(command)
+        return self._run_command(command)
 
     def scp_to_remote(self, source_path, target_path):
         command = self.scp_command + [source_path, "{}@{}:{}".format(self._username, self._host, target_path)]
-        self._run_command(command)
+        return self._run_command(command)
 
     def cleanup(self):
         if self._ilab_deploy_path is not None and os.path.exists(self._ilab_deploy_path):
@@ -95,6 +95,7 @@ class JumpClient(object):
             self._logger.info("Killing {}".format(" ".join(command)))
             process.kill()
             raise
+        return process.returncode
 
     @retry(subprocess.TimeoutExpired, tries=_SSH_RETRIES, delay=_SSH_RETRY_DELAY)
     def _ensure_process_finished(self, process, command):

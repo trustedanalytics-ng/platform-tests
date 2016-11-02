@@ -60,8 +60,14 @@ def tap_cli():
     target_directory = os.path.join("/tmp")
     target_path = os.path.join(target_directory, tap_binary_name)
 
+    if config.check_tap_cli_version:
+        log_fixture("Deleting old tap client")
+        os.remove(target_path)
+
     log_fixture("Download tap client")
-    jump_client.scp_from_remote(source_path=remote_tap_binary_path, target_path=target_directory)
+    return_code = jump_client.scp_from_remote(source_path=remote_tap_binary_path, target_path=target_directory)
+    if config.check_tap_cli_version and return_code != 0:
+        pytest.fail("Latest tap client cannot be properly copied from jumpbox")
     os.chmod(target_path, os.stat(target_path).st_mode | stat.S_IEXEC)
 
     return TapCli(target_path)
