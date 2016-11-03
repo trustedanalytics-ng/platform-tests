@@ -213,6 +213,9 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     def restart(self, client: HttpClient=None):
         api.restart_application(app_id=self.id, client=self._get_client(client))
 
+    def get_logs(self, client: HttpClient=None):
+        return api.get_application_logs(app_id=self.id, client=self._get_client(client))
+
     @retry(AssertionError, tries=10, delay=2)
     def ensure_responding(self, *, path=''):
         response = self.api_request(path=path)

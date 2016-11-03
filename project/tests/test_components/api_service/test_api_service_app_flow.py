@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import ApiServiceHttpStatus, TapApplicationType, TapComponent as TAP, Urls
+from modules.constants import TapApplicationType, TapComponent as TAP, Urls
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
@@ -62,13 +62,12 @@ class ApiServiceApplicationFlow:
         step("Check application is ready")
         sample_application.ensure_running()
 
-    @pytest.mark.skip("DPNG-11693: Checking logs in applications don't work yet")
     @priority.medium
-    def test_get_application_logs(self, sample_application):
+    def test_get_application_logs(self, sample_application, api_service_admin_client):
         step("Check that getting application logs returns no error")
-        response = sample_application.get_logs()
+        response = sample_application.get_logs(client=api_service_admin_client)
         # TODO assert something more meaningful
-        assert response.status_code == ApiServiceHttpStatus.CODE_OK
+        assert type(response) is dict
 
     @pytest.mark.skip("DPNG-11694: Scaling applications don't work yet")
     @priority.medium
