@@ -45,8 +45,9 @@ class CatalogService(object):
     @classmethod
     def _from_response(cls, response):
         service_plans = []
-        for item in response["plans"]:
-            service_plans.append(ServicePlan.from_response(item))
+        if response["plans"] is not None:
+            for item in response["plans"]:
+                service_plans.append(ServicePlan.from_response(item))
         return cls(service_id=response["id"], name=response["name"], description=response["description"],
                    template_id=response["templateId"], state=response["state"], plans=service_plans)
 
@@ -54,7 +55,10 @@ class CatalogService(object):
     def create(cls, context, *, template_id, name=None, bindable=True, plans=None):
         if name is None:
             name = generate_test_object_name().replace("_", "-")
-        response = catalog_api.create_service(template_id=template_id, name=name, bindable=bindable, plans=plans)
+        if plans is None:
+            plans = [ServicePlan(plan_id=None, name="test", description="test")]
+        response = catalog_api.create_service(template_id=template_id, name=name, bindable=bindable,
+                                              plans=[sp.to_dict() for sp in plans])
         new_service = cls._from_response(response)
         context.test_objects.append(new_service)
         return new_service
