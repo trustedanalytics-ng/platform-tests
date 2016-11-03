@@ -141,6 +141,7 @@ def sample_java_app(class_context, tap_cli):
     log_fixture("sample_java_app: Push app to tap")
     app = Application.push(context=class_context, app_path=ApplicationPath.SAMPLE_JAVA_APP, tap_cli=tap_cli,
                            app_type=TapApplicationType.JAVA)
+    app.ensure_running()
     return app
 
 
