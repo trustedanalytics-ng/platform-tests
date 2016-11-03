@@ -18,8 +18,6 @@
 import logging
 import os
 
-from sqlalchemy import create_engine
-
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
@@ -40,31 +38,21 @@ class ConfigurationError(Exception):
     pass
 
 
-class DBEngine(object):
-    @staticmethod
-    def get():
-        c = Config()
-        service_type = SUPPORTED_SERVICES[c.db_type]
-        engine = create_engine("{}://{}:{}@{}:{}/{}".format(service_type, c.db_username, c.db_password,
-                                                            c.db_hostname, c.db_port, c.db_name))
-        return engine
-
-
 class Config(object):
 
     def __init__(self):
+
         """
         Reads configuration from environment variables.
-        If the application is run locally, export DB_TYPE with value postgresql or mysql.
         """
 
         credentials = self._load_bound_database()
         try:
-            self.db_type = credentials[0]
-            self.db_name = credentials[1]
-            self.db_username = credentials[2]
-            self.db_password = credentials[3]
-            self.db_hostname = credentials[4]
+            self.db_type = credentials[0].encode('ascii', 'ignore')
+            self.db_name = credentials[1].encode('ascii', 'ignore')
+            self.db_username = credentials[2].encode('ascii', 'ignore')
+            self.db_password = credentials[3].encode('ascii', 'ignore')
+            self.db_hostname = credentials[4].encode('ascii', 'ignore')
         except KeyError as e:
             raise ConfigurationError("Missing {} in service credentials".format(e))
         self.db_port = int(credentials[5])

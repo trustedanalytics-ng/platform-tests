@@ -1,44 +1,11 @@
 {
-  "kerberos": [
-   {
-    "credentials": {
-     "config": "",
-     "enabled": false,
-     "kcacert": "",
-     "kdc": " ",
-     "kpassword": " ",
-     "krealm": " ",
-     "kuser": "cf"
-    },
-    "label": "kerberos",
-    "name": "kerbi",
-    "plan": "shared",
-    "tags": [
-     "kerberos"
-    ]
-   }
-  ],
-  "mysql56": [
-   {
-    "credentials": {
-     "dbname": "pfahmmdrjx7hbwcu",
-     "hostname": "10.0.4.4",
-     "password": "tkbvyryegschgwqk",
-     "port": "33359",
-     "ports": {
-      "3306/tcp": "33359"
-     },
-     "uri": "mysql://nyiu2xqkmimo70c0:tkbvyryegschgwqk@10.0.4.4:33359/pfahmmdrjx7hbwcu",
-     "username": "nyiu2xqkmimo70c0"
-    },
-    "label": "mysql56",
-    "name": "mysql",
-    "plan": "free",
-    "tags": [
-     "mysql56",
-     "mysql",
-     "relational"
-    ]
-   }
-  ]
- }
+ "KRB_NAME" : "kerberos",
+ "KRB_HOSTNAME" : "10.55.120.2",
+ "KRB_KDC" : "aswedrftgyhujiik",
+ "MYSQL_DB_MYSQL_DBNAME" : "pfahmmdrjx7hbwcu",
+ "MYSQL_DB_MYSQL_USERNAME" : "nyiu2xqkmimo70c0",
+ "MYSQL_DB_MYSQL_PASSWORD" : "tkbvyryegschgwqk",
+ "MYSQL_DB_MYSQL_HOSTNAME" : "10.0.4.4",
+ "APP_PORT" : "80",
+ "LOG_LEVEL" : "DEBUG"
+}

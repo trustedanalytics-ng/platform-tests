@@ -17,5 +17,6 @@
 
 source ~/virtualenvs/pyvenv_api_tests/bin/activate
 py.test modules -l -v
+py.test applications/sql-api-example -l -v
 deactivate
 

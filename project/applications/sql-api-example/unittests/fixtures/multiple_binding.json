@@ -1,48 +1,12 @@
 {
-  "mysql56": [
-   {
-    "credentials": {
-     "dbname": "pfahmmdrjx7hbwcu",
-     "hostname": "10.0.4.4",
-     "password": "tkbvyryegschgwqk",
-     "port": "33359",
-     "ports": {
-      "3306/tcp": "33359"
-     },
-     "uri": "mysql://nyiu2xqkmimo70c0:tkbvyryegschgwqk@10.0.4.4:33359/pfahmmdrjx7hbwcu",
-     "username": "nyiu2xqkmimo70c0"
-    },
-    "label": "mysql56",
-    "name": "mysql",
-    "plan": "free",
-    "tags": [
-     "mysql56",
-     "mysql",
-     "relational"
-    ]
-   }
-  ],
-  "postgresql93": [
-   {
-    "credentials": {
-     "dbname": "tmy8cr9fh2uqfufg",
-     "hostname": "10.0.4.4",
-     "password": "j1tzldzr5lanhdvm",
-     "port": "33358",
-     "ports": {
-      "5432/tcp": "33358"
-     },
-     "uri": "postgres://dhzunrvta6ogqkgl:j1tzldzr5lanhdvm@10.0.4.4:33358/tmy8cr9fh2uqfufg",
-     "username": "dhzunrvta6ogqkgl"
-    },
-    "label": "postgresql93",
-    "name": "psql",
-    "plan": "free",
-    "tags": [
-     "postgresql93",
-     "postgresql",
-     "relational"
-    ]
-   }
-  ]
- }
+ "MYSQL_DB_MYSQL_DBNAME" : "pfahmmdrjx7hbwcu",
+ "MYSQL_DB_MYSQL_USERNAME" : "nyiu2xqkmimo70c0",
+ "MYSQL_DB_MYSQL_PASSWORD" : "tkbvyryegschgwqk",
+ "MYSQL_DB_MYSQL_HOSTNAME" : "10.0.4.4",
+ "POSTGRES_DB_POSTGRES_DBNAME" : "tmy8cr9fh2uqfufg",
+ "POSTGRES_DB_POSTGRES_USERNAME" : "dhzunrvta6ogqkgl",
+ "POSTGRES_DB_POSTGRES_PASSWORD" : "j1tzldzr5lanhdvm",
+ "POSTGRES_DB_POSTGRES_HOSTNAME" : "10.0.4.4",
+ "APP_PORT" : "80",
+ "LOG_LEVEL" : "DEBUG"
+}

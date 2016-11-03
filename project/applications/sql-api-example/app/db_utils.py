@@ -16,7 +16,7 @@
 from sqlalchemy import MetaData
 from sqlalchemy.exc import NoSuchTableError
 
-from config import DBEngine
+from db_engine import DBEngine
 
 
 class DatabaseClient(object):

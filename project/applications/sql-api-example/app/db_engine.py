@@ -13,8 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from config import Config, SUPPORTED_SERVICES
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.404'
+from sqlalchemy import create_engine
 
 
+class DBEngine(object):
+    @staticmethod
+    def get():
+        c = Config()
+        service_type = SUPPORTED_SERVICES[c.db_type]
+        engine = create_engine("{}://{}:{}@{}:{}/{}".format(service_type, c.db_username, c.db_password,
+                                                            c.db_hostname, c.db_port, c.db_name))
+        return engine

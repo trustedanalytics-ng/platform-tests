@@ -1,24 +1,90 @@
 # sql-example-api
 An example usage of postgresql and mysql on Trusted Analytics Platform
 
-How to use:
+##Usage
 
-1. Clone sql-api-example repository.
+<!---
+This should be commented till working implementations of binding mechanism during pushing application
+0. Modify ' "bindings": null ' in manifest.json to bind services or left empty (you can bind it later in CLI).
 
-2. Modify `services:[]` line in `manifest.yml` to bind services or left empty (you can bind it later in console). Remember you can bind only one db service at once.
+-->
+1. Login to TAP CLI
 
-3. Login to Cloud Foundry to your organization and space (`cf login ...`).
+    `./tap login <address> <username> <password> `
 
-4. Go to `manifest.yml` containing directory and push app with `cf push`.
+2. Ensure you are in sql-api-example directory (it must contain 'manifest.json') and execute push command
 
-5. If not bound any service in `manifest.yml` then in TAP console go to Applications tab, bind one and restart app.
+    `./tap push`
 
-To change db service:
+3. Bind instance of database (if there was no specified bindings in manifest.json)
 
-1. Stop app.
+    `./tap bind-instance  <db_instance_name> <app_name> `
 
-2. Unbind old service.
 
-3. Bind new service.
+##Changing database
 
-4. Start app.
+1. Unbind old instance
+
+2. Bind new instance.
+
+
+
+##Running app locally
+
+You need to export environmental variables, follow this schema:
+
+` <INSTANCE_NAME>_MYSQL_<VARIABLE>`  *(if using mysql db)*
+
+or ` <INSTANCE_NAME>_POSTGRES_<VARIABLE>` *(if using postgres db)*
+
+Variables to set: `DBNAME, USERNAME, PASSWORD, HOSTNAME`
+
+i. e.
+
+```
+    MYSQL_DB_MYSQL_DBNAME = <dbname>
+    MYSQL_DB_MYSQL_USERNAME = <username>
+    MYSQL_DB_MYSQL_PASSWORD = <password>
+    MYSQL_DB_MYSQL_HOSTNAME = <hostname>
+```
+Exporting `APP_PORT` and `LOG_LEVEL` is optional.
+By default ` APP_PORT = 80 ` and ` LOG_LEVEL=DEBUG `.
+
+##Using and testing app with curl
+
+1. Create a table:
+
+`curl -X POST -H "Authorization: bearer $TOKEN"  -H "Content-type: application/json" -d '{"table_name": "tab_name", "columns":[{"name": "col_name", "type": "VARCHAR", "max_len":10}]}' http://<app_address>/tables`
+
+2. Display table content:
+
+`curl -X GET -H "Authorization: bearer $TOKEN" http://<app_address>/tables`
+
+3. Display table columns:
+
+`curl -X  GET -H "Authorization: bearer $TOKEN" http://<app_address>/tables/<tab_name>/columns`
+
+4. Display all table rows:
+
+`curl -X  GET -H "Authorization: bearer $TOKEN" http://<app_address>/tables/<tab_name>/rows`
+
+5. Create row:
+
+`curl -X POST -H "Authorization: bearer $TOKEN"  -H "Content-type: application/json" -d '[{"column_name":"col_name", "value":"some_value"}, {"column_name":"col_name2", "value":1}, {"column_name":"col_name3", "value":true}]' http://<app_address>/tables/<tab_name>/rows`
+
+6. Remove table:
+
+`curl -X  DELETE -H "Authorization: bearer $TOKEN" http://<app_address>/tables/<tab_name>`
+
+7. Remove specific row:
+
+`curl -X  DELETE -H "Authorization: bearer $TOKEN" http://<app_address>/tables/<tab_name>/rows/<row_id>`
+
+8. Display row content:
+
+`curl -X  GET -H "Authorization: bearer $TOKEN" http://<app_address>/tables/<tab_name>/rows/<row_id>`
+
+9. Update value for specific column in specific row:
+
+`curl -X  PUT -H "Authorization: bearer $TOKEN" -H "Content-type: application/json" -d '[{"column_name":"col_name", "value":"some_value"}]' http://<app_address>/tables/<tab_name>/rows/<row_name>`
+

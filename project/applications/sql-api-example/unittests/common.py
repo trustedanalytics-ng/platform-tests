@@ -40,7 +40,7 @@ class HTTPResponseError(AssertionError):
 
 class ApiObject(object):
     SESSION = requests.session()
-    APP_URL = "http://0.0.0.0:5000"
+    APP_URL = "http://0.0.0.0:80"
 
     @classmethod
     def handle_request(cls, request):
@@ -296,4 +296,3 @@ class PsqlRow(ApiObject):
     def delete(self):
         request = requests.Request(method="DELETE", url="/tables/{}/rows/{}".format(self.table_name, self.id))
         self.handle_request(request)
-
