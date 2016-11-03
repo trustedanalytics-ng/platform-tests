@@ -49,7 +49,7 @@ class TestDeleteOrganizationUser:
         step("Admin removes a user from the test org")
         user_to_delete.delete_from_organization(org_guid=test_org.guid)
         step("Check that trying to delete test user from organization for the second time causes an error")
-        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_EMPTY,
+        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_USER_NOT_EXIST,
                                      user_to_delete.delete_from_organization, org_guid=test_org.guid)
 
     @priority.low
