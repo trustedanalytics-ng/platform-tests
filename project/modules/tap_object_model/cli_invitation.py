@@ -31,6 +31,7 @@ class CliInvitation(CliObjectSuperclass):
     def send(cls, context, *, tap_cli, username=None):
         if username is None:
             username = test_names.generate_test_object_name(email=True)
+        tap_cli.login()
         tap_cli.invite(username)
         new_invitation = cls(tap_cli=tap_cli, username=username)
         context.test_objects.append(new_invitation)

@@ -39,7 +39,7 @@ class CliUser(CliObjectSuperclass):
     @classmethod
     def get_list(cls, *, tap_cli):
         output = tap_cli.users()
-        return [cls(tap_cli, line) for line in output.split("\n")]
+        return [cls(tap_cli=tap_cli, username=line) for line in output.split("\n")]
 
     def delete(self, short_cmd=False):
-        self.tap_cli.delete_user(self.username, short=short_cmd)
+        self.tap_cli.delete_user(self.name, short=short_cmd)
