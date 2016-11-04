@@ -69,15 +69,14 @@ class ApiServiceApplicationFlow:
         # TODO assert something more meaningful
         assert type(response) is dict
 
-    @pytest.mark.skip("DPNG-11694: Scaling applications don't work yet")
     @priority.medium
-    def test_scale_application(self, sample_application):
+    def test_scale_application(self, sample_application, api_service_admin_client):
         step("Scale application")
         replicas_number = 3
-        sample_application.scale(replicas_number)
+        response = sample_application.scale(replicas=replicas_number, client=api_service_admin_client)
         step("Check number of application instances")
-        app_pods = sample_application.get_pods()
-        assert len(app_pods) == replicas_number
+        app_info = Application.get(sample_application.id, client=api_service_admin_client)
+        assert app_info.running_instances == replicas_number
 
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
