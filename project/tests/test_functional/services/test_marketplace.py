@@ -56,6 +56,9 @@ class TestMarketplaceServices:
 
     @long
     @priority.high
+    @pytest.mark.bugs("DPNG-12295 Status code 401 for tests after Session expiration")
+    @pytest.mark.bugs("DPNG-12487 [api-tests] Service instances created in api-tests require unique names")
+    @pytest.mark.bugs("DPNG-12485 It is possible to create invalid services with no plan")
     @pytest.mark.parametrize("role", ["user"])
     def test_create_and_delete_service_instance(self, context, non_parametrized_marketplace_services,
                                                 test_user_clients, role):
