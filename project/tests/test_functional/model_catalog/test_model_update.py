@@ -37,7 +37,6 @@ class TestModelUpdate:
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
     def test_update_model(self, sample_model, test_user_clients, role):
-        # TODO change test case to use test_org_admin_client instead of admin_client - when DPNG-10987 is done
         step("Update model using {}".format(role))
         client = test_user_clients[role]
         sample_model.update(client=client, **self.UPDATED_METADATA)
@@ -54,12 +53,18 @@ class TestModelUpdate:
         model = ScoringEngineModel.get(model_id=sample_model.id)
         assert sample_model == model
 
+    @priority.low
+    def test_cannot_update_model_with_non_existing_guid(self):
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
+                                     model_catalog_api.update_model, model_id=Guid.NON_EXISTING_GUID,
+                                     **self.UPDATED_METADATA)
+
     @pytest.mark.bugs("DPNG-11760 Internal server error on updating model")
     @priority.low
-    @pytest.mark.parametrize("model_id", (Guid.NON_EXISTING_GUID, "invalid-model-id"))
-    def test_cannot_update_model_with_incorrect_guid(self, model_id):
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
-                                     model_catalog_api.update_model, model_id=model_id, **self.UPDATED_METADATA)
+    def test_cannot_update_model_with_incorrect_guid(self):
+        invalid_guid = "invalid-model-id"
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_BAD_REQUEST, ModelCatalogHttpStatus.MSG_BAD_REQUEST,
+                                     model_catalog_api.update_model, model_id=invalid_guid, **self.UPDATED_METADATA)
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])

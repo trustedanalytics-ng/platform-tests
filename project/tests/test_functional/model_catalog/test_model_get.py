@@ -37,7 +37,6 @@ class TestModelGet:
         step("Check that the two lists are the same")
         assert sorted(models) == sorted(expected_models)
 
-    @pytest.mark.bugs("DPNG-11716 Model-catalog: bad requests handling")
     @priority.low
     def test_cannot_get_models_without_org(self):
         step("Try to list models in non existing organization")
@@ -52,7 +51,6 @@ class TestModelGet:
         model = ScoringEngineModel.get(model_id=sample_model.id, client=client)
         assert model == sample_model
 
-    @pytest.mark.bugs("DPNG-11716 Model-catalog: bad requests handling")
     @priority.low
     def test_cannot_get_metadata_of_non_existing_model(self):
         step("Try to get metadata of non existing model")

@@ -130,7 +130,6 @@ class TestModelAdd:
         new_artifact_actions = new_artifact.actions
         assert new_artifact_actions == artifact_metadata["actions"]
 
-    @pytest.mark.bug(reason="DPNG-12068 Internal server error when add artifact without required field")
     @priority.medium
     def test_cannot_add_new_artifact_without_artifact_file_field(self, sample_model):
         artifact_metadata = self.ARTIFACT_METADATA.copy()
@@ -138,7 +137,6 @@ class TestModelAdd:
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
                                      ModelArtifact.upload_artifact, model_id=sample_model.id, **artifact_metadata)
 
-    @pytest.mark.bugs("DPNG-11930 Model-catalog - make artifactAction field optional")
     @priority.low
     def test_add_new_artifact_without_actions_filed(self, sample_model):
         artifact_metadata = self.ARTIFACT_METADATA.copy()
@@ -146,7 +144,7 @@ class TestModelAdd:
         step("Add new artifact to model")
         new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **artifact_metadata)
         artifact_actions = new_artifact.actions
-        expected_actions = None
+        expected_actions = []
         assert artifact_actions == expected_actions
 
     @priority.low
