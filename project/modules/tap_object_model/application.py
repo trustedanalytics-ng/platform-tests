@@ -37,26 +37,34 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     It enables sending http requests to such applications.
     """
 
-    _COMPARABLE_ATTRIBUTES = ["name", "id", "image_type", "state", "replication", "running_instances", "urls"]
-    _REFRESH_ATTRIBUTES = ["id", "image_type", "state", "replication", "running_instances", "urls"]
+    # id is the application instance id, app_id is the application id
+    _COMPARABLE_ATTRIBUTES = ["name", "id", "app_id", "image_type", "state",
+                              "replication", "running_instances", "urls"]
+    _REFRESH_ATTRIBUTES = ["id", "image_type", "state", "replication",
+                           "running_instances", "urls"]
 
     MANIFEST_NAME = "manifest.json"
     RUN_SH_NAME = "run.sh"
 
-    def __init__(self, app_id: str, name: str, bindings: list, image_type: str, state: str, replication: int,
-                 running_instances: int, urls: list, client: HttpClient=None):
+    def __init__(self, app_id: str, app_inst_id: str, name: str, bindings: list,
+                 image_type: str, state: str, replication: int, running_instances: int,
+                 urls: list, client: HttpClient=None):
         """Class initializer.
 
         Args:
+            app_id: Id of the application
+            app_inst_id: Id of instance of the application
             name: Name of the application
-            id: Id of the application
+            bindings: List of services that application is binded to
+            image_type: Defines the image type
             state: Current state of the application
-            instances: Instances that the application uses
+            replication: Amount of replications
+            running_instances: Amount of running instances
             urls: Urls that the application used
-            client: The Http client to use. If None, Http client from default
-                    configuration will be used
+            client: The Http client to use.
         """
-        super().__init__(object_id=app_id, client=client)
+        super().__init__(object_id=app_inst_id, client=client)
+        self.app_id = app_id
         self.name = name
         self.bindings = bindings
         self.image_type = image_type
@@ -67,7 +75,10 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         self._request_session = requests.session()
 
     def __repr__(self):
-        return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
+        return "{} (name={}, app_id={}, app_inst_id={})".format(self.__class__.__name__,
+                                                                self.name,
+                                                                self.app_id,
+                                                                self.id)
 
     @classmethod
     def update_manifest(cls, manifest_path: str, params: dict):
@@ -118,21 +129,28 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             os.chmod(run_sh_path, 0o777)
 
     @classmethod
-    def push(cls, context, *, app_path: str, tap_cli: TapCli, app_type: str, name: str=None, instances: int=1,
-             client: HttpClient=None, bindings: list=None):
+    def push(cls, context, *, app_path: str, tap_cli: TapCli, app_type: str,
+             name: str=None, instances: int=1, client: HttpClient=None,
+             bindings: list=None):
         """Pushes the application from source directory with provided name,
-        services and envs. This only pushed the application, but does not
-        verify whether the app is running or not.
+        services and envs.
+
+        After pushing the application, method verfies that the application was
+        pushed. If not, exceptions is raised.
+        It waits for the applications instance id to appear. If the instance id
+        does not appear, assertion is raised.
 
         Args:
-            context: context object that will store created applications. It is used later to perform a cleanup.
+            context: context object that will store created applications. It is used
+                     later to perform a cleanup.
             app_path: path to the application archive or to the application directory
             tap_cli: tap client, that will be used to push the app.
             app_type: "type" parameter in manifest.json
-            app_name: "name" parameter in manifest.json, if None, will be auto-generatgd
+            name: "name" parameter in manifest.json, if None, will be auto-generated
             instances: "instances" parameter in manifest.json
             client: The Http client to use. If None, default (admin via console)
                     will be used. It will be used to verify if the app was pushed
+            bindings: List of services bindings that the application will use
 
             Returns:
                 Application class instance
@@ -156,7 +174,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         app = next((a for a in apps if a.name == name), None)
         assert app is not None, "App {} has not been created on the platform".format(name)
 
-        # Wait for the application to receive id
+        # Wait for the application to receive the application instance id
         app._ensure_has_id(client=client)
         context.test_objects.append(app)
         return app
@@ -172,18 +190,18 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         return self.state == TapEntityState.RUNNING
 
     @classmethod
-    def get(cls, app_id: str, client: HttpClient=None):
-        """Retrieves the application based on app id
+    def get(cls, app_inst_id: str, client: HttpClient=None):
+        """Retrieves the application based on app instance id
 
         Args:
-            id: id of the application to retrieve
+            app_inst_id: id of the application instance to retrieve
 
         Returns:
             The application
         """
         if client is None:
             client = cls._get_default_client()
-        response = api.get_application(app_id=app_id, client=client)
+        response = api.get_application(app_id=app_inst_id, client=client)
         return cls._from_response(response, client)
 
     @classmethod
@@ -200,7 +218,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
 
     def delete(self, client: HttpClient=None):
         """ Deletes the application from TAP """
-        api.delete_application(client=self._get_client(client), app_id=self.id)
+        api.delete_application(client=self._get_client(client),
+                               app_id=self.id)
 
     def start(self, client: HttpClient=None):
         """ Sends the start command to application """
@@ -211,6 +230,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         api.stop_application(app_id=self.id, client=self._get_client(client))
 
     def restart(self, client: HttpClient=None):
+        """Sends the restart command to application """
         api.restart_application(app_id=self.id, client=self._get_client(client))
 
     def get_logs(self, client: HttpClient=None):
@@ -281,9 +301,20 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
 
     @classmethod
     def _from_response(cls, response: dict, client: HttpClient):
-        return cls(app_id=response["id"], name=response["name"], bindings=response["bindings"],
-                   image_type=response["imageType"], state=response["state"], replication=response["replication"],
-                   running_instances=response["running_instances"], urls=response["urls"], client=client)
+        """Creates an Application object based on the response
+
+        Args:
+            response: Response from api
+            client: HttpClient that created Application will use
+
+        Returns:
+            Application object created from response
+        """
+        return cls(app_id=response.get("classId", ""), app_inst_id=response.get("id", ""),
+                   name=response["name"], bindings=response["bindings"],
+                   image_type=response["imageType"], state=response["state"],
+                   replication=response["replication"], running_instances=response["running_instances"],
+                   urls=response["urls"], client=client)
 
     @classmethod
     def _read_app_name_from_manifest(cls, app_dir: str):
@@ -302,7 +333,12 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         return manifest['name']
 
     def _refresh(self, client: HttpClient=None):
-        """ Updates the state of the application. If the application is not present, assertion kicks in """
+        """ Updates the state of the application. If the application is not present,
+        assertion kicks in.
+
+        Args:
+            client: HttpClient to use
+        """
         apps = self.get_list(client=self._get_client(client))
         app = next((a for a in apps if a.name == self.name), None)
         assert app is not None, "Cannot find application {}".format(self.name)
@@ -312,6 +348,11 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
 
     @retry(AssertionError, tries=30, delay=2)
     def _ensure_has_id(self, client: HttpClient=None):
-        """ Waits for the application to receive an id. If no id is found, assertion is raised """
+        """ Waits for the application to receive an id. If no id is found,
+        assertion is raised.
+
+        Args:
+            client: HttpClient to use
+        """
         self._refresh(client=client)
         assert self.id != "", "App {} hasn't received id yet. State: {}".format(self.name, format(self.state))

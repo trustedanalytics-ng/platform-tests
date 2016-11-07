@@ -70,8 +70,10 @@ class TestApiServiceApplication:
 
     @priority.high
     def test_get_application(self, sample_app, api_service_admin_client):
+        step("Make sure the sample app has updated id")
+        sample_app._ensure_has_id()
         step("Get application")
-        app = Application.get(app_id=sample_app.id, client=api_service_admin_client)
+        app = Application.get(app_inst_id=sample_app.id, client=api_service_admin_client)
         step("Check that the apps are the same")
         assert sample_app == app
 
@@ -87,7 +89,7 @@ class TestApiServiceApplication:
         step("Update app state to {} using catalog api".format(updated_state))
         catalog_api.update_instance(instance_id=application.id, field_name="state", value=updated_state)
         step("Check that the app state was updated")
-        app = Application.get(app_id=application.id, client=api_service_admin_client)
+        app = Application.get(app_inst_id=application.id, client=api_service_admin_client)
         assert app.state == updated_state, "Application is not in the expected state. App state: {}".format(app.state)
         step("Check that the application can be deleted")
         application.delete()
