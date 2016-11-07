@@ -28,8 +28,7 @@ pytestmark = [pytest.mark.components(TAP.platform_operations)]
 
 class TestNonAdminOperationsMetrics:
 
-    @pytest.mark.skip("DPNG-5904: Operations/Platform - non-logged-in user get session expired",
-                      "DPNG-12166: http 500 after accepting invite")
+    @pytest.mark.skip("DPNG-5904: Operations/Platform - non-logged-in user get session expired")
     def test_non_admin_cannot_access_platform_operations(self, test_org_manager_client):
         step("Checking if non-admin user cannot retrieve data")
         metrics = Metrics()

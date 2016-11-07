@@ -37,7 +37,6 @@ class TestGateway:
     gateway_instance = None
     gateway_app = None
 
-    @pytest.mark.skip("DPNG-12166 http 500 after accepting invite")
     def test_0_create_gateway_instance(self, class_context, test_org_user_client):
         step("Create gateway instance")
         gateway_instance = ServiceInstance.create_with_name(
