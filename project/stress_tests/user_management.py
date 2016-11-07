@@ -15,8 +15,12 @@
 #
 
 import os
+import sys
 
 from locust import TaskSet, task
+
+project_path = os.path.abspath(os.path.join(__file__, "..", ".."))
+sys.path.append(project_path)
 
 from modules.constants.project_paths import Path
 from stress_tests.tap_locust import tap_locust
