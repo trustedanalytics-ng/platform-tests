@@ -52,7 +52,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
     def create(cls, context, *, offering_id: str, plan_id: str, name: str=None,
                params: dict=None, client: HttpClient=None):
         if name is None:
-            name = generate_test_object_name(short=True)
+            name = generate_test_object_name(separator="")
         if client is None:
             client = cls._get_default_client()
         response = api.create_service(name=name, plan_id=plan_id, params=params, offering_id=offering_id, client=client)
