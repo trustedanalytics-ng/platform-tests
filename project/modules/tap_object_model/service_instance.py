@@ -125,6 +125,9 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
     def get_credentials(self, client=None):
         return api.get_service_credentials(service_id=self.id, client=self._get_client(client))
 
+    def get_logs(self, client=None):
+        return api.get_service_logs(service_id=self.id, client=self._get_client(client))
+
     @classmethod
     def _get_offering_id_and_plan_id_by_names(cls, offering_label: str, plan_name: str, client: HttpClient) -> tuple:
         """

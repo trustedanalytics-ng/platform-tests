@@ -211,3 +211,17 @@ class TestServiceInstance:
         service_instance_requested.cleanup()
         self.mock_api_service.delete_service.assert_called_with(client=service_instance_requested._client,
                                                                 service_id=service_instance_requested.id)
+
+    @patch("modules.tap_object_model._api_model_superclass.HttpClientFactory", mock_http_client_factory)
+    @patch("modules.tap_object_model._api_model_superclass.ConsoleConfigurationProvider", mock_api_conf)
+    @patch("modules.tap_object_model.service_instance.api", mock_api_service)
+    def test_service_instance_get_logs(self, service_instance_running):
+        """
+        Test service instance cleanup
+        """
+        test_logs = "test logs"
+        self.mock_api_service.get_service_logs.return_value = test_logs
+        logs = service_instance_running.get_logs()
+        self.mock_api_service.get_service_logs.assert_called_with(client=service_instance_running._client,
+                                                                  service_id=service_instance_running.id)
+        assert logs == test_logs

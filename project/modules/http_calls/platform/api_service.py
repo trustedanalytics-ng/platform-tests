@@ -199,7 +199,7 @@ def get_services(*, client: HttpClient, name: str=None, offering_id: str=None, p
     return client.request(method=HttpMethod.GET, path="services", params=query_params, msg="List service instances")
 
 
-def create_service(*, client: HttpClient, name: str, plan_id: str, offering_id: str, params: dict):
+def create_service(*, client: HttpClient, name: str=None, plan_id: str, offering_id: str, params: dict):
     """POST /services"""
     metadata = [{"key": "PLAN_ID", "value": plan_id}]
     if params is not None:
@@ -207,9 +207,10 @@ def create_service(*, client: HttpClient, name: str, plan_id: str, offering_id: 
     body = {
         "classId": offering_id,
         "metadata": metadata,
-        "name": name,
         "type": "SERVICE"
     }
+    if name is not None:
+        body["name"] = name
     return client.request(method=HttpMethod.POST, path="services", body=body, msg="Create service instance")
 
 
