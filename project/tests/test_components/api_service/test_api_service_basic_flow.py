@@ -16,6 +16,7 @@
 
 import pytest
 import config
+import json
 
 from modules.http_client import HttpClientFactory, HttpClientConfiguration, HttpClientType, HttpMethod
 from modules.tap_logger import step
@@ -31,6 +32,7 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 class TestApiServiceBasicFlow:
     MSG_NO_CREDENTIALS_PROVIDED = "{\"message\":\"No credentials provided\"}"
     MSG_INVALID_CREDENTIALS_PROVIDED = "{\"message\":\"Bad response status: 401\"}"
+    KEY_ACCESS_TOKEN = "access_token"
 
     def _get_client(self, client_type=HttpClientType.BASIC_AUTH, username=None, password=None):
         configuration = HttpClientConfiguration(
@@ -58,7 +60,14 @@ class TestApiServiceBasicFlow:
 
     def test_login_providing_valid_credentials(self):
         step("Login providing valid credentials")
-        response = self._get_client(username='admin', password='password').request(method=HttpMethod.GET, path="login",
-                                                                                  raw_response=True,
-                                                                                  msg="Login with valid credentials")
+        credentials = config.ng_k8s_service_credentials()
+        client = self._get_client(username=credentials[0],
+                                  password=credentials[1])
+        response = client.request(method=HttpMethod.GET,
+                                  path="login",
+                                  raw_response=True,
+                                  msg="Login with valid credentials")
+
         assert response.status_code == ApiServiceHttpStatus.CODE_OK
+        assert self.KEY_ACCESS_TOKEN in response.text
+        assert len(json.loads(response.text)[self.KEY_ACCESS_TOKEN]) > 0
