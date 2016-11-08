@@ -15,23 +15,25 @@
 #
 
 import os
+import sys
 
 from locust import TaskSet, task
 
-from modules.constants import Path
+sys.path.append(os.getcwd())
+
+from modules.constants.project_paths import Path
 from stress_tests.tap_locust import tap_locust
 from stress_tests.tap_locust.task_set_utils import PytestSelector
 
 
-class UserBehaviorMetrics(TaskSet):
-    TEST_MODULE_PATH = os.path.join(Path.test_directories["stress_scenarios"], "test_scenarios.py")
-    TEST_CLASS_NAME = "TestMetrics"
+class UserBehaviorUserManagement(TaskSet):
+    SMOKE_TESTS_MODULE = os.path.join(Path.test_directories["test_smoke"], "test_functional.py")
 
     @task(1)
-    def get_org_metrics(self):
-        pytest_selector = PytestSelector(self.TEST_MODULE_PATH, self.TEST_CLASS_NAME, "test_get_org_metrics")
-        self.client.run(pytest_selector)
+    def login(self):
+        pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE, test_name="test_login")
+        self.client.run(pytest_selector=pytest_selector)
 
 
-class MetricsUser(tap_locust.TapLocust):
-    task_set = UserBehaviorMetrics
+class UserManagementUser(tap_locust.TapLocust):
+    task_set = UserBehaviorUserManagement

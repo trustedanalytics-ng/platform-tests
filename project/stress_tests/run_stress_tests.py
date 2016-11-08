@@ -15,16 +15,14 @@
 #
 import os
 import subprocess
+import sys
 from time import sleep
 
 import requests
 import signal
-
-import sys
 from retry import retry
 
-project_path = os.path.abspath(os.path.join(__file__, "..", ".."))
-sys.path.append(project_path)
+sys.path.append(os.getcwd())
 
 from config import get_int
 

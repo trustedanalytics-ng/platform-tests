@@ -17,22 +17,15 @@
 import pytest
 
 from modules.constants import Guid, HttpStatus
+from modules.constants.model_metadata import MODEL_METADATA
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from modules.tap_object_model.model_artifact import ModelArtifact
+from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
 class TestModelAdd:
-
-    TEST_METADATA = {
-        "name": "test-model",
-        "description": "Test model description",
-        "revision": "revision",
-        "algorithm": "algorithm",
-        "creation_tool": "creation-tool"
-    }
 
     ARTIFACT_METADATA = {
         "filename": "example_artifact.txt",
@@ -51,7 +44,7 @@ class TestModelAdd:
     def test_add_new_model_to_organization(self, context, test_user_clients, role):
         client = test_user_clients[role]
         step("Add model to organization using {}".format(role))
-        new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, client=client, **self.TEST_METADATA)
+        new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, client=client, **MODEL_METADATA)
         step("Check that the model is on model list")
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
         assert new_model in models
@@ -62,7 +55,7 @@ class TestModelAdd:
         incorrect_org = "incorrect-org-guid"
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
                                      ScoringEngineModel.create, context, org_guid=incorrect_org,
-                                     **self.TEST_METADATA)
+                                     **MODEL_METADATA)
 
     @priority.medium
     def test_cannot_add_model_with_auto_generated_metadata(self, context):
@@ -73,7 +66,7 @@ class TestModelAdd:
             "modified_by": 'test-user',
             "modified_on": '2000-01-01 00:00 GMT'
         }
-        metadata = self.TEST_METADATA.copy()
+        metadata = MODEL_METADATA.copy()
         metadata.update(metadata_auto_generated)
         test_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, **metadata)
         step("Check that params for auto-generated metadata do not affect created model")
@@ -90,7 +83,7 @@ class TestModelAdd:
     @pytest.mark.parametrize("missing_param", ("name", "creation_tool"))
     def test_cannot_add_model_without_a_required_parameter(self, context, missing_param):
         step("Check that adding a model without a required parameter ({}) causes an error".format(missing_param))
-        metadata = self.TEST_METADATA.copy()
+        metadata = MODEL_METADATA.copy()
         del metadata[missing_param]
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
                                      ScoringEngineModel.create, context, org_guid=Guid.CORE_ORG_GUID,
@@ -100,8 +93,8 @@ class TestModelAdd:
     def test_add_model_with_minimum_required_params(self, context):
         step("Add model to organization")
         metadata = {
-            "name": self.TEST_METADATA["name"],
-            "creation_tool": self.TEST_METADATA["creation_tool"]
+            "name": MODEL_METADATA["name"],
+            "creation_tool": MODEL_METADATA["creation_tool"]
         }
         new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, **metadata)
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)

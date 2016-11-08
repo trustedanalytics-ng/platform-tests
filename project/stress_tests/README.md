@@ -22,7 +22,7 @@ pip install git+https://github.com/locustio/locust.git@master
 
 Before starting tests it is required to set several env variables:
 
-- `PT_LOCUST_FILE` path to locust file with task
+- `PT_LOCUST_FILE` path to locust file with task (task sets are placed in `tests/test_stress`)
 - `PT_NUM_CLIENTS` number of clients spawned by locust, default: 2
 - `PT_HATCH_RATE` rate per second in which clients are spawned, default: 1
 - `PT_DURATION` test duration, default: 10 [minutes]

@@ -14,19 +14,10 @@
 # limitations under the License.
 #
 
-import pytest
-
-from modules.tap_object_model.catalog_image import CatalogImage
-
-
-class TestMetrics:
-
-    def test_get_org_metrics(self, core_org):
-        core_org.api_get_metrics()
-
-
-class TestImageFactory:
-
-    @pytest.mark.usefixtures("open_tunnel")
-    def test_get_catalog(self):
-        CatalogImage.get_list()
+MODEL_METADATA = {
+    "name": "test-model",
+    "description": "Test model description",
+    "revision": "revision",
+    "algorithm": "algorithm",
+    "creation_tool": "creation-tool"
+}

@@ -19,23 +19,28 @@ import sys
 
 from locust import TaskSet, task
 
-project_path = os.path.abspath(os.path.join(__file__, "..", ".."))
-sys.path.append(project_path)
+sys.path.append(os.getcwd())
 
 from modules.constants.project_paths import Path
 from stress_tests.tap_locust import tap_locust
 from stress_tests.tap_locust.task_set_utils import PytestSelector
 
 
-class UserBehaviorUserManagement(TaskSet):
+class UserBehaviorDataCatalog(TaskSet):
     SMOKE_TESTS_MODULE = os.path.join(Path.test_directories["test_smoke"], "test_functional.py")
 
     @task(1)
-    def push_sample_app(self):
+    def add_and_delete_from_link(self):
         pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE,
-                                         test_name="test_push_sample_app_and_check_response")
+                                         test_name="test_add_and_delete_transfer_from_link")
+        self.client.run(pytest_selector)
+
+    @task(1)
+    def add_and_delete_from_file(self):
+        pytest_selector = PytestSelector(module_path=self.SMOKE_TESTS_MODULE,
+                                         test_name="test_add_and_delete_transfer_from_file")
         self.client.run(pytest_selector)
 
 
-class UserManagementUser(tap_locust.TapLocust):
-    task_set = UserBehaviorUserManagement
+class DataCatalogUser(tap_locust.TapLocust):
+    task_set = UserBehaviorDataCatalog

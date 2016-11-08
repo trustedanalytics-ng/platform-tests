@@ -16,8 +16,9 @@
 
 import pytest
 
-from modules.constants import TapComponent as TAP, Urls
+from modules.constants import Guid, TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
+from modules.constants.model_metadata import MODEL_METADATA
 from modules.exceptions import UnexpectedResponseError
 from modules.file_utils import generate_csv_file
 from modules.http_client import HttpMethod
@@ -27,6 +28,7 @@ from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import DataSet, Transfer, User, ServiceOffering, TestSuite, ServiceInstance, Metrics
 from modules.tap_object_model.flows import onboarding
+from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tap_component_config import offerings_as_parameters
 from tests.fixtures.assertions import assert_dict_values_set
 
@@ -38,6 +40,7 @@ pytestmark = [priority.high]
 
 expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
                          "private_datasets", "public_datasets"]
+
 
 def test_login():
     entities = ServiceOffering.get_list()
@@ -191,3 +194,13 @@ def test_start_tests_or_get_suite_in_progress():
     step("Get suite details")
     created_test_results = TestSuite.api_get_test_suite_results(suite_id)
     assert created_test_results is not None
+
+
+@priority.high
+def test_add_new_model_to_organization(context, test_org_admin_client):
+    step("Add model to organization as admin")
+    new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, client=test_org_admin_client,
+                                          **MODEL_METADATA)
+    step("Check that the model is on model list")
+    models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+    assert new_model in models
