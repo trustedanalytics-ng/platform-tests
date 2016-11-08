@@ -22,7 +22,7 @@ import config
 from modules.app_sources import AppSources
 from modules.constants import ServicePlan, ServiceLabels, TapGitHub, TapComponent as TAP
 from modules.markers import incremental, priority
-from modules.service_tools.psql import PsqlRow, PsqlTable
+from modules.service_tools.db import Row, Table
 from modules.tap_logger import step
 from modules.tap_object_model import Application, HdfsJob, ServiceInstance, ServiceOffering
 from modules.tap_object_model.hdfs_job import JobStatus
@@ -73,7 +73,7 @@ class TestYarnAuthGateway:
 
         def fin():
             self.SSH_TUNNEL.disconnect()
-            for table in PsqlTable.TABLES:
+            for table in Table.TABLES:
                 table.delete()
 
         request.addfinalizer(fin)
@@ -114,14 +114,14 @@ class TestYarnAuthGateway:
         step("Create test table name")
         self.__class__.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
         step("Pass POST request to the application")
-        PsqlTable.post(self.psql_app, self.test_table_name, self.TEST_COLUMNS)
-        tables = str(PsqlTable.get_list(self.psql_app))
+        Table.post(self.psql_app, self.test_table_name, self.TEST_COLUMNS)
+        tables = str(Table.get_list(self.psql_app))
         step("Check that table with name '{}' was created.".format(self.test_table_name))
         assert self.test_table_name in tables, "There is no '{}' table in database".format(self.test_table_name)
         step("Fill postgres table with data")
-        PsqlRow.post(self.psql_app, self.test_table_name, self.TEST_ROWS)
+        Row.post(self.psql_app, self.test_table_name, self.TEST_ROWS)
         step("Check if there is data in table")
-        rows = PsqlRow.get_list(self.psql_app, self.test_table_name)
+        rows = Row.get_list(self.psql_app, self.test_table_name)
         assert len(rows) >= 1, "There is no data in table"
 
     def test_3_create_job(self, test_org, add_admin_to_test_org):

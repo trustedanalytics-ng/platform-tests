@@ -52,7 +52,7 @@ ACCESS_DENIED_RESPONSE = "Access denied"
 RECORD = ["1\tKowalski", "2\tNowak", "3\tRobak", "4\tZenonowicz"]
 
 
-@pytest.mark.skip("DPNG-11952 [api-tests] Adjust test_mysql to new TAP")
+@pytest.mark.skip("DPNG-11046 [TAP NG Backlog] Move clustered services used in 0.7 to tap-deploy")
 @pytest.mark.skipif(not kubernetes, reason="No point to run without Kubernetes")
 @priority.medium
 @incremental

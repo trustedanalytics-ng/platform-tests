@@ -55,6 +55,14 @@ def sample_app(sample_python_app, sample_java_app):
     }
 
 
+@pytest.fixture(scope="function")
+def sample_db_app(app_binded_psql, app_binded_mysql):
+    return {
+        "app_binded_psql": app_binded_psql,
+        "app_binded_mysql": app_binded_mysql
+    }
+
+
 @pytest.mark.components(TAP.metrics_grafana)
 def test_dashboard_metrics():
     """Test Dashboard Metrics"""
@@ -164,9 +172,11 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-def test_push_psql_app_check_response(psql_app):
+@pytest.mark.parametrize("sample_db_app_key", ("app_binded_psql", "app_binded_mysql"))
+def test_push_sql_app_check_response(sample_db_app, sample_db_app_key):
     """Push Sample Application and Test Http Response"""
-    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(psql_app.urls[0]))
+    sample_db_app = sample_db_app[sample_db_app_key]
+    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_db_app.urls[0]))
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
     assert response is not None
     assert response.status_code == 200

@@ -18,7 +18,7 @@ import pytest
 
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import priority, incremental
-from modules.service_tools.psql import PsqlTable, PsqlRow
+from modules.service_tools.db import Table, Row
 from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
 from modules.tap_object_model.flows import data_catalog
@@ -70,15 +70,15 @@ class TestJobSchedulerNoTunnelIncremental:
     def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app, request, class_context):
         step("Create a table in postgres DB")
         cls.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
-        cls.TEST_TABLE = PsqlTable.post(psql_app, cls.test_table_name, cls.TEST_COLUMNS)
-        PsqlRow.post(psql_app, cls.test_table_name, cls.TEST_ROWS)
+        cls.TEST_TABLE = Table.post(psql_app, cls.test_table_name, cls.TEST_COLUMNS)
+        Row.post(psql_app, cls.test_table_name, cls.TEST_ROWS)
         step("Get psql credentials")
         PSQL_CREDENTIALS = Psql.get_credentials(psql_app)
         cls.db_hostname, cls.db_name, cls.username, cls.password, cls.port = PSQL_CREDENTIALS
         step("Create context")
         cls.context = class_context
         def fin():
-            for table in PsqlTable.TABLES:
+            for table in Table.TABLES:
                 table.delete()
         request.addfinalizer(fin)
 
@@ -106,7 +106,7 @@ class TestJobSchedulerNoTunnelIncremental:
 
     @pytest.mark.skip("DPNG-7980 HDFS files added by Job Scheduler should be available for file submit in Data Catalog")
     def test_2_check_new_dataset_from_HDFS(self, test_org, psql_app):
-        PsqlRow.post(psql_app, self.test_table_name, self.TEST_ROWS)
+        Row.post(psql_app, self.test_table_name, self.TEST_ROWS)
         assertions.assert_dataset_greater_with_retry(self.TEST_DATASET.size, self.context, test_org.guid,
                                                      self.HDFS_OUTPUT_DIR + self.HDFS_OUTPUT_FILES[1])
 

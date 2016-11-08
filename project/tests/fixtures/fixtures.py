@@ -22,7 +22,7 @@ import pytest
 
 import config
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, HttpStatus, TapApplicationType, ServiceLabels
+from modules.constants import ApplicationPath, HttpStatus, TapApplicationType, ServiceLabels, ServicePlan
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -149,26 +149,52 @@ def sample_java_app(class_context, tap_cli):
 def psql_instance(session_context, api_service_admin_client):
     log_fixture("create_postgres_instance")
     psql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
-                                            offering_label=ServiceLabels.PSQL, plan_name='free')
+                                            offering_label=ServiceLabels.PSQL, plan_name=ServicePlan.FREE)
     log_fixture("Check the service instance is running")
     psql.ensure_running()
     return psql
 
 
+@pytest.fixture(scope="session")
+def mysql_instance(session_context, api_service_admin_client):
+    log_fixture("create_mysql_instance")
+    mysql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
+                                             offering_label=ServiceLabels.MYSQL, plan_name=ServicePlan.FREE)
+    log_fixture("Check the service instance is running")
+    mysql.ensure_running()
+    return mysql
+
+
 @pytest.fixture(scope="class")
-def psql_app(class_context, psql_instance, tap_cli, api_service_admin_client):
+def app_binded_mysql(class_context, tap_cli, mysql_instance, api_service_admin_client):
+    log_fixture("mysql_app: push sample application")
+    app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
+    app_src.run_build_sh()
+    db_app = Application.push(class_context, app_path=app_src.path, tap_cli=tap_cli,
+                              app_type=TapApplicationType.PYTHON27)
+    log_fixture("Check the application is running")
+    db_app.ensure_running()
+    Binding.create(client=api_service_admin_client, context=class_context,
+                   app_id=db_app.id, service_instance_id=mysql_instance.id)
+    log_fixture("Check the application is responding")
+    db_app.ensure_responding()
+    return db_app
+
+
+@pytest.fixture(scope="class")
+def app_binded_psql(class_context, tap_cli, psql_instance, api_service_admin_client):
     log_fixture("psql_app: push sample application")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    app = Application.push(class_context, app_path=app_src.path, tap_cli=tap_cli,
-                           app_type=TapApplicationType.PYTHON27)
+    db_app = Application.push(class_context, app_path=app_src.path, tap_cli=tap_cli,
+                              app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
-    app.ensure_running()
+    db_app.ensure_running()
     Binding.create(client=api_service_admin_client, context=class_context,
-                   app_id=app.id, service_instance_id=psql_instance.id)
+                   app_id=db_app.id, service_instance_id=psql_instance.id)
     log_fixture("Check the application is responding")
-    app.ensure_responding()
-    return app
+    db_app.ensure_responding()
+    return db_app
 
 
 @pytest.fixture(scope="class")

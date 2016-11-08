@@ -244,7 +244,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     def scale(self, *, replicas: int, client: HttpClient=None):
         return api.scale_application(app_id=self.id, replicas=replicas, client=self._get_client(client))
 
-    @retry(AssertionError, tries=10, delay=2)
+    @retry(AssertionError, tries=15, delay=3)
     def ensure_responding(self, *, path=''):
         response = self.api_request(path=path)
         assert response is not None, "App {} is not responding.".format(self.name)

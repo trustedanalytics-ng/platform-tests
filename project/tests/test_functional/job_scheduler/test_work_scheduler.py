@@ -19,7 +19,7 @@ import pytest
 import config
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import priority, incremental
-from modules.service_tools.psql import PsqlTable, PsqlRow
+from modules.service_tools.db import Table, Row
 from modules.tap_logger import step
 from modules.tap_object_model import HdfsJob
 from modules.test_names import generate_test_object_name
@@ -74,8 +74,8 @@ class TestJobScheduler:
     def prepare_test(cls, test_org, test_space, add_admin_to_test_org, login_to_cf, psql_app, request):
         step("Create a table in postgres DB")
         cls.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
-        cls.TEST_TABLE = PsqlTable.post(psql_app, cls.test_table_name, cls.TEST_COLUMNS)
-        PsqlRow.post(psql_app, cls.test_table_name, cls.TEST_ROWS[0])
+        cls.TEST_TABLE = Table.post(psql_app, cls.test_table_name, cls.TEST_COLUMNS)
+        Row.post(psql_app, cls.test_table_name, cls.TEST_ROWS[0])
         step("Create tunnel to cdh-master-0")
         cls.SSH_TUNNEL = SshTunnel(hostname=config.cdh_master_0_hostname, username=config.jumpbox_username,
                                    path_to_key=config.jumpbox_key_path, port=WebhdfsTools.DEFAULT_PORT,
@@ -89,7 +89,7 @@ class TestJobScheduler:
 
         def fin():
             cls.SSH_TUNNEL.disconnect()
-            for table in PsqlTable.TABLES:
+            for table in Table.TABLES:
                 table.delete()
 
         request.addfinalizer(fin)
@@ -115,8 +115,8 @@ class TestJobScheduler:
         HdfsJob.check_response(job_output_file_content, self.TEST_ROWS)
 
     def test_2_check_new_data_on_HDFS(self, psql_app):
-        PsqlRow.post(psql_app, self.test_table_name, self.TEST_ROWS[1])
-        rows = PsqlRow.get_list(psql_app, self.test_table_name)
+        Row.post(psql_app, self.test_table_name, self.TEST_ROWS[1])
+        rows = Row.get_list(psql_app, self.test_table_name)
         rows = [row.values for row in rows]
         rows = [list(row.values()) for row in rows]
         test_rows = [[x['value'] for x in row] for row in self.TEST_ROWS]

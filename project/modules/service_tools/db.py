@@ -17,7 +17,7 @@
 from collections import namedtuple
 
 
-class PsqlColumn(namedtuple("PsqlColumn", ["name", "data_type", "is_nullable", "max_len"])):
+class Column(namedtuple("Column", ["name", "data_type", "is_nullable", "max_len"])):
 
     def __new__(cls, name, data_type, is_nullable=None, max_len=None):
         is_nullable = True if is_nullable is None else is_nullable
@@ -33,7 +33,7 @@ class PsqlColumn(namedtuple("PsqlColumn", ["name", "data_type", "is_nullable", "
         )
 
 
-class PsqlTable(namedtuple("PsqlTable", ["app", "name"])):
+class Table(namedtuple("Table", ["app", "name"])):
 
     TABLES = []
 
@@ -46,11 +46,11 @@ class PsqlTable(namedtuple("PsqlTable", ["app", "name"])):
         return table
 
     @classmethod
-    def get_list(cls, psql_app):
-        response = psql_app.api_request(method="GET", path="tables")
+    def get_list(cls, app):
+        response = app.api_request(method="GET", path="tables")
         tables = []
         for name in response["tables"]:
-            tables.append(cls(psql_app, name))
+            tables.append(cls(app, name))
         return tables
 
     def delete(self):
@@ -61,36 +61,36 @@ class PsqlTable(namedtuple("PsqlTable", ["app", "name"])):
         response = self.app.api_request(method="GET", path="tables/{}/columns".format(self.name))
         columns = []
         for item in response["columns"]:
-            columns.append(PsqlColumn(item["name"], item["type"], item.get("is_nullable"), item.get("max_len")))
+            columns.append(Column(item["name"], item["type"], item.get("is_nullable"), item.get("max_len")))
         return columns
 
 
-class PsqlRow(namedtuple("PsqlRow", ["psql_app", "table_name", "id", "values"])):
+class Row(namedtuple("Row", ["app", "table_name", "id", "values"])):
 
     PATH_TO_ROW = "tables/{}/rows/{}"
     PATH_TO_ROWS = "tables/{}/rows"
 
     @classmethod
-    def post(cls, psql_app, table_name, cols_and_values):
-        response = psql_app.api_request(method="POST", path=cls.PATH_TO_ROWS.format(table_name),
-                                        body=cols_and_values)
+    def post(cls, app, table_name, cols_and_values):
+        response = app.api_request(method="POST", path=cls.PATH_TO_ROWS.format(table_name),
+                                   body=cols_and_values)
         return response["id"]
 
     @classmethod
-    def get(cls, psql_app, table_name, row_id):
-        response = psql_app.api_request(method="GET", path=cls.PATH_TO_ROW.format(table_name, row_id))
-        return cls(psql_app, table_name, response["id"], response["values"])
+    def get(cls, app, table_name, row_id):
+        response = app.api_request(method="GET", path=cls.PATH_TO_ROW.format(table_name, row_id))
+        return cls(app, table_name, response["id"], response["values"])
 
     @classmethod
-    def get_list(cls, psql_app, table_name):
-        response = psql_app.api_request(method="GET", path=cls.PATH_TO_ROWS.format(table_name))
-        return [cls(psql_app, table_name, item["id"], item["values"]) for item in response["rows"]]
+    def get_list(cls, app, table_name):
+        response = app.api_request(method="GET", path=cls.PATH_TO_ROWS.format(table_name))
+        return [cls(app, table_name, item["id"], item["values"]) for item in response["rows"]]
 
     def put(self, cols_and_values):
         for new in cols_and_values:
             self.values[new["column_name"]] = new["value"]
-        self.psql_app.api_request(method="PUT", path=self.PATH_TO_ROW.format(self.table_name, self.id),
-                                  body=cols_and_values)
+        self.app.api_request(method="PUT", path=self.PATH_TO_ROW.format(self.table_name, self.id),
+                             body=cols_and_values)
 
     def delete(self):
-        self.psql_app.api_request(method="DELETE", path=self.PATH_TO_ROW.format(self.table_name, self.id))
+        self.app.api_request(method="DELETE", path=self.PATH_TO_ROW.format(self.table_name, self.id))
