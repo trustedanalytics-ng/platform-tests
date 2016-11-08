@@ -25,8 +25,8 @@ from modules.tap_logger import log_fixture
 from tests.fixtures.assertions import assert_dict_values_set
 
 
-logged_components = (TAP.metrics_grafana, TAP.router_metrics_provider, TAP.api_service,)
-pytestmark = [pytest.mark.components(TAP.metrics_grafana, TAP.router_metrics_provider)]
+logged_components = (TAP.metrics_grafana, TAP.api_service,)
+pytestmark = [pytest.mark.components(TAP.metrics_grafana)]
 
 expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
                          "private_datasets", "public_datasets"]

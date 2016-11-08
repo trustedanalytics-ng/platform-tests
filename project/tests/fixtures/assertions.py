@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import math
 import pytest
 from retry import retry
 
@@ -156,8 +157,6 @@ def assert_command_execution(output, return_code_correct, e, return_code):
 def assert_dict_values_set(dictionary, expected_keys_list):
     values_not_set = []
     for key in dictionary:
-        if key in expected_keys_list and dictionary[key] is None:
+        if key in expected_keys_list and math.isnan(dictionary[key]):
             values_not_set.append(key)
     assert len(values_not_set) == 0, "Missing value(s): {}".format(values_not_set)
-
-

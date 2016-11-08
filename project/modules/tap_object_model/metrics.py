@@ -120,10 +120,10 @@ class Metrics(object):
                 tmp = grafana_metrics.api_get_metric(client, panel_id=metrics[panel_value], metrics_level=metrics_level)
                 metrics_values[panel_value] = float(tmp["data"]["result"][0]["values"][0][1])
             except IndexError:
-                metrics_values[panel_value] = None  # when prometheus and grafana dont have enough data
+                metrics_values[panel_value] = float('nan')  # when prometheus and grafana dont have enough data
             except UnexpectedResponseError as e:
                 if "bad data" in e.error_message:
-                    metrics_values[panel_value] = None  # in case someone ruins grafana query
+                    metrics_values[panel_value] = float('nan')  # in case someone ruins grafana query
                 else:
                     raise
             continue

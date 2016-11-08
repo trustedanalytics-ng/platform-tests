@@ -25,9 +25,10 @@ from modules.http_client.configuration_provider.application import ApplicationCo
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Transfer, User, ServiceOffering, TestSuite, ServiceInstance
+from modules.tap_object_model import DataSet, Transfer, User, ServiceOffering, TestSuite, ServiceInstance, Metrics
 from modules.tap_object_model.flows import onboarding
 from tap_component_config import offerings_as_parameters
+from tests.fixtures.assertions import assert_dict_values_set
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
@@ -35,6 +36,8 @@ logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloa
                      TAP.zookeeper_broker, TAP.zookeeper_wssb_broker, TAP.platform_tests)
 pytestmark = [priority.high]
 
+expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
+                         "private_datasets", "public_datasets"]
 
 def test_login():
     entities = ServiceOffering.get_list()
@@ -47,6 +50,15 @@ def sample_app(sample_python_app, sample_java_app):
         "sample_python_app": sample_python_app,
         "sample_java_app": sample_java_app
     }
+
+
+@pytest.mark.components(TAP.metrics_grafana)
+def test_dashboard_metrics():
+    """Test Dashboard Metrics"""
+    step("Send requests to Grafana")
+    dashboard_metrics = Metrics.from_grafana()
+    step("Check data are of correct type")
+    assert_dict_values_set(vars(dashboard_metrics), expected_metrics_keys)
 
 
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
