@@ -60,9 +60,8 @@ class TestApiServiceBasicFlow:
 
     def test_login_providing_valid_credentials(self):
         step("Login providing valid credentials")
-        credentials = config.ng_k8s_service_credentials()
-        client = self._get_client(username=credentials[0],
-                                  password=credentials[1])
+        client = self._get_client(username=config.admin_username,
+                                  password=config.admin_password)
         response = client.request(method=HttpMethod.GET,
                                   path="login",
                                   raw_response=True,
