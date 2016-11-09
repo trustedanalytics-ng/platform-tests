@@ -28,13 +28,13 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
-@pytest.mark.skip(reason="DPNG-12584 Error: Cannot parse ApiServiceInstance list: key PLAN_ID not found!")
 class TestCatalogInstances:
 
     @pytest.fixture(scope="function")
     def catalog_service_instance(self, class_context, catalog_service):
         log_fixture("Create service instance in catalog")
-        return CatalogServiceInstance.create(class_context, service_id=catalog_service.id)
+        return CatalogServiceInstance.create(class_context, service_id=catalog_service.id,
+                                             plan_id=catalog_service.plans[0].id)
 
     @pytest.fixture(scope="function")
     def catalog_instance(self, catalog_service_instance):
@@ -65,4 +65,3 @@ class TestCatalogInstances:
         step("Check that getting the deleted instance returns an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogInstance.get, instance_id=catalog_instance.id)
-

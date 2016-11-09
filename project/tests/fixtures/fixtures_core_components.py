@@ -23,25 +23,25 @@ from modules.tap_object_model import CatalogTemplate, CatalogImage, CatalogAppli
 pytestmark = [pytest.mark.usefixtures("open_tunnel")]
 
 
-@pytest.fixture(scope="session")
-def catalog_template(session_context):
+@pytest.fixture(scope="class")
+def catalog_template(class_context):
     log_fixture("Create sample template in catalog")
-    return CatalogTemplate.create(session_context)
+    return CatalogTemplate.create(class_context)
 
 
-@pytest.fixture(scope="session")
-def catalog_image(session_context):
+@pytest.fixture(scope="class")
+def catalog_image(class_context):
     log_fixture("Create sample image in catalog")
-    return CatalogImage.create(session_context)
+    return CatalogImage.create(class_context)
 
 
-@pytest.fixture(scope="session")
-def catalog_application(session_context, catalog_template, catalog_image):
+@pytest.fixture(scope="class")
+def catalog_application(class_context, catalog_template, catalog_image):
     log_fixture("Create sample application in catalog")
-    return CatalogApplication.create(session_context, template_id=catalog_template.id, image_id=catalog_image.id)
+    return CatalogApplication.create(class_context, template_id=catalog_template.id, image_id=catalog_image.id)
 
 
-@pytest.fixture(scope="session")
-def catalog_service(session_context, catalog_template):
+@pytest.fixture(scope="class")
+def catalog_service(class_context, catalog_template):
     log_fixture("Create sample service in catalog")
-    return CatalogService.create(session_context, template_id=catalog_template.id)
+    return CatalogService.create(class_context, template_id=catalog_template.id)

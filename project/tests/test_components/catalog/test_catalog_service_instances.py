@@ -29,18 +29,19 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
-@pytest.mark.skip(reason="DPNG-12584 Error: Cannot parse ApiServiceInstance list: key PLAN_ID not found!")
 class TestCatalogServiceInstances:
 
     @pytest.fixture(scope="class")
     def catalog_service_instance(self, class_context, catalog_service):
         log_fixture("Create sample catalog service instance")
-        return CatalogServiceInstance.create(class_context, service_id=catalog_service.id)
+        return CatalogServiceInstance.create(class_context, service_id=catalog_service.id,
+                                             plan_id=catalog_service.plans[0].id)
 
     @priority.high
     def test_create_and_delete_service_instance_in_catalog(self, context, catalog_service):
         step("Create service instance in catalog")
-        catalog_service_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id)
+        catalog_service_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id,
+                                                                 plan_id=catalog_service.plans[0].id)
 
         step("Check that the service instance is on the list of all instances")
         instances = CatalogInstance.get_all()
@@ -63,13 +64,18 @@ class TestCatalogServiceInstances:
                                      CatalogServiceInstance.get, service_id=catalog_service.id,
                                      instance_id=catalog_service_instance.id)
 
+    @priority.medium
+    def test_cannot_create_service_instance_without_plan_id(self, context, catalog_service):
+        step("Check that it's not possible to create instance without plan_id")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_KEY_PLAN_ID_NOT_FOUND,
+                                     CatalogServiceInstance.create, context, service_id=catalog_service.id)
+
     @priority.low
-    def test_cannot_update_service_instance_name(self, context, catalog_service_instance):
+    def test_cannot_update_service_instance_name(self, catalog_service_instance):
         step("Check that it's not possible to update name instance by service")
         assert_raises_http_exception(CatalogHttpStatus.CODE_INTERNAL_SERVER_ERROR,
                                      CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS,
-                                     catalog_api.update_service_instance,
-                                     service_id=catalog_service_instance.class_id,
+                                     catalog_api.update_service_instance, service_id=catalog_service_instance.class_id,
                                      instance_id=catalog_service_instance.id, field_name="name", value="Simple3")
         step("Check that the instance was not updated")
         instance = CatalogServiceInstance.get(service_id=catalog_service_instance.class_id,
@@ -77,12 +83,12 @@ class TestCatalogServiceInstances:
         assert catalog_service_instance == instance
 
     @priority.low
-    def test_cannot_get_instance_of_not_existing_service(self, context, catalog_service_instance):
+    def test_cannot_get_instance_of_not_existing_service(self, catalog_service_instance):
         incorrect_service_id = "badServiceId"
         step("Check that getting instance with incorrect service id causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogServiceInstance.get, service_id=incorrect_service_id,
-                                     instance_id=incorrect_service_id)
+                                     instance_id=catalog_service_instance.id)
 
     @priority.low
     def test_cannot_create_instance_with_invalid_name(self, context, catalog_service):
@@ -91,12 +97,11 @@ class TestCatalogServiceInstances:
         expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(invalid_name)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      CatalogServiceInstance.create, context, service_id=catalog_service.id,
-                                     name=invalid_name)
+                                     name=invalid_name, plan_id=catalog_service.plans[0].id)
 
     @priority.low
-    def test_cannot_create_instance_with_empty_body(self, context, catalog_service):
+    def test_cannot_create_instance_with_empty_body(self, catalog_service):
         step("Check create instance with empty body")
-        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format("")
-        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
-                                     catalog_api.create_service_instance, service_id=catalog_service.id,
-                                     name=None, instance_type=None, state=None)
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_KEY_PLAN_ID_NOT_FOUND,
+                                     catalog_api.create_service_instance, service_id=catalog_service.id, name=None,
+                                     instance_type=None, state=None)

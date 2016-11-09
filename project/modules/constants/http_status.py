@@ -213,6 +213,7 @@ class CatalogHttpStatus(HttpStatus):
     MSG_INVALID_JSON = "unexpected end of JSON input"
     MSG_INSTANCE_UNCHANGED_FIELDS = "ID and Name fields can not be changed!"
     MSG_KEY_NOT_FOUND = "100: Key not found"
+    MSG_KEY_PLAN_ID_NOT_FOUND = "key PLAN_ID not found!"
     MSG_SERVICE_EXISTS = "service with name: {} already exists!"
 
 

@@ -99,7 +99,6 @@ def get_template(*, template_id):
 def create_template(*, state):
     """ POST /templates """
     body = {
-        "templateId": "",
         "state": state
     }
     response = _get_client().request(HttpMethod.POST,
