@@ -21,7 +21,8 @@ import bson
 import mongomock
 
 import pytest
-from modules.mongo_reporter._reporter import MongoReporter, DBClient
+from modules.mongo_reporter.reporter import MongoReporter
+from modules.mongo_reporter._client import DBClient
 
 
 class Dummy:
@@ -45,7 +46,7 @@ report.duration = 0.123
 report.keywords = ("a", "b", "c")
 
 
-@mock.patch.multiple("modules.mongo_reporter._reporter.MongoReporter",
+@mock.patch.multiple("modules.mongo_reporter.reporter.MongoReporter",
                      _get_test_docstring=lambda *args, **kwargs: TEST_DOCSTRING,
                      _get_test_type_from_report=lambda *args, **kwargs: TEST_TEST_TYPE,
                      _marker_args_from_item=lambda *args, **kwargs: TEST_ITEMS,
@@ -111,14 +112,14 @@ class TestReporterTestDocument:
     @pytest.mark.parametrize("report_passed,report_failed,report_skipped",
                              [(True, False, False), (False, True, False), (False, False, True)],
                              ids=("report_passed", "report_failed", "report_skipped"))
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
+    @mock.patch("modules.mongo_reporter.reporter.config.database_url", "test_uri")
     def test_log_report_on_call(self, mock_db_client, report_passed, report_failed, report_skipped):
         report.when = "call"
         report.passed = report_passed
         report.failed = report_failed
         report.skipped = report_skipped
 
-        with mock.patch("modules.mongo_reporter._reporter.DBClient", mock_db_client):
+        with mock.patch("modules.mongo_reporter.base_reporter.DBClient", mock_db_client):
             reporter = MongoReporter()
             run_document_before = copy.deepcopy(reporter._mongo_run_document)
             reporter.log_report(report=report, item=item)
@@ -134,7 +135,7 @@ class TestReporterTestDocument:
                               ("teardown", False, True, False, MongoReporter._RESULT_FAIL, "{}: teardown error".format(report.nodeid)),
                               ("teardown", False, False, True, MongoReporter._RESULT_SKIPPED, "{}: skipped".format(report.nodeid))],
                              ids=("on_setup_report_skipped", "on_teardown_report_failed", "on_teardown_report_skipped"))
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
+    @mock.patch("modules.mongo_reporter.reporter.config.database_url", "test_uri")
     def test_log_report_on_fixture_one_document(self, mock_db_client, report_when, report_passed, report_failed,
                                                 report_skipped, expected_test_status, expected_test_name):
         report.when = report_when
@@ -142,7 +143,7 @@ class TestReporterTestDocument:
         report.failed = report_failed
         report.skipped = report_skipped
 
-        with mock.patch("modules.mongo_reporter._reporter.DBClient", mock_db_client):
+        with mock.patch("modules.mongo_reporter.base_reporter.DBClient", mock_db_client):
             reporter = MongoReporter()
             run_document_before = copy.deepcopy(reporter._mongo_run_document)
             reporter.log_report(report=report, item=item)
@@ -159,14 +160,14 @@ class TestReporterTestDocument:
 
     @pytest.mark.parametrize("report_when", ("setup", "teardown"),
                              ids=("on_setup_report_passed", "on_teardown_report_passed"))
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
+    @mock.patch("modules.mongo_reporter.reporter.config.database_url", "test_uri")
     def test_log_report_no_update(self, mock_db_client, report_when):
         report.when = report_when
         report.passed = True
         report.failed = False
         report.skipped = False
 
-        with mock.patch("modules.mongo_reporter._reporter.DBClient", mock_db_client):
+        with mock.patch("modules.mongo_reporter.base_reporter.DBClient", mock_db_client):
             reporter = MongoReporter()
             run_document_before = copy.deepcopy(reporter._mongo_run_document)
             reporter.log_report(report=report, item=item)
@@ -175,14 +176,14 @@ class TestReporterTestDocument:
             test_documents = self._get_test_result_documents(reporter)
             assert len(test_documents) == 0
 
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
+    @mock.patch("modules.mongo_reporter.reporter.config.database_url", "test_uri")
     def test_log_report_two_documents(self, mock_db_client):
         report.when = "setup"
         report.passed = False
         report.failed = True
         report.skipped = False
 
-        with mock.patch("modules.mongo_reporter._reporter.DBClient", mock_db_client):
+        with mock.patch("modules.mongo_reporter.base_reporter.DBClient", mock_db_client):
             reporter = MongoReporter()
             run_document_before = copy.deepcopy(reporter._mongo_run_document)
             reporter.log_report(report=report, item=item)

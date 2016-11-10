@@ -183,6 +183,16 @@ check_tap_cli_version = get_bool("PT_CHECK_TAP_CLI_VERSION", True)
 access_to_core_services_from_jump = get_bool("PT_ACCESS_TO_CORE_SERVICES_FROM_JUMP", False)
 master_0_hostname = os.environ.get("PT_MASTER_0_HOSTNAME", "master-0.kubernetes.cluster.local")
 
+# --------------------------------- Performance tests -------------------------------- #
+
+locust_file = os.environ.get("PT_LOCUST_FILE", None)
+num_clients = os.environ.get("PT_NUM_CLIENTS", "2")
+hatch_rate = os.environ.get("PT_HATCH_RATE", "1")
+test_duration = get_int("PT_DURATION", 10) * 60
+locust_port = os.environ.get("PT_LOCUST_PORT", "8089")
+locust_address = "http://localhost:{}".format(locust_port)
+stress_run_id = os.environ.get("PT_STRESS_RUN_ID", None)
+
 
 def ng_k8s_service_credentials() -> tuple:
     _assert_config_value_set("_ng_k8s_service_auth_password")

@@ -13,8 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from modules.mongo_reporter._reporter import MongoReporter
-
-
-mongo_reporter = MongoReporter()

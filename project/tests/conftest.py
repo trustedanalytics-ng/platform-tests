@@ -15,17 +15,17 @@
 #
 
 import os
-from collections import defaultdict, Counter, namedtuple
+import re
+from collections import Counter, namedtuple
 from itertools import groupby
 
 import pytest
-import re
 import requests
 from _pytest.mark import MarkInfo, MarkDecorator
 
 import config
 from modules.constants import Path, ParametrizedService
-from modules.mongo_reporter import mongo_reporter
+from modules.mongo_reporter.reporter import MongoReporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceOffering
 
@@ -40,6 +40,8 @@ logger = get_logger(__name__)
 
 
 INCREMENTAL_KEYWORD = "incremental"
+
+mongo_reporter = MongoReporter()
 
 
 def _log_test_configuration():
@@ -224,4 +226,3 @@ def pytest_generate_tests(metafunc):
 
 def pytest_sessionfinish(session, exitstatus):
     mongo_reporter.on_run_end()
-

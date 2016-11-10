@@ -42,3 +42,15 @@ class DBClient(object):
         data_filter = {"_id": document_id}
         self.database[collection_name].replace_one(data_filter, new_document)
         logger.debug("Updated document with id {}".format(collection_name, document_id))
+
+
+class MockDbClient(object):
+    """Used when database url is not configured"""
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def insert(self, *args, **kwargs):
+        pass
+
+    def replace(self, *args, **kwarg):
+        pass

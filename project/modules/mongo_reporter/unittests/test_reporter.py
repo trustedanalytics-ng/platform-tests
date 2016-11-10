@@ -15,16 +15,20 @@
 #
 
 import copy
-from datetime import datetime
 import os
 import socket
+from datetime import datetime
 from unittest import mock
+from unittest.mock import call
 
-from bson import ObjectId
 import pytest
+from bson import ObjectId
 
 from modules.constants import Path
-from modules.mongo_reporter._reporter import MongoReporter, _MockDbClient
+from modules.mongo_reporter._client import MockDbClient
+from modules.mongo_reporter.base_reporter import BaseReporter
+from modules.mongo_reporter.performance_reporter import PerformanceReporter
+from modules.mongo_reporter.reporter import MongoReporter
 
 MOCK_BUMPVERSION_PATH = os.path.join("modules", "mongo_reporter", "unittests", "fixtures", "mock_bumpversion")
 assert os.path.isfile(MOCK_BUMPVERSION_PATH)
@@ -37,7 +41,7 @@ TEST_RUN_ID = ObjectId()
 class MockClient:
     def __init__(self, *args, **kwargs): pass
     insert = mock.Mock(return_value=TEST_RUN_ID)
-    replace = lambda *args, **kwargs: None
+    replace = mock.MagicMock(return_value=None)
 
 
 class MockConfig:
@@ -47,6 +51,9 @@ class MockConfig:
     tap_infrastructure_type = "test_infrastructure_type"
     tap_version = "test_tap_version"
     kerberos = "test_kerberos"
+    stress_run_id = ObjectId()
+    hatch_rate = "test_hatch_rate"
+    num_clients = "test_num_clients"
 
 
 class MockTeamcityConfiguration:
@@ -67,8 +74,108 @@ class MockTeamcityConfiguration:
         return cls.GET_ALL_VALUE
 
 
-@mock.patch("modules.mongo_reporter._reporter.DBClient", MockClient)
-@mock.patch("modules.mongo_reporter._reporter.TeamCityConfiguration", MockTeamcityConfiguration)
+TEST_COLLECTION_NAME = "test_collection"
+
+
+@mock.patch("modules.mongo_reporter.base_reporter.DBClient", MockClient)
+class TestBaseReporter(object):
+    MockRunDocument = {"test_key": "test_value"}
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    @mock.patch("modules.mongo_reporter.base_reporter.config.database_url", "test_uri")
+    def test_init_run_id_is_set(self):
+        reporter = BaseReporter(self.MockRunDocument)
+        assert reporter._run_id == TEST_RUN_ID
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    @mock.patch("modules.mongo_reporter.base_reporter.config.database_url", "test_uri")
+    def test_init_database_url_set(self):
+        reporter = BaseReporter(self.MockRunDocument)
+        assert isinstance(reporter._db_client, MockClient)
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    @mock.patch("modules.mongo_reporter.base_reporter.config.database_url", None)
+    def test_init_no_database_url(self):
+        reporter = BaseReporter(self.MockRunDocument)
+        assert isinstance(reporter._db_client, MockDbClient)
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    def test_init_run_id(self):
+        run_id = ObjectId()
+        reporter = BaseReporter(self.MockRunDocument, run_id=run_id)
+        assert reporter._run_id == run_id
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    @mock.patch("modules.mongo_reporter.base_reporter.config.database_url", "test_uri")
+    @mock.patch.object(BaseReporter, "_save_test_run")
+    def test_init_save_run_document(self, mock_method):
+        BaseReporter(self.MockRunDocument)
+        mock_method.assert_any_call()
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    def test_mongo_run_document(self):
+        reporter = BaseReporter(self.MockRunDocument)
+        assert reporter._mongo_run_document == self.MockRunDocument
+
+    @mock.patch("modules.mongo_reporter.base_reporter.BaseReporter._TEST_RUN_COLLECTION_NAME", TEST_COLLECTION_NAME)
+    @mock.patch("modules.mongo_reporter.base_reporter.config.database_url", "test_uri")
+    def test_save_test_run(self):
+        run_id = ObjectId()
+        reporter = BaseReporter(self.MockRunDocument, run_id=run_id)
+        expected_args = {'new_document': {'test_key': 'test_value'}, 'document_id': run_id,
+                         'collection_name': TEST_COLLECTION_NAME}
+        reporter._db_client.replace.assert_called_with(**expected_args)
+
+    @mock.patch("modules.mongo_reporter.base_reporter.config.database_url", "test_uri")
+    def test_cannot_save_run_document_without_name(self):
+        with pytest.raises(AssertionError):
+            BaseReporter(self.MockRunDocument)
+
+
+@mock.patch("modules.mongo_reporter.base_reporter.DBClient", MockClient)
+class TestPerformanceReporter(object):
+    MockStats = None
+    StatsPassed = {"stats": [{"num_failures": 0}]}
+    StatsFailed = {"stats": [{"num_failures": 1}]}
+
+    @mock.patch("modules.mongo_reporter.performance_reporter.config", MockConfig)
+    def test_init_run_document(self):
+        run_document = PerformanceReporter()._mongo_run_document
+        assert run_document["end_date"] is None
+        assert run_document["environment"] == MockConfig.tap_domain
+        assert run_document["environment_version"] == MockConfig.tap_version
+        assert run_document["finished"] is False
+        assert run_document["hatch_rate"] == MockConfig.hatch_rate
+        assert run_document["infrastructure_type"] == MockConfig.tap_infrastructure_type
+        assert run_document["number_of_users"] == MockConfig.num_clients
+        _assert_date_close_enough_to_now(run_document["start_date"])
+        assert run_document["started by"] == socket.gethostname()
+        assert run_document["status"] == BaseReporter._RESULT_UNKNOWN
+
+    @mock.patch("modules.mongo_reporter.performance_reporter.PerformanceReporter._get_status",
+                lambda *args, **kwargs: BaseReporter._RESULT_PASS)
+    def test_on_run_end(self):
+        reporter = PerformanceReporter()
+        document_before = copy.deepcopy(reporter._mongo_run_document)
+        reporter.on_run_end(self.MockStats)
+        document_after = reporter._mongo_run_document
+        _assert_all_keys_equal_except(document_before, document_after, "end_date", "finished", "status")
+        _assert_date_close_enough_to_now(document_after["start_date"])
+        assert document_after["status"] is BaseReporter._RESULT_PASS
+        assert document_after["finished"] is True
+
+    @pytest.mark.parametrize("mock_stats, result", ((StatsPassed, BaseReporter._RESULT_PASS),
+                                                    (StatsFailed, BaseReporter._RESULT_FAIL)))
+    def test_get_stats(self, mock_stats, result):
+        assert PerformanceReporter._get_status(mock_stats) == result
+
+    def test_collection_name_is_not_none(self):
+        reporter = PerformanceReporter()
+        assert reporter._TEST_RUN_COLLECTION_NAME is not None
+
+
+@mock.patch("modules.mongo_reporter.base_reporter.DBClient", MockClient)
+@mock.patch("modules.mongo_reporter.reporter.TeamCityConfiguration", MockTeamcityConfiguration)
 class TestReporter(object):
 
     @pytest.fixture(scope="function")
@@ -83,18 +190,10 @@ class TestReporter(object):
         monkeypatch.setattr("modules.mongo_reporter._tap_info.config", MockConfig)
         return _mock_platform
 
-    def _assert_all_keys_equal_except(self, document_a: dict, document_b: dict, *args):
-        for k, v in document_a.items():
-            if k not in args:
-                assert v == document_b[k], "Value of {} key changed".format(k)
-
-    def _assert_date_close_enough_to_now(self, date, epsilon=0.1):
-        assert abs(date - datetime.now()).total_seconds() < epsilon
-
-    @mock.patch("modules.mongo_reporter._reporter.config", MockConfig)
+    @mock.patch("modules.mongo_reporter.reporter.config", MockConfig)
     def test_init_run_document(self):
         TEST_VERSION = "test.version"
-        with mock.patch("modules.mongo_reporter._reporter.MongoReporter._get_test_version",
+        with mock.patch("modules.mongo_reporter.reporter.MongoReporter._get_test_version",
                         lambda *args, **kwargs: TEST_VERSION):
             run_document = MongoReporter()._mongo_run_document
 
@@ -104,17 +203,19 @@ class TestReporter(object):
         assert run_document["environment_version"] == MockConfig.tap_version
         assert run_document["infrastructure_type"] == MockConfig.tap_infrastructure_type
         assert run_document["kerberos"] == MockConfig.kerberos
+        assert run_document["stress_run_id"] == MockConfig.stress_run_id
         # values from TeamCityConfiguration
         assert run_document["parameters"]["configuration_parameters"] == MockTeamcityConfiguration.GET_ALL_VALUE
         assert run_document["teamcity_build_id"] == MockTeamcityConfiguration.GETINT_VALUE
         assert run_document["teamcity_server_url"] == MockTeamcityConfiguration.GET_VALUE
         # other dynamic values
-        self._assert_date_close_enough_to_now(run_document["start_date"])
+        _assert_date_close_enough_to_now(run_document["start_date"])
         assert run_document["started_by"] == socket.gethostname()
         assert run_document["test_version"] == TEST_VERSION
         assert run_document["parameters"]["environment_variables"] == os.environ
         assert run_document["tap_build_number"] is None
         # non-dynamic values
+        _assert_date_close_enough_to_now(run_document["start_date"])
         assert run_document["end_date"] is None
         assert run_document["finished"] is False
         assert run_document["log"] == ""
@@ -128,43 +229,23 @@ class TestReporter(object):
         assert run_document["environment_availability"] is True
         assert run_document["test_type"] is None
 
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
-    def test_init_run_id_is_set(self):
-        reporter = MongoReporter()
-        assert reporter._run_id == TEST_RUN_ID
-
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", None)
-    def test_init_no_database_url(self):
-        reporter = MongoReporter()
-        assert isinstance(reporter._db_client, _MockDbClient)
-
-    @mock.patch("modules.mongo_reporter._reporter.config.database_url", "test_uri")
-    def test_init_database_url_set(self):
-        reporter = MongoReporter()
-        assert isinstance(reporter._db_client, MockClient)
-
-    def test_init_run_id(self):
-        run_id = ObjectId()
-        reporter = MongoReporter(run_id=run_id)
-        assert reporter._run_id == run_id
-
     def test_report_components(self):
         TEST_COMPONENTS = ["a", "b", "c"]
         reporter = MongoReporter()
         document_before = copy.deepcopy(reporter._mongo_run_document)
         reporter.report_components(TEST_COMPONENTS)
         document_after = reporter._mongo_run_document
-        self._assert_all_keys_equal_except(document_before, document_after, "components")
+        _assert_all_keys_equal_except(document_before, document_after, "components")
         assert sorted(document_after["components"]) == sorted(TEST_COMPONENTS)
 
     def test_report_test_type(self):
         RUN_TYPE_GET_VALUE = "test-type"
         reporter = MongoReporter()
         document_before = copy.deepcopy(reporter._mongo_run_document)
-        with mock.patch("modules.mongo_reporter._reporter.RunType.get", lambda *args, **kwargs: RUN_TYPE_GET_VALUE):
+        with mock.patch("modules.mongo_reporter.reporter.RunType.get", lambda *args, **kwargs: RUN_TYPE_GET_VALUE):
             reporter.report_test_type("xxx")
         document_after = reporter._mongo_run_document
-        self._assert_all_keys_equal_except(document_before, document_after, "test_type")
+        _assert_all_keys_equal_except(document_before, document_after, "test_type")
         assert reporter._mongo_run_document["test_type"] == RUN_TYPE_GET_VALUE
 
     def test_report_unavailable_environment(self):
@@ -172,10 +253,10 @@ class TestReporter(object):
         document_before = copy.deepcopy(reporter._mongo_run_document)
         reporter.report_unavailable_environment()
         document_after = reporter._mongo_run_document
-        self._assert_all_keys_equal_except(document_before, document_after, "environment_availability", "end_date",
+        _assert_all_keys_equal_except(document_before, document_after, "environment_availability", "end_date",
                                            "finished")
         assert document_after["environment_availability"] is False
-        self._assert_date_close_enough_to_now(document_after["end_date"])
+        _assert_date_close_enough_to_now(document_after["end_date"])
         assert document_after["finished"] is True
 
     def test_on_run_end(self):
@@ -185,23 +266,23 @@ class TestReporter(object):
         reporter._total_test_counter = TEST_COUNT
         reporter.on_run_end()
         document_after = reporter._mongo_run_document
-        self._assert_all_keys_equal_except(document_before, document_after, "end_date", "total_test_count", "finished")
-        self._assert_date_close_enough_to_now(document_after["start_date"])
+        _assert_all_keys_equal_except(document_before, document_after, "end_date", "total_test_count", "finished")
+        _assert_date_close_enough_to_now(document_after["start_date"])
         assert document_after["total_test_count"] == TEST_COUNT
         assert document_after["finished"] is True
 
-    @mock.patch("modules.mongo_reporter._reporter.Path.bumpversion_file", MOCK_BUMPVERSION_PATH)
+    @mock.patch("modules.mongo_reporter.reporter.Path.bumpversion_file", MOCK_BUMPVERSION_PATH)
     def test_get_test_version(self):
         version = MongoReporter._get_test_version()
         assert version == "test.version"
 
-    @mock.patch("modules.mongo_reporter._reporter.Path.bumpversion_file", "idontexist")
+    @mock.patch("modules.mongo_reporter.reporter.Path.bumpversion_file", "idontexist")
     def test_get_test_version_missing_bumpversion_file(self):
         with pytest.raises(AssertionError) as e:
             MongoReporter._get_test_version()
         assert "No such file" in e.value.msg
 
-    @mock.patch("modules.mongo_reporter._reporter.Path.bumpversion_file", MOCK_BUMPVERSION_BAD_PATH)
+    @mock.patch("modules.mongo_reporter.reporter.Path.bumpversion_file", MOCK_BUMPVERSION_BAD_PATH)
     def test_get_test_version_bad_file(self):
         with pytest.raises(AssertionError) as e:
             MongoReporter._get_test_version()
@@ -254,7 +335,7 @@ class TestReporter(object):
     def test_test_type_from_report_directory_other(self, dummy_class):
         report = dummy_class
         report.fspath = "xx"
-        with mock.patch("modules.mongo_reporter._reporter.MongoReporter._priority_from_report",
+        with mock.patch("modules.mongo_reporter.reporter.MongoReporter._priority_from_report",
                         lambda *args, **kwargs: "kitten"):
             test_type = MongoReporter._get_test_type_from_report(report)
         assert test_type == MongoReporter._TEST_TYPE_OTHER
@@ -264,7 +345,7 @@ class TestReporter(object):
                                                              ("low", MongoReporter._TEST_TYPE_OTHER),
                                                              ("kitten", MongoReporter._TEST_TYPE_OTHER)])
     def test_type_from_report_priority(self, priority, expected_test_type, dummy_class):
-        with mock.patch("modules.mongo_reporter._reporter.MongoReporter._priority_from_report",
+        with mock.patch("modules.mongo_reporter.reporter.MongoReporter._priority_from_report",
                         lambda *args, **kwargs: priority):
             test_type = MongoReporter._get_test_type_from_report(dummy_class)
         assert test_type == expected_test_type
@@ -293,7 +374,7 @@ class TestReporter(object):
         run_document_before = copy.deepcopy(reporter._mongo_run_document)
         reporter._update_run_status(result_document={}, test_status=test_status)
         run_document_after = reporter._mongo_run_document
-        self._assert_all_keys_equal_except(run_document_before, run_document_after, "status", "result", "test_count")
+        _assert_all_keys_equal_except(run_document_before, run_document_after, "status", "result", "test_count")
         assert run_document_after["status"] == expected_run_status
         assert run_document_after["result"][test_status] == run_document_before["result"][test_status] + 1
 
@@ -304,7 +385,7 @@ class TestReporter(object):
         reporter._update_run_status(result_document={}, test_status=MongoReporter._RESULT_PASS,
                                     increment_test_count=increment_test_count)
         run_document_after = reporter._mongo_run_document
-        self._assert_all_keys_equal_except(run_document_before, run_document_after, "result", "test_count")
+        _assert_all_keys_equal_except(run_document_before, run_document_after, "result", "test_count")
         if increment_test_count:
             assert run_document_after["test_count"] == run_document_before["test_count"] + 1
         else:
@@ -324,3 +405,17 @@ class TestReporter(object):
             reporter._save_test_run()
         mock_replace.assert_called_once_with(collection_name=MongoReporter._TEST_RUN_COLLECTION_NAME,
                                              document_id=reporter._run_id, new_document=reporter._mongo_run_document)
+
+    def test_collection_name_is_not_none(self):
+        reporter = MongoReporter()
+        assert reporter._TEST_RUN_COLLECTION_NAME is not None
+
+
+def _assert_date_close_enough_to_now(date, epsilon=0.1):
+    assert abs(date - datetime.now()).total_seconds() < epsilon
+
+
+def _assert_all_keys_equal_except(document_a: dict, document_b: dict, *args):
+    for k, v in document_a.items():
+        if k not in args:
+            assert v == document_b[k], "Value of {} key changed".format(k)

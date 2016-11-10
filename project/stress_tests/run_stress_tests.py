@@ -13,62 +13,64 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import json
+import logging
 import os
+import signal
 import subprocess
 import sys
 from time import sleep
 
 import requests
-import signal
 from retry import retry
 
 sys.path.append(os.getcwd())
 
-from config import get_int
+import config
+from modules.mongo_reporter.performance_reporter import PerformanceReporter
 
-try:
-    import user_config
-except ImportError:
-    pass
-
-
-locust_file = os.environ["PT_LOCUST_FILE"]
-num_clients = os.environ.get("PT_NUM_CLIENTS", "2")
-hatch_rate = os.environ.get("PT_HATCH_RATE", "1")
-test_duration = get_int("PT_DURATION", 10) * 60
-locust_port = os.environ.get("PT_LOCUST_PORT", "8089")
-locust_address = "http://localhost:{}".format(locust_port)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
-def start_locust_process(locust_file, locust_port):
-    command = ["locust", "-P", locust_port, "-f", locust_file]
-    process = subprocess.Popen(command, universal_newlines=True)
+def start_locust_process(stress_run_id=None):
+    command = ["locust", "-P", config.locust_port, "-f", config.locust_file]
+    env = os.environ
+    env.update({"PT_STRESS_RUN_ID": str(stress_run_id)})
+    process = subprocess.Popen(command, universal_newlines=True, env=env)
     return process
 
 
 @retry(tries=3, delay=1)
-def start_test(locust_address, num_clients, hatch_rate):
-    return requests.post("{}/swarm".format(locust_address),
-                         data={'locust_count': num_clients, 'hatch_rate': hatch_rate})
+def start_test():
+    response = requests.post("{}/swarm".format(config.locust_address),
+                         data={'locust_count': config.num_clients, 'hatch_rate': config.hatch_rate})
+    logger.info("/swarm response: {}".format(response))
+    return response
 
 
 def stop_test():
-    return requests.get("{}/stop".format(locust_address))
+    response = requests.get("{}/stop".format(config.locust_address))
+    logger.info("/stop response: {}".format(response))
+    return response
 
 
 def get_stats():
-    return requests.get("{}/requests".format(locust_address))
+    response = requests.get("{}/stats/requests".format(config.locust_address))
+    logger.info("/stats/requests response: {}".format(response))
+    return json.loads(response.text)
 
-
+perf_mongo_reporter = PerformanceReporter()
 locust_process = None
 try:
-    locust_process = start_locust_process(locust_file, locust_port)
-    start_test(locust_address, num_clients, hatch_rate)
-    sleep(test_duration)
-    stop_test()
-    get_stats()
+    locust_process = start_locust_process(stress_run_id=perf_mongo_reporter._run_id)
+    start_test()
+    sleep(config.test_duration)
 except:
     raise
 finally:
+    stop_test()
+    stats = get_stats()
+    perf_mongo_reporter.on_run_end(stats)
     if locust_process is not None:
         locust_process.send_signal(signal.SIGINT)

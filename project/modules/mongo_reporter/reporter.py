@@ -15,36 +15,24 @@
 #
 
 import configparser
-from datetime import datetime
 import os
 import socket
+from datetime import datetime
 
 from bson import ObjectId
 
 import config
 from modules.constants import Path
+from modules.mongo_reporter.base_reporter import BaseReporter
 from modules.tap_logger import get_logger
-from ._client import DBClient
+from ._run_type import RunType
 from ._tap_info import TapInfo
 from ._teamcity_configuration import TeamCityConfiguration
-from ._run_type import RunType
 
 logger = get_logger(__name__)
 
 
-class _MockDbClient(object):
-    """Used when database url is not configured"""
-    def __init__(self, *args, **kwargs): pass
-    def insert(self, *args, **kwargs): pass
-    def replace(self, *args, **kwarg): pass
-
-
-class MongoReporter(object):
-
-    _RESULT_PASS = "PASS"
-    _RESULT_FAIL = "FAIL"
-    _RESULT_SKIPPED = "SKIPPED"
-    _RESULT_UNKNOWN = "UNKNOWN"
+class MongoReporter(BaseReporter):
 
     _TEST_TYPE_SMOKE = "smoke"
     _TEST_TYPE_REGRESSION = "regression"
@@ -53,19 +41,12 @@ class MongoReporter(object):
     _TEST_RUN_COLLECTION_NAME = "test_run"
     _TEST_RESULT_COLLECTION_NAME = "test_result"
 
-    def __init__(self, run_id=None):
-        """Important! This method cannot make http calls!"""
-
-        if config.database_url is None:
-            logger.warning("Not writing results to a database - database_url not configured.")
-            self._db_client = _MockDbClient()
-        else:
-            self._db_client = DBClient(uri=config.database_url)
-        if run_id is not None:
-            run_id = ObjectId(run_id)
-        self._run_id = run_id
+    def __init__(self, *args, **kwargs):
+        stress_run_id = config.stress_run_id
+        if stress_run_id is not None:
+            stress_run_id = ObjectId(stress_run_id)
         self._total_test_counter = 0
-        self._mongo_run_document = {
+        mongo_run_document = {
             "appstack_version": config.appstack_version,  # TODO is it still needed in TAP 0.8?
             "end_date": None,
             "environment": config.tap_domain,
@@ -84,6 +65,7 @@ class MongoReporter(object):
             "start_date": datetime.now(),
             "started_by": socket.gethostname(),
             "status": self._RESULT_PASS,
+            "stress_run_id": stress_run_id,
             "test_count": 0,
             "total_test_count": 0,
             "test_version": self._get_test_version(),
@@ -96,7 +78,7 @@ class MongoReporter(object):
             "tap_build_number": None,
             "test_type": None,
         }
-        self._save_test_run()
+        super().__init__(mongo_run_document=mongo_run_document, *args, **kwargs)
         self._log = []
 
     def report_components(self, all_test_components):
@@ -246,11 +228,3 @@ class MongoReporter(object):
             self._mongo_run_document["status"] = self._RESULT_FAIL
         self._mongo_run_document["result"][test_status] += 1
         self._save_test_run()
-
-    def _save_test_run(self):
-        if self._run_id is None:
-            self._run_id = self._db_client.insert(collection_name=self._TEST_RUN_COLLECTION_NAME,
-                                                  document=self._mongo_run_document)
-        else:
-            self._db_client.replace(collection_name=self._TEST_RUN_COLLECTION_NAME, document_id=self._run_id,
-                                    new_document=self._mongo_run_document)
