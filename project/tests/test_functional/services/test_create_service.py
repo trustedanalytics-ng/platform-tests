@@ -14,82 +14,123 @@
 # limitations under the License.
 #
 
+import os
 import pytest
+import tarfile
 
-from modules.constants import ServiceCatalogHttpStatus as HttpStatus, TapComponent as TAP
+from modules.constants import ServicePlan, ServiceCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceOffering
+from modules.tap_object_model import ServiceInstance, ServiceOffering
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_in_with_retry, assert_raises_http_exception, assert_not_in_with_retry
 
 logged_components = (TAP.service_catalog,)
-pytestmark = [pytest.mark.components(TAP.service_catalog),
-              pytest.mark.skip(reason="DPNG-11125 api-service: endpoint for adding offerings from jar archives")]
+pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
-@priority.low
-@pytest.mark.sample_apps_test
-def test_cannot_create_service_with_no_name(context, test_org):
-    step("Attempt to create service with empty name")
-    assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                 ServiceOffering.create_from_binary, context, org_guid=test_org.guid, service_name="")
+class TestCreateService:
+    SAMPLE_APP_URL = Urls.tapng_java_app_url
+    APP_TYPE = "JAVA"
 
+    @pytest.fixture(scope="class")
+    def app_jar(self, sample_app_path):
+        step("Extract application archive")
+        sample_app_source_dir = os.path.join(os.path.dirname(sample_app_path),
+                                             "sample_{}_app_source".format(self.APP_TYPE))
+        with tarfile.open(sample_app_path) as tar:
+            tar.extractall(path=sample_app_source_dir)
+            sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
+        return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if ".jar" in name))
 
-@priority.low
-@pytest.mark.sample_apps_test
-def test_cannot_create_service_with_no_description(context, test_org):
-    step("Attempt to create service with empty description")
-    assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                 ServiceOffering.create_from_binary, context, org_guid=test_org.guid,
-                                 service_description="")
+    @pytest.fixture(scope="function")
+    def offering_json(self):
+        return ServiceOffering.create_offering_json()
 
+    @pytest.fixture(scope="class")
+    def manifest_json(self):
+        return ServiceOffering.create_manifest_json(self.APP_TYPE)
 
-@priority.high
-@pytest.mark.sample_apps_test
-@pytest.mark.parametrize("role", ["admin", "user"])
-def test_create_and_delete_service_offering(context, test_org, test_user_clients, role):
-    client = test_user_clients[role]
-    step("Register in marketplace")
-    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, client=client)
-    step("Check that service is in marketplace")
-    assert_in_with_retry(service, ServiceOffering.get_list)
-    step("Delete service")
-    service.api_delete(client=client)
-    step("Check that service isn't in marketplace")
-    assert_not_in_with_retry(service, ServiceOffering.get_list)
+    @priority.low
+    @pytest.mark.sample_apps_test
+    def test_cannot_create_service_with_no_name(self, context, app_jar,
+                                                manifest_json):
+        step("Prepare offering json")
+        offering_file = ServiceOffering.create_offering_json(name="")
+        step("Attempt to create service with empty name")
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_SERVICE_NAME_IS_EMPTY,
+                                     ServiceOffering.create_from_binary, context, jar_path=app_jar,
+                                     manifest_path=manifest_json, offering_path=offering_file)
 
+    @priority.high
+    @pytest.mark.sample_apps_test
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    @pytest.mark.bugs("DPNG-12740 Offerings created from JAR files are stuck in DEPLOYING state")
+    def test_create_and_delete_service_offering(self, context, app_jar, offering_json,
+                                                manifest_json, test_user_clients, role):
+        client = test_user_clients[role]
+        step("Register in marketplace")
+        service = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
+                                                     offering_path=offering_json, client=client)
+        step("Check that service is in marketplace")
+        assert_in_with_retry(service, ServiceOffering.get_list)
+        step("Check that service is in state 'READY'")
+        service.ensure_ready()
+        step("Create service instance")
+        instance = ServiceInstance.create_with_name(context, offering_label=service.label, plan_name=ServicePlan.FREE)
+        step("Check created instance")
+        instance.ensure_running()
+        assert instance.offering_id == service.id
+        assert instance.offering_label == service.label
+        step("Delete service instance")
+        instance.delete()
+        instance.ensure_deleted()
+        step("Delete service")
+        service.delete(client=client)
+        step("Check that service isn't in marketplace")
+        assert_not_in_with_retry(service, ServiceOffering.get_list)
 
-@priority.medium
-@pytest.mark.sample_apps_test
-def test_create_service_with_icon(context, test_org, example_image):
-    step("Register in marketplace")
-    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, image=example_image)
-    step("Check that service is in marketplace")
-    assert_in_with_retry(service, ServiceOffering.get_list)
-    step("Check that images are the same")
-    assert example_image == bytes(service.image, "utf8")
+    @priority.medium
+    @pytest.mark.sample_apps_test
+    @pytest.mark.bugs("DPNG-12742 /v2/api/offerings in tap-api-service does not return Service name and Metadata")
+    def test_create_service_with_icon(self, context, app_jar, manifest_json,
+                                      example_image):
+        step("Prepare offering json")
+        metadata = [{"key": "imageUrl", "value": example_image.decode()}, ]
+        offering_file = ServiceOffering.create_offering_json(metadata=metadata)
+        step("Register in marketplace")
+        service = ServiceOffering.create_from_binary(context, jar_path=app_jar,  manifest_path=manifest_json,
+                                                     offering_path=offering_file)
+        step("Check that service is in marketplace")
+        assert_in_with_retry(service, ServiceOffering.get_list)
+        step("Check that images are the same")
+        assert example_image == bytes(service.image, "utf8")
 
+    @priority.medium
+    @pytest.mark.sample_apps_test
+    def test_create_service_with_tag(self, context, app_jar, manifest_json):
+        step("Prepare offering json")
+        tags = [generate_test_object_name(short=True)]
+        offering_file = ServiceOffering.create_offering_json(tags=tags)
+        step("Register in marketplace")
+        service = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
+                                                     offering_path=offering_file)
+        step("Check that service is in marketplace")
+        assert_in_with_retry(service, ServiceOffering.get_list)
+        step("Check that tags names are the same")
+        assert tags == service.tags
 
-@priority.medium
-@pytest.mark.sample_apps_test
-def test_create_service_with_display_name(context, test_org):
-    display_name = generate_test_object_name()
-    step("Register in marketplace")
-    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, display_name=display_name)
-    step("Check that service is in marketplace")
-    assert_in_with_retry(service, ServiceOffering.get_list)
-    step("Check that display names are the same")
-    assert display_name == service.display_name
-
-
-@priority.medium
-@pytest.mark.sample_apps_test
-def test_create_service_with_tag(context, test_org):
-    tags = [generate_test_object_name(short=True)]
-    step("Register in marketplace")
-    service = ServiceOffering.create_from_binary(context, org_guid=test_org.guid, tags=tags)
-    step("Check that service is in marketplace")
-    assert_in_with_retry(service, ServiceOffering.get_list)
-    step("Check that tags names are the same")
-    assert tags == service.tags
+    @priority.medium
+    @pytest.mark.sample_apps_test
+    def test_create_service_with_display_name(self, context, app_jar, manifest_json):
+        step("Prepare offering json")
+        display_name = generate_test_object_name()
+        metadata = [{"key": "displayName", "value": display_name}, ]
+        offering_file = ServiceOffering.create_offering_json(metadata=metadata)
+        step("Register in marketplace")
+        service = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
+                                                     offering_path=offering_file)
+        step("Check that service is in marketplace")
+        assert_in_with_retry(service, ServiceOffering.get_list)
+        step("Check that display names are the same")
+        assert display_name == service.display_name

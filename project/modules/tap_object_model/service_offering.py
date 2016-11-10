@@ -14,12 +14,14 @@
 # limitations under the License.
 #
 
+import json
 import functools
 
 from retry import retry
 
 from fixtures.k8s_templates import template_example
-from modules.constants import TapEntityState
+from modules import file_utils
+from modules.constants import TapEntityState, ServicePlan as ServicePlanNames
 from modules.exceptions import ServiceOfferingCreationFailed
 from modules.http_calls.platform import api_service as api
 from modules.http_client import HttpClient
@@ -38,12 +40,16 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["id", "label"]
     TEST_SERVICE_PREFIX = "test_service"
 
-    def __init__(self, *, offering_id: str, label: str, service_plans: list, state: str, client: HttpClient=None):
+    def __init__(self, *, offering_id: str, label: str, service_plans: list, state: str, tags: list=None,
+                 image: str=None, display_name: str=None, client: HttpClient=None):
         # TODO add fields necessary for tests
         super().__init__(object_id=offering_id, client=client)
         self.label = label
         self.service_plans = service_plans
         self.state = state
+        self.tags = tags if tags is not None else []
+        self.image = image
+        self.display_name = display_name
 
     def __repr__(self):
         return "{} (label={}, guid={})".format(self.__class__.__name__, self.label, self.id)
@@ -89,11 +95,14 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         self.state = this_offering.state
 
     @classmethod
-    def create_from_binary(cls, context, *, org_guid: str, path=None, service_name: str=None,
-                           service_description: str=None, image: str=None, display_name: str=None, tags: list=None,
-                           client: HttpClient=None):
-        # TODO will call POST /offerings/binary in api-service
-        raise NotImplemented
+    def create_from_binary(cls, context, *, jar_path, manifest_path, offering_path, client: HttpClient=None):
+        if client is None:
+            client = cls._get_default_client()
+        response = api.create_offering_from_binary(jar_path=jar_path, manifest_path=manifest_path,
+                                                   offering_path=offering_path, client=client)
+        new_offering = cls._from_response(response, client)
+        context.test_objects.append(new_offering)
+        return new_offering
 
     @classmethod
     def get(cls, *, offering_id, client: HttpClient=None):
@@ -131,7 +140,59 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
             logger.debug("Why service_plans_json is None?")
             logger.debug(response)
             service_plans_json = []
+        if "tags" in response.keys():
+            tags = response["tags"]
+        elif "entity" in response.keys():
+            tags = response["entity"].get("tags", None)
+        else:
+            tags = None
+        if type(response["metadata"]) is list:
+            metadata = cls._metadata_to_dict(response["metadata"])
+            image = metadata.get("imageUrl", None)
+            display_name = metadata.get("displayName", None)
+        elif "entity" in response.keys():
+            image = response["entity"].get("imageUrl", None)
+            display_name = response["entity"].get("displayName", None)
+        else:
+            image = None
+            display_name = None
         service_plans = []
         for item in service_plans_json:
             service_plans.append(ServicePlan.from_response(item))
-        return cls(offering_id=offering_id, label=label, service_plans=service_plans, client=client, state=state)
+        return cls(offering_id=offering_id, label=label, service_plans=service_plans, image=image, state=state,
+                   tags=tags, display_name=display_name, client=client)
+
+    @classmethod
+    def _metadata_to_dict(cls, metadata):
+        metadata_dict = {}
+        if metadata is not None:
+            for pair in metadata:
+                metadata_dict.update({pair["key"]: pair["value"]})
+        return metadata_dict
+
+    @classmethod
+    def create_offering_json(cls, name: str=None, description: str=None, metadata: list=None, bindable: bool=True,
+                             tags: list=None, plans: list=None, file_name: str=None):
+        default_plans = [{
+            "name": ServicePlanNames.FREE,
+            "description": ServicePlanNames.FREE,
+            "cost": ServicePlanNames.FREE
+        }]
+        offering_dict = {
+            "name": name if name is not None else generate_test_object_name(separator="-"),
+            "description": description if description is not None else generate_test_object_name(),
+            "metadata": metadata if metadata is not None else [],
+            "bindable": bindable,
+            "tags": tags if tags is not None else [],
+            "plans": plans if plans is not None else default_plans
+        }
+        file_name = file_name if file_name is not None else "offering.json"
+        return file_utils.save_text_file(data=json.dumps(offering_dict), file_name=file_name)
+
+    @classmethod
+    def create_manifest_json(cls, app_type: str, file_name: str=None):
+        manifest_dict = {
+            "type": app_type
+        }
+        file_name = file_name if file_name is not None else "manifest.json"
+        return file_utils.save_text_file(data=json.dumps(manifest_dict), file_name=file_name)

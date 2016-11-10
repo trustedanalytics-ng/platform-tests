@@ -174,6 +174,7 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE = "Can't remove service with existing instances from catalog"
     MSG_SERVICE_EXISTS = "service with name: {} already exists!"
     MSG_SERVICE_DOES_NOT_EXIST = "100: Key not found"
+    MSG_SERVICE_NAME_IS_EMPTY = "Service name should not be empty"
 
 
 class KubernetesBrokerHttpStatus(HttpStatus):

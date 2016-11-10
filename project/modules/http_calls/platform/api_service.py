@@ -53,9 +53,17 @@ def create_offering(*, client: HttpClient, template_body: dict, service_name: st
     return response.json()
 
 
-def create_offering_from_binary(*, client: HttpClient):
+def create_offering_from_binary(*, jar_path: str, manifest_path: str, offering_path, client: HttpClient):
     """ POST /offerings/binary """
-    raise NotImplemented
+    files = {
+        "blob": (jar_path, open(jar_path, 'rb'), "multipart/form-data"),
+        "manifest": (manifest_path, open(manifest_path, 'rb'), "multipart/form-data"),
+        "offering": (offering_path, open(offering_path, 'rb'), "multipart/form-data"),
+    }
+    response = client.request(HttpMethod.POST, path="offerings/binary", files=files, raw_response=True,
+                              msg="Create an offering")
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
+    return response.json()
 
 
 def get_offering(*, client: HttpClient, offering_id: str):
