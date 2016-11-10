@@ -65,7 +65,7 @@ class TestPassword:
         client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
 
         step("Try to login with old credentials.")
-        assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
+        assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_INCORRECT_PASSWORD, self.test_user.login)
 
         step("Login to the platform with new credentials.")
         self.test_user.password = self.NEW_PASSWORD
@@ -85,7 +85,7 @@ class TestPassword:
         step("Logout and try to login with old credentials.")
         client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
         HttpClientFactory.remove(self.test_user.client_configuration)
-        assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_EMPTY, self.test_user.login)
+        assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_INCORRECT_PASSWORD, self.test_user.login)
 
         step("Login to the platform with new credentials.")
         self.test_user.password = self.NEW_PASSWORD

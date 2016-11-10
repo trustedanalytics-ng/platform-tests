@@ -146,6 +146,7 @@ class UserManagementHttpStatus(HttpStatus):
     MSG_USER_NOT_EXIST = "The user does not exist"
     MSG_ACCESS_IS_DENIED = "Access is denied"
     MSG_ACCESS_DENIED = "access_denied"
+    MSG_INCORRECT_PASSWORD = "forgot_password"
     MSG_PASSWORD_CANNOT_BE_EMPTY = "Password cannot be empty"
     MSG_ORGANIZATION_ALREADY_EXISTS = "Organization \\\"{}\\\" already exists"
     MSG_ORGANIZATION_ALREADY_TAKEN = "The organization name is taken: {}"
