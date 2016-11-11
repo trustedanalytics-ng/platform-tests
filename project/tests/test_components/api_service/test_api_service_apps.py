@@ -61,12 +61,19 @@ class TestApiServiceApplication:
                                                 client=api_service_admin_client)
 
     @priority.low
-    def test_cannot_scale_application_with_incorrect_instance_number(self, api_service_admin_client):
+    def test_cannot_scale_application_with_incorrect_instances_number(self, sample_app, api_service_admin_client):
         step("Scale application with incorrect replicas number")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
-                                                api_service.scale_application, app_id=3, replicas="wrong_number",
-                                                client=api_service_admin_client)
+                                                api_service.scale_application, app_id=sample_app.id,
+                                                replicas="wrong_number", client=api_service_admin_client)
+
+    @priority.low
+    def test_cannot_scale_application_with_negative_instances_number(self, sample_app, api_service_admin_client):
+        step("Scale application with negative replicas number")
+        expected_message = ApiServiceHttpStatus.MSG_MINIMUM_ALLOWED_REPLICA
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, expected_message,
+                                                sample_app.scale, replicas=-1, client=api_service_admin_client)
 
     @priority.high
     def test_get_application(self, sample_app, api_service_admin_client):
@@ -76,6 +83,21 @@ class TestApiServiceApplication:
         app = Application.get(app_inst_id=sample_app.id, client=api_service_admin_client)
         step("Check that the apps are the same")
         assert sample_app == app
+
+    @priority.low
+    def test_scale_application_with_zero_instances_number(self, sample_app, api_service_admin_client):
+        step("Scale application with zero replicas number")
+        replicas_number = 0
+        sample_app.scale(replicas=replicas_number, client=api_service_admin_client)
+        step("Check that application is stopped, there are zero replicas and there are no running instances")
+        app = Application.get(app_inst_id=sample_app.id, client=api_service_admin_client)
+        assert app.state == TapEntityState.STOPPED, "Application is not in the expected state. App state: {}"\
+                                                    .format(app.state)
+        assert app.replication == replicas_number, "Application does not have expected number of replication. App " \
+                                                   "replicas number: {}".format(app.replication)
+        assert app.running_instances == replicas_number, "Application does not have expected number of running " \
+                                                         "instances. App running instances number: {}"\
+                                                         .format(app.running_instances)
 
     @priority.medium
     def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path, tap_cli,

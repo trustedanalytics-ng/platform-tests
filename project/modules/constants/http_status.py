@@ -224,6 +224,7 @@ class ApiServiceHttpStatus(HttpStatus):
     MSG_BAD_REQUEST = "Bad response status"
     MSG_FIELD_INCORRECT_VALUE = "Field: {} has incorrect value"
     MSG_PLAN_CANNOT_BE_FOUND = "plan with id: {} cannot be found"
+    MSG_MINIMUM_ALLOWED_REPLICA = "Minimum allowed replication is 0"
 
 
 class ContainerBrokerHttpStatus(HttpStatus):
