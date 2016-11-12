@@ -32,19 +32,19 @@ logged_components = (TAP.data_catalog, TAP.dataset_publisher, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
 
-@pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
 @priority.medium
 @incremental
 class TestHue:
     TRANSFER_SOURCE = Urls.test_transfer_link
 
-    def test_0_create_transfer_and_dataset_with_csv_link(self, class_context, test_org, add_admin_to_test_org):
+    def test_0_create_transfer_and_dataset_with_csv_link(self, class_context, test_org):
         step("Create new transfer and dataset")
         self.__class__.transfer, dataset = create_dataset_from_link(context=class_context, org_guid=test_org.guid,
                                                                     source=self.TRANSFER_SOURCE)
-        step("Publish dataset")
+        step("Publish dataset in HUE")
         dataset.api_publish()
 
+    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_1_check_database(self, test_org):
         step("Check organization database is on the list of hive databases")
         self.__class__.database_name = escape_hive_name(test_org.guid)
@@ -65,16 +65,19 @@ class TestHue:
         columns = sample_table_soup.find_all("th")
         assert len(columns) - 1 == 8, "The number of columns is incorrect"
 
+    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_2_check_file_browser(self, admin_user):
         step("Check File Browser")
         response = hue.get_file_browser()
         assert response["home_directory"] == "/user/{}".format(admin_user.guid)
 
+    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_3_check_jobs_in_job_browser(self, admin_user):
         step("Check jobs in job browser")
         response = hue.get_job_browser()
         assert all(item["user"] == admin_user.guid for item in response["jobs"])
 
+    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_4_execute_hive_queries(self):
         step("Connect to hive")
         hive = Hive()
