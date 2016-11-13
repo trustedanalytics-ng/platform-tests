@@ -3,7 +3,7 @@
 ## Running platform tests
 
 ### Requirements
-* Recommended OS - Ubuntu 14
+* Recommended OS - Ubuntu 14, Centos 7
 * access to the Web (several tests rely on Web resources) - not necessarily needed for smoke tests (see below)
 * key `key.dat` to decrypt repository secrets (ask repository owner) - not needed for smoke tests
 
@@ -11,32 +11,31 @@
 ### Setup
 
 **1. Access to jumpbox**
-(not needed for smoke tests)
-You'll need to export the path to jumpbox key as `PT_JUMPBOX_KEY_PATH`
+You'll need to export the path to jumpbox key as `PT_NG_JUMP_KEY_PATH`
 
 
 **2. Install required packages**
+Ubuntu:
 ```
 sudo -E add-apt-repository ppa:avacariu/git-crypt
 sudo -E apt update
-sudo -E apt install python3.4 python3.4-dev git git-crypt build=essential g++ libssl-dev
+sudo -E apt install python3.4 python3.4-dev git git-crypt build-essential g++ libssl-dev
 ```
 
-**3. Download and install git crypt**
-(not needed for smoke tests)
+Centos:
 ```
-wget https://github.com/AGWA/git-crypt/archive/0.5.0.zip
-unzip 0.5.0.zip
-cd git-crypt-0.5.0
-make git-crypt
-sudo make install git-crypt
+sudo yum install epel-release
+sudo yum install gcc libffi-devel python-devel python34 python34-devel python34-setuptools openssl-devel maven make
+sudo easy_install pip
 ```
 
 
 **3. Clone this repository**
+```
+git clone git@github.com:intel-data/platform-tests.git
+```
 
-
-**5. Decrypt repository secrets**
+**4. Decrypt repository secrets**
 (not needed for smoke test)
 
 Place `key.dat` in /platform-tests directory.
@@ -51,39 +50,40 @@ cat platform-tests/project/secrets/gmail-code.json
 If the file looks normal, secrets have been decrypted.
 
 
-**6. Set up virtualenv**
+**5. Set up virtualenv**
 ```
 ./deploy/create_virtualenv.sh
 ```
 This will create [pyvenv](https://docs.python.org/3/using/scripts.html) with all Python packages required in `~/virtualenvs/pyvenv_api_tests`.
 
 
-**7. Configure test admin user** -- only if it's not already present on an environment
-You can use default `admin` user, but then certain failures may occur, because the username is not a valid e-mail.
+**6. Configure test admin user** -- only if it's not already present on an environment
 
-To run tests, we need a user trusted.analytics.tester@gmail.com with appropriate roles and authorizations. To create such user, use script `platform-tests/deploy/add-test-admin.sh`. The script requires cf client and uaac.
+To run tests, we need a test admin user for tests with appropriate roles and authorizations. To create such user, use script `platform-tests/deploy/add-test-admin.sh`. The script requires uaac.
 
-
-install cf client
-```
-wget https://cli.run.pivotal.io/stable?release=debian64 -O cf-client.deb
-sudo dpkg -i cf-client.deb
-```
 
 install uaac
+Ubuntu:
 ```
 sudo apt-get install rubygems-integration
 sudo gem install cf-uaac
 ```
 
+Centos:
+```
+sudo yum install rubygems ruby-devel gcc-c++
+sudo gem install cf-uaac
+```
+
 run the script
 ```
-./add-test-admin.sh <domain> <cf admin password> <core org name> <core space name> <password>
+cd platform-tests
+./deploy/add-test-admin.sh <domain> <uaa client pass> <username> <password>
 ```
-- domain, e.g. daily-nokrb.gotapaas.eu
-- cf admin password -- cf password of user admin
-- core org name (defaults to trustedanalytics)
-- core space name (defaults to platform)
+- domain, e.g. daily-nokrb-aws.gotapaas.eu
+- uaa client pass, uaa password for user admin
+- username, e.g. taptester
+- password, password for your taptester user
 
 
 
@@ -92,7 +92,7 @@ run the script
 The best way to run the tests from command line is to use the `run_tests.sh` script located in the `project` directory.
 The script activates virtualenv and runs the tests.
 
-Configuration (e.g. TAP domain, core org name, etc.) is defined using environment variables. They are parsed in `platform-tests/project/config.py`.
+Configuration (e.g. TAP domain) is defined using environment variables. They are parsed in `platform-tests/project/config.py`.
 This is also where you can find names of the variables.
 
 There are three options to define configuration:
@@ -103,7 +103,12 @@ There are three options to define configuration:
 ```
 import os
 os.environ["PT_TAP_DOMAIN"] = "daily-nokrb.gotapaas.eu"
-os.environ["PT_ADMIN_PASSWORD"] = "password"
+os.environ["PT_ADMIN_USERNAME"] = "taptester"
+os.environ["PT_ADMIN_PASSWORD"] = "<password>"
+os.environ["PT_NG_JUMP_IP"] = "<jumpbox_ip>"
+os.environ["PT_NG_JUMP_KEY_PATH"] = "<jumpbox_key_path>"
+os.environ["PT_K8S_SERVICE_AUTH_PASSWORD"] = "<kubernetes-password>"
+os.environ["PT_DISABLE_ENVIRONMENT_CHECK"] = "True"
 ...
 ```
 
@@ -114,6 +119,9 @@ The script `run_tests.sh` accepts [standard py.test parameters](https://pytest.o
 
 To run smoke tests:
 `./run_tests.sh tests/test_smoke > <log_file> 2>&1`
+
+To run components tests:
+`./run_tests.sh tests/test_components > <log_file> 2>&1`
 
 To run functional tests:
 `./run_tests.sh tests/test_functional > <log_file> 2>&1`
@@ -139,8 +147,8 @@ Due to issues with mongo reporter it might be necessary to specify a tests path.
 
 In order to run test with only single parameter it is possible to run pytest with `--only-with-param` argument.
 
-For example to run `test_create_and_delete_marketplace_service_instances` only for gateway with free plan run:
-```./run_tests.sh tests/test_smoke/test_functional.py::test_create_and_delete_marketplace_service_instances --only-with-param [gateway-free]```
+For example to run `test_create_and_delete_marketplace_service_instances` only for gateway with Single plan run:
+```./run_tests.sh tests/test_smoke/test_functional.py::test_create_and_delete_marketplace_service_instances --only-with-param [gateway-single]```
 
 ### Run smoke tests on bastion
 
@@ -159,16 +167,14 @@ ssh-add .ssh/[your_private_key]
 ```
 git checkout tests/v0.7
 ```
-**Note:** you'll have to also specify appstack version (branch/tag name) in configuration, i.e. export PT_APPSTACK_VERSION=v0.7
 
 + **Run smoke tests**
 ```
 cd /platform-test/project
-./run_tests.sh test_smoke > <log_file> 2>&1
+./run_tests.sh tests/test_smoke > <log_file> 2>&1
 ```
 
 **Useful options:**
-* If you export `PT_LOCAL_APPSTACK_PATH`, this will be the appstack.yml used, and tests won't download it from GitHub. This will allow for running smoke tests without access to GitHub.
 * If you export `PT_TAP_REPOS_DIRECTORY`, all repositories will be retrieved from there, and tests won't download them from github.
 
 ### Creating offline package
@@ -177,14 +183,14 @@ cd /platform-tests
 ./deploy/create_package.sh
 ```
 
-The package will be present in `/TAP-tests-0.6.410.zip`.
+The package will be present in `/TAP-tests-<tests_version>.zip`.
 The version is taken from `.bumversion.cfg`.
 
 ### Creating virtual environment from offline package
 ```
 mkdir platform-tests
 cd platform-tests
-unzip ../TAP-tests-0.6.410.zip
+unzip ../TAP-tests-<tests_version>.zip
 ./deploy/create_virtualenv.sh --vendor vendor
 ```
 
