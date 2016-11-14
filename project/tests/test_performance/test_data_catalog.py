@@ -20,16 +20,13 @@ import pytest
 
 import config
 from modules.constants import TapComponent as Tap
-from modules.gatling_runner.gatling_runner import GatlingRunner
-from modules.gatling_runner.gatling_runner_parameters import GatlingRunnerParameters
-from modules.gatling_runner.simulation.simulation_name import SimulationName
 from modules.markers import priority
 
 
 logged_components = (Tap.data_catalog, Tap.das, Tap.downloader, Tap.metadata_parser)
 pytestmark = [pytest.mark.components(Tap.data_catalog, Tap.das, Tap.downloader, Tap.metadata_parser)]
 
-
+@pytest.mark.skip("Test skipped until Locust is used")
 class DataCatalogPerformanceTest(unittest.TestCase):
     """Data catalog gatling performance tests."""
 
