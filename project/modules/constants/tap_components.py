@@ -72,8 +72,10 @@ class TapComponent:
     container_broker = "container-broker"
     h2o_model_provider = "h2o-model-provider"
     image_factory = "image-factory"
+    key_counter = "key-counter"
     metrics_collector_ambassador = "metrics-collector-ambassador"
     metrics_presenter = "metrics-presenter"
+    metrics_prometheus = "metrics-prometheus"
     metrics_tap_catalog_collector = "metrics-tap-catalog-collector"
     monitor = "monitor"
     nginx_ingress = "tapingress"
@@ -89,11 +91,10 @@ class TapComponent:
 
     @classmethod
     def get_list_internal(cls):
-        return [cls.blob_store, cls.ca, cls.catalog, cls.container_broker, cls.das,
-                cls.data_catalog, cls.dataset_publisher, cls.h2o_broker, cls.h2o_model_provider,
-                cls.h2o_scoring_engine_publisher, cls.downloader, cls.uploader, cls.image_factory,
-                cls.metadata_parser, cls.metrics_collector_ambassador, cls.metrics_presenter,
-                cls.metrics_tap_catalog_collector, cls.model_catalog, cls.monitor, cls.nginx_ingress,
+        return [cls.blob_store, cls.key_counter, cls.catalog, cls.container_broker, cls.das,
+                cls.data_catalog, cls.dataset_publisher, cls.h2o_scoring_engine_publisher,
+                cls.downloader, cls.uploader, cls.image_factory, cls.metadata_parser,
+                cls.metrics_grafana, cls.metrics_prometheus, cls.model_catalog, cls.nginx_ingress,
                 cls.template_repository, cls.user_management]
 
     @classmethod
