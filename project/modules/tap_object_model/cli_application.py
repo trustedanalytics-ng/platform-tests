@@ -30,7 +30,7 @@ from ._cli_object_superclass import CliObjectSuperclass
 class CliApplication(CliObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["name", "app_type"]
     EXPECTED_PUSH_HEADERS = ["NAME", "IMAGE ID", "DESCRIPTION", "REPLICATION"]
-    EXPECTED_DELETE_BODY = 'CODE: 204 BODY'
+    EXPECTED_DELETE_BODY = 'OK'
     EXPECTED_SUCCESS_RESPONSE = 'success'
 
     def __init__(self, *, app_type, target_directory, tap_cli, name, instances):
