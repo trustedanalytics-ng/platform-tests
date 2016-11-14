@@ -28,7 +28,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
 @pytest.mark.usefixtures("open_tunnel")
-@pytest.mark.skip(reason="DPNG-12584 Error: Cannot parse ApiServiceInstance list: key PLAN_ID not found!")
 class TestCatalogTemplates:
 
     @priority.high
