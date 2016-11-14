@@ -162,7 +162,12 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         tap_cli.login()
         try:
             tap_cli.push(app_path=app_path)
-        except:
+        except Exception as exc:
+            # If the application already exists, than don't remove it (as this
+            # will break later tests), just raise the error
+            if "application with name: " + name + " already exists!" in str(exc):
+                raise
+
             apps = Application.get_list(client=client)
             application = next((app for app in apps if app.name == name), None)
             if application is not None:
