@@ -40,13 +40,12 @@ def copy_dir_as_symlinks(*, src_root, dst_root):
     """
     shutil.rmtree(dst_root, ignore_errors=True)
     for current_root, dirs, files in os.walk(src_root):
-        for d in dirs:
-            src_dir = os.path.join(current_root, d)
-            tgt_dir = src_dir.replace(src_root, dst_root)
-            os.makedirs(tgt_dir)
+        src_dir = current_root
+        tgt_dir = src_dir.replace(src_root, dst_root)
+        os.mkdir(tgt_dir)
         for file in files:
-            src_file = os.path.join(current_root, file)
-            tgt_file = src_file.replace(src_root, dst_root)
+            src_file = os.path.join(src_dir, file)
+            tgt_file = os.path.join(tgt_dir, file)
             os.symlink(src_file, tgt_file)
 
 
