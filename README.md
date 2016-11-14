@@ -170,3 +170,23 @@ cd /platform-test/project
 **Useful options:**
 * If you export `PT_LOCAL_APPSTACK_PATH`, this will be the appstack.yml used, and tests won't download it from GitHub. This will allow for running smoke tests without access to GitHub.
 * If you export `PT_TAP_REPOS_DIRECTORY`, all repositories will be retrieved from there, and tests won't download them from github.
+
+### Creating offline package
+```
+cd /platform-tests
+./deploy/create_package.sh
+```
+
+The package will be present in `/TAP-tests-0.6.410.zip`.
+The version is taken from `.bumversion.cfg`.
+
+### Creating virtual environment from offline package
+```
+mkdir platform-tests
+cd platform-tests
+unzip ../TAP-tests-0.6.410.zip
+./deploy/create_virtualenv.sh --vendor vendor
+```
+
+By default virtual environment will be created in `~/virtualenvs/pyvenv_api_tests`.
+It can be changed with parameter `--pyvenv path`.
