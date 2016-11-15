@@ -19,10 +19,13 @@ import pytest
 
 import config
 from modules.constants import ApiServiceHttpStatus, TapComponent as TAP
-from modules.http_client import HttpClientFactory, HttpClientConfiguration, HttpClientType
+from modules.exceptions import UnexpectedResponseError
+from modules.http_client import HttpClientFactory, HttpClientConfiguration, HttpClientType, HttpMethod
 from modules.http_calls.platform import api_service as api
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.markers import priority
 from modules.tap_logger import step
+from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
@@ -48,3 +51,35 @@ class TestApiServiceAuthorization:
         step("Check that basic auth does not work with api service")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
                                      api.get_offerings, client=self.basic_auth_client)
+
+    def test_login_to_console_with_valid_credentials(self):
+        step("Login using uaa endpoint")
+        client = HttpClientFactory.get(
+            ConsoleConfigurationProvider.get(
+                config.admin_username,
+                config.admin_password))
+        client.request(method=HttpMethod.GET, path="users/current")
+
+    def test_login_to_console_with_invalid_credentials(self):
+        step("Login using uaa endpoint")
+        configuration = ConsoleConfigurationProvider.get(
+                username=generate_test_object_name(separator=""),
+                password=generate_test_object_name(separator=""))
+        with pytest.raises(UnexpectedResponseError):
+            HttpClientFactory.get(configuration)
+
+    def test_login_to_console_with_empty_credentials(self):
+        step("Login using uaa endpoint")
+        configuration = ConsoleConfigurationProvider.get(
+                username="",
+                password="")
+        with pytest.raises(UnexpectedResponseError):
+            HttpClientFactory.get(configuration)
+
+    def test_login_to_console_without_password(self):
+        step("Login using uaa endpoint")
+        configuration = ConsoleConfigurationProvider.get(
+                username=config.admin_username,
+                password=None)
+        with pytest.raises(UnexpectedResponseError):
+            HttpClientFactory.get(configuration)
