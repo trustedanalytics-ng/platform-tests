@@ -165,32 +165,32 @@ def mysql_instance(session_context, api_service_admin_client):
     return mysql
 
 
-@pytest.fixture(scope="class")
-def app_binded_mysql(class_context, tap_cli, mysql_instance, api_service_admin_client):
+@pytest.fixture(scope="module")
+def app_binded_mysql(module_context, tap_cli, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: push sample application")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    db_app = Application.push(class_context, app_path=app_src.path, tap_cli=tap_cli,
+    db_app = Application.push(module_context, app_path=app_src.path, tap_cli=tap_cli,
                               app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     db_app.ensure_running()
-    Binding.create(client=api_service_admin_client, context=class_context,
+    Binding.create(client=api_service_admin_client, context=module_context,
                    app_id=db_app.id, service_instance_id=mysql_instance.id)
     log_fixture("Check the application is responding")
     db_app.ensure_responding()
     return db_app
 
 
-@pytest.fixture(scope="class")
-def app_binded_psql(class_context, tap_cli, psql_instance, api_service_admin_client):
+@pytest.fixture(scope="module")
+def app_binded_psql(module_context, tap_cli, psql_instance, api_service_admin_client):
     log_fixture("psql_app: push sample application")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    db_app = Application.push(class_context, app_path=app_src.path, tap_cli=tap_cli,
+    db_app = Application.push(module_context, app_path=app_src.path, tap_cli=tap_cli,
                               app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     db_app.ensure_running()
-    Binding.create(client=api_service_admin_client, context=class_context,
+    Binding.create(client=api_service_admin_client, context=module_context,
                    app_id=db_app.id, service_instance_id=psql_instance.id)
     log_fixture("Check the application is responding")
     db_app.ensure_responding()

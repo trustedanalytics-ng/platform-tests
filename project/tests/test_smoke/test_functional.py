@@ -55,7 +55,7 @@ def sample_app(sample_python_app, sample_java_app):
     }
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def sample_db_app(app_binded_psql, app_binded_mysql):
     return {
         "app_binded_psql": app_binded_psql,

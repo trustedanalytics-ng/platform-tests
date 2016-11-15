@@ -34,7 +34,7 @@ class TestMysqlAndPsql(object):
     mysql_specyfic_columns = DbInput.mysql_specyfic_test_columns
     row_value_list = DbInput.test_rows_1
     
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="module")
     def db_type(self, app_binded_psql, app_binded_mysql):
         return {
             "app_binded_psql": app_binded_psql,
