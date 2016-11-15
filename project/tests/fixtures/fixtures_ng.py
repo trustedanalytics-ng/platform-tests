@@ -17,7 +17,7 @@
 import os
 import re
 import stat
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 import pytest
 
@@ -41,10 +41,10 @@ def open_tunnel(request):
 
 def _get_latest_tap_cli_instance(jumpbox_client):
     result = jumpbox_client.ssh("ls")
-    rex = re.compile(r'TAP-[0-9]+[\.][0-9]+[\.][0-9]+$')
+    rex = re.compile(r'TAP-[0-9]+[\.][0-9]+[\.][0-9]+(\.[0-9]+)?$')
     files = [s for s in result if rex.match(s)]
     assert len(files) > 0
-    return str(max([StrictVersion(i.split('-')[1]) for i in files]))
+    return str(max([LooseVersion(i.split('-')[1]) for i in files]))
 
 
 @pytest.fixture(scope="session")
