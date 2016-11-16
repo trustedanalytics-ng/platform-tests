@@ -189,11 +189,7 @@ class TestReporterTestDocument:
             run_document_after = reporter._mongo_run_document
             assert run_document_after["test_count"] == run_document_before["test_count"]
             test_documents = self._get_test_result_documents(reporter)
-            assert len(test_documents) == 2
-            test_document = next((d for d in test_documents if "status" in d), None)
-            assert test_document is not None
-            assert test_document["name"] == "{}: failed on setup".format(report.nodeid)
-            assert test_document["status"] == TEST_STATUS
+            assert len(test_documents) == 1
             fixture_document = next((d for d in test_documents if "status" not in d), None)
             assert fixture_document is not None
             assert fixture_document["name"] == "{}: setup error".format(report.nodeid)

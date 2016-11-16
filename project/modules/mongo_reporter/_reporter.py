@@ -136,11 +136,6 @@ class MongoReporter(object):
         if doc and status:
             self._update_run_status(doc, status, increment_test_count=(report.when == "call"))
 
-        # Also for consistency with TeamCity:
-        if report.failed and report.when == "setup":
-            doc, status = self._on_test(report, item, failed_by_setup=True)
-            self._update_run_status(doc, status)
-
     @staticmethod
     def _get_test_version():
         bumpversion_file_path = Path.bumpversion_file
