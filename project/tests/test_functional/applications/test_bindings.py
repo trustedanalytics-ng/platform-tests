@@ -33,7 +33,7 @@ def test_instance(class_context, request, test_org, test_space):
     step("Create test instance")
     instance = ServiceInstance.api_create_with_plan_name(context=class_context, org_guid=test_org.guid,
                                                          space_guid=test_space.guid,
-                                                         service_label=ServiceLabels.MONGO_DB,
+                                                         service_label=ServiceLabels.MONGO_DB_26,
                                                          service_plan_name=ServicePlan.FREE)
 
     return instance
@@ -128,7 +128,7 @@ class TestBindingErrors:
     def test_instance(self, class_context, request, test_org, test_space):
         step("Create test instance")
         instance = ServiceInstance.api_create_with_plan_name(class_context, test_org.guid, test_space.guid,
-                                                             ServiceLabels.MONGO_DB, service_plan_name=ServicePlan.FREE)
+                                                             ServiceLabels.MONGO_DB_26, service_plan_name=ServicePlan.FREE)
 
         return instance
 
