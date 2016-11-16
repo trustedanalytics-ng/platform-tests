@@ -92,7 +92,6 @@ class TestCreateService:
 
     @priority.medium
     @pytest.mark.sample_apps_test
-    @pytest.mark.bugs("DPNG-12742 /v2/api/offerings in tap-api-service does not return Service name and Metadata")
     def test_create_service_with_icon(self, context, app_jar, manifest_json,
                                       example_image):
         step("Prepare offering json")
@@ -108,6 +107,7 @@ class TestCreateService:
 
     @priority.medium
     @pytest.mark.sample_apps_test
+    @pytest.mark.bugs("DPNG-12742 /v2/api/offerings in tap-api-service does not return Service name and Metadata")
     def test_create_service_with_tag(self, context, app_jar, manifest_json):
         step("Prepare offering json")
         tags = [generate_test_object_name(short=True)]
