@@ -23,7 +23,7 @@ from ._cli_object_superclass import CliObjectSuperclass
 
 
 class CliService(CliObjectSuperclass):
-    _COMPARABLE_ATTRIBUTES = ["name", "offering_name", "plane"]
+    _COMPARABLE_ATTRIBUTES = ["name", "offering_name", "plan_name"]
 
     MESSAGE_SUCCESS = "OK"
 
@@ -34,30 +34,30 @@ class CliService(CliObjectSuperclass):
     FIELD_OFFERING_NAME = "serviceName"
     FIELD_PLAN_NAME = "planName"
 
-    def __init__(self, offering_name, plan, name, tap_cli, service_id=None, state=None):
+    def __init__(self, offering_name, plan_name, name, tap_cli, service_id=None, state=None):
         super().__init__(tap_cli=tap_cli, name=name)
         self.id = service_id
         self.state = state
         self.offering_name = offering_name
-        self.plan = plan
+        self.plan_name = plan_name
 
     @classmethod
     def get(cls, name, tap_cli):
         service = tap_cli.get_service(name)
         assert service is not None, "service {} does not exist".format(name)
         return cls(offering_name=service[cls.FIELD_OFFERING_NAME],
-                   plan=service[cls.FIELD_PLAN_NAME],
+                   plan_name=service[cls.FIELD_PLAN_NAME],
                    name=service[cls.FIELD_NAME],
                    service_id=service[cls.FIELD_ID],
                    state=service[cls.FIELD_STATE],
                    tap_cli=tap_cli)
 
     @classmethod
-    def create(cls, context, tap_cli, offering_name, plan, name=None):
+    def create(cls, context, tap_cli, offering_name, plan_name, name=None):
         if name is None:
             name = test_names.generate_test_object_name(separator="-")
-        tap_cli.create_service([offering_name, plan.name, name])
-        context.test_objects.append(cls(offering_name=offering_name, plan=plan, name=name, tap_cli=tap_cli))
+        tap_cli.create_service([offering_name, plan_name, name])
+        context.test_objects.append(cls(offering_name=offering_name, plan_name=plan_name, name=name, tap_cli=tap_cli))
         cli_service = cls.get(name, tap_cli)
         cli_service.ensure_service_state(TapEntityState.RUNNING)
         return cli_service

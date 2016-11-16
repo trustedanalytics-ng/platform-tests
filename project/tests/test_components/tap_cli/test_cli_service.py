@@ -16,16 +16,24 @@
 
 import pytest
 
-from modules.constants import TapMessage, TapComponent as TAP, TapEntityState
-from modules.markers import priority
+from modules.constants import TapMessage, TapComponent as TAP, TapEntityState, ServiceLabels
+from modules.markers import long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliOffering, CliService, ServiceOffering
 from tests.fixtures.assertions import assert_raises_command_execution_exception
+from tap_component_config import offerings_as_parameters
 
 
 logged_components = (TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
 
+# At all times at least one of the following must be available, and all that are available must not fail.
+RELIABLE_OFFERINGS = [
+    ServiceLabels.GATEWAY,
+    ServiceLabels.JUPYTER,
+    ServiceLabels.MOSQUITTO,
+    ServiceLabels.MYSQL,
+]
 
 @pytest.mark.usefixtures("cli_login")
 class TestCliService:
@@ -37,7 +45,9 @@ class TestCliService:
     @pytest.fixture(scope="class")
     def offering(cls):
         marketplace = ServiceOffering.get_list()
-        offering = next((o for o in marketplace if o.state == TapEntityState.READY and len(o.service_plans) > 0), None)
+        usable_offerings = (o for o in marketplace if o.state == TapEntityState.READY and len(o.service_plans) > 0)
+        reliable_offerings = (o for o in usable_offerings if o.label in RELIABLE_OFFERINGS)
+        offering = next(reliable_offerings, None)
         assert offering is not None, "No available offerings in marketplace"
         return offering
 
@@ -50,11 +60,24 @@ class TestCliService:
     @priority.high
     def test_create_and_delete_instance(self, context, offering, tap_cli):
         step("Create service instance")
-        instance = CliService.create(context=context, offering_name=offering.label, plan=offering.service_plans[0],
-                                     tap_cli=tap_cli)
+        instance = CliService.create(context=context, offering_name=offering.label,
+                                     plan_name=offering.service_plans[0].name, tap_cli=tap_cli)
         step("Check that the service is visible on service list")
         instance.ensure_on_service_list()
         step("Delete the instance and check it's no longer on the list")
+        instance.delete()
+        instance.ensure_not_on_service_list()
+
+    @long
+    @priority.low
+    @pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
+    def test_create_and_delete_instance_all(self, context, service_label, plan_name, tap_cli):
+        step("Create instance of service {}".format(service_label))
+        instance = CliService.create(context=context, offering_name=service_label,
+                                     plan_name=plan_name, tap_cli=tap_cli)
+        step("Check that the service {} is visible on service list".format(service_label))
+        instance.ensure_on_service_list()
+        step("Delete the instance of service {} and check it's no longer on the list".format(service_label))
         instance.delete()
         instance.ensure_not_on_service_list()
 
