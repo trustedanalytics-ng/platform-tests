@@ -35,19 +35,21 @@ class TestApiServiceApplication:
     EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
 
     @pytest.fixture(scope="class")
-    def sample_app(self, class_context, sample_app_path, tap_cli, api_service_admin_client):
+    def sample_app(self, class_context, sample_app_path, api_service_admin_client):
         log_fixture("Push sample application")
-        application = Application.push(class_context, app_path=sample_app_path, tap_cli=tap_cli,
-                                       app_type=TapApplicationType.PYTHON27, client=api_service_admin_client)
+        application = Application.push(class_context, app_path=sample_app_path,
+                                       app_type=TapApplicationType.PYTHON27,
+                                       client=api_service_admin_client)
         application.ensure_running()
         return application
 
     @priority.low
-    def test_cannot_push_application_twice(self, context, sample_app_path, tap_cli, sample_app,
+    def test_cannot_push_application_twice(self, context, sample_app_path, sample_app,
                                            api_service_admin_client):
         step("Check that pushing the same application again causes an error")
         with pytest.raises(CommandExecutionException) as e:
-            Application.push(context, app_path=sample_app_path, tap_cli=tap_cli, app_type=TapApplicationType.PYTHON27,
+            Application.push(context, app_path=sample_app_path,
+                             app_type=TapApplicationType.PYTHON27,
                              name=sample_app.name, client=api_service_admin_client)
         assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in e.value.output
 
@@ -100,11 +102,12 @@ class TestApiServiceApplication:
                                                          .format(app.running_instances)
 
     @priority.medium
-    def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path, tap_cli,
+    def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path,
                                                        api_service_admin_client):
         log_fixture("Push sample application and check it's running")
-        application = Application.push(context, app_path=sample_app_path, tap_cli=tap_cli,
-                                       app_type=TapApplicationType.PYTHON27, client=api_service_admin_client)
+        application = Application.push(context, app_path=sample_app_path,
+                                       app_type=TapApplicationType.PYTHON27,
+                                       client=api_service_admin_client)
         application.ensure_running()
 
         updated_state = TapEntityState.FAILURE

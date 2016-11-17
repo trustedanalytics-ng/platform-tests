@@ -24,7 +24,6 @@ from modules.constants import TapEntityState
 from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.api_service as api
 from modules.http_client import HttpClient
-from modules.tap_cli import TapCli
 from modules.tap_logger import log_http_request, log_http_response
 from modules import test_names
 from ._api_model_superclass import ApiModelSuperclass
@@ -129,9 +128,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             os.chmod(run_sh_path, 0o777)
 
     @classmethod
-    def push(cls, context, *, app_path: str, tap_cli: TapCli, app_type: str,
-             name: str=None, instances: int=1, client: HttpClient=None,
-             bindings: list=None):
+    def push(cls, context, *, app_path: str, app_type: str, name: str=None,
+             instances: int=1, client: HttpClient=None, bindings: list=None):
         """Pushes the application from source directory with provided name,
         services and envs.
 
@@ -144,7 +142,6 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             context: context object that will store created applications. It is used
                      later to perform a cleanup.
             app_path: path to the application archive or to the application directory
-            tap_cli: tap client, that will be used to push the app.
             app_type: "type" parameter in manifest.json
             name: "name" parameter in manifest.json, if None, will be auto-generated
             instances: "instances" parameter in manifest.json
@@ -157,11 +154,13 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         """
         if name is None:
             name = test_names.generate_test_object_name(separator="")
-        cls.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type, bindings=bindings)
+        manifest_path = cls.save_manifest(app_path=app_path, name=name, instances=instances,
+                                          app_type=app_type, bindings=bindings)
         cls.set_run_sh_access(app_path=app_path)
-        tap_cli.login()
+
         try:
-            tap_cli.push(app_path=app_path)
+            api.create_application(client=client, file_path=app_path,
+                                   manifest_path=manifest_path)
         except Exception as exc:
             # If the application already exists, than don't remove it (as this
             # will break later tests), just raise the error

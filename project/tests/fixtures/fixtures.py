@@ -123,10 +123,10 @@ def marketplace_offerings():
 
 
 @pytest.fixture(scope="class")
-def sample_python_app(class_context, tap_cli):
+def sample_python_app(class_context):
     log_fixture("sample_python_app: push sample application")
     cwd = ApplicationPath.SAMPLE_PYTHON_APP
-    app = Application.push(class_context, app_path=cwd, tap_cli=tap_cli,
+    app = Application.push(class_context, app_path=cwd,
                            app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     app.ensure_running()
@@ -134,12 +134,12 @@ def sample_python_app(class_context, tap_cli):
 
 
 @pytest.fixture(scope="class")
-def sample_java_app(class_context, tap_cli):
+def sample_java_app(class_context):
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
     log_fixture("sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()
     log_fixture("sample_java_app: Push app to tap")
-    app = Application.push(context=class_context, app_path=ApplicationPath.SAMPLE_JAVA_APP, tap_cli=tap_cli,
+    app = Application.push(context=class_context, app_path=ApplicationPath.SAMPLE_JAVA_APP,
                            app_type=TapApplicationType.JAVA)
     app.ensure_running()
     return app
@@ -166,11 +166,11 @@ def mysql_instance(session_context, api_service_admin_client):
 
 
 @pytest.fixture(scope="module")
-def app_binded_mysql(module_context, tap_cli, mysql_instance, api_service_admin_client):
+def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: push sample application")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    db_app = Application.push(module_context, app_path=app_src.path, tap_cli=tap_cli,
+    db_app = Application.push(module_context, app_path=app_src.path,
                               app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     db_app.ensure_running()
@@ -182,11 +182,11 @@ def app_binded_mysql(module_context, tap_cli, mysql_instance, api_service_admin_
 
 
 @pytest.fixture(scope="module")
-def app_binded_psql(module_context, tap_cli, psql_instance, api_service_admin_client):
+def app_binded_psql(module_context, psql_instance, api_service_admin_client):
     log_fixture("psql_app: push sample application")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    db_app = Application.push(module_context, app_path=app_src.path, tap_cli=tap_cli,
+    db_app = Application.push(module_context, app_path=app_src.path,
                               app_type=TapApplicationType.PYTHON27)
     log_fixture("Check the application is running")
     db_app.ensure_running()

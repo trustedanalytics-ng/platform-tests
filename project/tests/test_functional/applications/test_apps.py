@@ -42,14 +42,14 @@ class TestTapApp:
     @pytest.mark.bugs("DPNG-12584 'Cannot parse ApiServiceInstance list: key PLAN_ID not found!' "
                       "after trying to check Marketplace->Services and details of applications.")
     @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_user_can_do_app_flow(self, tap_cli, test_user_clients, role, context):
+    def test_user_can_do_app_flow(self, test_user_clients, role, context):
         client = test_user_clients[role]
 
         test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
         test_app_sources.compile_mvn()
         step("Push app to tap")
-        app = Application.push(context, app_path=ApplicationPath.SAMPLE_JAVA_APP, tap_cli=tap_cli, client=client,
-                               app_type=TapApplicationType.JAVA)
+        app = Application.push(context, app_path=ApplicationPath.SAMPLE_JAVA_APP,
+                               client=client, app_type=TapApplicationType.JAVA)
         step("Check the application is running")
         app.ensure_running()
         step("Stop the application and check that it is stopped")
@@ -72,12 +72,13 @@ class TestTapApp:
 
     @pytest.mark.skip(reason="DPNG-12190 cascade flag is not supported yet")
     @priority.medium
-    def test_cascade_app_delete(self, context, tap_cli, instance, admin_client):
+    def test_cascade_app_delete(self, context, instance, admin_client):
         test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
         test_app_sources.compile_mvn()
         step("Push app to tap")
-        app = Application.push(context, app_path=ApplicationPath.SAMPLE_JAVA_APP, tap_cli=tap_cli, client=admin_client,
-                               app_type=TapApplicationType.JAVA, bindings=[instance.id])
+        app = Application.push(context, app_path=ApplicationPath.SAMPLE_JAVA_APP,
+                               client=admin_client, app_type=TapApplicationType.JAVA,
+                               bindings=[instance.id])
         step("Check the application is running")
         app.ensure_running()
 
