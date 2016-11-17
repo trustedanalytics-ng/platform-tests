@@ -37,7 +37,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     """
 
     # id is the application instance id, app_id is the application id
-    _COMPARABLE_ATTRIBUTES = ["name", "id", "app_id", "image_type", "state",
+    _COMPARABLE_ATTRIBUTES = ["name", "id", "image_type", "state",
                               "replication", "running_instances", "urls"]
     _REFRESH_ATTRIBUTES = ["id", "image_type", "state", "replication",
                            "running_instances", "urls"]
@@ -45,14 +45,13 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     MANIFEST_NAME = "manifest.json"
     RUN_SH_NAME = "run.sh"
 
-    def __init__(self, app_id: str, app_inst_id: str, name: str, bindings: list,
+    def __init__(self, app_id: str, name: str, bindings: list,
                  image_type: str, state: str, replication: int, running_instances: int,
                  urls: list, client: HttpClient=None):
         """Class initializer.
 
         Args:
             app_id: Id of the application
-            app_inst_id: Id of instance of the application
             name: Name of the application
             bindings: List of services that application is binded to
             image_type: Defines the image type
@@ -62,8 +61,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             urls: Urls that the application used
             client: The Http client to use.
         """
-        super().__init__(object_id=app_inst_id, client=client)
-        self.app_id = app_id
+        super().__init__(object_id=app_id, client=client)
         self.name = name
         self.bindings = bindings
         self.image_type = image_type
@@ -74,10 +72,9 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         self._request_session = requests.session()
 
     def __repr__(self):
-        return "{} (name={}, app_id={}, app_inst_id={})".format(self.__class__.__name__,
-                                                                self.name,
-                                                                self.app_id,
-                                                                self.id)
+        return "{} (name={}, app_id={})".format(self.__class__.__name__,
+                                                self.name,
+                                                self.id)
 
     @classmethod
     def update_manifest(cls, manifest_path: str, params: dict):
@@ -314,10 +311,10 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         Returns:
             Application object created from response
         """
-        return cls(app_id=response.get("classId", ""), app_inst_id=response.get("id", ""),
-                   name=response["name"], bindings=response["bindings"],
-                   image_type=response["imageType"], state=response["state"],
-                   replication=response["replication"], running_instances=response["running_instances"],
+        return cls(app_id=response.get("id", ""), name=response["name"],
+                   bindings=response["bindings"], image_type=response["imageType"],
+                   state=response["state"], replication=response["replication"],
+                   running_instances=response["running_instances"],
                    urls=response["urls"], client=client)
 
     @classmethod
