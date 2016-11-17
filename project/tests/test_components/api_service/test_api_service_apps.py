@@ -55,7 +55,7 @@ class TestApiServiceApplication:
     def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
         step("Scale application with incorrect id")
         incorrect_id = "wrong_id"
-        expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(incorrect_id)
+        expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_APP_INSTANCE.format(incorrect_id)
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
                                                 api_service.scale_application, app_id=incorrect_id, replicas=3,
                                                 client=api_service_admin_client)
