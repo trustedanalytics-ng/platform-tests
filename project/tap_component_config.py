@@ -28,7 +28,7 @@ default = {
 api_service = {
     TAP.api_service: {
         "get_endpoint": "catalog",
-        "api_version": "v1",
+        "api_version": "v2",
         "api_version_alias": None
     }
 }
