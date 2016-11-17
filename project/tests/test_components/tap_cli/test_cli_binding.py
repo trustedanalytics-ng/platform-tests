@@ -42,7 +42,7 @@ class TestCliBinding:
         return CliService.create(
             context=class_context,
             offering_name=offering.name,
-            plan=offering.plans[0],
+            plan_name=offering.plans[0].name,
             tap_cli=tap_cli)
 
     @pytest.fixture(scope="class")
@@ -50,7 +50,7 @@ class TestCliBinding:
         return CliService.create(
             context=class_context,
             offering_name=offering.name,
-            plan=offering.plans[0],
+            plan_name=offering.plans[0].name,
             tap_cli=tap_cli)
 
     @pytest.fixture(scope="class")
@@ -58,7 +58,7 @@ class TestCliBinding:
         return CliService(
             name=generate_test_object_name(separator="-"),
             offering_name=offering.name,
-            plan=offering.plans[0],
+            plan_name=offering.plans[0].name,
             tap_cli=tap_cli)
 
     @pytest.fixture(scope="function")
