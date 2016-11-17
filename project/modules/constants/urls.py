@@ -26,4 +26,3 @@ class Urls(object):
     tapng_go_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-go-app.tar.gz"
     tapng_java_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-java-app.tar.gz"
     tapng_nodejs_app_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-nodejs-app.tar.gz"
-    manifest_url = "https://repo.gotapaas.eu/files/tapng_sample_apps/manifest.json"

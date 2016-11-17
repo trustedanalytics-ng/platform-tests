@@ -80,14 +80,6 @@ def cli_login(tap_cli):
 
 
 @pytest.fixture(scope="class")
-def sample_manifest_path(request):
-    log_fixture("Download sample manifest.json")
-    sample_manifest_path = file_utils.download_file(Urls.manifest_url, "manifest.json")
-    request.addfinalizer(lambda: file_utils.remove_if_exists(sample_manifest_path))
-    return sample_manifest_path
-
-
-@pytest.fixture(scope="class")
 def sample_app_path(request):
     # NOTE: test class needs to have application source url specified as SAMPLE_APP_URL class variable
     sample_app_url = getattr(request.cls, "SAMPLE_APP_URL")
