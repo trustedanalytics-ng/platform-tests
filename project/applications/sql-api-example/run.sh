@@ -22,5 +22,5 @@
 #  writing.                                                                #
 ############################################################################
 
-pip install -r requirements.txt --egg
+python2 -m pip install --no-index --find-links=./vendor -r requirements.txt
 python app/main.py
