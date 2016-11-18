@@ -53,5 +53,5 @@ class AuthGatewayOrganization(TapObjectSuperclass):
     @classmethod
     def _from_response(cls, response):
         users = AuthGatewayUser.list_from_response(response["users"])
-        org = cls(org_guid=response["guid"], name=response["name"], is_synchronized=response["state"], users=users)
+        org = cls(org_guid=response["guid"], name=response["name"], is_synchronized=response["synchronized"], users=users)
         return org

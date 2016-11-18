@@ -21,7 +21,7 @@ from ._tap_object_superclass import TapObjectSuperclass
 class AuthGatewayUser(TapObjectSuperclass):
 
     def __init__(self, user_guid, name, is_synchronized: bool):
-        super().__init__(object_id=user_guid)
+        self.guid = user_guid
         self.name = name
         self.is_synchronized = is_synchronized
 
