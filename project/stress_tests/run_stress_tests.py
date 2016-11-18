@@ -73,4 +73,4 @@ finally:
     stats = get_stats()
     perf_mongo_reporter.on_run_end(stats)
     if locust_process is not None:
-        locust_process.send_signal(signal.SIGINT)
+        locust_process.send_signal(signal.SIGTERM)
