@@ -70,6 +70,7 @@ class TestMonitorApplication:
         pods_json = [i["metadata"] for i in pods_list["items"]]
         container_broker_name = [i["name"] for i in pods_json if self.POD_APP_NAME in i["name"]]
         step("Collect logs for container-broker")
-        log = k8s_logs(container_broker_name[0], {"sinceSeconds": self.LOG_TIME})
+        log = k8s_logs(container_broker_name[0], {"sinceSeconds": self.LOG_TIME_SEC,
+                                                  "container": "container-broker"})
         log_entries = log.split('\n')
         assert (i for i in log_entries if "[MonitorInstanceDeployment]" in i and """InstanceId: {}""".format(app_id))
