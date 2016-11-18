@@ -42,8 +42,8 @@ class CatalogTemplate(object):
         return cls(template_id=response["templateId"], state=response["state"])
 
     @classmethod
-    def create(cls, context, *, state=TapEntityState.READY):
-        response = catalog_api.create_template(state=state)
+    def create(cls, context, *, state=TapEntityState.READY, template_id=None):
+        response = catalog_api.create_template(state=state, template_id=template_id)
         new_template = cls._from_response(response)
         context.test_objects.append(new_template)
         return new_template
@@ -62,9 +62,10 @@ class CatalogTemplate(object):
             templates.append(template)
         return templates
 
-    def update(self, *, field_name, value):
+    def update(self, *, field_name, value, prev_value=None, username=None):
         setattr(self, field_name, value)
-        catalog_api.update_template(template_id=self.id, field_name=field_name, value=value)
+        catalog_api.update_template(template_id=self.id, field_name=field_name, value=value, prev_value=prev_value,
+                                    username=username)
 
     def delete(self):
         catalog_api.delete_template(template_id=self.id)

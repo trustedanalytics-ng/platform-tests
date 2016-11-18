@@ -96,11 +96,13 @@ def get_template(*, template_id):
                                  msg="CATALOG: get template")
 
 
-def create_template(*, state):
+def create_template(*, state, template_id=None):
     """ POST /templates """
     body = {
+        "templateId": template_id,
         "state": state
     }
+    body = {k: v for k, v in body.items() if v is not None}
     response = _get_client().request(HttpMethod.POST,
                                      path="templates",
                                      body=body,
@@ -116,13 +118,16 @@ def delete_template(*, template_id):
     return response
 
 
-def update_template(*, template_id, field_name, value):
+def update_template(*, template_id, field_name, value, prev_value=None, username=None):
     """ PATCH /templates/{template_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prevValue": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="templates/{}".format(template_id),
                                      body=body,
