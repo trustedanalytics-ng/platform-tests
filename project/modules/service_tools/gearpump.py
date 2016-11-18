@@ -30,27 +30,25 @@ from .gearpump_application import GearpumpApplication
 class Gearpump(object):
     """Gearpump service instance."""
 
-    def __init__(self, context, org_guid, space_guid, service_plan_name, instance_name=None, params=None):
-        self.instance = ServiceInstance.api_create_with_plan_name(
+    def __init__(self, context, service_plan_name, instance_name=None, params=None):
+        self.instance = ServiceInstance.create_with_name(
             context=context,
-            org_guid=org_guid,
-            space_guid=space_guid,
+            offering_label=ServiceLabels.GEARPUMP,
             name=instance_name,
-            service_label=ServiceLabels.GEARPUMP,
-            service_plan_name=service_plan_name,
+            plan_name=service_plan_name,
             params=params
         )
-        self.space_guid = space_guid
         self.yarn_app_id = None
         self.client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
 
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
         """Set gearpump instance credentials."""
-        response = self.instance.api_get_credentials()
-        self.instance.login = response["login"]
-        self.instance.password = response["password"]
-        self.instance.instance_url = response["hostname"]
+        response = self.instance.get_credentials()
+        credentials = response[0].get("envs")
+        self.instance.login = credentials["username"]
+        self.instance.password = credentials["password"]
+        self.instance.instance_url = credentials["dashboardUrl"]
 
     def go_to_dashboard(self):
         """Simulate going to gearpump dashboard"""
@@ -90,8 +88,8 @@ class Gearpump(object):
             return GearpumpApplication(application_name, self.client)
 
     def get_ui_app(self):
-        apps = Application.api_get_list(space_guid=self.space_guid)
-        gearpump_ui_app = next((app for app in apps if "gearpump-ui-{}".format(self.instance.guid) in app.name), None)
+        apps = self.instance.get_list(name="gp-ui-{}".format(self.instance.id))
+        gearpump_ui_app = apps[0] if apps else None
         return gearpump_ui_app
 
     def get_yarn_app_status(self):

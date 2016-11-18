@@ -243,7 +243,7 @@ def space_users_clients_core(request, session_context, core_org, core_space, adm
 @pytest.fixture(scope="session")
 def add_admin_to_test_org(test_org, admin_user):
     log_fixture("add_admin_to_test_org")
-    admin_user.api_add_to_organization(org_guid=test_org.guid)
+    admin_user.add_to_organization(org_guid=test_org.guid)
 
 
 @pytest.fixture(scope="session")

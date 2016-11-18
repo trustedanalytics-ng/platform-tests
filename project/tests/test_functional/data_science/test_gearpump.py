@@ -20,21 +20,19 @@ from modules.file_utils import download_file
 from modules.constants import ServicePlan, TapComponent as TAP, Urls
 from modules.markers import incremental
 from modules.service_tools.gearpump import Gearpump
-from modules.tap_object_model import ServiceInstance
 from modules.tap_logger import step
 from modules.yarn import YarnAppStatus
-from tests.fixtures import assertions
+
 
 logged_components = (TAP.gearpump_broker, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.service_catalog)]
 
 
-@pytest.mark.skip(reason="DPNG-8806 Adjust test_gearpump tests to TAP NG")
 @incremental
 class TestGearpumpConsole:
 
     COMPLEXDAG_APP_NAME = "dag"
-    ONE_WORKER_PLAN_NAME = ServicePlan.WORKER_1
+    PLAN_NAME = ServicePlan.SMALL
     COMPLEXDAG_FILE_NAME = Urls.complexdag_app_url.split("/")[-1]
 
     gearpump = None
@@ -51,12 +49,13 @@ class TestGearpumpConsole:
         self.gearpump.go_to_dashboard()
         request.addfinalizer(self.gearpump.go_to_console)
 
-    def test_0_create_gearpump_instance(self, class_context, test_org, test_space):
-        step("Create gearpump instance with plan: 1 worker")
-        self.__class__.gearpump = Gearpump(class_context, test_org.guid, test_space.guid,
-                                           service_plan_name=self.ONE_WORKER_PLAN_NAME)
-        instances = ServiceInstance.api_get_list(space_guid=test_space.guid)
-        assert self.gearpump.instance in instances, "Gearpump instance is not on list of instances"
+    @pytest.mark.bugs("DPNG-12899 'Cannot parse ApiServiceInstance list: key PLAN_ID not found!' ")
+    @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
+    def test_0_create_gearpump_instance(self, class_context, test_org):
+        step("Create gearpump instance with plan {} ".format(self.PLAN_NAME))
+        self.__class__.gearpump = Gearpump(class_context, service_plan_name=self.PLAN_NAME)
+        step("Ensure that instance is running")
+        self.gearpump.instance.ensure_running()
         step("Check yarn app status")
         yarn_app_status = self.gearpump.get_yarn_app_status()
         assert yarn_app_status == YarnAppStatus.RUNNING
@@ -67,7 +66,7 @@ class TestGearpumpConsole:
         assert gearpump_ui_app is not None, "Gearpump ui application was not created"
         self.gearpump.get_credentials()
 
-    def test_2_submit_complexdag_app_to_gearpump_dashboard(self, add_admin_to_test_org, go_to_dashboard,
+    def test_2_submit_complexdag_app_to_gearpump_dashboard(self, go_to_dashboard,
                                                            complexdag_app_path):
         step("Submit application complexdag to gearpump dashboard")
         self.__class__.dag_app = self.gearpump.submit_application_jar(complexdag_app_path, self.COMPLEXDAG_APP_NAME)
@@ -80,11 +79,12 @@ class TestGearpumpConsole:
         step("Check that application is stopped")
         assert not self.dag_app.is_started
 
-    def test_4_delete_gearpump_instance(self, test_space):
+    @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
+    def test_4_delete_gearpump_instance(self):
         step("Delete gearpump instance")
-        self.gearpump.instance.api_delete()
-        assertions.assert_not_in_with_retry(self.gearpump.instance, ServiceInstance.api_get_list,
-                                            space_guid=test_space.guid)
+        self.gearpump.instance.delete()
+        step("Ensure that instance is running")
+        self.gearpump.instance.ensure_deleted()
         step("Check yarn app status")
         yarn_app_status = self.gearpump.get_yarn_app_status()
         assert yarn_app_status == YarnAppStatus.KILLED
