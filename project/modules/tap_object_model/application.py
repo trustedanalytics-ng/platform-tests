@@ -245,7 +245,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         response = self.api_request(path=path)
         assert response is not None, "App {} is not responding.".format(self.name)
 
-    @retry(AssertionError, tries=30, delay=2)
+    @retry(AssertionError, tries=150, delay=2)
     def ensure_running(self, client: HttpClient=None):
         """Waits for the application to start for a given number of tries.
 

@@ -17,7 +17,7 @@
 import pytest
 
 from modules.constants import ApiServiceHttpStatus, TapApplicationType, Urls, TapEntityState, TapComponent as TAP
-from modules.exceptions import CommandExecutionException
+from modules.exceptions import UnexpectedResponseError
 from modules.http_calls.platform import api_service, catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -47,11 +47,11 @@ class TestApiServiceApplication:
     def test_cannot_push_application_twice(self, context, sample_app_path, sample_app,
                                            api_service_admin_client):
         step("Check that pushing the same application again causes an error")
-        with pytest.raises(CommandExecutionException) as e:
+        with pytest.raises(UnexpectedResponseError) as e:
             Application.push(context, app_path=sample_app_path,
                              app_type=TapApplicationType.PYTHON27,
                              name=sample_app.name, client=api_service_admin_client)
-        assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in e.value.output
+        assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in str(e)
 
     @priority.low
     def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
