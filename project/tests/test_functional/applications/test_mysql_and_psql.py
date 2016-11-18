@@ -32,13 +32,13 @@ class TestMysqlAndPsql(object):
     test_columns = DbInput.test_columns
     mysql_specyfic_columns = DbInput.mysql_specyfic_test_columns
     row_value_list = DbInput.test_rows_1
-    
+
     @pytest.fixture(scope="module")
-    def db_type(self, app_binded_psql, app_binded_mysql):
+    def db_type(self, app_bound_psql, app_bound_mysql):
         return {
-            "app_binded_psql": app_binded_psql,
-            "app_binded_mysql": app_binded_mysql
-        }    
+            "app_binded_psql": app_bound_psql,
+            "app_binded_mysql": app_bound_mysql,
+        }
 
     @pytest.fixture(scope="function", autouse=True)
     def cleanup_mysql_tables(self, request):

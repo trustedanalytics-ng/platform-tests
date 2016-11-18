@@ -18,6 +18,7 @@
 import logging
 import os
 
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
@@ -95,4 +96,4 @@ class Config(object):
             logger.debug("Detected MYSQL substring in env variables. Assuming this db.")
             return cls._get_service_credentials(DB_MYSQL, "MYSQL")
         logger.error("No expected db services found " + str(SUPPORTED_SERVICES.keys()) + " Exiting...")
-        exit(1)
+

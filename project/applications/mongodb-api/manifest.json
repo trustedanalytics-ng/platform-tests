@@ -1,0 +1,1 @@
+{"type": "PYTHON2.7", "instances": 1, "bindings": ["mongo3"], "name": "mongodb-example"}

@@ -23,10 +23,11 @@ from config import Config
 
 logger = logging.getLogger(__name__)
 
+
 class DatabaseClient(object):
     def __init__(self):
         self.config = Config()
-        self.connection = MongoClient(self.config.db_hostname0, port=self.config.db_port0)
+        self.connection = MongoClient(self.config.db_hostname, port=self.config.db_port)
         self._database = self.connection[self.config.db_name]
         if self.config.db_username and self.config.db_password:
             self._database.authenticate(self.config.db_username, self.config.db_password)

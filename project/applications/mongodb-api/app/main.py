@@ -20,7 +20,7 @@ from werkzeug.exceptions import default_exceptions, InternalServerError
 from pymongo import errors
 from bson.json_util import dumps
 
-from config import Config, MongoLabel
+from config import Config, MongoVersion
 from db_utils import DatabaseClient
 
 
@@ -49,17 +49,16 @@ def create_app():
 
 
 app = create_app()
-db = DatabaseClient()
 c = Config()
+db = DatabaseClient()
 
-
-if c.mongodb_version == MongoLabel.MONGODB30_MULTINODE:
+if c.db_type == MongoVersion['30_MULTINODE']:
     db.configure_mongo_cluster()
 
 
 @app.route("/")
 def index():
-    return "Mongodb api example"
+    return "Mongodb api example\n"
 
 
 @app.route("/collections", methods=["GET"])

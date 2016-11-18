@@ -74,5 +74,5 @@ class NoBindingTest(unittest.TestCase):
         os.environ = {}
 
     def test_should_raise_if_no_binding(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(TypeError):
             Config()

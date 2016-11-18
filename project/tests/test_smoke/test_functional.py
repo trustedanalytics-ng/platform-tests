@@ -66,15 +66,16 @@ def test_login():
 def sample_app(sample_python_app, sample_java_app):
     return {
         "sample_python_app": sample_python_app,
-        "sample_java_app": sample_java_app
+        "sample_java_app": sample_java_app,
     }
 
 
 @pytest.fixture(scope="module")
-def sample_db_app(app_binded_psql, app_binded_mysql):
+def sample_db_app(app_bound_mongodb, app_bound_mysql, app_bound_psql):
     return {
-        "app_binded_psql": app_binded_psql,
-        "app_binded_mysql": app_binded_mysql
+        "app_bound_mysql": app_bound_mysql,
+        "app_bound_mongodb": app_bound_mongodb,
+        "app_bound_psql": app_bound_psql,
     }
 
 
@@ -303,8 +304,8 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-@pytest.mark.parametrize("sample_db_app_key", ("app_binded_psql", "app_binded_mysql"))
-def test_push_sql_app_check_response(sample_db_app, sample_db_app_key):
+@pytest.mark.parametrize("sample_db_app_key", (["app_bound_mysql", "app_bound_mongodb", "app_bound_psql"]))
+def test_push_db_app_check_response(sample_db_app, sample_db_app_key):
     """
     <b>Description:</b>
     Checks if application pushed to the platform with postgres or mysql database service bound work.

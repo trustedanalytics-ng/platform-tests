@@ -15,72 +15,107 @@
 #
 
 import os
-import json
 import logging
 
+from retry import retry
 
 # environment variables to set
-VCAP_SERVICES = "VCAP_SERVICES"
 LOG_LEVEL = "LOG_LEVEL"
-VCAP_APP_PORT = "VCAP_APP_PORT"
+APP_PORT = "APP_PORT"
 
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
-class MongoLabel:
-    MONGODB30 = "mongodb-30"
-    MONGODB30_MULTINODE = "mongodb30-multinode"
+MongoVersion = {
+    '26': 'mongodb26',
+    '30': 'mongodb30',
+    '30_MULTINODE': 'mongodb30_multinode',
+}
 
-
-class NoConfigurationError(Exception):
-    pass
+MONGODB_SERVER_PORT = 27017
 
 
 class Config(object):
 
     def __init__(self):
         """
-        Reads configuration from environment variables, also those set by Cloud Foundry.
-        If the application is run locally, export VCAP_SERVICES with the following value:
-        {
-            "mongodb26": [
-                {
-                    "credentials": {
-                     "dbname": <db_name>,
-                     "hostname": <db_host_name>,
-                     "password": <user_password>,
-                     "username": <user_name>,
-                     "port": <db_connection_port_number>
-                }
-            ]
-        }
+        Reads configuration from environment variables.
+
+        Raises:
+            Raises KeyError when missing environment variable.
         """
+        mongodb_credentials = self._load_database_credentials_and_type()
 
         try:
-            vcap_services = os.environ[VCAP_SERVICES]
-            self.mongodb_version = list(json.loads(vcap_services).keys())[0]
-        except KeyError:
-            raise NoConfigurationError("VCAP_SERVICES environment variable not set")
+            self.db_type = mongodb_credentials['db_type'].encode('ascii', 'ignore')
+            self.db_name = mongodb_credentials['db_name'].encode('ascii', 'ignore')
+            self.db_username = mongodb_credentials['username'].encode('ascii', 'ignore')
+            self.db_password = mongodb_credentials['password'].encode('ascii', 'ignore')
+            self.db_hostname = mongodb_credentials['hostname'].encode('ascii', 'ignore')
+            self.db_port = int(mongodb_credentials['port'])
+        except KeyError as e:
+            raise ConfigurationError("Missing {} in service credentials".format(e))
 
-        mongodb_credentials = json.loads(vcap_services)[self.mongodb_version][0]["credentials"]
-        self.db_name = mongodb_credentials.get("dbname")
-        self.db_username = mongodb_credentials.get("username")
-        self.db_password = mongodb_credentials.get("password")
-        if self.mongodb_version == MongoLabel.MONGODB30:
-            self.db_hostname0 = mongodb_credentials.get("hostname", "localhost")
-            self.db_port0 = int(mongodb_credentials.get("port", "27017"))
-        elif self.mongodb_version == MongoLabel.MONGODB30_MULTINODE:
-            self.db_hostname0 = mongodb_credentials["replicas"][0]["host"]
-            self.db_port0 = int(mongodb_credentials["replicas"][0]["ports"]["27017/tcp"])
-            self.db_hostname1 = mongodb_credentials["replicas"][1]["host"]
-            self.db_port1 = int(mongodb_credentials["replicas"][1]["ports"]["27017/tcp"])
-            self.db_hostname2 = mongodb_credentials["replicas"][2]["host"]
-            self.db_port2 = int(mongodb_credentials["replicas"][2]["ports"]["27017/tcp"])
-        else:
-            raise Exception("Unexpected MongoDB label")
         self.log_level = os.environ.get(LOG_LEVEL, "DEBUG")
-        self.app_port = int(os.environ.get(VCAP_APP_PORT, "5000"))
+        self.app_port = int(os.environ.get(APP_PORT, "80"))
         self.app_host = "0.0.0.0"
-        logger.info("DB name: {}, DB username: {}, DB password: {}, DB hostname: {}, DB port: {}"
-                    .format(self.db_name, self.db_username, self.db_password, self.db_hostname0, self.db_port0))
 
+        logger.info("DB name: {}, DB username: {}, DB password: {}, DB hostname: {}, DB port: {}"
+                    .format(self.db_name, self.db_username, self.db_password, self.db_hostname, self.db_port))
+
+    @classmethod
+    def _load_database_credentials_and_type(cls):
+        if "_MONGODB_DBNAME" in ''.join(os.environ.keys()):
+            logger.debug("Detected MongoDB 3.0 substring in env variables. Assuming this db.")
+            db_type = MongoVersion['30']
+            return cls._get_service_credentials(db_type)
+        elif "_MONGODB_MULTINODE_DBNAME" in ''.join(os.environ.keys()):
+            logger.debug("Detected MongoDB 3.0 multi node substring in env variables. Assuming this db.")
+            db_type = MongoVersion['30_MULTINODE']
+            return cls._get_service_credentials(db_type)
+        logger.error("No expected db services found " + str(MongoVersion.values()) + " Exiting...")
+
+    @classmethod
+    def _get_service_credentials(cls, db_type):
+        try:
+            if db_type in [MongoVersion['30'], MongoVersion['26']]:
+                dbname_env = '_MONGODB_DBNAME'
+                username_env = '_MONGODB_USERNAME'
+                password_env = '_MONGODB_PASSWORD'
+                hostname_env = '_MONGO_HOSTNAME'
+                for variable in os.environ.keys():
+                    if variable.endswith(dbname_env):
+                        db_name = os.environ[variable]
+                        if db_name == '':
+                            os.environ[variable] = 'default_db_name'
+                            db_name = os.environ[variable]
+                    elif variable.endswith(username_env):
+                        username = os.environ[variable]
+                    elif variable.endswith(password_env):
+                        password = os.environ[variable]
+                    elif variable.endswith(hostname_env):
+                        hostname = os.environ[variable]
+                port = MONGODB_SERVER_PORT
+                credentials = {
+                    'db_type': db_type,
+                    'db_name': db_name,
+                    'username': username,
+                    'password': password,
+                    'hostname': hostname,
+                    'port': port
+                }
+                return credentials
+            elif db_type == MongoVersion['30_MULTINODE']:
+                # TODO: put here parsing of multinode mongodb config when available on TAP 0.9
+                pass
+        except UnboundLocalError as e:
+            raise KeyError("Missing environment variable. Following exception occured: <{}>".format(e))
+
+
+class ConfigurationError(Exception):
+    pass
+
+
+class NoConfigurationError(Exception):
+    pass

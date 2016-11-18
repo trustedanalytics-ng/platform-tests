@@ -181,7 +181,7 @@ def sample_java_app(class_context):
 def psql_instance(session_context, api_service_admin_client):
     log_fixture("create_postgres_instance")
     psql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
-                                            offering_label=ServiceLabels.PSQL, plan_name=ServicePlan.FREE)
+                                            offering_label=ServiceLabels.PSQL, plan_name=ServicePlan.SINGLE_SMALL)
     log_fixture("Check the service instance is running")
     psql.ensure_running()
     return psql
@@ -191,14 +191,52 @@ def psql_instance(session_context, api_service_admin_client):
 def mysql_instance(session_context, api_service_admin_client):
     log_fixture("create_mysql_instance")
     mysql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
-                                             offering_label=ServiceLabels.MYSQL, plan_name=ServicePlan.FREE)
+                                             offering_label=ServiceLabels.MYSQL, plan_name=ServicePlan.SINGLE_SMALL)
+    log_fixture("Check the service instance is running")
+    mysql.ensure_running()
+    return mysql
+
+
+@pytest.fixture(scope="session")
+def mongodb_instance(session_context, api_service_admin_client):
+    log_fixture("create_mongodb_instance")
+    mysql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
+                                             offering_label=ServiceLabels.MONGO_DB_30,
+                                             plan_name=ServicePlan.SINGLE_SMALL)
     log_fixture("Check the service instance is running")
     mysql.ensure_running()
     return mysql
 
 
 @pytest.fixture(scope="module")
-def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
+def app_bound_mongodb(module_context, mongodb_instance, api_service_admin_client):
+    log_fixture("mongodb_app: download libraries")
+    app_src = AppSources.from_local_path(ApplicationPath.MONGODB_API)
+    app_src.run_build_sh()
+
+    log_fixture("mongodb_app: package sample application")
+    p_a = PrepApp(app_src.path)
+    gzipped_app_path = p_a.package_app(module_context)
+
+    log_fixture("mongodb_app: update manifest")
+    manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [mongodb_instance.id]}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("mongodb_app: push sample application")
+    db_app = Application.push(module_context, app_path=gzipped_app_path,
+                              name=p_a.app_name, manifest_path=manifest_path,
+                              client=api_service_admin_client)
+
+    log_fixture("mongodb_app: Check the application is running")
+    db_app.ensure_running()
+
+    log_fixture("mongodb_app: Check the application is responding")
+    db_app.ensure_responding()
+    return db_app
+
+
+@pytest.fixture(scope="module")
+def app_bound_mysql(module_context, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
@@ -208,7 +246,7 @@ def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
     gzipped_app_path = p_a.package_app(module_context)
 
     log_fixture("mysql_app: update manifest")
-    manifest_params = {"type" : TapApplicationType.PYTHON27}
+    manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [mysql_instance.id]}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("mysql_app: push sample application")
@@ -219,22 +257,20 @@ def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: Check the application is running")
     db_app.ensure_running()
 
-    Binding.create(client=api_service_admin_client, context=module_context,
-                   app_id=db_app.id, service_instance_id=mysql_instance.id)
     log_fixture("mysql_app: Check the application is responding")
     db_app.ensure_responding()
     return db_app
 
 
 @pytest.fixture(scope="module")
-def app_binded_psql(module_context, psql_instance, api_service_admin_client):
+def app_bound_psql(module_context, psql_instance, api_service_admin_client):
     log_fixture("psql_app: Download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
 
     log_fixture("psql_app: update manifest")
     p_a = PrepApp(app_src.path)
-    manifest_params = {"type" : TapApplicationType.PYTHON27}
+    manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [psql_instance.id]}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("mysql_app: package sample application")
@@ -247,8 +283,6 @@ def app_binded_psql(module_context, psql_instance, api_service_admin_client):
 
     log_fixture("psql_app: Check the application is running")
     db_app.ensure_running()
-    Binding.create(client=api_service_admin_client, context=module_context,
-                   app_id=db_app.id, service_instance_id=psql_instance.id)
 
     log_fixture("psq_app: Check the application is responding")
     db_app.ensure_responding()
