@@ -252,6 +252,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         If the application hasn't started, assertion kicks in
         """
         self._refresh(client=client)
+        if self.state == TapEntityState.FAILURE:
+            raise ValueError("Application is in FAILURE, aborting retrying")
         assert self.is_running is True, "App {} is not started. App state: {}".format(self.name, self.state)
 
     @retry(AssertionError, tries=30, delay=2)
