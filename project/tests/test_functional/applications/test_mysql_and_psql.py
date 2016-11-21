@@ -26,7 +26,6 @@ logged_components = (TAP.service_catalog,)
 pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
-@pytest.mark.bugs("DPNG-11064 API Service requirese base64 string when creating offering")
 class TestMysqlAndPsql(object):
     app = None
     test_table_name = DbInput.test_table_name
@@ -63,6 +62,8 @@ class TestMysqlAndPsql(object):
 
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_create_and_delete_table(self, db_type, db_type_key):
         app = db_type[db_type_key]
         self.__class__.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
@@ -74,6 +75,8 @@ class TestMysqlAndPsql(object):
         assert test_table not in table_list
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_get_table_columns_msql(self, db_type):
         app = db_type["app_binded_mysql"]
         test_table = Table.post(app, self.test_table_name, self.test_columns)
@@ -85,6 +88,8 @@ class TestMysqlAndPsql(object):
             assert column in columns
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_get_table_columns_psql(self, db_type):
         app = db_type["app_binded_psql"]
         test_table = Table.post(app, self.test_table_name, self.test_columns)
@@ -98,6 +103,8 @@ class TestMysqlAndPsql(object):
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
     @pytest.mark.parametrize("row_values", row_value_list)
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_post_row(self, row_values, db_type, db_type_key):
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
@@ -110,6 +117,8 @@ class TestMysqlAndPsql(object):
 
     @priority.low
     @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_post_multiple_rows(self, db_type, db_type_key):
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
@@ -119,6 +128,8 @@ class TestMysqlAndPsql(object):
 
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_put_row(self, db_type, db_type_key):
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
@@ -130,6 +141,8 @@ class TestMysqlAndPsql(object):
 
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
+    @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_delete_row(self, db_type, db_type_key):
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
