@@ -77,11 +77,18 @@ class CatalogService(object):
             services.append(service)
         return services
 
+    def create_plan(self, body):
+        new_plan = ServicePlan.create(service_id=self.id, body=body)
+        self.plans.append(new_plan)
+        return new_plan
+
     def update(self, *, field_name, value):
         setattr(self, field_name, value)
         catalog_api.update_service(service_id=self.id, field_name=field_name, value=value)
 
     def delete(self):
+        for plan in self.plans:
+            ServicePlan.delete_plan(service_id=self.id, plan_id=plan.id)
         catalog_api.delete_service(service_id=self.id)
 
     def cleanup(self):

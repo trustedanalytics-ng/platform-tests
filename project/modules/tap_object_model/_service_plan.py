@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
+import modules.http_calls.platform.catalog as catalog_api
 from ._tap_object_superclass import TapObjectSuperclass
+
 
 class ServicePlan(TapObjectSuperclass):
 
@@ -32,6 +34,36 @@ class ServicePlan(TapObjectSuperclass):
         return {"name": self.name, "description": self.description, "cost": "free"}
 
     @classmethod
+    def create(cls, *, service_id, body):
+        response = catalog_api.create_service_plan(service_id, body)
+        new_plan = cls.from_response(response)
+        return new_plan
+
+    @classmethod
+    def get_plans(cls, *, service_id: str):
+        response = catalog_api.get_service_plans(service_id)
+        plans = []
+        for item in response:
+            plan = cls.from_response(item)
+            plans.append(plan)
+        return plans
+
+    @classmethod
+    def get_plan(cls, *, service_id: str, plan_id: str):
+        response = catalog_api.get_service_plan(service_id, plan_id)
+        return cls.from_response(response)
+
+    @classmethod
+    def update_plan(cls, *, service_id: str, plan_id: str, field, value):
+        response = catalog_api.update_service_plan(service_id, plan_id, field, value)
+        return cls.from_response(response)
+
+    @classmethod
+    def delete_plan(cls, *, service_id: str, plan_id: str):
+        response = catalog_api.delete_service_plan(service_id, plan_id)
+        return response
+
+    @classmethod
     def from_response(cls, response):
         # TODO this workaround for inconsistent responses will not be required
         plan_id = response.get("id")
@@ -39,4 +71,3 @@ class ServicePlan(TapObjectSuperclass):
             plan_id = response["metadata"]["guid"]
         response = response.get("entity", response)
         return cls(plan_id=plan_id, name=response["name"], description=response["description"])
-

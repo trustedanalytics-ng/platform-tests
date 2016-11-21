@@ -22,8 +22,7 @@ from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import CatalogService
 from tests.fixtures.assertions import assert_raises_http_exception
 
-
-logged_components = (TAP.catalog, )
+logged_components = (TAP.catalog,)
 pytestmark = [pytest.mark.components(TAP.catalog)]
 
 
