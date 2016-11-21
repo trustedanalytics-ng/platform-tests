@@ -25,7 +25,6 @@ logged_components = (TAP.platform_snapshot,)
 pytestmark = [pytest.mark.components(TAP.platform_snapshot)]
 
 
-@pytest.mark.skip(reason="DPNG-11945 [api-tests] Adjust test_snapshot tests to new TAP")
 class TestSnapshot:
 
     @retry(AssertionError, tries=10, delay=3)
