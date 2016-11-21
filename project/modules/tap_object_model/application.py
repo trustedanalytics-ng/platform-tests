@@ -77,40 +77,36 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
                                                 self.id)
 
     @classmethod
-    def update_manifest(cls, manifest_path: str, params: dict):
-        """Updates the manifest with provided params
+    def update_manifest(cls, *, app_path: str, params: dict):
+        """Updates the manifest with provided params. If the manifest file
+        does not exist, it is created and filled with parameters provided.
 
         Args:
-            manifest_path: Path to the manifest file
+            app_path: Path to the gziped application or the application directory
             params: key->value that will update the manifest
-        """
-        with open(manifest_path, 'r') as file:
-            manifest = json.loads(file.read())
-            for key, val in params.items():
-                manifest[key] = val
 
-        with open(manifest_path, 'w') as file:
-            file.write(json.dumps(manifest))
-
-    @classmethod
-    def save_manifest(cls, *, app_path, name, instances, app_type, bindings):
+        Returns:
+            Path to the manifest file
         """
-        Fill manifest with parameters, save as file in application directory.
-        Return path to the manifest file.
-        """
-        manifest = {
-            "name": name,
-            "instances": instances,
-            "type": app_type,
-            "bindings": bindings
-        }
         if os.path.isfile(app_path):
             manifest_dir = os.path.dirname(app_path)
         else:
             manifest_dir = app_path
+
         manifest_path = os.path.join(manifest_dir, cls.MANIFEST_NAME)
-        with open(manifest_path, "w") as f:
-            f.write(json.dumps(manifest))
+
+        try:
+            with open(manifest_path, 'r') as file:
+                manifest = json.loads(file.read())
+                for key, val in params.items():
+                    manifest[key] = val
+        except FileNotFoundError:
+            # That is okay
+            manifest = params
+
+        with open(manifest_path, 'w') as file:
+            file.write(json.dumps(manifest))
+
         return manifest_path
 
     @classmethod
@@ -151,8 +147,12 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         """
         if name is None:
             name = test_names.generate_test_object_name(separator="")
-        manifest_path = cls.save_manifest(app_path=app_path, name=name, instances=instances,
-                                          app_type=app_type, bindings=bindings)
+
+        manifest_params = {"name" : name, "instances" : instances,
+                           "type" : app_type, "bindings" : bindings}
+        manifest_path = cls.update_manifest(app_path=app_path,
+                                            params=manifest_params)
+
         cls.set_run_sh_access(app_path=app_path)
 
         try:

@@ -45,20 +45,14 @@ class CliApplication(CliObjectSuperclass):
         self.target_directory = target_directory
 
     @classmethod
-    def _update_manifest(cls, *, manifest_path, target_directory, app_type, name, instances):
-        manifest_params = {
-            'instances': instances,
-            'name': name,
-            'type': app_type
-        }
-        Application.update_manifest(manifest_path, manifest_params)
-        shutil.copyfile(manifest_path, os.path.join(target_directory, "manifest.json"))
-
-    @classmethod
     def push(cls, context, *, app_path, tap_cli, app_type, name=None, instances=1, bindings: list=None):
         if name is None:
             name = generate_test_object_name(separator="-")
-        Application.save_manifest(app_path=app_path, name=name, instances=instances, app_type=app_type, bindings=bindings)
+
+        manifest_params = {"name" : name, "instances" : instances,
+                           "type" : app_type, "bindings" : bindings}
+        Application.update_manifest(app_path=app_path, params=manifest_params)
+
         new_app = cls(app_type=app_type, target_directory=app_path, tap_cli=tap_cli, name=name, instances=instances)
         context.test_objects.append(new_app)
         push_output = tap_cli.push(app_path=app_path)
