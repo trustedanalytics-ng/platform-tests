@@ -74,7 +74,7 @@ class TestMarketplaceServices:
         assert_in_with_retry(instance, ServiceInstance.get_list, name=instance.name)
         step("Delete an instance")
         instance.delete()
-        assertions.assert_not_in_by_id_with_retry(instance.id, ServiceInstance.get_list)
+        instance.ensure_deleted()
 
     def _skip_if_service_excluded(self, offering):
         if offering.label in self.SERVICES_TESTED_SEPARATELY:
