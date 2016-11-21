@@ -125,34 +125,20 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
     def _from_response(cls, response: dict, client: HttpClient):
         # TODO this workaround for inconsistent responses will not be required
         offering_id = response.get("id")
-        if offering_id is None:
-            offering_id = response["metadata"]["guid"]
         state = response.get("state")
-        if state is None:
-            state = response["entity"]["state"]
         label = response.get("name")
-        if label is None:
-            label = response["entity"]["label"]
         service_plans_json = response.get("plans")
         if service_plans_json is None:
-            service_plans_json = response["entity"]["service_plans"]
+            service_plans_json = response.get("offeringPlans")
         if service_plans_json is None:
             logger.debug("Why service_plans_json is None?")
             logger.debug(response)
             service_plans_json = []
-        if "tags" in response.keys():
-            tags = response["tags"]
-        elif "entity" in response.keys():
-            tags = response["entity"].get("tags", None)
-        else:
-            tags = None
+        tags = response.get("tags")
         if type(response["metadata"]) is list:
             metadata = cls._metadata_to_dict(response["metadata"])
             image = metadata.get("imageUrl", None)
             display_name = metadata.get("displayName", None)
-        elif "entity" in response.keys():
-            image = response["entity"].get("imageUrl", None)
-            display_name = response["entity"].get("displayName", None)
         else:
             image = None
             display_name = None

@@ -41,6 +41,11 @@ PLAN_1_ID = "de641503-89b8-4bff-5a7e-24e1ee7f5081"
 PLAN_1_NAME = "test_1"
 PLAN_1_DESCRIPTION = "Test plan 1"
 
+metadata_dict = {
+    "key": "some_key",
+    "value": "some_value"
+}
+
 PLAN_0_POST = {
     "id": PLAN_0_ID,
     "name": PLAN_0_NAME,
@@ -107,38 +112,28 @@ POST_RESPONSE_ONE_PLAN = {
 }
 
 GET_RESPONSE_ONE_PLAN = {
-    "entity": {
-        "label": OFFERING_LABEL,
-        "state": "READY",
-        "provider": "",
-        "url": "",
-        "description": "Test test test",
-        "long_Description": "",
-        "version": "",
-        "info_url": "",
-        "active": True,
-        "bindable": True,
-        "unique_id": OFFERING_ID,
-        "extra": "",
-        "tags": None,
-        "requires": None,
-        "documentation_url": "",
-        "service_broker_guid": "",
-        "plan_updateable": True,
-        "service_plans_url": "",
-        "service_plans": [
-            PLAN_0_GET
-        ]
-    },
-    "metadata": {
-        "guid": OFFERING_ID
-    }
+    "name": OFFERING_LABEL,
+    "state": "READY",
+    "provider": "",
+    "url": "",
+    "description": "Test test test",
+    "long_Description": "",
+    "version": "",
+    "bindable": True,
+    "id": OFFERING_ID,
+    "tags": [],
+    "offeringPlans": [
+        PLAN_0_GET
+    ],
+    "metadata": [
+        metadata_dict,
+    ]
 }
 
 POST_RESPONSE_TWO_PLANS = copy.deepcopy(POST_RESPONSE_ONE_PLAN)
 POST_RESPONSE_TWO_PLANS["plans"].append(PLAN_1_POST)
 GET_RESPONSE_TWO_PLANS = copy.deepcopy(GET_RESPONSE_ONE_PLAN)
-GET_RESPONSE_TWO_PLANS["entity"]["service_plans"].append(PLAN_1_GET)
+GET_RESPONSE_TWO_PLANS["offeringPlans"].append(PLAN_1_GET)
 
 
 class TestServiceOffering:

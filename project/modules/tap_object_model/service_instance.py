@@ -179,15 +179,15 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         response = api.get_offerings(client=client)
 
         # find offering in the response
-        offering_data = next((i for i in response if i["entity"]["label"] == offering_label), None)
+        offering_data = next((i for i in response if i["name"] == offering_label), None)
         assert offering_data is not None, "No such offering {}".format(offering_label)
 
         # find plan in offering data
-        plan_data = next((i for i in offering_data["entity"]["service_plans"] if i["entity"]["name"] == plan_name), None)
+        plan_data = next((i for i in offering_data["offeringPlans"] if i["name"] == plan_name), None)
         assert plan_data is not None, "No such plan {} for offering {}".format(plan_name, offering_label)
 
-        offering_id = offering_data["metadata"]["guid"]
-        plan_id = plan_data["metadata"]["guid"]
+        offering_id = offering_data["id"]
+        plan_id = plan_data["id"]
         return offering_id, plan_id
 
     def cleanup(self):

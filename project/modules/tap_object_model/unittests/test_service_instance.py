@@ -32,6 +32,7 @@ class TestServiceInstance:
     STARTING = TapEntityState.STARTING
     RUNNING = TapEntityState.RUNNING
     FAILURE = TapEntityState.FAILURE
+    STOPPED = TapEntityState.STOPPED
 
     OFFERING_LABEL = "test_service"
     OFFERING_ID = str(uuid.uuid4())
@@ -67,41 +68,30 @@ class TestServiceInstance:
     GET_CATALOG_RESPONSE = \
         [
             {
-                'metadata':
+                'version': '',
+                'requires': None,
+                'provider': '',
+                'state': 'READY',
+                'active': True,
+                'documentation_url': '',
+                'id': OFFERING_ID,
+                'bindable': True,
+                'description': 'Test offering',
+                'extra': '',
+                "offeringPlans": [
                     {
-                        'guid': OFFERING_ID
-                    },
-                'entity':
-                    {
-                        'version': '',
-                        'requires': None,
-                        'provider': '',
-                        'state': 'READY',
-                        'active': True,
-                        'documentation_url': '',
-                        'unique_id': OFFERING_ID,
-                        'bindable': True,
-                        'description': 'Test offering',
-                        'extra': '',
-                        "service_plans": [
-                            {
-                                "entity": {
-                                    "name": SERVICE_PLAN_NAME
-                                },
-                                "metadata": {
-                                    "guid": SERVICE_PLAN_ID
-                                }
-                            }
-                        ],
-                        'info_url': '',
-                        'tags': None,
-                        'service_broker_guid': '',
-                        'service_plans_url': '',
-                        'label': OFFERING_LABEL,
-                        'plan_updateable': True,
-                        'url': '',
-                        'long_Description': ''
+                        "name": SERVICE_PLAN_NAME,
+                        "id": SERVICE_PLAN_ID
                     }
+                ],
+                'info_url': '',
+                'tags': None,
+                'service_broker_guid': '',
+                'service_plans_url': '',
+                'name': OFFERING_LABEL,
+                'plan_updateable': True,
+                'url': '',
+                'long_Description': ''
             }
         ]
 
@@ -208,6 +198,8 @@ class TestServiceInstance:
         """
         Test service instance cleanup
         """
+        self.mock_api_service.get_services.side_effect = [self.get_service_list_with_state(self.RUNNING),
+                                                          self.get_service_list_with_state(self.STOPPED)]
         service_instance_requested.cleanup()
         self.mock_api_service.delete_service.assert_called_with(client=service_instance_requested._client,
                                                                 service_id=service_instance_requested.id)
