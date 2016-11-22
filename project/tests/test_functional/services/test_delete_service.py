@@ -30,17 +30,17 @@ pytestmark = [pytest.mark.components(TAP.service_catalog)]
 class TestDeleteService:
 
     @pytest.fixture(scope="class")
-    def public_service(self, request):
+    def public_service(self):
         services = ServiceOffering.get_list()
         return next(s for s in services if s.label == ServiceLabels.ZOOKEEPER)
 
-    @pytest.mark.bugs(reason="DPNG-11781 TAP-NG doesn't support user roles yet")
+    @pytest.mark.skip(reason="DPNG-12855 Deleting service broker offering - not yet implemented")
     @pytest.mark.parametrize("role", ["user"])
     def test_cannot_delete_public_service_as_non_admin(self, test_user_clients, role, public_service):
         client = test_user_clients[role]
         step("Attempt to delete public service")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE,
-                                     public_service.api_delete, client=client)
+                                     public_service.delete, client=client)
 
     @pytest.mark.skip(reason="DPNG-11414 Create offering from binary - not supported yet")
     @pytest.mark.parametrize("role", ["admin"])
