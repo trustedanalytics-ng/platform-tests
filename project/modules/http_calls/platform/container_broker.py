@@ -38,9 +38,9 @@ def get_logs(*, instance_id):
 
 
 def get_envs(*, instance_id):
-    """ GET /service/{instanceId}/envs """
+    """ GET /service/{instanceId}/credentials """
     response = _get_client().request(HttpMethod.GET,
-                                     path="service/{}/envs".format(instance_id),
+                                     path="service/{}/credentials".format(instance_id),
                                      raw_response=True,
                                      msg="CONTAINER-BROKER: get envs for instance")
     assert response.status_code == ContainerBrokerHttpStatus.CODE_OK

@@ -19,7 +19,7 @@ import modules.http_calls.platform.container_broker as container_broker_api
 
 
 class ContainerBrokerInstance(object):
-    ENVS_KEY = "Envs"
+    ENVS_KEY = "envs"
 
     def __init__(self, *, instance_id: str):
         """Instantiate objects of this class using catalog service instance id"""

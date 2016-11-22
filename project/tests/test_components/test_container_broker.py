@@ -141,7 +141,7 @@ class TestContainerBroker:
         step("CONTAINER-BROKER: Get instance envs")
         container_broker_instance = ContainerBrokerInstance(instance_id=catalog_instance_a.id)
         response = container_broker_instance.get_envs()
-        assert ContainerBrokerInstance.ENVS_KEY in response[0]["Containers"][0]
+        assert ContainerBrokerInstance.ENVS_KEY in response[0]
 
     def test_scale_instance(self, catalog_instance_a):
         for scaled_instances in [3, 1]:
