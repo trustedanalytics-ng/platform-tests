@@ -35,9 +35,9 @@ logger.setLevel(logging.DEBUG)
 
 def start_locust_process(stress_run_id=None):
     command = ["locust", "-P", config.locust_port, "-f", config.locust_file]
-    env = os.environ
-    env.update({"PT_STRESS_RUN_ID": str(stress_run_id)})
-    process = subprocess.Popen(command, universal_newlines=True, env=env)
+    if stress_run_id is not None:
+        os.environ.update({"PT_STRESS_RUN_ID": str(stress_run_id)})
+    process = subprocess.Popen(command, universal_newlines=True)
     return process
 
 
