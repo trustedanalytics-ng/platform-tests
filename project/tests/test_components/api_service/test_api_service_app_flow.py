@@ -20,6 +20,7 @@ from modules.constants import TapApplicationType, TapComponent as TAP, Urls
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
+from modules.tap_object_model.prep_app import PrepApp
 from tests.fixtures import assertions
 
 
@@ -32,9 +33,14 @@ class ApiServiceApplicationFlow:
 
     @pytest.fixture(scope="class")
     def sample_application(self, class_context, sample_app_path, api_service_admin_client):
+        log_fixture("sample_application: update manifest")
+        p_a = PrepApp(sample_app_path)
+        manifest_params = {"app_type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         log_fixture("Push sample application and check it's running")
         application = Application.push(class_context, app_path=sample_app_path,
-                                       app_type=self.APP_TYPE,
+                                       name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         application.ensure_running()
         return application
@@ -42,8 +48,14 @@ class ApiServiceApplicationFlow:
     @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
     @priority.high
     def test_push_and_delete_application(self, context, sample_app_path, api_service_admin_client):
+        log_fixture("sample_application: update manifest")
+        p_a = PrepApp(sample_app_path)
+        manifest_params = {"app_type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push sample application")
-        application = Application.push(context, app_path=sample_app_path, app_type=self.APP_TYPE,
+        application = Application.push(context, app_path=sample_app_path,
+                                       name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         step("Check application is running")
         application.ensure_running()

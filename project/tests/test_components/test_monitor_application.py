@@ -24,6 +24,7 @@ from modules.constants import TapComponent
 from modules.constants import TapComponent as TAP, Urls, TapApplicationType
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
+from modules.tap_object_model.prep_app import PrepApp
 from modules.http_calls.kubernetes import k8s_get_pods, k8s_logs
 
 logged_components = (TAP.api_service,)
@@ -59,10 +60,18 @@ class TestMonitorApplication:
 
     @pytest.mark.bugs("DPNG-12123 FileNotFoundError: /.kube")
     @pytest.mark.bugs("DPNG-12343 [api-tests] Tests which push app using cli fail immediately instead of waiting")
-    def test_app_deployment(self, context, sample_app_target_directory, tap_cli, sample_app_tar_content):
+    def test_app_deployment(self, context, sample_app_target_directory, tap_cli,
+                            sample_app_tar_content):
+        step("Update the manifest")
+        p_a = PrepApp(sample_app_target_directory)
+        manifest_params = {"type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
         application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
-                                          app_path=sample_app_target_directory)
+                                          app_path=sample_app_target_directory,
+                                          name=p_a.app_name, instances=p_a.instances)
+
         app_id = application.ensure_app_has_id()
         step("Get K8s pods")
         pods_list = k8s_get_pods()

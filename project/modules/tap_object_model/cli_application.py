@@ -45,15 +45,9 @@ class CliApplication(CliObjectSuperclass):
         self.target_directory = target_directory
 
     @classmethod
-    def push(cls, context, *, app_path, tap_cli, app_type, name=None, instances=1, bindings: list=None):
-        if name is None:
-            name = generate_test_object_name(separator="-")
-
-        manifest_params = {"name" : name, "instances" : instances,
-                           "type" : app_type, "bindings" : bindings}
-        Application.update_manifest(app_path=app_path, params=manifest_params)
-
-        new_app = cls(app_type=app_type, target_directory=app_path, tap_cli=tap_cli, name=name, instances=instances)
+    def push(cls, context, *, app_path, tap_cli, app_type, name=None, instances=1):
+        new_app = cls(app_type=app_type, target_directory=app_path,
+                      tap_cli=tap_cli, name=name, instances=instances)
         context.test_objects.append(new_app)
         push_output = tap_cli.push(app_path=app_path)
         missing_headers = []

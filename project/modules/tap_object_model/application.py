@@ -15,7 +15,6 @@
 #
 
 import json
-import os
 
 import requests
 from retry import retry
@@ -25,7 +24,6 @@ from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.api_service as api
 from modules.http_client import HttpClient
 from modules.tap_logger import log_http_request, log_http_response
-from modules import test_names
 from ._api_model_superclass import ApiModelSuperclass
 from ._tap_object_superclass import TapObjectSuperclass
 
@@ -42,7 +40,6 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     _REFRESH_ATTRIBUTES = ["id", "image_type", "state", "replication",
                            "running_instances", "urls"]
 
-    MANIFEST_NAME = "manifest.json"
     RUN_SH_NAME = "run.sh"
 
     def __init__(self, app_id: str, name: str, bindings: list,
@@ -77,52 +74,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
                                                 self.id)
 
     @classmethod
-    def update_manifest(cls, *, app_path: str, params: dict):
-        """Updates the manifest with provided params. If the manifest file
-        does not exist, it is created and filled with parameters provided.
-
-        Args:
-            app_path: Path to the gziped application or the application directory
-            params: key->value that will update the manifest
-
-        Returns:
-            Path to the manifest file
-        """
-        if os.path.isfile(app_path):
-            manifest_dir = os.path.dirname(app_path)
-        else:
-            manifest_dir = app_path
-
-        manifest_path = os.path.join(manifest_dir, cls.MANIFEST_NAME)
-
-        try:
-            with open(manifest_path, 'r') as file:
-                manifest = json.loads(file.read())
-                for key, val in params.items():
-                    manifest[key] = val
-        except FileNotFoundError:
-            # That is okay
-            manifest = params
-
-        with open(manifest_path, 'w') as file:
-            file.write(json.dumps(manifest))
-
-        return manifest_path
-
-    @classmethod
-    def set_run_sh_access(cls, *, app_path):
-        if os.path.isfile(app_path):
-            run_sh_dir = os.path.dirname(app_path)
-        else:
-            run_sh_dir = app_path
-
-        run_sh_path = os.path.join(run_sh_dir, cls.RUN_SH_NAME)
-        if os.path.isfile(run_sh_path):
-            os.chmod(run_sh_path, 0o777)
-
-    @classmethod
-    def push(cls, context, *, app_path: str, app_type: str, name: str=None,
-             instances: int=1, client: HttpClient=None, bindings: list=None):
+    def push(cls, context, *, app_path: str, name: str, manifest_path: str,
+             client: HttpClient=None):
         """Pushes the application from source directory with provided name,
         services and envs.
 
@@ -135,26 +88,14 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             context: context object that will store created applications. It is used
                      later to perform a cleanup.
             app_path: path to the application archive or to the application directory
-            app_type: "type" parameter in manifest.json
-            name: "name" parameter in manifest.json, if None, will be auto-generated
-            instances: "instances" parameter in manifest.json
+            name: Name of the application
+            manifest_path: path to the manifest file
             client: The Http client to use. If None, default (admin via console)
                     will be used. It will be used to verify if the app was pushed
-            bindings: List of services bindings that the application will use
 
             Returns:
                 Application class instance
         """
-        if name is None:
-            name = test_names.generate_test_object_name(separator="")
-
-        manifest_params = {"name" : name, "instances" : instances,
-                           "type" : app_type, "bindings" : bindings}
-        manifest_path = cls.update_manifest(app_path=app_path,
-                                            params=manifest_params)
-
-        cls.set_run_sh_access(app_path=app_path)
-
         try:
             api.create_application(client=client, file_path=app_path,
                                    manifest_path=manifest_path)
@@ -318,22 +259,6 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
                    state=response["state"], replication=response["replication"],
                    running_instances=response["running_instances"],
                    urls=response["urls"], client=client)
-
-    @classmethod
-    def _read_app_name_from_manifest(cls, app_dir: str):
-        """Retrieves the application name assuming there is a manifest.json file
-
-        Arguments:
-            app_dir: Path to the gzipped application. In this same directory
-                     there should be a manifest.json file
-
-        Returns:
-            The application name
-        """
-        manifest_path = os.path.join(os.path.dirname(app_dir), cls.MANIFEST_NAME)
-        with open(manifest_path, 'r') as file:
-            manifest = json.loads(file.read())
-        return manifest['name']
 
     def _refresh(self, client: HttpClient=None):
         """ Updates the state of the application. If the application is not present,

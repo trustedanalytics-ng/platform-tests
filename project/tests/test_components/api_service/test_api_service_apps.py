@@ -22,6 +22,7 @@ from modules.http_calls.platform import api_service, catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
+from modules.tap_object_model.prep_app import PrepApp
 from tests.fixtures import assertions
 
 
@@ -36,9 +37,14 @@ class TestApiServiceApplication:
 
     @pytest.fixture(scope="class")
     def sample_app(self, class_context, sample_app_path, api_service_admin_client):
+        log_fixture("sample_application: update manifest")
+        p_a = PrepApp(sample_app_path)
+        manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         log_fixture("Push sample application")
         application = Application.push(class_context, app_path=sample_app_path,
-                                       app_type=TapApplicationType.PYTHON27,
+                                       name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         application.ensure_running()
         return application
@@ -47,10 +53,16 @@ class TestApiServiceApplication:
     def test_cannot_push_application_twice(self, context, sample_app_path, sample_app,
                                            api_service_admin_client):
         step("Check that pushing the same application again causes an error")
+        log_fixture("sample_application: update manifest")
+        p_a = PrepApp(sample_app_path)
+        manifest_params = {"app_type" : TapApplicationType.PYTHON27,
+                           "name": sample_app.name}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         with pytest.raises(UnexpectedResponseError) as e:
             Application.push(context, app_path=sample_app_path,
-                             app_type=TapApplicationType.PYTHON27,
-                             name=sample_app.name, client=api_service_admin_client)
+                             name=sample_app.name, manifest_path=manifest_path,
+                             client=api_service_admin_client)
         assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in str(e)
 
     @priority.low
@@ -104,9 +116,14 @@ class TestApiServiceApplication:
     @priority.medium
     def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path,
                                                        api_service_admin_client):
+        log_fixture("sample_application: update manifest")
+        p_a = PrepApp(sample_app_path)
+        manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         log_fixture("Push sample application and check it's running")
         application = Application.push(context, app_path=sample_app_path,
-                                       app_type=TapApplicationType.PYTHON27,
+                                       name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         application.ensure_running()
 

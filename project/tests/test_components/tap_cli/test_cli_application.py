@@ -24,6 +24,7 @@ from modules.constants import TapComponent as TAP, Urls, TapApplicationType, Tap
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
+from modules.tap_object_model.prep_app import PrepApp
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
@@ -161,9 +162,15 @@ class TestPythonCliApp:
 
     @pytest.fixture(scope="class")
     def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
+        step("Update the manifest")
+        p_a = PrepApp(sample_app_target_directory)
+        manifest_params = {"type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push application")
         application = CliApplication.push(class_context, tap_cli=tap_cli, app_type=self.APP_TYPE,
-                                          app_path=sample_app_target_directory)
+                                          app_path=sample_app_target_directory,
+                                          name=p_a.app_name, instances=p_a.instances)
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")
@@ -174,9 +181,15 @@ class TestPythonCliApp:
 
     @priority.high
     def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
+        step("Update the manifest")
+        p_a = PrepApp(sample_app_target_directory)
+        manifest_params = {"type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push application")
         application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
-                                          app_path=sample_app_target_directory)
+                                          app_path=sample_app_target_directory,
+                                          name=p_a.app_name, instances=p_a.instances)
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")
@@ -191,9 +204,15 @@ class TestPythonCliApp:
 
     @pytest.mark.bugs("DPNG-12158 Tap client fails when pushing directory containing symbolic links")
     def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
+        step("Update the manifest")
+        p_a = PrepApp(sample_app_target_directory_with_symlinks)
+        manifest_params = {"type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push application")
         application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
-                                          app_path=sample_app_target_directory_with_symlinks)
+                                          app_path=sample_app_target_directory_with_symlinks,
+                                          name=p_a.app_name, instances=p_a.instances)
         step("Ensure app is on the app list")
         application.ensure_on_app_list()
         step("Ensure app is running")

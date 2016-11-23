@@ -21,6 +21,7 @@ from modules.constants import ApplicationPath, TapApplicationType, TapComponent 
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
+from modules.tap_object_model.prep_app import PrepApp
 from tests.fixtures import assertions
 
 
@@ -45,11 +46,23 @@ class TestTapApp:
     def test_user_can_do_app_flow(self, test_user_clients, role, context):
         client = test_user_clients[role]
 
+        step("Compile the app")
         test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
         test_app_sources.compile_mvn()
+
+        step("Package the app")
+        p_a = PrepApp(ApplicationPath.SAMPLE_JAVA_APP)
+        gzipped_app_path = p_a.package_app(context)
+
+        step("Update manifest")
+        manifest_params = {"app_type" : TapApplicationType.JAVA}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push app to tap")
-        app = Application.push(context, app_path=ApplicationPath.SAMPLE_JAVA_APP,
-                               client=client, app_type=TapApplicationType.JAVA)
+        app = Application.push(context, app_path=gzipped_app_path,
+                               name=p_a.app_name, manifest_path=manifest_path,
+                               client=client)
+
         step("Check the application is running")
         app.ensure_running()
         step("Stop the application and check that it is stopped")
@@ -73,12 +86,23 @@ class TestTapApp:
     @pytest.mark.skip(reason="DPNG-12190 cascade flag is not supported yet")
     @priority.medium
     def test_cascade_app_delete(self, context, instance, admin_client):
+        step("Compile the app")
         test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
         test_app_sources.compile_mvn()
+
+        step("Package the app")
+        p_a = PrepApp(ApplicationPath.SAMPLE_JAVA_APP)
+        gzipped_app_path = p_a.package_app(context)
+
+        step("Update manifest")
+        manifest_params = {"app_type" : TapApplicationType.JAVA,
+                           "bindings" : instance.id}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
         step("Push app to tap")
-        app = Application.push(context, app_path=ApplicationPath.SAMPLE_JAVA_APP,
-                               client=admin_client, app_type=TapApplicationType.JAVA,
-                               bindings=[instance.id])
+        app = Application.push(context, app_path=gzipped_app_path,
+                               name=p_a.app_name, manifest_path=manifest_path,
+                               client=admin_client)
         step("Check the application is running")
         app.ensure_running()
 

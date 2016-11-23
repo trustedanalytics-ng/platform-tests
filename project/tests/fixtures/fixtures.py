@@ -30,6 +30,7 @@ from modules.http_client.configuration_provider.k8s_service import ServiceConfig
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
     ScoringEngineModel, ModelArtifact, Binding
+from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
 from tap_component_config import api_service
 
@@ -125,11 +126,20 @@ def marketplace_offerings():
 
 @pytest.fixture(scope="class")
 def sample_python_app(class_context):
+    log_fixture("sample_python_app: package sample application")
+    p_a = PrepApp(ApplicationPath.SAMPLE_PYTHON_APP)
+    gzipped_app_path = p_a.package_app(class_context)
+
+    log_fixture("sample_python_app: update manifest")
+    manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
     log_fixture("sample_python_app: push sample application")
-    cwd = ApplicationPath.SAMPLE_PYTHON_APP
-    app = Application.push(class_context, app_path=cwd,
-                           app_type=TapApplicationType.PYTHON27)
-    log_fixture("Check the application is running")
+    app = Application.push(class_context, app_path=gzipped_app_path,
+                           name=p_a.app_name, manifest_path=manifest_path,
+                           client=api_service_admin_client())
+
+    log_fixture("sample_python_app: Check the application is running")
     app.ensure_running()
     return app
 
@@ -137,11 +147,24 @@ def sample_python_app(class_context):
 @pytest.fixture(scope="class")
 def sample_java_app(class_context):
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
+
     log_fixture("sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()
+
+    log_fixture("sample_java_app: package sample application")
+    p_a = PrepApp(ApplicationPath.SAMPLE_JAVA_APP)
+    gzipped_app_path = p_a.package_app(class_context)
+
+    log_fixture("sample_java_app: update manifest")
+    manifest_params = {"app_type" : TapApplicationType.JAVA}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
     log_fixture("sample_java_app: Push app to tap")
-    app = Application.push(context=class_context, app_path=ApplicationPath.SAMPLE_JAVA_APP,
-                           app_type=TapApplicationType.JAVA)
+    app = Application.push(context=class_context, app_path=gzipped_app_path,
+                           name=p_a.app_name, manifest_path=manifest_path,
+                           client=api_service_admin_client())
+
+    log_fixture("sample_java_app: Check the application is running")
     app.ensure_running()
     return app
 
@@ -168,32 +191,58 @@ def mysql_instance(session_context, api_service_admin_client):
 
 @pytest.fixture(scope="module")
 def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
-    log_fixture("mysql_app: push sample application")
+    log_fixture("mysql_app: download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    db_app = Application.push(module_context, app_path=app_src.path,
-                              app_type=TapApplicationType.PYTHON27)
-    log_fixture("Check the application is running")
+
+    log_fixture("mysql_app: package sample application")
+    p_a = PrepApp(app_src.path)
+    gzipped_app_path = p_a.package_app(module_context)
+
+    log_fixture("mysql_app: update manifest")
+    manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("mysql_app: push sample application")
+    db_app = Application.push(module_context, app_path=gzipped_app_path,
+                              name=p_a.app_name, manifest_path=manifest_path,
+                              client=api_service_admin_client())
+
+    log_fixture("mysql_app: Check the application is running")
     db_app.ensure_running()
+
     Binding.create(client=api_service_admin_client, context=module_context,
                    app_id=db_app.id, service_instance_id=mysql_instance.id)
-    log_fixture("Check the application is responding")
+    log_fixture("mysql_app: Check the application is responding")
     db_app.ensure_responding()
     return db_app
 
 
 @pytest.fixture(scope="module")
 def app_binded_psql(module_context, psql_instance, api_service_admin_client):
-    log_fixture("psql_app: push sample application")
+    log_fixture("psql_app: Download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
     app_src.run_build_sh()
-    db_app = Application.push(module_context, app_path=app_src.path,
-                              app_type=TapApplicationType.PYTHON27)
-    log_fixture("Check the application is running")
+
+    log_fixture("psql_app: update manifest")
+    p_a = PrepApp(app_src.path)
+    manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("mysql_app: package sample application")
+    gzipped_app_path = p_a.package_app(module_context)
+
+    log_fixture("psql_app: push sample application")
+    db_app = Application.push(module_context, app_path=gzipped_app_path,
+                              name=p_a.app_name, manifest_path=manifest_path,
+                              client=api_service_admin_client())
+
+    log_fixture("psql_app: Check the application is running")
     db_app.ensure_running()
     Binding.create(client=api_service_admin_client, context=module_context,
                    app_id=db_app.id, service_instance_id=psql_instance.id)
-    log_fixture("Check the application is responding")
+
+    log_fixture("psq_app: Check the application is responding")
     db_app.ensure_responding()
     return db_app
 
