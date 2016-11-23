@@ -63,7 +63,6 @@ third_party_services = {
 
 offerings = {
     ServiceLabels.COUCH_DB: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.ELASTICSEARCH13: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
     ServiceLabels.ELASTICSEARCH17: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
     ServiceLabels.GATEWAY: [Plan.SINGLE],
     ServiceLabels.GEARPUMP: [Plan.SMALL, Plan.MEDIUM],
