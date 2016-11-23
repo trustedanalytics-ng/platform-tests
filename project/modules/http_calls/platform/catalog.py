@@ -43,13 +43,15 @@ def get_image(*, image_id):
                                  msg="CATALOG: get image")
 
 
-def create_image(*, image_type, state, blob_type):
+def create_image(*, image_id, image_type, state, blob_type):
     """ POST /images """
     body = {
+        "id": image_id,
         "type": image_type,
         "state": state,
         "blobType": blob_type
     }
+    body = {k: v for k, v in body.items() if v is not None}
     response = _get_client().request(HttpMethod.POST,
                                      path="images",
                                      body=body,
@@ -65,13 +67,16 @@ def delete_image(*, image_id):
     return response
 
 
-def update_image(*, image_id, field_name, value):
+def update_image(*, image_id, field_name, value, prev_value=None, username=None):
     """ PATCH /images/{image_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prevValue": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="images/{}".format(image_id),
                                      body=body,

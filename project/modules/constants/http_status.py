@@ -219,6 +219,7 @@ class CatalogHttpStatus(HttpStatus):
     MSG_EVENT_DOES_NOT_EXIST = "event {} does not exist"
     MSG_COMPARE_FAILED = "101: Compare failed ([\\\"{}\\\" != \\\"{}\\\"]"
     MSG_FIELD_IS_EMPTY = "field {} is empty!"
+    MSG_KEY_EXISTS = "Key already exists"
 
 
 class ApiServiceHttpStatus(HttpStatus):

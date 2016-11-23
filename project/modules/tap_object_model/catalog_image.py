@@ -38,8 +38,8 @@ class CatalogImage(TapObjectSuperclass):
                    blob_type=response["blobType"])
 
     @classmethod
-    def create(cls, context, *, image_type=None, state=None, blob_type=None):
-        response = catalog_api.create_image(image_type=image_type, state=state, blob_type=blob_type)
+    def create(cls, context, *, image_id=None, image_type=None, state=None, blob_type=None):
+        response = catalog_api.create_image(image_id=image_id, image_type=image_type, state=state, blob_type=blob_type)
         new_image = cls._from_response(response)
         context.test_objects.append(new_image)
         return new_image
@@ -60,9 +60,10 @@ class CatalogImage(TapObjectSuperclass):
         self.state = image.state
         assert self.state == expected_state, "State is {}, expected {}".format(self.state, expected_state)
 
-    def update(self, *, field_name, value):
+    def update(self, *, field_name, value, prev_value=None, username=None):
         setattr(self, field_name, value)
-        catalog_api.update_image(image_id=self.id, field_name=field_name, value=value)
+        catalog_api.update_image(image_id=self.id, field_name=field_name, value=value, prev_value=prev_value,
+                                 username=username)
 
     def delete(self):
         catalog_api.delete_image(image_id=self.id)
