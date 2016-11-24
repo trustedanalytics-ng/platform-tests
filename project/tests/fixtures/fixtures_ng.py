@@ -60,7 +60,7 @@ def tap_cli():
     target_directory = os.path.join("/tmp")
     target_path = os.path.join(target_directory, tap_binary_name)
 
-    if config.check_tap_cli_version:
+    if config.check_tap_cli_version and os.path.isfile(target_path):
         log_fixture("Deleting old tap client")
         os.remove(target_path)
 
