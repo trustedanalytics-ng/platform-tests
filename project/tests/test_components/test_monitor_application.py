@@ -27,8 +27,7 @@ from modules.tap_object_model import CliApplication
 from modules.tap_object_model.prep_app import PrepApp
 from modules.http_calls.kubernetes import k8s_get_pods, k8s_logs
 
-logged_components = (TAP.api_service,)
-pytestmark = [pytest.mark.components(TAP.api_service)]
+pytestmark = [pytest.mark.components(TAP.cli, TAP.monitor)]
 
 
 @pytest.mark.usefixtures("cli_login")

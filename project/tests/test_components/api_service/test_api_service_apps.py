@@ -27,7 +27,6 @@ from tests.fixtures import assertions
 
 
 logged_components = (TAP.api_service, TAP.catalog)
-pytestmark = [pytest.mark.components(TAP.api_service)]
 
 
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
@@ -50,6 +49,7 @@ class TestApiServiceApplication:
         return application
 
     @priority.low
+    @pytest.mark.components(TAP.api_service)
     def test_cannot_push_application_twice(self, context, sample_app_path, sample_app,
                                            api_service_admin_client):
         step("Check that pushing the same application again causes an error")
@@ -66,6 +66,7 @@ class TestApiServiceApplication:
         assert self.EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE in str(e)
 
     @priority.low
+    @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
         step("Scale application with incorrect id")
         incorrect_id = "wrong_id"
@@ -75,6 +76,7 @@ class TestApiServiceApplication:
                                                 client=api_service_admin_client)
 
     @priority.low
+    @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_incorrect_instances_number(self, sample_app, api_service_admin_client):
         step("Scale application with incorrect replicas number")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
@@ -83,6 +85,7 @@ class TestApiServiceApplication:
                                                 replicas="wrong_number", client=api_service_admin_client)
 
     @priority.low
+    @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_negative_instances_number(self, sample_app, api_service_admin_client):
         step("Scale application with negative replicas number")
         expected_message = ApiServiceHttpStatus.MSG_MINIMUM_ALLOWED_REPLICA
@@ -90,6 +93,7 @@ class TestApiServiceApplication:
                                                 sample_app.scale, replicas=-1, client=api_service_admin_client)
 
     @priority.high
+    @pytest.mark.components(TAP.api_service)
     def test_get_application(self, sample_app, api_service_admin_client):
         step("Make sure the sample app has updated id")
         sample_app._ensure_has_id()
@@ -99,6 +103,7 @@ class TestApiServiceApplication:
         assert sample_app == app
 
     @priority.low
+    @pytest.mark.components(TAP.api_service)
     def test_scale_application_with_zero_instances_number(self, sample_app, api_service_admin_client):
         step("Scale application with zero replicas number")
         replicas_number = 0
@@ -114,6 +119,7 @@ class TestApiServiceApplication:
                                                          .format(app.running_instances)
 
     @priority.medium
+    @pytest.mark.components(TAP.api_service, TAP.catalog)
     def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path,
                                                        api_service_admin_client):
         log_fixture("sample_application: update manifest")

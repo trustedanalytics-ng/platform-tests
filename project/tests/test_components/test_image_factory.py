@@ -17,7 +17,8 @@
 import pytest
 from retry import retry
 
-from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus, HttpStatus
+from modules.constants import TapComponent as TAP, Urls, TapApplicationType, TapEntityState, ImageFactoryHttpStatus, \
+    HttpStatus
 from modules.file_utils import download_file
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -25,8 +26,7 @@ from modules.tap_object_model import Blob, CatalogImage, Image, ImageRepository
 from tests.fixtures import assertions
 from tests.fixtures.assertions import assert_raises_http_exception
 
-logged_components = (TAP.image_factory, TAP.blob_store, TAP.catalog, TAP.image_repository)
-pytestmark = [pytest.mark.components(TAP.image_factory)]
+logged_components = (TAP.blob_store, TAP.catalog, TAP.image_factory, TAP.image_repository)
 
 
 @priority.medium
@@ -73,6 +73,7 @@ class TestImageFactory:
                                                 Blob.get, blob_id=blob_id)
 
     @priority.high
+    @pytest.mark.components(TAP.blob_store, TAP.catalog, TAP.image_factory, TAP.image_repository)
     def test_create_image_in_image_factory(self, context, catalog_image):
         step("IMAGE-FACTORY: Create an image")
         Image.create(context, image_id=catalog_image.id)
@@ -86,6 +87,7 @@ class TestImageFactory:
         step("BLOB-STORE: Wait until blob is successfully removed")
         self.assert_blob_deleted(blob_id=catalog_image.id)
 
+    @pytest.mark.components(TAP.catalog, TAP.image_factory)
     @pytest.mark.parametrize("body", ["invalid body", ""])
     def test_create_image_factory_with_wrong_body(self, class_context, body, catalog_image):
         step("Create image in image-factory with invalid body")

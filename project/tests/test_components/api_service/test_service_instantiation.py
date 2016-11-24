@@ -24,8 +24,8 @@ from modules.tap_object_model import ServiceInstance, ServiceOffering
 from modules.test_names import generate_test_object_name
 from tests.fixtures import assertions
 
-logged_components = (TAP.service_catalog, TAP.api_service)
-pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.api_service)]
+logged_components = (TAP.api_service, )
+pytestmark = [pytest.mark.components(TAP.api_service)]
 
 
 @incremental

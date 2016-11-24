@@ -24,8 +24,7 @@ from modules.tap_object_model.flows.onboarding import onboard
 from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_retry
 
 
-logged_components = (TAP.api_service,)
-pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
+logged_components = (TAP.user_management,)
 
 
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
@@ -45,6 +44,7 @@ class TestCliInvitationsShort:
 
     @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
     @priority.high
+    @pytest.mark.components(TAP.cli)
     def test_invite_user(self, context, tap_cli):
         step("Send invitation")
         invitation = CliInvitation.send(context, tap_cli=tap_cli)
@@ -55,6 +55,7 @@ class TestCliInvitationsShort:
         assert user in users
 
     @priority.medium
+    @pytest.mark.components(TAP.cli)
     def test_sent_invitation_is_on_pending_list(self, tap_cli, invitation):
         pending_invitations = CliInvitation.get_list(tap_cli, short_cmd=self.SHORT)
         invitation = next((i for i in pending_invitations if i == invitation), None)
@@ -62,12 +63,14 @@ class TestCliInvitationsShort:
 
     @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
     @priority.high
+    @pytest.mark.components(TAP.cli, TAP.user_management)
     def test_delete_user(self, tap_cli, user):
         assert_in_with_retry(user, User.get_all_users)
         tap_cli.delete_user(user.username, short=self.SHORT)
         assert_not_in_with_retry(user, User.get_all_users)
 
     @priority.medium
+    @pytest.mark.components(TAP.cli)
     def test_delete_invitation(self, tap_cli, invitation):
         invitation.delete(short_cmd=self.SHORT)
         assert_not_in_with_retry(invitation, CliInvitation.get_list, tap_cli)

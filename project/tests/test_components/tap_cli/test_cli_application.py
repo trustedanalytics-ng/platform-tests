@@ -29,8 +29,7 @@ from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 
-logged_components = (TAP.api_service,)
-pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
+pytestmark = [pytest.mark.components(TAP.cli)]
 
 
 def copy_dir_as_symlinks(*, src_root, dst_root):

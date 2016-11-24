@@ -25,8 +25,7 @@ from modules.tap_logger import step
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 
-logged_components = (TAP.api_service,)
-pytestmark = [pytest.mark.components(TAP.api_service, TAP.cli)]
+pytestmark = [pytest.mark.components(TAP.cli)]
 
 
 class TestCliBasicFlow:
