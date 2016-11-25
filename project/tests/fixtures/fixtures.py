@@ -206,7 +206,7 @@ def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: push sample application")
     db_app = Application.push(module_context, app_path=gzipped_app_path,
                               name=p_a.app_name, manifest_path=manifest_path,
-                              client=api_service_admin_client())
+                              client=api_service_admin_client)
 
     log_fixture("mysql_app: Check the application is running")
     db_app.ensure_running()
@@ -235,7 +235,7 @@ def app_binded_psql(module_context, psql_instance, api_service_admin_client):
     log_fixture("psql_app: push sample application")
     db_app = Application.push(module_context, app_path=gzipped_app_path,
                               name=p_a.app_name, manifest_path=manifest_path,
-                              client=api_service_admin_client())
+                              client=api_service_admin_client)
 
     log_fixture("psql_app: Check the application is running")
     db_app.ensure_running()
