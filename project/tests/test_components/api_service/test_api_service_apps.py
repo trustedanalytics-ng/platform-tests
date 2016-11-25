@@ -39,7 +39,7 @@ class TestApiServiceApplication:
     def sample_app(self, class_context, sample_app_path, api_service_admin_client):
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
-        manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+        manifest_params = {"type" : TapApplicationType.PYTHON27}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         log_fixture("Push sample application")
@@ -55,7 +55,7 @@ class TestApiServiceApplication:
         step("Check that pushing the same application again causes an error")
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
-        manifest_params = {"app_type" : TapApplicationType.PYTHON27,
+        manifest_params = {"type" : TapApplicationType.PYTHON27,
                            "name": sample_app.name}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
@@ -118,7 +118,7 @@ class TestApiServiceApplication:
                                                        api_service_admin_client):
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
-        manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+        manifest_params = {"type" : TapApplicationType.PYTHON27}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         log_fixture("Push sample application and check it's running")

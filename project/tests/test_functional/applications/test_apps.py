@@ -55,7 +55,7 @@ class TestTapApp:
         gzipped_app_path = p_a.package_app(context)
 
         step("Update manifest")
-        manifest_params = {"app_type" : TapApplicationType.JAVA}
+        manifest_params = {"type" : TapApplicationType.JAVA}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         step("Push app to tap")
@@ -95,7 +95,7 @@ class TestTapApp:
         gzipped_app_path = p_a.package_app(context)
 
         step("Update manifest")
-        manifest_params = {"app_type" : TapApplicationType.JAVA,
+        manifest_params = {"type" : TapApplicationType.JAVA,
                            "bindings" : instance.id}
         manifest_path = p_a.update_manifest(params=manifest_params)
 

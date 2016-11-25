@@ -131,7 +131,7 @@ def sample_python_app(class_context):
     gzipped_app_path = p_a.package_app(class_context)
 
     log_fixture("sample_python_app: update manifest")
-    manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+    manifest_params = {"type" : TapApplicationType.PYTHON27}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("sample_python_app: push sample application")
@@ -156,7 +156,7 @@ def sample_java_app(class_context):
     gzipped_app_path = p_a.package_app(class_context)
 
     log_fixture("sample_java_app: update manifest")
-    manifest_params = {"app_type" : TapApplicationType.JAVA}
+    manifest_params = {"type" : TapApplicationType.JAVA}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("sample_java_app: Push app to tap")
@@ -200,7 +200,7 @@ def app_binded_mysql(module_context, mysql_instance, api_service_admin_client):
     gzipped_app_path = p_a.package_app(module_context)
 
     log_fixture("mysql_app: update manifest")
-    manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+    manifest_params = {"type" : TapApplicationType.PYTHON27}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("mysql_app: push sample application")
@@ -226,7 +226,7 @@ def app_binded_psql(module_context, psql_instance, api_service_admin_client):
 
     log_fixture("psql_app: update manifest")
     p_a = PrepApp(app_src.path)
-    manifest_params = {"app_type" : TapApplicationType.PYTHON27}
+    manifest_params = {"type" : TapApplicationType.PYTHON27}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("mysql_app: package sample application")

@@ -102,7 +102,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         except Exception as exc:
             # If the application already exists, than don't remove it (as this
             # will break later tests), just raise the error
-            if "application " + name + " already exists!" in str(exc):
+            if "application " + name + " already exists" in str(exc):
                 raise
 
             apps = Application.get_list(client=client)
