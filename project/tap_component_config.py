@@ -15,7 +15,6 @@
 #
 import itertools
 
-import config
 from modules.constants import ServiceLabels, ServicePlan as Plan, TapComponent as TAP
 
 default = {
@@ -48,7 +47,7 @@ for item in TAP_core_services:
 
 third_party_services = {
     TAP.image_repository: {
-        "url": config.ng_image_repository_url,
+        "url": "127.0.0.1:30000",
         "api_version": "v2",
         "api_version_alias": None,
         "health_endpoint": None,

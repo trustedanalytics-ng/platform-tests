@@ -14,14 +14,16 @@
 # limitations under the License.
 #
 
-import config
-
+from tap_component_config import third_party_services
+from modules.constants import TapComponent as TAP
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.k8s_service import ProxiedConfigurationProvider
 
 
 def _get_client():
-    configuration = ProxiedConfigurationProvider.get("http://{}/v2".format(config.ng_image_repository_url))
+    image_repository_config = third_party_services[TAP.image_repository]
+    configuration = ProxiedConfigurationProvider.get("http://{}/{}".format(image_repository_config["url"],
+                                                                           image_repository_config["api_version"]))
     return HttpClientFactory.get(configuration)
 
 

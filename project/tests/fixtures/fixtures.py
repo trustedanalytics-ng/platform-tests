@@ -41,7 +41,9 @@ from tap_component_config import api_service
 
 @pytest.fixture(scope="session")
 def api_service_admin_client():
-    return HttpClientFactory.get(ServiceConfigurationProvider.get())
+    api_version = api_service[TapComponent.api_service]["api_version"]
+    default_url = "http://{}/api/{}".format(config.api_url, api_version)
+    return HttpClientFactory.get(ServiceConfigurationProvider.get(url=default_url))
 
 
 @pytest.fixture(scope="session")
@@ -373,11 +375,4 @@ def model_hdfs_path(core_org):
     if model_dataset is None:
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
     return model_dataset.target_uri
-
-
-@pytest.fixture(scope="session")
-def api_service_admin_client():
-    api_version = api_service[TapComponent.api_service]["api_version"]
-    default_url = "http://{}/api/{}".format(config.api_url, api_version)
-    return HttpClientFactory.get(ServiceConfigurationProvider.get(url=default_url))
 

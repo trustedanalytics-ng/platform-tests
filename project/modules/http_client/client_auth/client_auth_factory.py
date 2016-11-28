@@ -48,7 +48,7 @@ class ClientAuthFactory(object):
             return ClientAuthHttpBasic(ClientAuthFactory.EMPTY_URL, session)
 
         elif auth_type == ClientAuthType.TOKEN_K8S_AS:
-            return K8sClientAuthToken(config.ng_k8s_as_oauth_token_url, session)
+            return K8sClientAuthToken(config.ng_api_service_oauth_token_url, session)
 
         elif auth_type == ClientAuthType.LOGIN_PAGE:
             return ClientAuthLoginPage(config.console_login_url, session)

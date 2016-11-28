@@ -16,6 +16,9 @@
 
 import os
 
+from modules.constants import TapComponent as TAP
+from tap_component_config import api_service, third_party_services
+
 
 try:
     # In user_config.py, user might export custom environment variables
@@ -170,14 +173,14 @@ ng_jump_user = os.environ.get("PT_NG_JUMP_USER", "centos")
 ng_kubernetes_api_host = os.environ.get("PT_KUBERNETES_API_HOST", "localhost")
 ng_kubernetes_api_port = get_int("PT_KUBERNETES_API_PORT", 8080)
 ng_socks_proxy_port = get_int("PT_SOCKS_PROXY_PORT", 5555)
-ng_kubernetes_api_version = os.environ.get("PT_KUBERNETES_API_VERSION", "v1")
+ng_kubernetes_api_version = os.environ.get("PT_KUBERNETES_API_VERSION", api_service[TAP.api_service]["api_version"])
 ng_service_http_scheme = os.environ.get("PT_SERVICE_HTTP_SCHEME", "http")
 ng_k8s_service_auth_username = os.environ.get("PT_K8S_SERVICE_AUTH_USERNAME", "admin")
 _ng_k8s_service_auth_password = os.environ.get("PT_K8S_SERVICE_AUTH_PASSWORD")
-ng_image_repository_url = os.environ.get("PT_NG_IMAGE_REPOSITORY_URL", "127.0.0.1:30000")
-ng_k8s_as_oauth_token_url = os.environ.get("PT_NG_AS_OAUTH_TOKEN_URL",
-                                           "http://{}.{}/{}".format("api", tap_domain,
-                                                                    "api/{}/login".format(ng_kubernetes_api_version)))
+ng_image_repository_url = os.environ.get("PT_NG_IMAGE_REPOSITORY_URL", third_party_services[TAP.image_repository]["url"])
+ng_api_service_oauth_token_url = os.environ.get("PT_NG_AS_OAUTH_TOKEN_URL",
+                                                "http://{}.{}/{}".format("api", tap_domain,
+                                                                         "api/{}/login".format(ng_kubernetes_api_version)))
 ng_build_number = os.environ.get("PT_NG_BUILD_NUMBER")
 check_tap_cli_version = get_bool("PT_CHECK_TAP_CLI_VERSION", True)
 
