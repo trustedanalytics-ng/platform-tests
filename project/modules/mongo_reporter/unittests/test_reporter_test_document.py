@@ -33,6 +33,7 @@ TEST_DOCSTRING = "test-docstring"
 TEST_ITEMS = ("abc", "def")
 TEST_LOG = "test-log"
 TEST_PRIORITY = "test-priority"
+TEST_KEYWORDS = ("a", "b", "c")
 TEST_RUN_ID = bson.ObjectId()
 TEST_STACKTRACE = "test-stacktrace"
 TEST_TEST_COUNT = 14
@@ -43,8 +44,19 @@ report = Dummy()
 report.nodeid = "test-name"
 report.when = "then"
 report.duration = 0.123
-report.keywords = ("a", "b", "c")
+report.keywords = TEST_KEYWORDS
 
+TEST_COMMON_REPORT = {
+    "components": TEST_ITEMS,
+    "docstring": TEST_DOCSTRING,
+    "defects": ", ".join(TEST_ITEMS),
+    "priority": TEST_PRIORITY,
+    "tags": ", ".join(TEST_KEYWORDS),
+    "log": TEST_LOG,
+    "run_id": TEST_RUN_ID,
+    "stacktrace": TEST_STACKTRACE,
+    "test_type": TEST_TEST_TYPE,
+}
 
 @mock.patch.multiple("modules.mongo_reporter.reporter.MongoReporter",
                      _get_test_docstring=lambda *args, **kwargs: TEST_DOCSTRING,
@@ -72,42 +84,33 @@ class TestReporterTestDocument:
         test_document, status = reporter._on_test(report=report, item=item, log=TEST_LOG,
                                                   failed_by_setup=failed_by_setup)
         assert status == TEST_STATUS
-        assert test_document["components"] == TEST_ITEMS
-        assert test_document["defects"] == ", ".join(TEST_ITEMS)
-        assert test_document["docstring"] == TEST_DOCSTRING
-        assert test_document["log"] == TEST_LOG
-        assert test_document["priority"] == TEST_PRIORITY
-        assert test_document["run_id"] == TEST_RUN_ID
-        assert test_document["stacktrace"] == TEST_STACKTRACE
+        assert set(TEST_COMMON_REPORT.items()).issubset(set(test_document.items()))
         assert test_document["status"] == TEST_STATUS
-        assert test_document["tags"] == ", ".join(report.keywords)
-        assert test_document["test_type"] == TEST_TEST_TYPE
 
         if not failed_by_setup:
             assert test_document["duration"] == report.duration
             assert test_document["name"] == report.nodeid
             assert test_document["order"] == TEST_TEST_COUNT
-
         else:
             assert test_document["duration"] == 0.0
             assert test_document["name"] == "{}: failed on setup".format(report.nodeid)
             assert "order" not in test_document
 
-    @pytest.mark.parametrize("reason,expected_status,expected_name",
-                             [("error", MongoReporter._RESULT_FAIL, "{}: {} error".format(report.nodeid, report.when)),
-                              ("skipped", MongoReporter._RESULT_SKIPPED, "{}: skipped".format(report.nodeid))],
-                             ids=("error", "skipped"))
-    def test_on_fixture(self, reason, expected_status, expected_name):
+    def test_on_fixture_error(self):
         reporter = MongoReporter(run_id=TEST_RUN_ID)
-        test_document, status = reporter._on_fixture(report=report, item=item, reason=reason, log=TEST_LOG)
-        assert status == expected_status
-        assert test_document["components"] == TEST_ITEMS
-        assert test_document["docstring"] == TEST_DOCSTRING
-        assert test_document["log"] == TEST_LOG
-        assert test_document["name"] == expected_name
-        assert test_document["run_id"] == TEST_RUN_ID
-        assert test_document["stacktrace"] == TEST_STACKTRACE
-        assert test_document["test_type"] == TEST_TEST_TYPE
+        test_document, status = reporter._on_fixture_error(report=report, item=item, log=TEST_LOG)
+        assert status == MongoReporter._RESULT_FAIL
+        assert set(TEST_COMMON_REPORT.items()).issubset(set(test_document.items()))
+        assert "status" not in test_document
+        assert test_document["name"] == "{}: {} error".format(report.nodeid, report.when)
+
+    def test_on_fixture_skipped(self):
+        reporter = MongoReporter(run_id=TEST_RUN_ID)
+        test_document, status = reporter._on_fixture_skipped(report=report, item=item, log=TEST_LOG)
+        assert status == MongoReporter._RESULT_SKIPPED
+        assert set(TEST_COMMON_REPORT.items()).issubset(set(test_document.items()))
+        assert test_document["name"] == "{}: skipped".format(report.nodeid)
+        assert test_document["status"] == status
 
     @pytest.mark.parametrize("report_passed,report_failed,report_skipped",
                              [(True, False, False), (False, True, False), (False, False, True)],
@@ -130,11 +133,14 @@ class TestReporterTestDocument:
             assert test_documents[0]["name"] == report.nodeid
             assert test_documents[0]["status"] == TEST_STATUS
 
-    @pytest.mark.parametrize("report_when,report_passed,report_failed,report_skipped,expected_test_status,expected_test_name",
-                             [("setup", False, False, True, MongoReporter._RESULT_SKIPPED, "{}: skipped".format(report.nodeid)),
-                              ("teardown", False, True, False, MongoReporter._RESULT_FAIL, "{}: teardown error".format(report.nodeid)),
-                              ("teardown", False, False, True, MongoReporter._RESULT_SKIPPED, "{}: skipped".format(report.nodeid))],
-                             ids=("on_setup_report_skipped", "on_teardown_report_failed", "on_teardown_report_skipped"))
+    @pytest.mark.parametrize(
+        "report_when,report_passed,report_failed,report_skipped,expected_test_status,expected_test_name",
+        [("setup", False, True, False, MongoReporter._RESULT_FAIL, "{}: setup error".format(report.nodeid)),
+         ("setup", False, False, True, MongoReporter._RESULT_SKIPPED, "{}: skipped".format(report.nodeid)),
+         ("teardown", False, True, False, MongoReporter._RESULT_FAIL, "{}: teardown error".format(report.nodeid)),
+         ("teardown", False, False, True, MongoReporter._RESULT_SKIPPED, "{}: skipped".format(report.nodeid))],
+        ids=("on_setup_report_error", "on_setup_report_skipped",
+             "on_teardown_report_failed", "on_teardown_report_skipped"))
     @mock.patch("modules.mongo_reporter.reporter.config.database_url", "test_uri")
     def test_log_report_on_fixture_one_document(self, mock_db_client, report_when, report_passed, report_failed,
                                                 report_skipped, expected_test_status, expected_test_name):
@@ -156,7 +162,10 @@ class TestReporterTestDocument:
             test_documents = self._get_test_result_documents(reporter)
             assert len(test_documents) == 1
             assert test_documents[0]["name"] == expected_test_name
-            assert "status" not in test_documents[0]
+            if report_skipped:
+                assert test_documents[0]["status"] == MongoReporter._RESULT_SKIPPED
+            else:
+                assert "status" not in test_documents[0]
 
     @pytest.mark.parametrize("report_when", ("setup", "teardown"),
                              ids=("on_setup_report_passed", "on_teardown_report_passed"))

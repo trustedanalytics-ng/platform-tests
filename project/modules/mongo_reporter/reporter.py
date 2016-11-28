@@ -112,9 +112,9 @@ class MongoReporter(BaseReporter):
         if report.when == "call":
             doc, status = self._on_test(report, item)
         elif report.failed:
-            doc, status = self._on_fixture(report, item, reason="error")
+            doc, status = self._on_fixture_error(report, item)
         elif report.skipped:
-            doc, status = self._on_fixture(report, item, reason="skipped")
+            doc, status = self._on_fixture_skipped(report, item)
         if doc and status:
             self._update_run_status(doc, status, increment_test_count=(report.when == "call"))
 
@@ -178,44 +178,48 @@ class MongoReporter(BaseReporter):
     def _on_test(self, report, item, log="", failed_by_setup=False):
         status = self._test_status_from_report(report)
         bugs = self._marker_args_from_item(item, "bugs")
-        name = report.nodeid
-        test_mongo_document = {
-            "components": self._marker_args_from_item(item, "components"),
-            "defects": ", ".join(bugs),
-            "docstring": self._get_test_docstring(item),
+        test_mongo_document = self._common_mongo_document(report=report, item=item, log=log)
+        name = test_mongo_document["name"]
+        test_mongo_document.update({
             "duration": report.duration if not failed_by_setup else 0.0,
-            "log": log,
             "name": name if not failed_by_setup else "{}: failed on setup".format(name),
-            "priority": self._priority_from_report(report),
-            "run_id": self._run_id,
-            "stacktrace": self._stacktrace_from_report(report),
             "status": status,
-            "tags": ", ".join(report.keywords),
-            "test_type": self._get_test_type_from_report(report),
-        }
+        })
         if not failed_by_setup:
             test_mongo_document.update({"order": self._mongo_run_document["test_count"]})
         return test_mongo_document, status
 
-    def _on_fixture(self, report, item, reason, log=""):
-        status = None
+    def _on_fixture_error(self, report, item, log=""):
+        fixture_mongo_document = self._common_mongo_document(report=report, item=item, log=log)
+        fixture_mongo_document.update({
+            "name": "{}: {} error".format(fixture_mongo_document["name"], report.when)
+        })
+        return fixture_mongo_document, self._RESULT_FAIL
+
+    def _on_fixture_skipped(self, report, item, log=""):
+        fixture_mongo_document = self._common_mongo_document(report=report, item=item, log=log)
+        fixture_mongo_document.update({
+            "name": "{}: skipped".format(fixture_mongo_document["name"]),
+            "status": self._RESULT_SKIPPED,
+        })
+        return fixture_mongo_document, self._RESULT_SKIPPED
+
+    def _common_mongo_document(self, report, item, log):
         name = report.nodeid
-        if reason == "error":
-            name = "{}: {} error".format(name, report.when)
-            status = self._RESULT_FAIL
-        elif reason == "skipped":
-            name = "{}: skipped".format(name)
-            status = self._RESULT_SKIPPED
-        fixture_mongo_document = {
+        bugs = self._marker_args_from_item(item, "bugs")
+        common_mongo_document = {
             "components": self._marker_args_from_item(item, "components"),
+            "defects": ", ".join(bugs),
             "docstring": self._get_test_docstring(item),
             "log": log,
-            "name": name,
+            "name": report.nodeid,
+            "priority": self._priority_from_report(report),
             "run_id": self._run_id,
             "stacktrace": self._stacktrace_from_report(report),
-            "test_type": self._get_test_type_from_report(report)
+            "tags": ", ".join(report.keywords),
+            "test_type": self._get_test_type_from_report(report),
         }
-        return fixture_mongo_document, status
+        return common_mongo_document
 
     def _update_run_status(self, result_document, test_status, increment_test_count=False):
         self._total_test_counter += 1
