@@ -65,7 +65,7 @@ class TestCreateService:
     @priority.high
     @pytest.mark.sample_apps_test
     @pytest.mark.parametrize("role", ["admin", "user"])
-    @pytest.mark.bugs("DPNG-12740 Offerings created from JAR files are stuck in DEPLOYING state")
+    @pytest.mark.bugs("DPNG-13211 api-service responses don't relate to swagger definition")
     def test_create_and_delete_service_offering(self, context, app_jar, offering_json,
                                                 manifest_json, test_user_clients, role):
         client = test_user_clients[role]

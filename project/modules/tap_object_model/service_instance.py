@@ -114,7 +114,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         assert plan_id is not None, "No service instance plan id found in the response"
         return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["classId"],
                    bindings=response["bindings"], state=response["state"], name=response["name"],
-                   offering_label=response["name"], client=client)
+                   offering_label=response.get("serviceName", None), client=client)
 
     def _refresh(self):
         instances = self.get_list()
