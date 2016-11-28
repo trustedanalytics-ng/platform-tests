@@ -128,3 +128,14 @@ class TestSmokeTrustedAnalyticsComponents:
         client = HttpClientFactory.get(ServiceConfigurationProvider.get(url))
         response = client.request(method=HttpMethod.GET, path="", raw_response=True)
         assert response.status_code == HttpStatus.CODE_OK
+
+    @pytest.mark.parametrize("component", [TAP.api_service])
+    def test_api_indicator_returns_platform_header(self, component):
+        step("Check get /api endpoint")
+        url = "http://{}.{}".format(component, config.tap_domain)
+        client = HttpClientFactory.get(ServiceConfigurationProvider.get(url, username=None, password=None))
+        response = client.request(method=HttpMethod.GET, path="api", raw_response=True)
+        step('Check if request contains "x-platform" header')
+        assert response.headers['x-platform'] == 'TAP'
+        assert response.text == ''
+
