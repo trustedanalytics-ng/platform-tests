@@ -126,6 +126,10 @@ def marketplace_offerings():
 
 @pytest.fixture(scope="class")
 def sample_python_app(class_context):
+    log_fixture("sample_python_app: download libraries")
+    test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_PYTHON_APP)
+    test_app_sources.run_build_sh()
+
     log_fixture("sample_python_app: package sample application")
     p_a = PrepApp(ApplicationPath.SAMPLE_PYTHON_APP)
     gzipped_app_path = p_a.package_app(class_context)
@@ -146,7 +150,9 @@ def sample_python_app(class_context):
 
 @pytest.fixture(scope="class")
 def sample_java_app(class_context):
+    log_fixture("sample_java_app: download libraries")
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
+    test_app_sources.run_build_sh()
 
     log_fixture("sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()
