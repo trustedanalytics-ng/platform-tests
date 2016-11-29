@@ -72,7 +72,8 @@ class PrepApp():
         """
         self.tar_name = os.path.join(self.app_path, str(random.random()) + ".tar.gz")
         tar_file = tarfile.open(self.tar_name, "w:gz")
-        tar_file.add(self.app_path)
+        tar_file.add(self.app_path, arcname="")
+
         tar_file.close()
 
         context.test_objects.append(self)
