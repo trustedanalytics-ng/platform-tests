@@ -195,12 +195,14 @@ def get_service(*, service_id):
                                  msg="CATALOG: get service")
 
 
-def create_service(*, template_id, name, bindable=True, plans=None):
+def create_service(*, template_id, name, description=None, bindable=True, state=None, plans=None):
     """ POST /services """
     body = {
         "templateId": template_id,
         "name": name,
+        "description": description,
         "bindable": bindable,
+        "state": state,
         "plans": plans
     }
     response = _get_client().request(HttpMethod.POST,
@@ -218,13 +220,16 @@ def delete_service(*, service_id):
     return response
 
 
-def update_service(*, service_id, field_name, value):
+def update_service(*, service_id, field_name, value, prev_value=None, username=None):
     """ PATCH /services/{service_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prevValue": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="services/{}".format(service_id),
                                      body=body,

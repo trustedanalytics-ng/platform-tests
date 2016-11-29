@@ -52,13 +52,13 @@ class CatalogService(object):
                    template_id=response["templateId"], state=response["state"], plans=service_plans)
 
     @classmethod
-    def create(cls, context, *, template_id, name=None, bindable=True, plans=None):
+    def create(cls, context, *, template_id, name=None, description=None, bindable=True, state=None, plans=None):
         if name is None:
             name = generate_test_object_name().replace("_", "-")
         if plans is None:
             plans = [ServicePlan(plan_id=None, name="test", description="test")]
-        response = catalog_api.create_service(template_id=template_id, name=name, bindable=bindable,
-                                              plans=[sp.to_dict() for sp in plans])
+        response = catalog_api.create_service(template_id=template_id, name=name, description=description,
+                                              bindable=bindable, state=state, plans=[sp.to_dict() for sp in plans])
         new_service = cls._from_response(response)
         context.test_objects.append(new_service)
         return new_service
@@ -82,9 +82,10 @@ class CatalogService(object):
         self.plans.append(new_plan)
         return new_plan
 
-    def update(self, *, field_name, value):
+    def update(self, *, field_name, value, prev_value=None, username=None):
         setattr(self, field_name, value)
-        catalog_api.update_service(service_id=self.id, field_name=field_name, value=value)
+        catalog_api.update_service(service_id=self.id, field_name=field_name, value=value, prev_value=prev_value,
+                                   username=username)
 
     def delete(self):
         for plan in self.plans:
