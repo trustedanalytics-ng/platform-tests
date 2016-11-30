@@ -37,7 +37,7 @@ class TestSpaceShuttleDemo:
     MODEL_TITLE = "model"
     MODEL_SOURCE_FILE_NAME = "space-shuttle-model.tar"
     SPACE_SHUTTLE_APP_NAME = "space_shuttle_client"
-    expected_bindings = [ServiceLabels.INFLUX_DB, ServiceLabels.GATEWAY, ServiceLabels.SCORING_ENGINE,
+    expected_bindings = [ServiceLabels.INFLUX_DB_110, ServiceLabels.GATEWAY, ServiceLabels.SCORING_ENGINE,
                          ServiceLabels.ZOOKEEPER]
 
     @pytest.fixture(scope="class")

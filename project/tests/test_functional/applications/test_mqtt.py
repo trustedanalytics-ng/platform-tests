@@ -57,9 +57,9 @@ class Mqtt:
             context=context,
             org_guid=test_org.guid,
             space_guid=test_space.guid,
-            service_label=ServiceLabels.INFLUX_DB,
+            service_label=ServiceLabels.INFLUX_DB_110,
             name=self.INFLUX_INSTANCE_NAME,
-            service_plan_name=ServicePlan.FREE
+            service_plan_name=ServicePlan.SINGLE_SMALL,
         )
         ServiceInstance.api_create_with_plan_name(
             context=context,

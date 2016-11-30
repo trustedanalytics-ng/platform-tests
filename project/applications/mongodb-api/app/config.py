@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class MongoLabel:
-    MONGODB26 = "mongodb26"
+    MONGODB30 = "mongodb-30"
     MONGODB30_MULTINODE = "mongodb30-multinode"
 
 
@@ -66,7 +66,7 @@ class Config(object):
         self.db_name = mongodb_credentials.get("dbname")
         self.db_username = mongodb_credentials.get("username")
         self.db_password = mongodb_credentials.get("password")
-        if self.mongodb_version == MongoLabel.MONGODB26:
+        if self.mongodb_version == MongoLabel.MONGODB30:
             self.db_hostname0 = mongodb_credentials.get("hostname", "localhost")
             self.db_port0 = int(mongodb_credentials.get("port", "27017"))
         elif self.mongodb_version == MongoLabel.MONGODB30_MULTINODE:

@@ -100,7 +100,7 @@ class TestMarketplaceServices:
             context=context,
             offering_label=ServiceLabels.RABBIT_MQ,
             name=existing_name,
-            plan_name=ServicePlan.FREE
+            plan_name=ServicePlan.SINGLE_SMALL,
         )
         step("Ensure that instance is running")
         instance.ensure_running()
@@ -125,6 +125,6 @@ class TestMarketplaceServices:
         step("Check that instance cannot be created with empty name")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, ApiServiceHttpStatus.MSG_BAD_REQUEST,
                                      ServiceInstance.create_with_name, context=context,
-                                     offering_label=ServiceLabels.RABBIT_MQ, plan_name=ServicePlan.FREE, name="")
+                                     offering_label=ServiceLabels.RABBIT_MQ, plan_name=ServicePlan.SINGLE_SMALL, name="")
         assert_unordered_list_equal(expected_instance_list, ServiceInstance.get_list(), "New instance was created")
 
