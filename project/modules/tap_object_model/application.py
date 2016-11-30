@@ -102,7 +102,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         except Exception as exc:
             # If the application already exists, than don't remove it (as this
             # will break later tests), just raise the error
-            if "application " + name + " already exists" in str(exc):
+            if exc.status == 409:
                 raise
 
             apps = Application.get_list(client=client)
@@ -204,6 +204,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         If the application hasn't stopped, assertion kicks in
         """
         self._refresh(client=client)
+        if self.state == TapEntityState.FAILURE:
+            raise ValueError("Application is in FAILURE, aborting retrying")
         assert self.is_stopped is True, "App {} is not stopped. App state: {}".format(self.name, self.state)
 
     def api_request(self, path: str, method: str="GET", scheme: str="http", hostname: str=None, data: dict=None,

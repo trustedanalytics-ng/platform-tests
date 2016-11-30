@@ -110,8 +110,7 @@ class TestApiServiceApplication:
         sample_app.scale(replicas=replicas_number, client=api_service_admin_client)
         step("Check that application is stopped, there are zero replicas and there are no running instances")
         app = Application.get(app_inst_id=sample_app.id, client=api_service_admin_client)
-        assert app.state == TapEntityState.STOPPED, "Application is not in the expected state. App state: {}"\
-                                                    .format(app.state)
+        app.ensure_stopped()
         assert app.replication == replicas_number, "Application does not have expected number of replication. App " \
                                                    "replicas number: {}".format(app.replication)
         assert app.running_instances == replicas_number, "Application does not have expected number of running " \
