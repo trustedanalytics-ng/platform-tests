@@ -92,8 +92,8 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         return cls._list_from_response(response, client)
 
     @retry(AssertionError, tries=60, delay=5)
-    def ensure_running(self):
-        self._refresh()
+    def ensure_running(self, client: HttpClient=None):
+        self._refresh(client=client)
         if self.state == TapEntityState.FAILURE:
             raise ServiceInstanceCreationFailed()
         assert self.state == TapEntityState.RUNNING, "Instance state is {}, expected {}".format(self.state,
@@ -116,8 +116,8 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
                    bindings=response["bindings"], state=response["state"], name=response["name"],
                    offering_label=response.get("serviceName", None), client=client)
 
-    def _refresh(self):
-        instances = self.get_list()
+    def _refresh(self, client: HttpClient=None):
+        instances = self.get_list(client=self._get_client(client))
         this_instance = next((i for i in instances if i.id == self.id), None)
         assert this_instance is not None, "Instance {} not found on the list".format(self.name)
         self.state = this_instance.state

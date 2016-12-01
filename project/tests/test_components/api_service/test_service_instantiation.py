@@ -36,7 +36,7 @@ class TestServiceInstantiation:
     def instance(cls, class_context, api_service_admin_client):
         instance = ServiceInstance.create_with_name(context=class_context, offering_label=ServiceLabels.ETCD,
                                                     plan_name=ServicePlan.FREE, client=api_service_admin_client)
-        instance.ensure_running()
+        instance.ensure_running(client=api_service_admin_client)
         return instance
 
     @priority.medium
@@ -99,8 +99,8 @@ class TestServiceInstantiationOther:
 
     @classmethod
     @pytest.fixture(scope="class")
-    def etcd_offering(cls):
-        offerings = ServiceOffering.get_list()
+    def etcd_offering(cls, api_service_admin_client):
+        offerings = ServiceOffering.get_list(client=api_service_admin_client)
         etcd = next((o for o in offerings if o.label == ServiceLabels.ETCD), None)
         assert etcd is not None, "{} not found".format(ServiceLabels.ETCD)
         return etcd

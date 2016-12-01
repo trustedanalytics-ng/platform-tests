@@ -43,8 +43,8 @@ class TestCliService:
 
     @classmethod
     @pytest.fixture(scope="class")
-    def offering(cls):
-        marketplace = ServiceOffering.get_list()
+    def offering(cls, api_service_admin_client):
+        marketplace = ServiceOffering.get_list(client=api_service_admin_client)
         usable_offerings = (o for o in marketplace if o.state == TapEntityState.READY and len(o.service_plans) > 0)
         reliable_offerings = (o for o in usable_offerings if o.label in RELIABLE_OFFERINGS)
         offering = next(reliable_offerings, None)

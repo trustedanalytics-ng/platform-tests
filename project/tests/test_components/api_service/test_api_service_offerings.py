@@ -47,7 +47,7 @@ class TestApiServiceOfferings:
         assert test_offering not in catalog
         step("Check that requesting the deleted offering returns an error")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
-                                     test_offering.delete)
+                                     test_offering.delete, client=api_service_admin_client)
 
     @priority.low
     @pytest.mark.bugs("DPNG-11864 [api-tests] create new offering - problem to compare created offering with offering from response")
