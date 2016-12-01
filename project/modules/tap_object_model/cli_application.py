@@ -14,16 +14,11 @@
 # limitations under the License.
 #
 
-import os
-import shutil
-
 from retry import retry
 
-from modules.constants import HttpStatus
+from modules.constants import HttpStatus, TapEntityState
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
-from modules.tap_object_model import Application
-from modules.test_names import generate_test_object_name
 from ._cli_object_superclass import CliObjectSuperclass
 
 
@@ -101,7 +96,11 @@ class CliApplication(CliObjectSuperclass):
     def ensure_app_state(self, state):
         app = self.get_details()
         assert app is not None, "Application {} was not found".format(self.name)
-        assert app[self.FIELD_STATE] == state, "Expected state '{}' but was '{}'".format(state, app[self.FIELD_STATE])
+        msg = "Expected state '{}' but was '{}'".format(state, app[self.FIELD_STATE])
+        # Stop rerunning when the app is in FAILURE state.
+        if app[self.FIELD_STATE] == TapEntityState.FAILURE and state != app[self.FIELD_STATE]:
+            raise ValueError(msg)
+        assert app[self.FIELD_STAlTE] == state, msg
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_is_ready(self):
