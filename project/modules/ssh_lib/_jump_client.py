@@ -41,7 +41,8 @@ class JumpClient(object):
         self._key_path = config.ng_jump_key_path
         self.auth_options = ["-o UserKnownHostsFile=/dev/null",
                              "-o StrictHostKeyChecking=no",
-                             "-o GSSAPIAuthentication=no"]
+                             "-o GSSAPIAuthentication=no",
+                             "-o ServerAliveInterval=30"]
         ssh_options = ["-i", self.key_path] + self.auth_options + ["{}@{}".format(self._username, self._host)]
         scp_options = ["-r", "-i", self.key_path] + self.auth_options
         if config.verbose_ssh:
