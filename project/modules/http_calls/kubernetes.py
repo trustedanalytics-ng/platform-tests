@@ -66,6 +66,7 @@ def k8s_get_configmap(configmap_name):
         msg="KUBERNETES: get configmap {}".format(configmap_name)
     )
 
+
 def k8s_logs(application_name, params):
     """GET /namespaces/{namespace}/pods/{application_name}/log"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
@@ -85,3 +86,23 @@ def k8s_get_pods_metrics(pod_ip_port):
         msg="POD: get metrics for {}".format(pod_ip_port)
     )
 
+
+def k8s_scale_pod(pod_name, number_of_replicas, rest_prefix="apis", api_version="extensions/v1beta1"):
+    """PUT /apis/extensions/v1beta1/namespaces/{namespace}/deployments/{name}/scale"""
+    body = {
+        "metadata": {
+            "name": pod_name,
+            "namespace": DEFAULT_NAMESPACE
+        },
+        "spec": {
+            "replicas": number_of_replicas
+        }
+    }
+
+    client = HttpClientFactory.get(KubernetesConfigurationProvider.get(rest_prefix, api_version))
+    return client.request(
+        method=HttpMethod.PUT,
+        body=body,
+        path="namespaces/{}/deployments/{}/scale".format(DEFAULT_NAMESPACE, pod_name),
+        msg="POD {} scaled to {} replicas".format(pod_name, number_of_replicas)
+    )

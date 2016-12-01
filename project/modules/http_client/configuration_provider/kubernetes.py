@@ -15,10 +15,9 @@
 #
 
 import os
-
 import yaml
-
 import config
+
 from modules import file_utils
 from modules.ssh_lib import JumpClient
 from .. import HttpClientConfiguration, HttpClientType
@@ -35,11 +34,13 @@ class KubernetesConfigurationProvider(object):
     _api_version = None
 
     @classmethod
-    def get(cls):
+    def get(cls, rest_prefix="api", api_version="v1"):
         """
         When called for the first time, retrieve kubernetes service configuration from jumpbox.
         """
 
+        if rest_prefix is None:
+            rest_prefix = "api"
         if cls._kube_dir_path is None:
             cls._kube_dir_path = cls._download_config_directory()
             kube_config_path = os.path.join(cls._kube_dir_path, cls._KUBE_CONFIG_FILE_NAME)
@@ -47,9 +48,12 @@ class KubernetesConfigurationProvider(object):
             cls._certificate = cls._get_certificates(cls._kube_dir_path, kube_config_path)
             cls._api_version = cls._get_api_version(kube_config_path)
 
+        if api_version is not None:
+            cls._api_version = api_version
+
         client_configuration = HttpClientConfiguration(
             client_type=HttpClientType.NO_AUTH,
-            url="{}/api/{}".format(cls._host, cls._api_version),
+            url="{}/{}/{}".format(cls._host, rest_prefix, cls._api_version),
             proxies={"http": cls._SOCKS_PROXY, "https": cls._SOCKS_PROXY},
             cert=cls._certificate
         )
