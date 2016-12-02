@@ -62,6 +62,7 @@ def get_tables(database_name):
     return _get_client().request(
         method=HttpMethod.GET,
         path="metastore/tables/{}".format(database_name),
+        params={"format": "json"},
         msg="HUE: get tables"
     )
 
@@ -73,6 +74,17 @@ def get_table(database_name, table_name):
         method=HttpMethod.GET,
         path="metastore/table/{}/{}".format(database_name, table_name),
         msg="HUE: get table"
+    )
+
+
+@login_required
+def get_table_metadata(database_name, table_name):
+    """GET metastore/table/{database_name}/{table_name}/metadata"""
+    return _get_client().request(
+        method=HttpMethod.GET,
+        path="metastore/table/{}/{}/metadata".format(database_name, table_name),
+        params={"format": "json"},
+        msg="HUE: get table metadata"
     )
 
 

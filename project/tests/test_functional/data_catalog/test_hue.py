@@ -44,15 +44,22 @@ class TestHue:
         step("Publish dataset in HUE")
         dataset.api_publish()
 
-    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_1_check_database(self, test_org):
         step("Check organization database is on the list of hive databases")
         self.__class__.database_name = escape_hive_name(test_org.guid)
         response = hue.get_databases()
         assert self.database_name in response["databases"]
+
+    def test_2_check_table(self):
         step("Check there is a table with transfer title as name")
         tables_response = hue.get_tables(database_name=self.database_name)
-        assert self.transfer.title in tables_response
+        assert self.transfer.title in tables_response["table_names"]
+        step("Try to get table metadata")
+        table_metadata = hue.get_table_metadata(database_name=self.database_name, table_name=self.transfer.title)
+        assert table_metadata["status"] == 0
+
+    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
+    def test_3_check_table_content(self):
         step("Check table content against submitted transfer")
         table_response = hue.get_table(database_name=self.database_name, table_name=self.transfer.title)
         expected_csv = list(csv.reader(open(download_file(url=self.TRANSFER_SOURCE))))
@@ -66,19 +73,19 @@ class TestHue:
         assert len(columns) - 1 == 8, "The number of columns is incorrect"
 
     @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
-    def test_2_check_file_browser(self, admin_user):
+    def test_4_check_file_browser(self, admin_user):
         step("Check File Browser")
         response = hue.get_file_browser()
         assert response["home_directory"] == "/user/{}".format(admin_user.guid)
 
     @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
-    def test_3_check_jobs_in_job_browser(self, admin_user):
+    def test_5_check_jobs_in_job_browser(self, admin_user):
         step("Check jobs in job browser")
         response = hue.get_job_browser()
         assert all(item["user"] == admin_user.guid for item in response["jobs"])
 
     @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
-    def test_4_execute_hive_queries(self):
+    def test_6_execute_hive_queries(self):
         step("Connect to hive")
         hive = Hive()
         step("Execute SQL queries in hive")
