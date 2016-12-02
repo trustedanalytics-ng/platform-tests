@@ -26,7 +26,7 @@ from modules.http_client.configuration_provider.application import ApplicationCo
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Transfer, User, ServiceOffering, TestSuite, ServiceInstance, Metrics
+from modules.tap_object_model import DataSet, Transfer, User, TestSuite, ServiceInstance, Metrics, Organization
 from modules.tap_object_model.flows import onboarding
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tap_component_config import offerings_as_parameters
@@ -43,8 +43,23 @@ expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usag
 
 
 def test_login():
-    entities = ServiceOffering.get_list()
-    assert entities is not None
+    """
+    <b>Description:</b>
+    Checks if login to platform works.
+
+    <b>Input data:</b>
+    1. User name.
+    2. Password.
+
+    <b>Expected results:</b>
+    Test passes when user was logged successfully into platform.
+
+    <b>Steps:</b>
+    1. Log into platform.
+    2. Get organization list and verify that it's not None.
+    """
+    orgs_list = Organization.get_list()
+    assert orgs_list is not None
 
 
 @pytest.fixture(scope="function")
@@ -65,17 +80,47 @@ def sample_db_app(app_binded_psql, app_binded_mysql):
 
 @pytest.mark.components(TAP.metrics_grafana)
 def test_dashboard_metrics():
-    """Test Dashboard Metrics"""
-    step("Send requests to Grafana")
+    """
+    <b>Description:</b>
+    Checks if platform returns following Dashboard Metrics: "apps_running", "apps_down", "users_org", "service_usage",
+    "memory_usage_org", "cpu_usage_org", "private_datasets", "public_datasets".
+
+    <b>Input data:</b>
+    No input data.
+
+    <b>Expected results:</b>
+    Test passes when Grafana returns all expected metrics i.e. "apps_running", "apps_down", "users_org",
+    "service_usage", "memory_usage_org", "cpu_usage_org", "private_datasets", "public_datasets".
+
+    <b>Steps:</b>
+    1. Get metrics from Grafana.
+    2. Verify that Grafana returned following metrics: "apps_running", "apps_down", "users_org", "service_usage",
+    "memory_usage_org", "cpu_usage_org", "private_datasets", "public_datasets".
+    """
+    step("Get metrics from Grafana")
     dashboard_metrics = Metrics.from_grafana()
-    step("Check data are of correct type")
+    step("Check if all expected metrics returned")
     assert_dict_values_set(vars(dashboard_metrics), expected_metrics_keys)
 
 
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_onboarding(context):
-    """Test Onboarding"""
+    """
+    <b>Description:</b>
+    Checks if user can be added to the platform with onboarding functionality.
+
+    <b>Input data:</b>
+    1. User email.
+
+    <b>Expected results:</b>
+    Test passes when user was successfully added to the platform with onboading functionality.
+
+    <b>Steps:</b>
+    1. Onboard new user to the platform.
+    2. Get list of all users on the platform.
+    3. Verify that the user is present on the platform.
+    """
     step("Onboard new user")
     test_user = onboarding.onboard(context=context, check_email=False)
     step("Check that user is created")
@@ -86,7 +131,23 @@ def test_onboarding(context):
 @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
-    """Add New User to and Delete from Organization"""
+    """
+    <b>Description:</b>
+    Checks if admin user can be added and removed from the platform.
+
+    <b>Input data:</b>
+    1. User email.
+
+    <b>Expected results:</b>
+    Test passes when admin user was successfully added to the platform and removed from it.
+
+    <b>Steps:</b>
+    1. Onboard new user to the platform.
+    2. Add new user to the default organization.
+    3. Verify the user is present in the organization.
+    4. Remove the user from the organization.
+    5. Verify that the user was removed from the organization.
+    """
     step("Add new user to organization")
     test_user = onboarding.onboard(context=context, check_email=False)
     test_user.add_to_organization(org_guid=core_org.guid, role=User.ORG_ROLE["admin"])
@@ -95,7 +156,7 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     assert test_user in users
     step("Delete the user from the organization")
     test_user.delete_from_organization(org_guid=core_org.guid)
-    step("Check that the user is in the organization")
+    step("Check that the user is not in the organization")
     users = User.get_list_in_organization(org_guid=core_org.guid)
     assert test_user not in users
 
@@ -124,7 +185,26 @@ def transfer_flow(transfer, core_org):
 
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_link(core_org, context):
-    """Create and Delete Transfer from Link"""
+    """
+    <b>Description:</b>
+    Checks if a file can be downloaded from a link to the platform.
+
+    <b>Input data:</b>
+    1. File URL.
+    2. Transfer title.
+    3. Transfer category.
+
+    <b>Expected results:</b>
+    Test passes when a file from link was downloaded to the platform and corresponding transfer and dataset were
+    successfully created and removed from the platform.
+
+    <b>Steps:</b>
+    1. Create a transfer using csv file.
+    2. Check if transfer finished with correct state and verify that it is present on the transfers list.
+    3. Check if the transfer has corresponding dataset.
+    4. Delete dataset and transfer from the platform.
+    5. Verify that transfer and dataset were removed from the platform.
+    """
     step("Create a transfer")
     transfer = Transfer.api_create(context, category="other", source=Urls.test_transfer_link, org_guid=core_org.guid)
     transfer_flow(transfer, core_org)
@@ -132,7 +212,26 @@ def test_add_and_delete_transfer_from_link(core_org, context):
 
 @pytest.mark.components(TAP.das, TAP.data_catalog, TAP.downloader, TAP.metadata_parser)
 def test_add_and_delete_transfer_from_file(core_org, context):
-    """Create and Delete Transfer from File"""
+    """
+    <b>Description:</b>
+    Checks if a file can be uploaded from disk to the platform.
+
+    <b>Input data:</b>
+    1. File name.
+    2. Transfer title.
+    3. Transfer category.
+
+    <b>Expected results:</b>
+    Test passes when a file from disk was uploaded to the platform and corresponding transfer and dataset were
+    successfully created and removed from the platform.
+
+    <b>Steps:</b>
+    1. Create a transfer using generated csv file.
+    2. Check if transfer finished with correct state and verify that it is present on the transfers list.
+    3. Check if the transfer has corresponding dataset.
+    4. Delete dataset and transfer from the platform.
+    5. Verify that transfer and dataset were removed from the platform.
+    """
     step("Generate a test csv file")
     file_path = generate_csv_file(column_count=10, row_count=100)
     step("Create a transfer by file upload")
@@ -148,7 +247,23 @@ def test_add_and_delete_transfer_from_file(core_org, context):
                         TAP.zookeeper_wssb_broker)
 @pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
 def test_create_and_delete_marketplace_service_instances(context, service_label, plan_name):
-    """Create and Delete Marketplace Service Instance"""
+    """
+    <b>Description:</b>
+    Checks if a service instance can be created and deleted from the platform.
+
+    <b>Input data:</b>
+    1. Offering names.
+
+    <b>Expected results:</b>
+    Test passes when a service instance was successfully created and removed from the platform for every marketplace
+    official offering and its plans.
+
+    <b>Steps:</b>
+    1. Create service instance of every offering and its plans.
+    2. Verify that the service instance is in state RUNNING.
+    3. Delete the service instance of an offering.
+    4. Verify the service instance was deleted from the platform.
+    """
     step("Create instance {} {}".format(service_label, plan_name))
     instance = ServiceInstance.create_with_name(context, offering_label=service_label, plan_name=plan_name)
     step("Check that the instance is running")
@@ -162,7 +277,23 @@ def test_create_and_delete_marketplace_service_instances(context, service_label,
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
 @pytest.mark.parametrize("sample_app_key", ("sample_python_app", "sample_java_app"))
 def test_push_sample_app_and_check_response(sample_app, sample_app_key):
-    """Push Sample Application and Test Http Response"""
+    """
+    <b>Description:</b>
+    Checks if sample python and java applications pushed to the platform work.
+
+    <b>Input data:</b>
+    1. Application names.
+    2. Application gzip paths.
+    3. Application manifest paths.
+
+    <b>Expected results:</b>
+    Test passes when python and java applications are in RUNNING state and return OK status to HTTP GET request.
+
+    <b>Steps:</b>
+    1. Create HTTP client.
+    2. Send GET request with the client.
+    3. Verify response is not None and response status code equals 200.
+    """
     sample_app = sample_app[sample_app_key]
     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app.urls[0]))
     step("Check response for HTTP GET to the endpoint")
@@ -174,7 +305,24 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
 @pytest.mark.parametrize("sample_db_app_key", ("app_binded_psql", "app_binded_mysql"))
 def test_push_sql_app_check_response(sample_db_app, sample_db_app_key):
-    """Push Sample Application and Test Http Response"""
+    """
+    <b>Description:</b>
+    Checks if application pushed to the platform with postgres or mysql database service bound work.
+
+    <b>Input data:</b>
+    1. Application names.
+    2. Application gzip paths.
+    3. Application manifest paths.
+
+    <b>Expected results:</b>
+    Test passes when application with postgres or mysql database service bound are in RUNNING state and returns OK
+    status to HTTP GET request.
+
+    <b>Steps:</b>
+    1. Create HTTP client.
+    2. Send GET request with the client.
+    3. Verify response is not None and response status code equals 200.
+    """
     sample_db_app = sample_db_app[sample_db_app_key]
     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_db_app.urls[0]))
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
@@ -185,7 +333,22 @@ def test_push_sql_app_check_response(sample_db_app, sample_db_app_key):
 @pytest.mark.skip(reason="DPNG-11944 [api-tests] adjust test_platform_tests to new TAP")
 @pytest.mark.components(TAP.platform_tests)
 def test_start_tests_or_get_suite_in_progress():
-    """Start Tests or get Suite in Progress"""
+    """
+    <b>Description:</b>
+    Checks if platform tests functionality runs on the platform.
+
+    <b>Input data:</b>
+    1. Username.
+    2. User password.
+
+    <b>Expected results:</b>
+    Test passes when platform tests can be started and tests are in progress state.
+
+    <b>Steps:</b>
+    1. Create new test instance.
+    2. Verify tests suite is in progress.
+    3. Verify test results are not None
+    """
     step("Start tests")
     try:
         new_test = TestSuite.api_create()
@@ -208,6 +371,21 @@ def test_start_tests_or_get_suite_in_progress():
 
 @priority.high
 def test_add_new_model_to_organization(context):
+    """
+    <b>Description:</b>
+    Checks if new model can be added to the platform.
+
+    <b>Input data:</b>
+    1. Scoring Engine Model.
+
+    <b>Expected results:</b>
+    Test passes when model was successfully added to the platform.
+
+    <b>Steps:</b>
+    1. Create a model in the organization.
+    2. Get list with models on the platform.
+    3. Verify the model is on the list.
+    """
     step("Add model to organization as admin")
     new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID,
                                           **MODEL_METADATA)

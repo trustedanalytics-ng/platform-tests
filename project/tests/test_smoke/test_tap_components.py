@@ -54,9 +54,23 @@ class TestK8sComponents:
 
     @pytest.mark.parametrize("service,service_params", k8s_core_service_params, ids=k8s_core_service_ids)
     def test_k8s_component_health_check(self, service, service_params):
+        """
+        <b>Description:</b>
+        Checks if k8s core components healthz endpoint returns status OK to HTTP GET request.
+
+        <b>Input data:</b>
+        TAP core components.
+
+        <b>Expected results:</b>
+        Test passes when k8s core components return status OK to HTTP GET request on healthz endpoint.
+
+        <b>Steps:</b>
+        1. Check k8s component healthz endpoint.
+        2. Verify that HTTP response status code is 200.
+        """
         if service_params["health_endpoint"] is None:
-            pytest.skip("Service {} does not have health endpoint configured".format(service))
-        step("Check k8s component healtz endpoint for {}".format(service))
+            pytest.skip("Service {} does not have healthz endpoint configured".format(service))
+        step("Check k8s component healthz endpoint for {}".format(service))
         health_client = self.get_client(service)
         response = health_client.request(HttpMethod.GET,
                                          path=service_params["health_endpoint"],
@@ -66,6 +80,20 @@ class TestK8sComponents:
         assert response.status_code == HttpStatus.CODE_OK
 
     def test_api_service_check_availability(self):
+        """
+        <b>Description:</b>
+        Checks if api service is available.
+
+        <b>Input data:</b>
+        1. TAP domain name.
+
+        <b>Expected results:</b>
+        Test passes when platform api service returns OK status to HTTP GET request.
+
+        <b>Steps:</b>
+        1. Check api get endpoint for a domain.
+        2. Verify that response status is OK.
+        """
         step("Check api get endpoint for {}".format(TAP.api_service))
         api_client = HttpClientFactory.get(ServiceConfigurationProvider.get())
         response = api_client.request(HttpMethod.GET,
@@ -76,6 +104,20 @@ class TestK8sComponents:
 
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
     def test_3rd_party_component_check_availability(self, service, service_params):
+        """
+        <b>Description:</b>
+        Checks if 3rd party component is available.
+
+        <b>Input data:</b>
+        1. List of third party components (currently: image repository).
+
+        <b>Expected results:</b>
+        Test passes when 3rd party component api service returns OK status to HTTP GET request.
+
+        <b>Steps:</b>
+        1. Check api get endpoint of 3rd party component.
+        2. Verify that response status is OK.
+        """
         if service_params["get_endpoint"] is None or service_params["api_version"] is None:
             pytest.skip("Service {} does not have get endpoint or api version configured".format(service))
         step("Check 3rd party component get api endpoint for {}".format(service))
@@ -89,11 +131,38 @@ class TestK8sComponents:
 
     @pytest.mark.parametrize("expected_app", TAP.get_list_internal())
     def test_k8s_component_presence_on_platform(self, expected_app, running_tap_components):
+        """
+        <b>Description:</b>
+        Checks if k8s services are present on the platform.
+
+        <b>Input data:</b>
+        TAP core components.
+
+        <b>Expected results:</b>
+        Test passes when all k8s services are present on the platform.
+
+        <b>Steps:</b>
+        1. Verify that all k8s services are present on the platform.
+        """
         step("Check that '{}' app is present on platform".format(expected_app))
         assert expected_app in running_tap_components, "No such service {}".format(expected_app)
 
     @pytest.mark.parametrize("expected_offering,plan_name", offerings_as_parameters)
     def test_available_offerings(self, expected_offering, plan_name, test_marketplace):
+        """
+        <b>Description:</b>
+        Checks if marketplace official offerings are present on the platform.
+
+        <b>Input data:</b>
+        Offering names.
+
+        <b>Expected results:</b>
+        Test passes when marketplace official offerings are present on the platform.
+
+        <b>Steps:</b>
+        1. Verify that marketplace offerings are not None.
+        2. Verify that marketplace offerings planes are not None.
+        """
         offering = next((o for o in test_marketplace if o.label == expected_offering), None)
         assert offering is not None, "Offering '{}' was not found in marketplace".format(expected_offering)
         plan_name = next((plan for plan in offering.service_plans if plan.name == plan_name), None)
@@ -103,8 +172,23 @@ class TestK8sComponents:
 @priority.high
 class TestSmokeTrustedAnalyticsComponents:
 
+    @pytest.mark.bugs("DPNG-13413 user-management is no longer reachable from outside network")
     @pytest.mark.parametrize("component", [TAP.user_management, TAP.api_service, TAP.uaa])
     def test_components_check_healthz(self, component):
+        """
+        <b>Description:</b>
+        Checks if user-management, api service and uaa return status OK on healthz endpoint.
+
+        <b>Input data:</b>
+        1. Component names: user-management, api service, uaa.
+
+        <b>Expected results:</b>
+        Test passes when user-management, api service and uaa healthz endpoint return status OK to HTTP GET request.
+
+        <b>Steps:</b>
+        1. Check healthz endpoint for components: user-management, api service and uaa.
+        2. Verify that response status is OK.
+        """
         step("Check healthz endpoint")
         url = "http://{}.{}".format(component, config.tap_domain)
         client = HttpClientFactory.get(ApplicationConfigurationProvider.get(url))
@@ -113,6 +197,20 @@ class TestSmokeTrustedAnalyticsComponents:
 
     @pytest.mark.bugs("DPNG-11452 Healthz response returns 200 for non existing application")
     def test_calling_healthz_on_non_existing_service_returns_404(self):
+        """
+        <b>Description:</b>
+        Checks if calling healthz endpoint on not existing service returns error status code 404.
+
+        <b>Input data:</b>
+        False service URL.
+
+        <b>Expected results:</b>
+        Test passes when not existing service healthz endpoint returns status code 404 to HTTP GET request.
+
+        <b>Steps:</b>
+        1. Check healthz endpoint for not existing service.
+        2. Verify that response status code is 404.
+        """
         expected_status_code = HttpStatus.CODE_NOT_FOUND
         url = "http://anything.{}".format(config.tap_domain)
         step("Check that calling {} returns {}".format(url, expected_status_code))
@@ -123,6 +221,20 @@ class TestSmokeTrustedAnalyticsComponents:
 
     @pytest.mark.parametrize("component", [TAP.console])
     def test_components_root_endpoint(self, component):
+        """
+        <b>Description:</b>
+        Checks if console root endpoint returns OK status to HTTP GET request.
+
+        <b>Input data:</b>
+        Component root endpoint.
+
+        <b>Expected results:</b>
+        Test passes when console root endpoint returns OK status to HTTP GET request.
+
+        <b>Steps:</b>
+        1. Check console root endpoint.
+        2. Verify that HTTP response status code is 200.
+        """
         step("Check get / endpoint")
         url = "http://{}.{}".format(component, config.tap_domain)
         client = HttpClientFactory.get(ServiceConfigurationProvider.get(url))
@@ -131,6 +243,22 @@ class TestSmokeTrustedAnalyticsComponents:
 
     @pytest.mark.parametrize("component", [TAP.api_service])
     def test_api_indicator_returns_platform_header(self, component):
+        """
+        <b>Description:</b>
+        Checks if api indicator returns platform header.
+
+        <b>Input data:</b>
+        1. Component name: api service.
+
+        <b>Expected results:</b>
+        Test passes when component api indicator HTTP response header "x-platform" contains "TAP" string.
+
+        <b>Steps:</b>
+        1. Create HTTP client.
+        2. Send GET request to component api endpoint.
+        3. Verify that HTTP response header "x-platform" contains "TAP" string.
+        4. Verify that HTTP response text is empty.
+        """
         step("Check get /api endpoint")
         url = "http://{}.{}".format(component, config.tap_domain)
         client = HttpClientFactory.get(ServiceConfigurationProvider.get(url, username=None, password=None))
