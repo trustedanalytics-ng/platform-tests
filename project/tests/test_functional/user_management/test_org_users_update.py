@@ -86,7 +86,7 @@ class TestUpdateOrganizationUser:
         step("Check that updating user which invalid user guid returns an error")
         invalid_guid = "invalid-user-guid"
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
                                      user_management.api_update_org_user_role, org_guid=test_org.guid,
                                      user_guid=invalid_guid, new_role=User.ORG_ROLE["user"])
         step("Check that user org list did not change")
@@ -98,7 +98,7 @@ class TestUpdateOrganizationUser:
         # TODO implement non-existing guid
         invalid_guid = "invalid-org-guid"
         step("Check that updating user using invalid org guid returns an error")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
                                      user_management.api_update_org_user_role, org_guid=invalid_guid,
                                      user_guid=updated_user.guid, new_role=User.ORG_ROLE["user"])
 

@@ -76,7 +76,7 @@ class TestAddNewUserToOrganization:
     def test_cannot_add_new_user_to_non_existing_org(self, context):
         org_guid = "this-org-guid-is-not-correct"
         step("Check that an error is raised when trying to add user using incorrect org guid")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
                                      User.create_by_adding_to_organization, context=context, org_guid=org_guid,
                                      role=User.ORG_ROLE["user"])
 

@@ -137,7 +137,7 @@ class HttpStatus(object):
 class UserManagementHttpStatus(HttpStatus):
     """User management http status messages"""
 
-    MSG_WRONG_UUID_FORMAT_EXCEPTION = "Wrong uuid format exception"
+    MSG_GUID_CODE_IS_INVALID_EXCEPTION = "Guid code is invalid."
     MSG_EMAIL_ADDRESS_NOT_VALID = "That email address is not valid"
     MSG_MUST_HAVE_AT_LEAST_ONE_ROLE = "You must have at least one role"
     MSG_CANNOT_PERFORM_REQ_WITHOUT_ROLES = "You cannot perform request without specified roles"

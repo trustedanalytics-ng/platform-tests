@@ -90,7 +90,7 @@ class TestAddExistingUserToOrganization:
     def test_cannot_add_existing_user_to_org_with_invalid_guid(self, existing_user):
         step("Check that adding user to organization using invalid org guid raises an error")
         invalid_org_guid = "this-org-guid-is-not-correct"
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_WRONG_UUID_FORMAT_EXCEPTION,
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
                                      existing_user.add_to_organization, org_guid=invalid_org_guid)
 
     @priority.low
