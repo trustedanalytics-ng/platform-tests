@@ -207,9 +207,9 @@ def test_start_tests_or_get_suite_in_progress():
 
 
 @priority.high
-def test_add_new_model_to_organization(context, test_org_admin_client):
+def test_add_new_model_to_organization(context):
     step("Add model to organization as admin")
-    new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, client=test_org_admin_client,
+    new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID,
                                           **MODEL_METADATA)
     step("Check that the model is on model list")
     models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
