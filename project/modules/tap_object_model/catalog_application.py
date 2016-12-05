@@ -49,11 +49,11 @@ class CatalogApplication(object):
                    template_id=response["templateId"])
 
     @classmethod
-    def create(cls, context, *, template_id, image_id, name=None, replication=1):
+    def create(cls, context, *, template_id, image_id, name=None, replication=1, description=None):
         if name is None:
             name = generate_test_object_name(separator="-")
         response = catalog.create_application(name=name, template_id=template_id, image_id=image_id,
-                                              replication=replication)
+                                              replication=replication, description=description)
         new_application = cls._from_response(response)
         context.test_objects.append(new_application)
         return new_application
@@ -78,6 +78,7 @@ class CatalogApplication(object):
     def cleanup(self):
         self.delete()
 
-    def update(self, *, field_name, value):
+    def update(self, *, field_name, value, prev_value=None, username=None):
         setattr(self, field_name, value)
-        catalog.update_application(application_id=self.id, field_name=field_name, value=value)
+        catalog.update_application(application_id=self.id, field_name=field_name, value=value, prev_value=prev_value,
+                                   username=username)

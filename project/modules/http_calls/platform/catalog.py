@@ -350,14 +350,16 @@ def create_service_plan(service_id, body):
 # --------------------------------------------------- applications --------------------------------------------------- #
 
 
-def create_application(*, name, template_id, image_id, replication):
+def create_application(*, name, template_id, image_id, replication, description=None):
     """ POST /applications """
     body = {
         "name": name,
         "imageId": image_id,
         "templateId": template_id,
-        "replication": replication
+        "replication": replication,
+        "description": description
     }
+    body = {k: v for k, v in body.items() if v is not None}
     response = _get_client().request(HttpMethod.POST,
                                      path="applications",
                                      body=body,
@@ -379,13 +381,16 @@ def get_application(*, application_id):
                                  msg="CATALOG: get application")
 
 
-def update_application(*, application_id, field_name, value):
+def update_application(*, application_id, field_name, value, prev_value=None, username=None):
     """ PATCH /applications/{application_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prevValue": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="applications/{}".format(application_id),
                                      body=body,
