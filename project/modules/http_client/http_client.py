@@ -49,7 +49,7 @@ class HttpClient(object):
         if not self._auth.authenticated:
             self._auth.authenticate()
         url = self.url if url is None else url
-        return self._auth.session.request(
+        response = self._auth.session.request(
             method=method,
             url="{}/{}".format(url, path),
             headers=headers,
@@ -63,3 +63,22 @@ class HttpClient(object):
             timeout=timeout,
             raise_exception=raise_exception
         )
+
+        if "session_expired" in format(response):
+            self._auth.authenticate()
+            return self._auth.session.request(
+                method=method,
+                url="{}/{}".format(url, path),
+                headers=headers,
+                files=files,
+                params=params,
+                data=data,
+                body=body,
+                auth=self._auth.http_auth,
+                log_message=msg,
+                raw_response=raw_response,
+                timeout=timeout,
+                raise_exception=raise_exception
+            )
+
+        return response
