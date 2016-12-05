@@ -147,6 +147,22 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         return cls._from_response(response, client)
 
     @classmethod
+    def get_by_name(cls, name: str, client: HttpClient = None):
+        """Retrieves the application id based on app name
+
+        Args:
+            name: name of the application instance to retrieve
+
+        Returns:
+            The application
+        """
+        if client is None:
+            client = cls._get_default_client()
+        for application in api.get_applications(client=client):
+            if application['name'] == name:
+                return cls._from_response(application, client)
+
+    @classmethod
     def get_list(cls, client: HttpClient=None):
         """Get list of applications from Console / service-catalog API
 

@@ -189,6 +189,16 @@ def sample_java_app(class_context, compiled_sample_java_app):
     return app
 
 
+@pytest.fixture(scope="class")
+def space_shuttle_application(class_context):
+    SPACE_SHUTTLE_DEMO_APP_NAME = "space-shuttle-demo"
+
+    log_fixture(SPACE_SHUTTLE_DEMO_APP_NAME + ": Get all information about application")
+    app = Application.get_by_name(SPACE_SHUTTLE_DEMO_APP_NAME)
+
+    return app
+
+
 @pytest.fixture(scope="session")
 def psql_instance(session_context, api_service_admin_client):
     log_fixture("create_postgres_instance")

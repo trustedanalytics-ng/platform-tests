@@ -14,17 +14,12 @@
 # limitations under the License.
 #
 
-import time
-from datetime import datetime
-
 import pytest
 
-from modules.constants import ServiceLabels, TapComponent as TAP, TapGitHub
-from modules.http_calls.platform import space_shuttle_demo
+from modules.constants import ServiceLabels, TapEntityState, TapComponent as TAP
 from modules.markers import incremental, priority
-from modules.platform_version import get_appstack_yml
-from modules.tap_logger import step
-from modules.tap_object_model import Application, DataSet, Binding, ServiceInstance
+from modules.tap_object_model import ServiceInstance
+
 
 logged_components = (TAP.space_shuttle_demo,)
 pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
@@ -32,44 +27,29 @@ pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
 
 @incremental
 @priority.low
-@pytest.mark.skip("DPNG-8659: Adjust Space-shuttle & mqtt: functional tests")
 class TestSpaceShuttleDemo:
-    MODEL_TITLE = "model"
-    MODEL_SOURCE_FILE_NAME = "space-shuttle-model.tar"
-    SPACE_SHUTTLE_APP_NAME = "space_shuttle_client"
-    expected_bindings = [ServiceLabels.INFLUX_DB_110, ServiceLabels.GATEWAY, ServiceLabels.SCORING_ENGINE,
-                         ServiceLabels.ZOOKEEPER]
+    SPACE_SHUTTLE_DEMO_APP_NAME = "space-shuttle-demo"
+    SPACE_SHUTTLE_DEMO_CLIENT_NAME = "space-shuttle-client"
+    EXPECTED_BINDINGS = [ServiceLabels.GATEWAY, ServiceLabels.INFLUX_DB_088]
 
-    @pytest.fixture(scope="class")
-    def space_shuttle_demo_app(self, core_space):
-        space_shuttle_demo_app = next((app for app in Application.api_get_list(core_space.guid)
-                                       if TAP.space_shuttle_demo == app.name), None)
-        return space_shuttle_demo_app
+    @priority.low
+    def test_0_check_if_app_exist(self, space_shuttle_application):
+        assert space_shuttle_application.name == self.SPACE_SHUTTLE_DEMO_APP_NAME
 
-    @pytest.fixture(scope="class")
-    def space_shuttle_client_app(self, core_space):
-        space_shuttle_client_app = next((app for app in Application.api_get_list(core_space.guid)
-                                         if self.SPACE_SHUTTLE_APP_NAME == app.name), None)
-        return space_shuttle_client_app
+    @priority.low
+    def test_1_check_if_app_bindings_exist(self, space_shuttle_application):
+        app_binding = []
 
-    def test_0_check_if_app_is_on_appstack_and_is_deployed_and_is_running(self, space_shuttle_demo_app):
-        step("Try to get application from appstack.yml to check if the application should be deployed")
-        space_shuttle_demo_yml = next((app for app in get_appstack_yml(TapGitHub.intel_data)["apps"]
-                                       if app["name"] == TAP.space_shuttle_demo), None)
-        assert space_shuttle_demo_yml is not None, '{} is not on appstack.yml list'.format(TAP.space_shuttle_demo)
-        step('Check the app is deployed')
-        assert space_shuttle_demo_app is not None, '{} is not deployed'.format(TAP.space_shuttle_demo)
-        step('Check the app is running')
-        assert space_shuttle_demo_app.is_running, 'space shuttle is not running'
+        for binding in space_shuttle_application.bindings:
+            app_binding.append(ServiceInstance.get(service_id=binding["id"]).offering_label)
 
-    def test_1_check_if_app_has_correct_bindings(self, core_space, space_shuttle_demo_app):
-        step('Check required services are correctly bound')
-        instances = ServiceInstance.api_get_list(core_space.guid)
-        bindings = Binding.api_get_list(app_guid=space_shuttle_demo_app.guid)
-        binding_guids = [b.service_instance_guid for b in bindings]
-        bound_instance_labels = [i.service_label for i in instances if i.guid in binding_guids]
-        assert sorted(self.expected_bindings) == sorted(bound_instance_labels)
+        assert sorted(app_binding) == sorted(self.EXPECTED_BINDINGS)
 
+    @priority.low
+    def test_2_check_if_app_running(self, space_shuttle_application):
+        assert space_shuttle_application.state == TapEntityState.RUNNING
+
+    @pytest.mark.skip(reason="DPNG-9278 [space shuttle demo] Enable usage os Scoring Engine")
     def test_2_check_app_model_dataset_title_and_uri(self, core_org):
         step('Check model title is as expected')
         dataset_list = DataSet.api_get_list(org_guid_list=[core_org.guid])
@@ -78,6 +58,7 @@ class TestSpaceShuttleDemo:
         step('Check model uri is as expected')
         assert self.MODEL_SOURCE_FILE_NAME == model.source_uri, 'Model source file name is not as expected'
 
+    @pytest.mark.skip(reason="DPNG-9278 [space shuttle demo] Enable usage os Scoring Engine")
     def test_3_space_shuttle_anomaly_detection(self, space_shuttle_demo_app, space_shuttle_client_app):
         step('Check that anomalies are detected correctly')
         now = time.time()
