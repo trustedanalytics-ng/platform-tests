@@ -17,12 +17,15 @@
 import base64
 import io
 import os
+import tarfile
 
 import pytest
 
 import config
+from modules import file_utils
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, TapComponent
+from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, \
+    TapComponent, Urls
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -151,20 +154,31 @@ def sample_python_app(class_context):
 
 
 @pytest.fixture(scope="class")
-def sample_java_app(class_context):
-    log_fixture("sample_java_app: download libraries")
+def compiled_sample_java_app():
+    log_fixture("compiled_sample_java_app: download libraries")
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
     test_app_sources.run_build_sh()
 
-    log_fixture("sample_java_app: Compile the sources")
+    log_fixture("compiled_sample_java_app: Compile the sources")
     test_app_sources.compile_mvn()
+    return test_app_sources.path
 
+
+@pytest.fixture(scope="class")
+def sample_app_jar(compiled_sample_java_app):
+    jar_directory = os.path.join(compiled_sample_java_app, "target")
+    file_list = os.listdir(jar_directory)
+    return os.path.join(jar_directory, next(name for name in file_list if ".jar" in name))
+
+
+@pytest.fixture(scope="class")
+def sample_java_app(class_context, compiled_sample_java_app):
     log_fixture("sample_java_app: package sample application")
-    p_a = PrepApp(ApplicationPath.SAMPLE_JAVA_APP)
+    p_a = PrepApp(compiled_sample_java_app)
     gzipped_app_path = p_a.package_app(class_context)
 
     log_fixture("sample_java_app: update manifest")
-    manifest_params = {"type" : TapApplicationType.JAVA}
+    manifest_params = {"type": TapApplicationType.JAVA}
     manifest_path = p_a.update_manifest(params=manifest_params)
 
     log_fixture("sample_java_app: Push app to tap")
@@ -299,9 +313,13 @@ def sample_service_from_template(class_context):
 
 
 @pytest.fixture(scope="class")
-def sample_service(class_context, test_org):
+def sample_service(class_context, sample_app_jar):
+    log_fixture("Prepare mainfest and offering json")
+    offering_json = ServiceOffering.create_offering_json()
+    manifest_json = ServiceOffering.create_manifest_json(app_type=TapApplicationType.JAVA)
     log_fixture("Create new example service from binary")
-    sample_service = ServiceOffering.create_from_binary(class_context, org_guid=test_org.guid)
+    sample_service = ServiceOffering.create_from_binary(class_context, jar_path=sample_app_jar,
+                                                        manifest_path=manifest_json, offering_path=offering_json)
     log_fixture("Check the service is ready")
     sample_service.ensure_ready()
     return sample_service
@@ -409,4 +427,3 @@ def model_hdfs_path(core_org):
     if model_dataset is None:
         raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
     return model_dataset.target_uri
-

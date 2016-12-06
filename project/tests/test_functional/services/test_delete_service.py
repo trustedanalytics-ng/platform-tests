@@ -42,7 +42,6 @@ class TestDeleteService:
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE,
                                      public_service.delete, client=client)
 
-    @pytest.mark.skip(reason="DPNG-11414 Create offering from binary - not supported yet")
     @pytest.mark.parametrize("role", ["admin"])
     def test_cannot_remove_service_with_instance(self, context, sample_service, test_user_clients, role):
         client = test_user_clients[role]
@@ -58,7 +57,7 @@ class TestDeleteService:
         step("Check that service instance is present")
         assert_in_with_retry(instance, ServiceInstance.get_list, name=instance.name)
 
-        step("Attempt to delete public service with instnace")
+        step("Attempt to delete public service with instance")
         assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR,
                                      HttpStatus.MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE,
                                      sample_service.delete)
