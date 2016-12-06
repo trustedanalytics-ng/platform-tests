@@ -99,9 +99,9 @@ class TestModelUpdate:
         assert len(incorrect_metadata) == 0, "Incorrect metadata: {}".format(", ".join(incorrect_metadata))
         assert model == sample_model
 
-    @pytest.mark.bug(reason="Not allow to insert model without name is not implemented yet - DPNG-11673")
     @pytest.mark.parametrize("missing_param", ("name", "creation_tool"))
     @priority.medium
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_cannot_update_metadata_with_empty_name_filed(self, missing_param, sample_model):
         metadata = self.UPDATED_METADATA.copy()
         del metadata[missing_param]

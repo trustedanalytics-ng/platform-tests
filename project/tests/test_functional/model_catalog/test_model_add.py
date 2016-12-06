@@ -102,6 +102,7 @@ class TestModelAdd:
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_add_new_artifact_to_model(self, sample_model, test_user_clients, role):
         client = test_user_clients[role]
         step("Add new artifact to model using {}".format(role))
@@ -114,6 +115,7 @@ class TestModelAdd:
 
     @priority.low
     @pytest.mark.parametrize("artifact_actions_key", ("publish_to_marketplace", "publish_to_tap_scoring_engine"))
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_add_new_artifact_to_model_different_actions(self, sample_model, artifact_actions_key, actions):
         action = actions[artifact_actions_key]
         artifact_metadata = self.ARTIFACT_METADATA.copy()
@@ -141,6 +143,7 @@ class TestModelAdd:
         assert artifact_actions == expected_actions
 
     @priority.low
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_cannot_add_new_artifact_to_non_existing_model(self):
         non_existing_model = Guid.NON_EXISTING_GUID
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
@@ -149,6 +152,7 @@ class TestModelAdd:
 
     @priority.medium
     @pytest.mark.parametrize("role", ["admin", "user"])
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_artifact_file_has_been_properly_added(self, sample_model, test_user_clients, role):
         client = test_user_clients[role]
         step("Add new artifact to model using {}".format(role))
@@ -158,8 +162,8 @@ class TestModelAdd:
             expected_content = text.read()
         assert added_file_content == expected_content
 
-    @pytest.mark.bugs("DPNG-11673 Model-catalog: required fields")
     @priority.low
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_cannot_add_artifact_with_invalid_action(self, sample_model):
         step("Try to add artifact with invalid action")
         artifact_metadata = self.ARTIFACT_METADATA.copy()
@@ -168,7 +172,7 @@ class TestModelAdd:
                                      ModelArtifact.upload_artifact, model_id=sample_model.id,
                                      **artifact_metadata)
 
-    @pytest.mark.bugs("DPNG-11673 Model-catalog: required fields")
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     @priority.low
     def test_cannot_add_artifact_with_two_actions(self, sample_model):
         step("Try to add artifact with two actions")
@@ -178,7 +182,7 @@ class TestModelAdd:
                                      ModelArtifact.upload_artifact, model_id=sample_model.id,
                                      **artifact_metadata)
 
-    @pytest.mark.bugs("DPNG-11673 Model-catalog: required fields")
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     @priority.low
     def test_cannot_add_more_than_one_artifacts_to_model(self, sample_model):
         step("Add new artifact to model")

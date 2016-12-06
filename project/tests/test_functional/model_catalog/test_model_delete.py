@@ -43,6 +43,7 @@ class TestModelDelete:
         assert sample_model not in models
 
     @priority.low
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_cannot_delete_model_twice(self, sample_model):
         step("Delete sample model")
         sample_model.delete()
@@ -58,6 +59,7 @@ class TestModelDelete:
 
     @priority.low
     @pytest.mark.parametrize("role", ["admin", "user"])
+    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_delete_artifact_and_file(self, model_with_artifact, test_user_clients, role):
         client = test_user_clients[role]
         artifact_id = model_with_artifact.artifacts[0].get("id")
