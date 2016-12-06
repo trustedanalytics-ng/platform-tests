@@ -42,6 +42,7 @@ class TapMessage:
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     CANNOT_FIND_PLAN_FOR_SERVICE = "cannot find plan: '{}' for service: '{}'"
     CANNOT_FIND_SERVICE = "cannot find service: '{}'"
+    CANNOT_REACH_API = "Cannot reach API. Not a TAP environment?"
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
     INSTANCE_IS_BOUND_TO_OTHER_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
     NO_SUCH_FILE_OR_DIRECTORY = "open {}: no such file or directory"

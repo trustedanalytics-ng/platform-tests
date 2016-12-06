@@ -29,6 +29,10 @@ pytestmark = [pytest.mark.components(TAP.cli)]
 
 
 class TestCliBasicFlow:
+
+    INCORRECT_DOMAIN = 'www.incorrect.domain'
+    FOREIGN_DOMAIN = 'www.google.com'
+
     @pytest.fixture(scope="function")
     def restore_login(self, request, tap_cli):
         request.addfinalizer(tap_cli.login)
@@ -69,11 +73,14 @@ class TestCliBasicFlow:
                                                   tap_cli.login,
                                                   tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")    
-    @pytest.mark.bugs("DPNG-10120 [TAP-NG] CLI - ./tap target should be enable only for console-service ip")
     @priority.low
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):
         step("Check that user cannot login to tap cli using incorrect domain")
-        incorrect_domain = "incorrect.domain"
         assert_raises_command_execution_exception(1, TapMessage.NO_SUCH_HOST,
-                                                  tap_cli.login, login_domain=incorrect_domain)
+                                                  tap_cli.login, login_domain=self.INCORRECT_DOMAIN)
+
+    @priority.low
+    def test_cannot_login_with_foreign_domain(self, tap_cli, restore_login):
+        step("Check that user cannot login to tap cli using foreign domain")
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_REACH_API,
+                                                  tap_cli.login, login_domain=self.FOREIGN_DOMAIN)
