@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from modules.hive import Hive
 from modules.tap_logger import get_logger
-from modules.tap_object_model import DataSet, Invitation, Organization, Transfer, User
+from modules.tap_object_model import DataSet, Invitation, Transfer, User, Application, ServiceInstance, \
+    ServiceOffering, ScoringEngineModel
 from modules.test_names import is_test_object_name
 from tests.fixtures import fixtures
+from tests.fixtures.fixtures import core_org
 
 logger = get_logger(__name__)
 
@@ -47,7 +48,8 @@ def remove_hive_databases():
         logger.info("No database to remove.")
 
 
-if __name__ == "__main__":
+def cleanup_test_data():
+    core_org_guid = core_org().guid
 
     all_data_sets = DataSet.api_get_list()
     test_data_sets = [x for x in all_data_sets if is_test_object_name(x.title)]
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     log_deleted_objects(test_transfers, "transfer")
     fixtures.tear_down_test_objects(test_transfers)
 
-    all_users = User.cf_api_get_all_users()
+    all_users = User.get_list_in_organization(org_guid=core_org_guid)
     test_users = [x for x in all_users if is_test_object_name(x.username)]
     log_deleted_objects(test_users, "user")
     fixtures.tear_down_test_objects(test_users)
@@ -69,10 +71,28 @@ if __name__ == "__main__":
     log_deleted_objects(test_invitations, "invitation")
     fixtures.tear_down_test_objects(test_invitations)
 
-    all_orgs = Organization.get_list()
-    test_orgs = [x for x in all_orgs if is_test_object_name(x.name)]
-    log_deleted_objects(test_orgs, "organization")
-    fixtures.tear_down_test_objects(test_orgs,)
+    all_applications = Application.get_list()
+    test_applications = [x for x in all_applications if is_test_object_name(x.name)]
+    log_deleted_objects(test_applications, "application")
+    fixtures.tear_down_test_objects(test_applications)
 
-    remove_hive_databases()
+    all_services = ServiceInstance.get_list()
+    test_services = [x for x in all_services if is_test_object_name(x.name)]
+    log_deleted_objects(test_applications, "service")
+    fixtures.tear_down_test_objects(test_services)
 
+    all_offerings = ServiceOffering.get_list()
+    test_offerings = [x for x in all_offerings if is_test_object_name(x.label)]
+    log_deleted_objects(test_offerings, "offering")
+    fixtures.tear_down_test_objects(test_offerings)
+
+    all_models = ScoringEngineModel.get_list(org_guid=core_org_guid)
+    test_models = [x for x in all_models if is_test_object_name(x.name)]
+    log_deleted_objects(test_models, 'scoring engine model')
+    fixtures.tear_down_test_objects(test_models)
+
+    # TODO: remove hive dbs
+
+
+if __name__ == "__main__":
+    cleanup_test_data()

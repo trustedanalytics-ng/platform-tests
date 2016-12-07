@@ -25,7 +25,7 @@ def is_test_object_name(name):
     """Return True if object's name matches pattern for test names, False otherwise."""
     if name is None:
         return False  # there are users with username=None
-    test_name_regex = "^.+[0-9]{8}_{0,1}[0-9]{6}_{0,1}[0-9]{0,6}(@gmail.com){0,1}$"
+    test_name_regex = r'^.*[0-9]{8}(.?)[0-9]{6}\1[0-9]{0,6}(@gmail.com)?$'
     return re.match(test_name_regex, name) is not None
 
 
