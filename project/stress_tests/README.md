@@ -27,6 +27,7 @@ Before starting tests it is required to set several env variables:
 - `PT_HATCH_RATE` rate per second in which clients are spawned, default: 1
 - `PT_DURATION` test duration, default: 10 [minutes]
 - `PT_LOCUST_PORT` port for locust web service, default: 8089
+- `PT_LOG_METRICS_INTERVAL` interval between gathering environment metrics, if 0 no metrics will be gathered (if positive please keep at least about 10 seconds), default: 0
 
 After setting required env variables test can be run by `python run_stress_tests.py`.
 

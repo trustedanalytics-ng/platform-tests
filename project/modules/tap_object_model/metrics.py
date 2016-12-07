@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from datetime import datetime
 import re
 
 from ..http_calls.platform import grafana_metrics
@@ -51,6 +51,7 @@ class Metrics(object):
         self.cpu_usage_platform = cpu_usage_platform
         self.public_datasets = public_datasets
         self.private_datasets = private_datasets
+        self.timestamp = datetime.now()
 
     def __repr__(self):
         return self.__class__.__name__

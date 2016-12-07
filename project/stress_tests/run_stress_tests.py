@@ -61,6 +61,7 @@ def get_stats():
     return json.loads(response.text)
 
 perf_mongo_reporter = PerformanceReporter()
+perf_mongo_reporter.start_gathering_metrics()
 locust_process = None
 try:
     locust_process = start_locust_process(stress_run_id=perf_mongo_reporter._run_id)
@@ -72,5 +73,6 @@ finally:
     stop_test()
     stats = get_stats()
     perf_mongo_reporter.on_run_end(stats)
+    perf_mongo_reporter.stop_gathering_metrics()
     if locust_process is not None:
         locust_process.send_signal(signal.SIGTERM)
