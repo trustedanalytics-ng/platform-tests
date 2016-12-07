@@ -181,7 +181,6 @@ ng_image_repository_url = os.environ.get("PT_NG_IMAGE_REPOSITORY_URL", third_par
 ng_api_service_oauth_token_url = os.environ.get("PT_NG_AS_OAUTH_TOKEN_URL",
                                                 "http://{}.{}/{}".format("api", tap_domain,
                                                                          "api/{}/login".format(ng_kubernetes_api_version)))
-ng_build_number = os.environ.get("PT_NG_BUILD_NUMBER")
 check_tap_cli_version = get_bool("PT_CHECK_TAP_CLI_VERSION", True)
 
 # Set to True if kubectl and core services are not accessible from jumpbox, but from master-0

@@ -51,12 +51,12 @@ def _get_latest_tap_cli_instance(jumpbox_client):
 def tap_cli():
     jump_client = JumpClient(username=config.ng_jump_user)
 
-    ng_build_number = config.ng_build_number
-    if ng_build_number is None:
-        ng_build_number = _get_latest_tap_cli_instance(jump_client)
+    tap_build_number = config.tap_build_number
+    if tap_build_number is None:
+        tap_build_number = _get_latest_tap_cli_instance(jump_client)
 
     tap_binary_name = "tap"
-    remote_tap_binary_path = os.path.join("TAP-{}".format(ng_build_number), tap_binary_name)
+    remote_tap_binary_path = os.path.join("TAP-{}".format(tap_build_number), tap_binary_name)
     target_directory = os.path.join("/tmp")
     target_path = os.path.join(target_directory, tap_binary_name)
 
