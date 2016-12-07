@@ -16,29 +16,43 @@
 
 import pytest
 
+from config import console_url
 from modules.constants import HttpStatus, TapComponent as TAP
 from modules.tap_logger import step
-from modules.tap_object_model import Metrics
+from modules.tap_object_model import Metrics, User
 from tests.fixtures import assertions
-
+from modules.http_client.client_auth.http_method import HttpMethod
 
 logged_components = (TAP.platform_operations, )
 pytestmark = [pytest.mark.components(TAP.platform_operations)]
 
 
 class TestNonAdminOperationsMetrics:
+    PLATFORM_SUMMARY_PATH = "app/operations/platformdashboard/platform-summary.html"
 
-    @pytest.mark.skip("DPNG-5904: Operations/Platform - non-logged-in user get session expired",
-                      "DPNG-10769 [TAP-NG] Metrics - E2E tests")
-    def test_non_admin_cannot_access_platform_operations(self, test_org_manager_client):
-        step("Checking if non-admin user cannot retrieve data")
-        metrics = Metrics()
-        ref_metrics = metrics.from_reference()
-        grafana_metrics = metrics.from_grafana()
+    @pytest.mark.bugs("DPNG-13537 non-admin user is able to see /app/platformdashboard/summary")
+    def test_non_admin_cannot_access_platform_operations(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if non-admin user cannot reach summary operations page /app/platformdashboard/summary.
+
+        <b>Input data:</b>
+        1. User email.
+
+        <b>Expected results:</b>
+        Test passes when non-admin user was not able to reach summary operations page.
+
+        <b>Steps:</b>
+        1. Create non-admin user.
+        2. Verify that the user cannot reach summary operations page.
+        """
+        step("Create non-admin user")
+        self.test_user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid)
+        client = self.test_user.login(rest_prefix="")
+        step("Checking if non-admin user cannot request admin-only data")
         assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                                ref_metrics, test_org_manager_client)
-        assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                                grafana_metrics, test_org_manager_client)
+                                                client.request, method=HttpMethod.GET, url=console_url,
+                                                path=self.PLATFORM_SUMMARY_PATH)
 
 
 @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
@@ -75,13 +89,45 @@ class TestOperationsMetrics:
 
     @pytest.mark.parametrize("metrics_attribute", ("apps", "services", "service_instances", "orgs", "users_platform"))
     def test_operations_metrics(self, metrics_attribute):
+        """
+        <b>Description:</b>
+        Checks if metrics for "apps", "services", "service_instances", "orgs", "users_platform" show correct values on
+        Platform Dashboard Summary page.
+
+        <b>Input data:</b>
+        1. Metric names.
+
+        <b>Expected results:</b>
+        Test passes when metric values or "apps", "services", "service_instances", "orgs", "users_platform" on Platform
+        Dashboard Summary page equal values retrieved from Grafana.
+
+        <b>Steps:</b>
+        1. Retrieve reference and platform metrics.
+        2. Verify that reference values equal platform metrics.
+        """
         step("Testing if reference values equals platform data. Data to check: {}".format(metrics_attribute))
         operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute)
-        assert operation_metrics == ref_metrics, "Grafana metrics {} are not equals to references metrics {}" \
+        assert operation_metrics == ref_metrics, "Grafana metrics {} are not equal to references metrics {}" \
                                                  "".format(operation_metrics, ref_metrics)
 
     @pytest.mark.parametrize("metrics_attribute", ("memory_usage_platform", "cpu_usage_platform"))
     def test_operations_metrics_cpu_and_memory(self, metrics_attribute):
+        """
+        <b>Description:</b>
+        Checks if metrics for "memory_usage_platform", "cpu_usage_platform" show correct values on Platform Dashboard
+        Summary page.
+
+        <b>Input data:</b>
+        1. Metric names.
+
+        <b>Expected results:</b>
+        Test passes when metric values for "memory_usage_platform", "cpu_usage_platform" on Platform Dashboard Summary
+        page equal values retrieved from Grafana.
+
+        <b>Steps:</b>
+        1. Retrieve reference and platform metrics.
+        2. Verify that reference values equal platform metrics with error margin.
+        """
         step("Testing if reference values equals platform data. Data to check: {}".format(metrics_attribute))
         operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute)
         assert abs(operation_metrics - ref_metrics) < self.MARGIN_ERROR, \

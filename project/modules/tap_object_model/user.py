@@ -90,9 +90,10 @@ class User(object):
             users.append(user)
         return users
 
-    def login(self):
+    def login(self, rest_prefix="/rest"):
         """Return a logged-in API client for this user."""
-        self.client_configuration = ConsoleConfigurationProvider.get(self.username, self.password)
+        self.client_configuration = ConsoleConfigurationProvider.get(self.username, self.password,
+                                                                     rest_prefix=rest_prefix)
         self.client = HttpClientFactory.get(self.client_configuration)
         return self.client
 

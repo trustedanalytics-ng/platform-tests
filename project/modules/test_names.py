@@ -40,7 +40,7 @@ def generate_test_object_name(email=False, short=False, prefix=None, separator="
     now = datetime.now().strftime(str_format)
     name_format = config.test_user_email.replace('@', '+{}{}{}@') if email else "{}{}{}"
     if prefix is None:
-        prefix = socket.gethostname().replace("-", separator).lower()
+        prefix = socket.gethostname().split(".", 1)[0].replace("-", separator).lower()
     return name_format.format(prefix, separator, now)
 
 
