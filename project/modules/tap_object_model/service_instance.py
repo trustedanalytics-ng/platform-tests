@@ -99,11 +99,54 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         assert self.state == TapEntityState.RUNNING, "Instance state is {}, expected {}".format(self.state,
                                                                                                 TapEntityState.RUNNING)
 
+    @retry(AssertionError, tries=60, delay=5)
+    def ensure_stopped(self, client: HttpClient=None):
+        """Waits for the service instance state to change to STOPPED. If somehow
+        the service instance state is FAILUR, it won't be checked and function
+        quits.
+
+        Args:
+            client: HttpClient to use
+
+        Raises:
+            AssertionError if the service state doesn't change to STOPPED
+            ServiceInstanceCreationFailed if service state changes to FAILURE
+        """
+        self._refresh(client=client)
+        if self.state == TapEntityState.FAILURE:
+            raise ServiceInstanceCreationFailed()
+        assert self.state == TapEntityState.STOPPED, \
+               "Instance state is {}, expected {}".format(self.state, TapEntityState.STOPPED)
+
     @retry(AssertionError, tries=10, delay=2)
     def ensure_deleted(self):
         instances = self.get_list()
         this_instance = next((i for i in instances if i.id == self.id), None)
         assert this_instance is None, "Instance is is still on the list with status {}".format(this_instance.state)
+
+    def start(self, client: HttpClient=None):
+        """ Sends the start command to service instance
+
+        Args:
+            client: HttpClient to use
+        """
+        api.start_service(srv_id=self.id, client=self._get_client(client))
+
+    def stop(self, client: HttpClient=None):
+        """ Sends the stop command to service instance
+
+        Args:
+            client: HttpClient to use
+        """
+        api.stop_service(srv_id=self.id, client=self._get_client(client))
+
+    def restart(self, client: HttpClient=None):
+        """Sends the restart command to service instance
+
+        Args:
+            client: HttpClient to use
+        """
+        api.restart_service(srv_id=self.id, client=self._get_client(client))
 
     def delete(self, client: HttpClient=None):
         api.delete_service(service_id=self.id, client=self._get_client(client))

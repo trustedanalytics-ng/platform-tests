@@ -70,7 +70,26 @@ class TestServiceInstantiation:
         assert retrieved_logs
 
     @priority.medium
-    def test_4_delete_service_instance(self, instance, api_service_admin_client):
+    def test_4_stop_start_restart_service(self, instance, api_service_admin_client):
+        """This tests attempts to stop, start and restart the servie instance.
+        """
+        step("Stop the service instance")
+        instance.stop(client=api_service_admin_client)
+        step("Make sure the service instance is stopped")
+        instance.ensure_stopped(client=api_service_admin_client)
+
+        step("Start the service instance")
+        instance.start(client=api_service_admin_client)
+        step("Make sure the service instance is running")
+        instance.ensure_running(client=api_service_admin_client)
+
+        step("Restart the service instance")
+        instance.restart(client=api_service_admin_client)
+        step("Make sure the service instance is running")
+        instance.ensure_running(client=api_service_admin_client)
+
+    @priority.medium
+    def test_5_delete_service_instance(self, instance, api_service_admin_client):
         step("Delete service instance")
         instance.delete(client=api_service_admin_client)
         step("Ensure instance is not on the list")
@@ -78,14 +97,14 @@ class TestServiceInstantiation:
         assertions.assert_not_in_with_retry(instance, ServiceInstance.get_list)
 
     @priority.medium
-    def test_5_cannot_remove_deleted_instance(self, instance, api_service_admin_client):
+    def test_6_cannot_remove_deleted_instance(self, instance, api_service_admin_client):
         step("Try delete not existing service instance")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
                                                 ApiServiceHttpStatus.MSG_KEY_NOT_FOUND, instance.delete,
                                                 client=api_service_admin_client)
 
     @priority.medium
-    def test_6_cannot_retrieve_deleted_instance(self, instance, api_service_admin_client):
+    def test_7_cannot_retrieve_deleted_instance(self, instance, api_service_admin_client):
         step("Try retrieve service instance by providing invalid id")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
                                                 ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(instance.id),
@@ -105,6 +124,15 @@ class TestServiceInstantiationOther:
         assert offering is not None, "{} not found".format(ServiceLabels.REDIS)
         return offering
 
+    @classmethod
+    @pytest.fixture(scope="class")
+    def invalid_instance(cls, api_service_admin_client):
+        """Creates a servicve instance with invalid id"""
+        return ServiceInstance(service_id=TestServiceInstantiationOther.INVALID_ID,
+                               name=None, offering_id=None, plan_id=None,
+                               bindings=None, state=None, offering_label=None,
+                               client=api_service_admin_client)
+
     @priority.medium
     def test_cannot_retrieve_instance_with_invalid_id(self, api_service_admin_client):
         step("Try retrieve service instance by providing invalid id")
@@ -112,6 +140,30 @@ class TestServiceInstantiationOther:
                                                 ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(self.INVALID_ID),
                                                 ServiceInstance.get, service_id=self.INVALID_ID,
                                                 client=api_service_admin_client)
+
+    @priority.medium
+    def test_cannot_stop_service_with_invalid_id(self, invalid_instance):
+        """Verifies that we cannot stop a service with invalid id"""
+        step("Stop the non existent service instance")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
+                                                invalid_instance.stop)
+
+    @priority.medium
+    def test_cannot_start_service_with_invalid_id(self, invalid_instance):
+        """Verifies that we cannot stop a service with invalid id"""
+        step("Start the non existent service instance")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
+                                                invalid_instance.start)
+
+    @priority.medium
+    def test_cannot_restart_service_with_invalid_id(self, invalid_instance):
+        """Verifies that we cannot stop a service with invalid id"""
+        step("Restart the non existent service instance")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
+                                                invalid_instance.restart)
 
     @priority.medium
     def test_cannot_retrieve_logs_with_invalid_id(self, api_service_admin_client):

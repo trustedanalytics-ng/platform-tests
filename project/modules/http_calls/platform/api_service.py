@@ -160,6 +160,46 @@ def restart_application(*, client: HttpClient, app_id: str):
     assert response.status_code == HttpStatus.CODE_OK
     return response.json()
 
+def start_service(*, client: HttpClient, srv_id: str):
+    """ PUT /services/{srv_id}/start
+    Attempts to start service instance
+
+    Args:
+        client: HttpClient to use
+        srv_id: id of the service instance to start
+    """
+    response = client.request(HttpMethod.PUT, path="services/{}/start".format(srv_id),
+                              raw_response=True, msg="Start service instance")
+    assert response.status_code == HttpStatus.CODE_OK
+    return response.json()
+
+
+def stop_service(*, client: HttpClient, srv_id: str):
+    """ PUT /services/{srv_id}/stop
+    Attempts to stop service instance
+
+    Args:
+        client: HttpClient to use
+        srv_id: id of the service instance to stop
+    """
+    response = client.request(HttpMethod.PUT, path="services/{}/stop".format(srv_id),
+                              raw_response=True, msg="Stop service instance")
+    assert response.status_code == HttpStatus.CODE_OK
+    return response.json()
+
+
+def restart_service(*, client: HttpClient, srv_id: str):
+    """ PUT /services/{srv_id}/restart
+    Attempts to restart service instance
+
+    Args:
+        client: HttpClient to use
+        srv_id: id of the service instance to restart
+    """
+    response = client.request(HttpMethod.PUT, path="services/{}/restart".format(srv_id),
+                              raw_response=True, msg="Restart service instance")
+    assert response.status_code == HttpStatus.CODE_OK
+    return response.json()
 
 # --------------------------------------- application bindings --------------------------------------- #
 
