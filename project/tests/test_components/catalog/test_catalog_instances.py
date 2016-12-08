@@ -17,6 +17,7 @@
 import pytest
 
 from modules.constants import CatalogHttpStatus, TapComponent as TAP
+import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import CatalogInstance, CatalogServiceInstance
@@ -29,6 +30,12 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogInstances:
+
+    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
+    SAMPLE_CLASS_ID = "test-class"
+    NEW_CLASS_ID = "new-class-id"
+    WRONG_PREV_CLASS_ID = "prev-test-class-id"
+    INCORRECT_INSTANCE_NAME = "instance!#"
 
     @pytest.fixture(scope="function")
     def catalog_service_instance(self, class_context, catalog_service):
@@ -46,11 +53,10 @@ class TestCatalogInstances:
 
     @priority.high
     def test_update_instance(self, catalog_instance):
-        step("Update the instance")
-        catalog_instance.update(field_name="class_id", value="testupdate")
+        step("Update the instance class id")
+        catalog_instance.update(field_name="classId", value=self.SAMPLE_CLASS_ID)
         step("Check that the instance was updated")
         instance = CatalogInstance.get(instance_id=catalog_instance.id)
-        # assert instance.classId == catalog_instance.classId
         assert catalog_instance == instance
 
     @priority.high
@@ -65,3 +71,61 @@ class TestCatalogInstances:
         step("Check that getting the deleted instance returns an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogInstance.get, instance_id=catalog_instance.id)
+
+    @priority.low
+    def test_cannot_get_not_existing_instance(self):
+        step("Check that getting instance with incorrect id causes an error")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     CatalogInstance.get, instance_id=self.INVALID_ID)
+
+    @priority.low
+    def test_cannot_update_instance_name(self, catalog_instance):
+        step("Check that it's not possible to update instance name")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_INTERNAL_SERVER_ERROR,
+                                     CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS,
+                                     catalog_instance.update, field_name="name", value="Simple3")
+        step("Check that the instance was not updated")
+        instance = CatalogInstance.get(instance_id=catalog_instance.id)
+        assert catalog_instance == instance
+
+    @priority.low
+    @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services, "
+                      "catalog: applications)")
+    def test_cannot_update_instance_with_wrong_prev_class_id_value(self, catalog_instance):
+        step("Check that is't not possible to update instance with incorrect prev_value of class id")
+        expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_CLASS_ID,
+                                                                       catalog_instance.class_id)
+        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+                                     catalog_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
+                                     prev_value=self.WRONG_PREV_CLASS_ID)
+
+    @priority.low
+    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
+                      "(catalog: services, catalog: applications)")
+    def test_cannot_update_instance_instance_without_field(self, catalog_instance):
+        step("Check that it's not possible to update instance without field")
+        expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
+        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+                                     catalog_instance.update, field_name=None, value=self.NEW_CLASS_ID)
+
+    @priority.low
+    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
+                      "(catalog: services, catalog: applications)")
+    def test_cannot_update_instance_without_value(self, catalog_instance):
+        step("Check that it's not possible to update instance without value")
+        expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
+        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+                                     catalog_instance.update, field_name="classId", value=None)
+
+    @priority.low
+    def test_cannot_update_not_existing_instance(self):
+        step("Check that it's not possible to update not-existing instance")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     catalog_api.update_instance, instance_id=self.INVALID_ID, field_name="classId",
+                                     value=self.NEW_CLASS_ID)
+
+    @priority.low
+    def test_cannot_delete_not_existing_instance(self):
+        step("Check that it's not possible to delete not-existing instance")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     catalog_api.delete_instance, instance_id=self.INVALID_ID)

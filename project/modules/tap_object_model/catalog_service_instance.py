@@ -53,10 +53,12 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
         response = catalog_api.get_service_instance(service_id=service_id, instance_id=instance_id)
         return cls._from_response(response)
 
-    def update(self, *, field_name, value):
-        setattr(self, field_name, value)
+    def update(self, *, field_name, value, prev_value=None, username=None):
         catalog_api.update_service_instance(service_id=self.class_id, instance_id=self.id, field_name=field_name,
-                                            value=value)
+                                            value=value, prev_value=prev_value, username=username)
+        if field_name == "classId":
+            field_name = "class_id"
+        setattr(self, field_name, value)
 
     def delete(self):
         catalog_api.delete_service_instance(service_id=self.class_id, instance_id=self.id)

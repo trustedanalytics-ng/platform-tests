@@ -164,13 +164,16 @@ def delete_instance(*, instance_id):
     return response
 
 
-def update_instance(*, instance_id, field_name, value):
+def update_instance(*, instance_id, field_name, value, prev_value=None, username=None):
     """ PATCH /instances/{instance_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prev_value": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="instances/{}".format(instance_id),
                                      body=body,
@@ -278,13 +281,16 @@ def get_service_instance(*, service_id, instance_id):
                                  msg="CATALOG: get service instance")
 
 
-def update_service_instance(*, service_id, instance_id, field_name, value):
+def update_service_instance(*, service_id, instance_id, field_name, value, prev_value=None, username=None):
     """ PATCH /services/{service_id}/instances/{instance_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prevValue": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="services/{}/instances/{}".format(service_id, instance_id),
                                      body=body,
@@ -443,13 +449,16 @@ def get_application_instance(*, application_id, instance_id):
                                  msg="CATALOG: get application instance")
 
 
-def update_application_instance(*, application_id, instance_id, field_name, value):
+def update_application_instance(*, application_id, instance_id, field_name, value, prev_value=None, username=None):
     """ PATCH /applications/{application_id}/instances/{instance_id} """
     body = [{
         "op": "Update",
         "field": field_name,
-        "value": value
+        "value": value,
+        "prevValue": prev_value,
+        "username": username
     }]
+    body = [{k: v for k, v in body[0].items() if v is not None}]
     response = _get_client().request(HttpMethod.PATCH,
                                      path="applications/{}/instances/{}".format(application_id, instance_id),
                                      body=body,

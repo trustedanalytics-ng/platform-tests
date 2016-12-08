@@ -48,10 +48,13 @@ class CatalogApplicationInstance(CatalogInstanceSuperClass):
         response = catalog_api.get_application_instance(application_id=application_id, instance_id=instance_id)
         return cls._from_response(response)
 
-    def update(self, *, field_name, value):
-        setattr(self, field_name, value)
+    def update(self, *, field_name, value, prev_value=None, username=None):
         catalog_api.update_application_instance(application_id=self.class_id, instance_id=self.id,
-                                                field_name=field_name, value=value)
+                                                field_name=field_name, value=value, prev_value=prev_value,
+                                                username=username)
+        if field_name == "classId":
+            field_name = "class_id"
+        setattr(self, field_name, value)
 
     def delete(self):
         catalog_api.delete_application_instance(application_id=self.class_id, instance_id=self.id)

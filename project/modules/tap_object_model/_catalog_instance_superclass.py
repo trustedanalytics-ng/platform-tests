@@ -28,7 +28,7 @@ class CatalogInstanceSuperClass(object):
     Base class for all CatalogInstance* classes.
     """
 
-    _COMPARABLE_ATTRIBUTES = ["id", "name", "type", "class_id", "state"]
+    _COMPARABLE_ATTRIBUTES = ["id", "name", "type", "class_id"]
     _STOP_STATE_SEQUENCE = [TapEntityState.STOP_REQ, TapEntityState.STOPPING, TapEntityState.STOPPED]
 
     def __init__(self, instance_id: str, name: str, instance_type: str, class_id: str, state: str,

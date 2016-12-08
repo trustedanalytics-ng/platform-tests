@@ -216,6 +216,7 @@ class CatalogHttpStatus(HttpStatus):
     MSG_KEY_PLAN_ID_NOT_FOUND = "key PLAN_ID not found!"
     MSG_SERVICE_EXISTS = "service with name: {} already exists!"
     MSG_APPLICATION_EXISTS = "application \\\"{}\\\" already exists"
+    MSG_INSTANCE_EXISTS = "instance with name: {} already exists!"
     MSG_ID_HAS_TO_BE_EMPTY = "Id field has to be empty!"
     MSG_EVENT_DOES_NOT_EXIST = "event {} does not exist"
     MSG_COMPARE_FAILED = "101: Compare failed ([\\\"{}\\\" != \\\"{}\\\"]"
@@ -223,6 +224,8 @@ class CatalogHttpStatus(HttpStatus):
     MSG_KEY_EXISTS = "Key already exists"
     MSG_INCORRECT_TYPE = "json: cannot unmarshal string into Go value of type int"
     MSG_APP_FORBIDDEN_CHARACTERS = "field Name has incorrect value: {}"
+    MSG_SERVICE_DOES_NOT_EXIST = "service with id: {} does not exists!"
+    MSG_APPLICATION_DOES_NOT_EXIST = "application with id: {} does not exists!"
 
 
 class ApiServiceHttpStatus(HttpStatus):
