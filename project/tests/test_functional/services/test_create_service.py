@@ -82,6 +82,9 @@ class TestCreateService:
         instance.ensure_running()
         assert instance.offering_id == service.id
         assert instance.offering_label == service.label
+        step("Stop service instance")
+        instance.stop()
+        instance.ensure_stopped()
         step("Delete service instance")
         instance.delete()
         instance.ensure_deleted()

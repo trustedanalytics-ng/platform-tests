@@ -190,6 +190,11 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         plan_id = plan_data["metadata"]["guid"]
         return offering_id, plan_id
 
+    def cleanup(self):
+        self.stop()
+        self.ensure_stopped()
+        self.delete()
+
 
 class AtkInstance(ServiceInstance):
 

@@ -40,6 +40,9 @@ class TestTapServiceInstance:
         api_service_instances_list = ServiceInstance.get_list()
         step("Check if instance is on the list")
         assert instance in api_service_instances_list
+        step("Stop service instance")
+        instance.stop()
+        instance.ensure_stopped()
         step("Delete service instance")
         instance.delete()
         step("Ensure instance is not on the list")

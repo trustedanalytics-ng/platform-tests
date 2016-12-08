@@ -81,6 +81,9 @@ class TestGearpumpConsole:
 
     @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
     def test_4_delete_gearpump_instance(self):
+        step("Stop service instance")
+        self.gearpump.instance.stop()
+        self.gearpump.instance.ensure_stopped()
         step("Delete gearpump instance")
         self.gearpump.instance.delete()
         step("Ensure that instance is running")

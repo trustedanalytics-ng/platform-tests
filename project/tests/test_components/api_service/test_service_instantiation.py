@@ -90,6 +90,9 @@ class TestServiceInstantiation:
 
     @priority.medium
     def test_5_delete_service_instance(self, instance, api_service_admin_client):
+        step("Stop service instance")
+        instance.stop(client=api_service_admin_client)
+        instance.ensure_stopped(client=api_service_admin_client)
         step("Delete service instance")
         instance.delete(client=api_service_admin_client)
         step("Ensure instance is not on the list")
