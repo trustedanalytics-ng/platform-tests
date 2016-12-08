@@ -103,12 +103,7 @@ class DataSet(object):
                    source_uri=source["sourceUri"], target_uri=source["targetUri"])
 
     def api_publish(self, client=None):
-        return dataset_publisher.api_publish_dataset(category=self.category, creation_time=self.creation_time,
-                                                     data_sample=self.data_sample, format=self.format,
-                                                     is_public=self.is_public, org_guid=self.org_guid,
-                                                     record_count=self.record_count, size=self.size,
-                                                     source_uri=self.source_uri, target_uri=self.target_uri,
-                                                     title=self.title, client=client)
+        return dataset_publisher.api_publish_dataset(dataset_id=self.id, client=client)
 
     def api_update(self, creation_time=None, target_uri=None, category=None, format=None, record_count=None,
                    is_public=None, org_guid=None, source_uri=None, size=None, data_sample=None, title=None,
