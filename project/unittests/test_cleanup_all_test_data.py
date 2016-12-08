@@ -16,6 +16,7 @@
 from mock import Mock, patch
 
 from cleanup_all_test_data import cleanup_test_data
+from modules.exceptions import UnexpectedResponseError
 from modules.tap_object_model import DataSet, Invitation, Transfer, User, Application, ServiceInstance, \
     ServiceOffering, ScoringEngineModel
 from modules.test_names import generate_test_object_name
@@ -41,14 +42,21 @@ mock_model.name = generate_test_object_name()
 @patch.object(ServiceInstance, 'get_list', lambda: [mock_service])
 @patch.object(ServiceOffering, 'get_list', lambda: [mock_offering])
 @patch.object(ScoringEngineModel, 'get_list', lambda **kwargs: [mock_model])
-def test_dataset_is_cleaned_up():
-    cleanup_test_data()
+class TestCleanupAllTestData:
 
-    mock_data_set.cleanup.assert_any_call()
-    mock_transfer.cleanup.assert_any_call()
-    mock_user.cleanup.assert_any_call()
-    mock_invitation.cleanup.assert_any_call()
-    mock_application.cleanup.assert_any_call()
-    mock_service.cleanup.assert_any_call()
-    mock_offering.cleanup.assert_any_call()
-    mock_model.cleanup.assert_any_call()
+    def test_dataset_is_cleaned_up(self):
+        cleanup_test_data()
+
+        mock_data_set.cleanup.assert_any_call()
+        mock_transfer.cleanup.assert_any_call()
+        mock_user.cleanup.assert_any_call()
+        mock_invitation.cleanup.assert_any_call()
+        mock_application.cleanup.assert_any_call()
+        mock_service.cleanup.assert_any_call()
+        mock_offering.cleanup.assert_any_call()
+        mock_model.cleanup.assert_any_call()
+
+    def test_should_not_raise_unexpected_response_error(self):
+        with patch('tests.fixtures.fixtures.tear_down_test_objects') as tear_down_function_mock:
+            tear_down_function_mock.side_effect = UnexpectedResponseError(500, 'error_msg')
+            cleanup_test_data()

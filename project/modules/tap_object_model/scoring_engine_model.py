@@ -17,6 +17,7 @@
 import functools
 
 import modules.http_calls.platform.model_catalog as model_catalog_api
+from modules.test_names import generate_test_object_name
 
 
 @functools.total_ordering
@@ -69,6 +70,8 @@ class ScoringEngineModel(object):
     def create(cls, context, *, org_guid, description=None, name=None, creation_tool=None, revision=None,
                algorithm=None, artifacts=None, added_by=None, added_on=None, modified_by=None, modified_on=None,
                client=None):
+        if not name:
+            name = generate_test_object_name()
         response = model_catalog_api.insert_model(org_guid=org_guid, name=name, creation_tool=creation_tool,
                                                   revision=revision, algorithm=algorithm, description=description,
                                                   artifacts=artifacts, added_by=added_by, added_on=added_on,

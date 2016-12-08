@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from modules.exceptions import UnexpectedResponseError
 from modules.hive import Hive
 from modules.tap_logger import get_logger
 from modules.tap_object_model import DataSet, Invitation, Transfer, User, Application, ServiceInstance, \
@@ -48,48 +49,34 @@ def remove_hive_databases():
         logger.info("No database to remove.")
 
 
+def _cleanup_test_data(name, objects_list, name_attribute):
+    try:
+        test_objects = []
+        for test_object in objects_list:
+            object_name = getattr(test_object, name_attribute)
+            if is_test_object_name(object_name):
+                test_objects.append(test_object)
+        log_deleted_objects(test_objects, name)
+        fixtures.tear_down_test_objects(test_objects)
+    except UnexpectedResponseError as e:
+        logger.error('Cannot cleanup {}s, reason: {}'.format(name, e))
+
+
 def cleanup_test_data():
     core_org_guid = core_org().guid
-
-    all_data_sets = DataSet.api_get_list()
-    test_data_sets = [x for x in all_data_sets if is_test_object_name(x.title)]
-    log_deleted_objects(test_data_sets, "data set")
-    fixtures.tear_down_test_objects(test_data_sets)
-
-    all_transfers = Transfer.api_get_list()
-    test_transfers = [x for x in all_transfers if is_test_object_name(x.title)]
-    log_deleted_objects(test_transfers, "transfer")
-    fixtures.tear_down_test_objects(test_transfers)
-
-    all_users = User.get_list_in_organization(org_guid=core_org_guid)
-    test_users = [x for x in all_users if is_test_object_name(x.username)]
-    log_deleted_objects(test_users, "user")
-    fixtures.tear_down_test_objects(test_users)
-
-    all_pending_invitations = Invitation.api_get_list()
-    test_invitations = [x for x in all_pending_invitations if is_test_object_name(x.username)]
-    log_deleted_objects(test_invitations, "invitation")
-    fixtures.tear_down_test_objects(test_invitations)
-
-    all_applications = Application.get_list()
-    test_applications = [x for x in all_applications if is_test_object_name(x.name)]
-    log_deleted_objects(test_applications, "application")
-    fixtures.tear_down_test_objects(test_applications)
-
-    all_services = ServiceInstance.get_list()
-    test_services = [x for x in all_services if is_test_object_name(x.name)]
-    log_deleted_objects(test_services, "service")
-    fixtures.tear_down_test_objects(test_services)
-
-    all_offerings = ServiceOffering.get_list()
-    test_offerings = [x for x in all_offerings if is_test_object_name(x.label)]
-    log_deleted_objects(test_offerings, "offering")
-    fixtures.tear_down_test_objects(test_offerings)
-
-    all_models = ScoringEngineModel.get_list(org_guid=core_org_guid)
-    test_models = [x for x in all_models if is_test_object_name(x.name)]
-    log_deleted_objects(test_models, 'scoring engine model')
-    fixtures.tear_down_test_objects(test_models)
+    test_object_models = [
+        {'name': 'data set', 'objects_list': DataSet.api_get_list(), 'name_attribute': 'title'},
+        {'name': 'transfer', 'objects_list': Transfer.api_get_list(), 'name_attribute': 'title'},
+        {'name': 'user', 'objects_list': User.get_list_in_organization(org_guid=core_org_guid), 'name_attribute': 'username'},
+        {'name': 'invitation', 'objects_list': Invitation.api_get_list(), 'name_attribute': 'username'},
+        {'name': 'application', 'objects_list': Application.get_list(), 'name_attribute': 'name'},
+        {'name': 'service', 'objects_list': ServiceInstance.get_list(), 'name_attribute': 'name'},
+        {'name': 'offering', 'objects_list': ServiceOffering.get_list(), 'name_attribute': 'label'},
+        {'name': 'scoring engine model', 'objects_list': ScoringEngineModel.get_list(org_guid=core_org_guid),
+         'name_attribute': 'name'}
+    ]
+    for model in test_object_models:
+        _cleanup_test_data(**model)
 
     # TODO: remove hive dbs
 

@@ -33,6 +33,7 @@ from modules.tap_object_model import Application, Organization, ServiceOffering,
     ScoringEngineModel, ModelArtifact
 from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
+from modules.test_names import generate_test_object_name
 from tap_component_config import api_service
 
 
@@ -97,15 +98,15 @@ def test_user_clients(test_org_admin_client, test_org_user_client):
 @pytest.fixture(scope="function")
 def sample_model(request, context, core_org):
     log_fixture("test_model: Create test model")
-    return ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model",
-                                     revision="revision", algorithm="algorithm", creation_tool="creationTool")
+    return ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model", revision="revision",
+                                     algorithm="algorithm", creation_tool="creationTool")
 
 
 @pytest.fixture(scope="function")
 def model_with_artifact(request, context, core_org):
     log_fixture("test_model: Create test model and add artifact")
-    model = ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model",
-                                      revision="revision", algorithm="algorithm", creation_tool="creationTool")
+    model = ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model", revision="revision",
+                                      algorithm="algorithm", creation_tool="creationTool")
     ModelArtifact.upload_artifact(model_id=model.id, filename="example_artifact.txt",
                                   actions=[ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]])
     return ScoringEngineModel.get(model_id=model.id)
