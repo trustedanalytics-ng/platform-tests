@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from modules.test_names import generate_test_object_name
 
 MODEL_METADATA = {
-    "name": "test-model",
+    "name": generate_test_object_name(),
     "description": "Test model description",
     "revision": "revision",
     "algorithm": "algorithm",

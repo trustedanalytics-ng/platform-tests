@@ -97,14 +97,14 @@ def test_user_clients(test_org_admin_client, test_org_user_client):
 @pytest.fixture(scope="function")
 def sample_model(request, context, core_org):
     log_fixture("test_model: Create test model")
-    return ScoringEngineModel.create(context, org_guid=core_org.guid, name="test-model", description="Test model",
+    return ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model",
                                      revision="revision", algorithm="algorithm", creation_tool="creationTool")
 
 
 @pytest.fixture(scope="function")
 def model_with_artifact(request, context, core_org):
     log_fixture("test_model: Create test model and add artifact")
-    model = ScoringEngineModel.create(context, org_guid=core_org.guid, name="test-model", description="Test model",
+    model = ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model",
                                       revision="revision", algorithm="algorithm", creation_tool="creationTool")
     ModelArtifact.upload_artifact(model_id=model.id, filename="example_artifact.txt",
                                   actions=[ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]])

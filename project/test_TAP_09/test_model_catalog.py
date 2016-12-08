@@ -19,13 +19,14 @@ import pytest
 from modules.constants import Guid, HttpStatus
 from modules.markers import priority
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
+from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
 
 
 class TestModelAdd:
 
     TEST_METADATA = {
-        "name": "test-model",
+        "name": generate_test_object_name(),
         "description": "Test model description",
         "revision": "revision",
         "algorithm": "algorithm",

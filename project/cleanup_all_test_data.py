@@ -78,7 +78,7 @@ def cleanup_test_data():
 
     all_services = ServiceInstance.get_list()
     test_services = [x for x in all_services if is_test_object_name(x.name)]
-    log_deleted_objects(test_applications, "service")
+    log_deleted_objects(test_services, "service")
     fixtures.tear_down_test_objects(test_services)
 
     all_offerings = ServiceOffering.get_list()
