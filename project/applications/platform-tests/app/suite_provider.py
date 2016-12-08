@@ -15,9 +15,10 @@
 #
 
 import ast
-import os
 import dateutil.parser
 import math
+import os
+import re
 
 from .config import Paths
 
@@ -33,6 +34,8 @@ class SuiteProvider(object):
         "id": "project.tests.test_smoke.test_functional",
         "title": SUITE_NAME,
     }]
+
+    DOCSTRING_NAME_PATTERN = re.compile("description[^>]*>([^<]*)<", re.IGNORECASE)
 
     @classmethod
     def get_list(cls, last_runs) -> list:
@@ -55,8 +58,8 @@ class SuiteProvider(object):
             file_contents = f.read()
         module = ast.parse(file_contents)
         functions = [node for node in module.body if isinstance(node, ast.FunctionDef)]
-        docs = [ast.get_docstring(f) for f in functions if f.name.startswith(cls.TEST_PREFIX)]
-        return docs
+        names = [cls._get_test_name(f) for f in functions if f.name.startswith(cls.TEST_PREFIX)]
+        return names
 
     @classmethod
     def _get_average_run_time(cls, suite_documents):
@@ -75,3 +78,14 @@ class SuiteProvider(object):
         minutes = math.floor(execution_time / 60)
         seconds = int(execution_time - (minutes * 60))
         return "{} Minutes {} Seconds".format(minutes, seconds)
+
+    @classmethod
+    def _get_test_name(cls, function):
+        docstring = ast.get_docstring(function)
+        if docstring:
+            match = cls.DOCSTRING_NAME_PATTERN.search(docstring)
+            if match:
+                function_name_from_docs = match.group(1).strip()
+                if function_name_from_docs:
+                    return function_name_from_docs
+        return function.name
