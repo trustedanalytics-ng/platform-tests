@@ -100,7 +100,7 @@ class CliApplication(CliObjectSuperclass):
         # Stop rerunning when the app is in FAILURE state.
         if app[self.FIELD_STATE] == TapEntityState.FAILURE and state != app[self.FIELD_STATE]:
             raise ValueError(msg)
-        assert app[self.FIELD_STAlTE] == state, msg
+        assert app[self.FIELD_STATE] == state, msg
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_is_ready(self):
