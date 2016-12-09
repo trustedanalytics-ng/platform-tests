@@ -47,7 +47,9 @@ class CatalogInstanceSuperClass(object):
         return self.id < other.id
 
     def __repr__(self):
-        return "{} (name={}, id={})".format(self.__class__.__name__,  self.name, self.id)
+        return "{} (name={}, id={}, type={}, class_id={}, state={})".format(
+                self.__class__.__name__, self.name, self.id, self.type,
+                self.class_id, self.state)
 
     @classmethod
     def _from_response(cls, response: dict):
