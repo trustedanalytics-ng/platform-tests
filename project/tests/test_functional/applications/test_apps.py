@@ -71,6 +71,9 @@ class TestTapApp:
         step("Start the application and check that it has started")
         app.start()
         app.ensure_running()
+        step("Stop application before delete")
+        app.stop()
+        app.ensure_stopped()
         step("Delete the application and check that it doesn't exist")
         app.delete()
         assertions.assert_not_in_by_id_with_retry(app.id, Application.get_list)
@@ -115,6 +118,9 @@ class TestTapApp:
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_delete_app(self, sample_java_app):
+        step("Stop application")
+        sample_java_app.stop()
+        sample_java_app.ensure_stopped()
         step("Delete the application and check that it doesn't exist")
         sample_java_app.delete()
         assertions.assert_not_in_by_id_with_retry(sample_java_app.id, Application.get_list)

@@ -35,7 +35,7 @@ class ApiServiceApplicationFlow:
     def sample_application(self, class_context, sample_app_path, api_service_admin_client):
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
-        manifest_params = {"type" : self.APP_TYPE}
+        manifest_params = {"type": self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         log_fixture("Push sample application and check it's running")
@@ -50,7 +50,7 @@ class ApiServiceApplicationFlow:
     def test_push_and_delete_application(self, context, sample_app_path, api_service_admin_client):
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
-        manifest_params = {"type" : self.APP_TYPE}
+        manifest_params = {"type": self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         step("Push sample application")
@@ -59,6 +59,9 @@ class ApiServiceApplicationFlow:
                                        client=api_service_admin_client)
         step("Check application is running")
         application.ensure_running()
+        step("Stop application")
+        application.stop()
+        application.ensure_stopped()
         step("Delete application")
         application.delete()
         step("Check that application is not on the list")

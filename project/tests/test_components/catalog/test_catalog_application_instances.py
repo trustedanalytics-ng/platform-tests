@@ -52,6 +52,9 @@ class TestCatalogApplicationInstances:
         instances = CatalogApplicationInstance.get_list_for_application(application_id=catalog_application.id)
         assert app_instance in instances
 
+        step("Stop application")
+        app_instance.stop()
+        app_instance.ensure_in_state(expected_state=TapEntityState.STOPPED)
         step("Delete the application instance")
         app_instance.delete()
 

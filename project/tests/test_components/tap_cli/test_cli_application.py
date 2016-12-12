@@ -182,7 +182,7 @@ class TestPythonCliApp:
     def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory)
-        manifest_params = {"type" : self.APP_TYPE}
+        manifest_params = {"type": self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         step("Push application")
@@ -196,6 +196,9 @@ class TestPythonCliApp:
         step("Ensure app is ready")
         application.ensure_app_is_ready()
 
+        step("Stop application")
+        application.stop()
+        application.ensure_app_state(state=TapEntityState.STOPPED)
         step("Delete app")
         application.delete()
         step("Ensure app is not on the app list")
@@ -205,7 +208,7 @@ class TestPythonCliApp:
     def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory_with_symlinks)
-        manifest_params = {"type" : self.APP_TYPE}
+        manifest_params = {"type": self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         step("Push application")
@@ -219,6 +222,9 @@ class TestPythonCliApp:
         step("Ensure app is ready")
         application.ensure_app_is_ready()
 
+        step("Stop application")
+        application.stop()
+        application.ensure_app_state(state=TapEntityState.STOPPED)
         step("Delete app")
         application.delete()
         step("Ensure app is not on the app list")

@@ -26,7 +26,7 @@ class CliApplication(CliObjectSuperclass):
     _COMPARABLE_ATTRIBUTES = ["name", "app_type"]
     EXPECTED_PUSH_HEADERS = ["NAME", "IMAGE ID", "DESCRIPTION", "REPLICATION"]
     EXPECTED_DELETE_BODY = 'OK'
-    EXPECTED_SUCCESS_RESPONSE = 'success'
+    EXPECTED_SUCCESS_RESPONSE = 'Accepted'
 
     FIELD_ID = "id"
     FIELD_NAME = "NAME"
@@ -122,3 +122,9 @@ class CliApplication(CliObjectSuperclass):
         assert isinstance(app, dict)
         assert app[self.FIELD_ID] is not None
         return app[self.FIELD_ID]
+
+    def cleanup(self):
+        if self.get_details()[self.FIELD_STATE] == TapEntityState.RUNNING:
+            self.stop()
+            self.ensure_app_state(TapEntityState.STOPPED)
+        self.delete()
