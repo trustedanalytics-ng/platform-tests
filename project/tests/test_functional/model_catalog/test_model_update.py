@@ -22,12 +22,13 @@ from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tests.fixtures.assertions import assert_raises_http_exception
+from modules.test_names import generate_test_object_name
 
 
 class TestModelUpdate:
 
     UPDATED_METADATA = {
-        "name": "updated-model",
+        "name": generate_test_object_name(),
         "revision": "updated-revision",
         "algorithm": "updated-algorithm",
         "creation_tool": "updated-creationTool",
@@ -55,27 +56,24 @@ class TestModelUpdate:
 
     @priority.low
     def test_cannot_update_model_with_non_existing_guid(self):
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND, ModelCatalogHttpStatus.MSG_NOT_FOUND,
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_NOT_FOUND,
+                                     ModelCatalogHttpStatus.MSG_MODEL_NOT_FOUND.format("ID"),
                                      model_catalog_api.update_model, model_id=Guid.NON_EXISTING_GUID,
                                      **self.UPDATED_METADATA)
 
-    @pytest.mark.bugs("DPNG-11760 Internal server error on updating model")
     @priority.low
     def test_cannot_update_model_with_incorrect_guid(self):
-        invalid_guid = "invalid-model-id"
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_BAD_REQUEST, ModelCatalogHttpStatus.MSG_BAD_REQUEST,
+        invalid_guid = Guid.INVALID_GUID
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_BAD_REQUEST,
+                                     ModelCatalogHttpStatus.MSG_INVALID_UUID.format(invalid_guid),
                                      model_catalog_api.update_model, model_id=invalid_guid, **self.UPDATED_METADATA)
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_update_model_metadata(self, sample_model, test_user_clients, role):
+    def test_patch_model_metadata(self, sample_model, test_user_clients, role):
         step("Update model name and creation_tool")
         client = test_user_clients[role]
-        metadata = {
-            "name": "updated-model",
-            "creation_tool": "updated-tool"
-        }
-        sample_model.patch(client=client, **metadata)
+        sample_model.patch(client=client, **self.UPDATED_METADATA)
         step("Get model and check that metadata are updated")
         model = ScoringEngineModel.get(model_id=sample_model.id)
         assert model == sample_model
@@ -99,11 +97,26 @@ class TestModelUpdate:
         assert len(incorrect_metadata) == 0, "Incorrect metadata: {}".format(", ".join(incorrect_metadata))
         assert model == sample_model
 
-    @pytest.mark.parametrize("missing_param", ("name", "creation_tool"))
     @priority.medium
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
-    def test_cannot_update_metadata_with_empty_name_filed(self, missing_param, sample_model):
+    def test_can_patch_metadata_without_all_fields(self, sample_model):
+        metadata = self.UPDATED_METADATA.copy()
+        fields_to_not_update = {"creation_tool", "name"}
+        for key in fields_to_not_update:
+            if key in fields_to_not_update:
+                del metadata[key]
+        sample_model.patch(**metadata)
+        updated_model = ScoringEngineModel.get(model_id=sample_model.id)
+        assert updated_model.name == sample_model.name
+        assert updated_model.creation_tool == sample_model.creation_tool
+
+    @priority.medium
+    @pytest.mark.parametrize("missing_param", ["name", "creation_tool"])
+    def test_cannot_update_metadata_without_required_field(self, missing_param, sample_model):
         metadata = self.UPDATED_METADATA.copy()
         del metadata[missing_param]
-        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_BAD_REQUEST, ModelCatalogHttpStatus.MSG_BAD_REQUEST,
-                                     sample_model.patch, **metadata)
+        if missing_param == "creation_tool":
+            missing_param = "creationTool"
+        assert_raises_http_exception(ModelCatalogHttpStatus.CODE_BAD_REQUEST,
+                                     ModelCatalogHttpStatus.MSG_MISSING_PARAM.format(missing_param),
+                                     sample_model.update, **metadata)
+

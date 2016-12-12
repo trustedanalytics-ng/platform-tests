@@ -108,7 +108,7 @@ def model_with_artifact(request, context, core_org):
     model = ScoringEngineModel.create(context, org_guid=core_org.guid, description="Test model", revision="revision",
                                       algorithm="algorithm", creation_tool="creationTool")
     ModelArtifact.upload_artifact(model_id=model.id, filename="example_artifact.txt",
-                                  actions=[ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]])
+                                  actions=[ModelArtifact.ARTIFACT_ACTIONS["publish_jar_scoring_engine"]])
     return ScoringEngineModel.get(model_id=model.id)
 
 

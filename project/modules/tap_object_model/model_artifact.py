@@ -25,10 +25,9 @@ class ModelArtifact(object):
     _COMPARABLE_ATTRIBUTES = ["id", "location", "filename", "actions"]
     _UPDATABLE_METADATA = ["filename", "actions"]
 
-    # TODO change actions - when DPNG-11673 is done
     ARTIFACT_ACTIONS = {
-        "publish_to_tap_scoring_engine": "PUBLISH_TO_TAP_SCORING_ENGINE",
-        "publish_to_marketplace": "PUBLISH_TO_MARKETPLACE",
+        "publish_tap_scoring_engine": "PUBLISH_TAP_SCORING_ENGINE",
+        "publish_jar_scoring_engine": "PUBLISH_JAR_SCORING_ENGINE"
     }
 
     def __init__(self, *, artifact_id, filename, actions, location):

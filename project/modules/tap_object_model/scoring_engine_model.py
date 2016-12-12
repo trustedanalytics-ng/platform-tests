@@ -70,7 +70,7 @@ class ScoringEngineModel(object):
     def create(cls, context, *, org_guid, description=None, name=None, creation_tool=None, revision=None,
                algorithm=None, artifacts=None, added_by=None, added_on=None, modified_by=None, modified_on=None,
                client=None):
-        if not name:
+        if name is None:
             name = generate_test_object_name()
         response = model_catalog_api.insert_model(org_guid=org_guid, name=name, creation_tool=creation_tool,
                                                   revision=revision, algorithm=algorithm, description=description,

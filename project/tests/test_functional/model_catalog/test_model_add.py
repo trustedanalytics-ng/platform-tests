@@ -23,20 +23,21 @@ from modules.tap_logger import step
 from modules.tap_object_model.model_artifact import ModelArtifact
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tests.fixtures.assertions import assert_raises_http_exception
+import modules.http_calls.platform.model_catalog as model_catalog_api
 
 
 class TestModelAdd:
 
     ARTIFACT_METADATA = {
         "filename": "example_artifact.txt",
-        "actions": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]]
+        "actions": [ModelArtifact.ARTIFACT_ACTIONS["publish_jar_scoring_engine"]]
     }
 
     @pytest.fixture(scope="class")
     def actions(self):
         return {
-            "publish_to_marketplace": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_marketplace"]],
-            "publish_to_tap_scoring_engine": [ModelArtifact.ARTIFACT_ACTIONS["publish_to_tap_scoring_engine"]]
+            "publish_jar_scoring_engine": [ModelArtifact.ARTIFACT_ACTIONS["publish_jar_scoring_engine"]],
+            "publish_tap_scoring_engine": [ModelArtifact.ARTIFACT_ACTIONS["publish_tap_scoring_engine"]]
         }
 
     @priority.high
@@ -49,10 +50,18 @@ class TestModelAdd:
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
         assert new_model in models
 
-    @pytest.mark.bugs("DPNG-11756 Internal server error when creating model for incorrect organization")
+    @pytest.mark.bugs("DPNG-13599 Adding model with empty or spaces only name is possible")
+    @priority.high
+    def test_cannot_add_new_model_to_organization_with_empty_name(self, context):
+        step("Add model to organization")
+        metadata = MODEL_METADATA.copy()
+        metadata["name"] = "    "
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, ScoringEngineModel.create,
+                                     context, org_guid=Guid.CORE_ORG_GUID, **metadata)
+
     @priority.low
     def test_cannot_add_model_to_org_with_incorrect_guid(self, context):
-        incorrect_org = "incorrect-org-guid"
+        incorrect_org = Guid.INVALID_GUID
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
                                      ScoringEngineModel.create, context, org_guid=incorrect_org,
                                      **MODEL_METADATA)
@@ -78,15 +87,14 @@ class TestModelAdd:
         models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
         assert test_model in models
 
-    @pytest.mark.bug(reason="Not allow to insert model without name is not implemented yet - DPNG-11673")
     @priority.medium
     @pytest.mark.parametrize("missing_param", ("name", "creation_tool"))
-    def test_cannot_add_model_without_a_required_parameter(self, context, missing_param):
+    def test_cannot_add_model_without_a_required_parameter(self, missing_param):
         step("Check that adding a model without a required parameter ({}) causes an error".format(missing_param))
         metadata = MODEL_METADATA.copy()
         del metadata[missing_param]
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     ScoringEngineModel.create, context, org_guid=Guid.CORE_ORG_GUID,
+                                     model_catalog_api.insert_model, org_guid=Guid.CORE_ORG_GUID,
                                      **metadata)
 
     @priority.low
@@ -102,7 +110,6 @@ class TestModelAdd:
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_add_new_artifact_to_model(self, sample_model, test_user_clients, role):
         client = test_user_clients[role]
         step("Add new artifact to model using {}".format(role))
@@ -114,8 +121,7 @@ class TestModelAdd:
         assert artifact in model_artifacts
 
     @priority.low
-    @pytest.mark.parametrize("artifact_actions_key", ("publish_to_marketplace", "publish_to_tap_scoring_engine"))
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
+    @pytest.mark.parametrize("artifact_actions_key", ("publish_jar_scoring_engine", "publish_tap_scoring_engine"))
     def test_add_new_artifact_to_model_different_actions(self, sample_model, artifact_actions_key, actions):
         action = actions[artifact_actions_key]
         artifact_metadata = self.ARTIFACT_METADATA.copy()
@@ -143,7 +149,6 @@ class TestModelAdd:
         assert artifact_actions == expected_actions
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_cannot_add_new_artifact_to_non_existing_model(self):
         non_existing_model = Guid.NON_EXISTING_GUID
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
@@ -152,7 +157,6 @@ class TestModelAdd:
 
     @priority.medium
     @pytest.mark.parametrize("role", ["admin", "user"])
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_artifact_file_has_been_properly_added(self, sample_model, test_user_clients, role):
         client = test_user_clients[role]
         step("Add new artifact to model using {}".format(role))
@@ -163,7 +167,7 @@ class TestModelAdd:
         assert added_file_content == expected_content
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
+    @pytest.mark.bugs("DPNG-13588 Internal server error when add artifact with invalid action")
     def test_cannot_add_artifact_with_invalid_action(self, sample_model):
         step("Try to add artifact with invalid action")
         artifact_metadata = self.ARTIFACT_METADATA.copy()
@@ -172,25 +176,24 @@ class TestModelAdd:
                                      ModelArtifact.upload_artifact, model_id=sample_model.id,
                                      **artifact_metadata)
 
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     @priority.low
-    def test_cannot_add_artifact_with_two_actions(self, sample_model):
+    def test_can_add_artifact_with_two_actions(self, sample_model):
         step("Try to add artifact with two actions")
         artifact_metadata = self.ARTIFACT_METADATA.copy()
-        artifact_metadata["actions"].append(ModelArtifact.ARTIFACT_ACTIONS["publish_to_tap_scoring_engine"])
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     ModelArtifact.upload_artifact, model_id=sample_model.id,
-                                     **artifact_metadata)
+        artifact_metadata["actions"].append(ModelArtifact.ARTIFACT_ACTIONS["publish_tap_scoring_engine"])
+        new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **artifact_metadata)
+        assert sorted(new_artifact.actions) == sorted(artifact_metadata["actions"])
 
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     @priority.low
-    def test_cannot_add_more_than_one_artifacts_to_model(self, sample_model):
+    def test_can_add_more_than_one_artifacts_to_model(self, sample_model):
         step("Add new artifact to model")
-        ModelArtifact.upload_artifact(model_id=sample_model.id, **self.ARTIFACT_METADATA)
+        uploaded_first_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **self.ARTIFACT_METADATA)
+        first_artifact = ModelArtifact.get_artifact(model_id=sample_model.id, artifact_id=uploaded_first_artifact.id)
         step("Try to add second artifact to model")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     ModelArtifact.upload_artifact, model_id=sample_model.id,
-                                     **self.ARTIFACT_METADATA)
+        uploaded_second_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **self.ARTIFACT_METADATA)
+        second_artifact = ModelArtifact.get_artifact(model_id=sample_model.id, artifact_id=uploaded_second_artifact.id)
+        assert first_artifact in ScoringEngineModel.get(model_id=sample_model.id).artifacts
+        assert second_artifact in ScoringEngineModel.get(model_id=sample_model.id).artifacts
 
 
 

@@ -247,3 +247,5 @@ class ContainerBrokerHttpStatus(HttpStatus):
 
 class ModelCatalogHttpStatus(HttpStatus):
     MSG_MODEL_NOT_FOUND = "Model with given {} not found"
+    MSG_INVALID_UUID = "Invalid UUID string: {}"
+    MSG_MISSING_PARAM = "Non-empty value is required for model {} field"

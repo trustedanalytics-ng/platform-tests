@@ -58,7 +58,6 @@ class TestModelGet:
                                      ScoringEngineModel.get, model_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_get_artifact_metadata_using_both_clients(self, model_with_artifact, admin_client, test_org_user_client):
         artifact_id = model_with_artifact.artifacts[0].get("id")
         step("Get artifact {} metadata of model {} using user client".format(artifact_id, model_with_artifact.id))
@@ -70,7 +69,6 @@ class TestModelGet:
         assert artifact_metadata == expected_artifact_metadata
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13394 Error while proxying request to service model-catalog")
     def test_get_artifact_file_using_both_clients(self, model_with_artifact, admin_client, test_org_user_client):
         artifact_id = model_with_artifact.artifacts[0].get("id")
         step("Get file of artifact {} using user client".format(artifact_id))
