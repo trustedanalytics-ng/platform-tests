@@ -89,8 +89,7 @@ class TestCatalogInstances:
         assert catalog_instance == instance
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services, "
-                      "catalog: applications)")
+    @pytest.mark.bugs("DPNG-13600: User can update catalog instance using wrong prevValue classId")
     def test_cannot_update_instance_with_wrong_prev_class_id_value(self, catalog_instance):
         step("Check that is't not possible to update instance with incorrect prev_value of class id")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_CLASS_ID,
