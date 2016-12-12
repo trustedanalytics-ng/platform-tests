@@ -19,7 +19,7 @@
 
 set -e
 VENDOR=vendor/
-SECRETS_PATH=./project/secrets/
+SECRETS_PATH=project/secrets
 REQUIREMENTS_PATH=./requirements.txt
 ZIPPED_ITEMS="deploy/ project/ SMOKE_TESTS_README.md build_info.ini manifest.yml requirements.txt runtime.txt .bumpversion.cfg"
 VIRTUALENV_PATH=~/virtualenvs/pyvenv_api_tests
@@ -37,12 +37,9 @@ pip install --download $VENDOR -r $REQUIREMENTS_PATH
 
 deactivate
 
-# remove secrets
-rm -rf $SECRETS_PATH
-
 # prepare build manifest
 echo "commit_sha=$(git rev-parse HEAD)" > build_info.ini
 
-# assemble the artifact
+# assemble the artifact (excluding secrets)
 VERSION=$(grep current_version .bumpversion.cfg | cut -d " " -f 3)
-zip -r platform-tests-${VERSION}.zip $VENDOR $ZIPPED_ITEMS
+zip -r platform-tests-${VERSION}.zip $VENDOR $ZIPPED_ITEMS -x "$SECRETS_PATH/*"
