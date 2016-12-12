@@ -191,8 +191,9 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         return offering_id, plan_id
 
     def cleanup(self):
-        self.stop()
-        self.ensure_stopped()
+        if self.state == TapEntityState.RUNNING:
+            self.stop()
+            self.ensure_stopped()
         self.delete()
 
 
