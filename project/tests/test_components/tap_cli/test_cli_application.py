@@ -53,6 +53,20 @@ class TestCheckAppPushHelp:
 
     @priority.medium
     def test_check_app_push_help(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check output from tap cli help push.
+
+        <b>Input data:</b>
+        1. Command name: help push
+
+        <b>Expected results:</b>
+        Test passes when TAP CLI help push command print proper output.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command help push.
+        2. Verify response contains proper output.
+        """
         step("Check output from tap cli push help")
         output = tap_cli.push_help()
         assert "NAME" in output
@@ -66,6 +80,21 @@ class TestCliCommandsWithNonExistingApplication:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
     def test_try_stop_non_existing_app(self, tap_cli, cli_login):
+        """
+        <b>Description:</b>
+        Try to stop non existing application.
+
+        <b>Input data:</b>
+        1. Command name: stop
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to stop non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command stop.
+        2. Verify that attempt to stop non existing application return expected error message.
+        """
         step("Try to stop app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.stop_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
@@ -73,12 +102,42 @@ class TestCliCommandsWithNonExistingApplication:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
     def test_try_start_non_existing_app(self, tap_cli, cli_login):
+        """
+        <b>Description:</b>
+        Try to start non existing application.
+
+        <b>Input data:</b>
+        1. Command name: start
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to start non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command start.
+        2. Verify that attempt to start non existing application return expected error message.
+        """
         step("Try to start app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.start_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @priority.low
     def test_try_restart_non_existing_app(self, tap_cli, cli_login):
+        """
+        <b>Description:</b>
+        Try to restart non existing application.
+
+        <b>Input data:</b>
+        1. Command name: restart
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to restart non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command restart.
+        2. Verify that attempt to restart non existing application return expected error message.
+        """
         step("Try to restart app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.restart_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
@@ -86,6 +145,21 @@ class TestCliCommandsWithNonExistingApplication:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
+        """
+        <b>Description:</b>
+        Try to scale non existing application.
+
+        <b>Input data:</b>
+        1. Command name: scale
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to scale non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command scale.
+        2. Verify that attempt to scale non existing application return expected error message.
+        """
         scaled_instances = '3'
         step("Try to scale app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.scale_app,
@@ -95,6 +169,21 @@ class TestCliCommandsWithNonExistingApplication:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
     def test_try_check_logs_for_non_existing_app(self, tap_cli, cli_login):
+        """
+        <b>Description:</b>
+        Try to retrieve logs of non existing application.
+
+        <b>Input data:</b>
+        1. Command name: logs
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to retrieve logs of non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command logs.
+        2. Verify that attempt to retrieve logs for non existing application return expected message.
+        """
         step("Try to check logs for non existing app name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_logs,
                                                   application_name=self.NON_EXISTING_APP_NAME)
@@ -102,6 +191,21 @@ class TestCliCommandsWithNonExistingApplication:
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
     def test_try_delete_non_existing_app(self, tap_cli, cli_login):
+        """
+        <b>Description:</b>
+        Try to delete non existing application.
+
+        <b>Input data:</b>
+        1. Command name: delete
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to delete non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command delete.
+        2. Verify that attempt to delete non existing application return expected message.
+        """
         step("Try to delete with non existing app name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG,
                                                   tap_cli.delete_app, application_name=self.NON_EXISTING_APP_NAME)
@@ -205,6 +309,25 @@ class TestPythonCliApp(TestAppBase):
 
     @priority.high
     def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
+        """
+        <b>Description:</b>
+        Push sample application, check it's show in applications list and remove it.
+
+        <b>Input data:</b>
+        1. Sample application target directory
+
+        <b>Expected results:</b>
+        Test passes when application is pushed, displayed in applications list and then successfully deleted.
+
+        <b>Steps:</b>
+        1. Update application manifest.
+        2. Push application.
+        3. Verify that application is present in applications list.
+        4. Check that application is running.
+        5. Check that application is ready.
+        6. Delete application.
+        7. Check that application is no longer presented in applications list.
+        """
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory)
         manifest_params = {"type": self.APP_TYPE}
@@ -231,6 +354,25 @@ class TestPythonCliApp(TestAppBase):
 
     @pytest.mark.bugs("DPNG-12158 Tap client fails when pushing directory containing symbolic links")
     def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
+        """
+        <b>Description:</b>
+        Push sample application, check it's show in applications list and remove it.
+
+        <b>Input data:</b>
+        1. Sample application with symlinks target directory
+
+        <b>Expected results:</b>
+        Test passes when application is pushed, displayed in applications list and then successfully deleted.
+
+        <b>Steps:</b>
+        1. Update application manifest.
+        2. Push application.
+        3. Verify that application is present in applications list.
+        4. Check that application is running.
+        5. Check that application is ready.
+        6. Delete application.
+        7. Check that application is no longer presented in applications list.
+        """
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory_with_symlinks)
         manifest_params = {"type": self.APP_TYPE}
@@ -257,6 +399,22 @@ class TestPythonCliApp(TestAppBase):
 
     @priority.high
     def test_stop_and_start_app(self, sample_cli_app):
+        """
+        <b>Description:</b>
+        Check that application can be stopped and started again.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when application is stopped and successfully started again.
+
+        <b>Steps:</b>
+        1. Stop application.
+        2. Check that application is stopped.
+        3. Start application.
+        4. Check that application is running.
+        """
         step("Stop app")
         sample_cli_app.stop()
         step("Ensure app is stopped")
@@ -274,6 +432,24 @@ class TestPythonCliApp(TestAppBase):
 
     @priority.high
     def test_scale_app(self, sample_cli_app):
+        """
+        <b>Description:</b>
+        Check that application can be scaled.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when application can be successfully scaled.
+
+        <b>Steps:</b>
+        1. Scale application to 3 instances.
+        2. Check that application is running.
+        3. Verify that there is 3 application instances.
+        4. Scale application to 1 instance.
+        5. Check that application is running.
+        6. Verify that there is 1 application instance.
+        """
         scaled_instances = '3'
         step("Scale app to {} instance(s)".format(scaled_instances))
         sample_cli_app.scale(scale_app_instances=scaled_instances)
@@ -292,6 +468,19 @@ class TestPythonCliApp(TestAppBase):
 
     @priority.medium
     def test_check_app_logs(self, sample_cli_app):
+        """
+        <b>Description:</b>
+        Check that logs of application are properly presented.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when logs of application are properly presented.
+
+        <b>Steps:</b>
+        1. Check that application name is shown in application logs.
+        """
         step("Check logs")
         assert sample_cli_app.name in sample_cli_app.logs()
 

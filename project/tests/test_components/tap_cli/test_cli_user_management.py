@@ -46,6 +46,21 @@ class TestCliInvitationsShort:
     @priority.high
     @pytest.mark.components(TAP.cli)
     def test_invite_user(self, context, tap_cli):
+        """
+        <b>Description:</b>
+        Invite and register new user.
+
+        <b>Input data:</b>
+        -
+
+        <b>Expected results:</b>
+        New user is successfully registered and visible in users list.
+
+        <b>Steps:</b>
+        1. Send invitation.
+        2. Register new user.
+        3. Check that added user is in users list.
+        """
         step("Send invitation")
         invitation = CliInvitation.send(context, tap_cli=tap_cli)
         step("User accepts invitation and registers")
@@ -57,6 +72,20 @@ class TestCliInvitationsShort:
     @priority.medium
     @pytest.mark.components(TAP.cli)
     def test_sent_invitation_is_on_pending_list(self, tap_cli, invitation):
+        """
+        <b>Description:</b>
+        Check that invitation is shown in invitations list.
+
+        <b>Input data:</b>
+        1. Invitation
+
+        <b>Expected results:</b>
+        Invitation is shown in invitations list.
+
+        <b>Steps:</b>
+        1. Retrieve active invitations.
+        2. Check that invitation is present in retrieved invitations list.
+        """
         pending_invitations = CliInvitation.get_list(tap_cli, short_cmd=self.SHORT)
         invitation = next((i for i in pending_invitations if i == invitation), None)
         assert invitation is not None, "Sent invitation not found on pending invitations list"
@@ -65,6 +94,21 @@ class TestCliInvitationsShort:
     @priority.high
     @pytest.mark.components(TAP.cli, TAP.user_management)
     def test_delete_user(self, tap_cli, user):
+        """
+        <b>Description:</b>
+        Delete user.
+
+        <b>Input data:</b>
+        1. User
+
+        <b>Expected results:</b>
+        User is successfully deleted and no longer visible in users list
+
+        <b>Steps:</b>
+        1. Check that user is present in users list.
+        2. Delete user.
+        3. Check that user is no longer present in users list.
+        """
         assert_in_with_retry(user, User.get_all_users)
         tap_cli.delete_user(user.username, short=self.SHORT)
         assert_not_in_with_retry(user, User.get_all_users)
@@ -72,6 +116,20 @@ class TestCliInvitationsShort:
     @priority.medium
     @pytest.mark.components(TAP.cli)
     def test_delete_invitation(self, tap_cli, invitation):
+        """
+        <b>Description:</b>
+        Delete invitation.
+
+        <b>Input data:</b>
+        1. Invitation
+
+        <b>Expected results:</b>
+        Invitation is successfully deleted and no longer visible in active invitations list
+
+        <b>Steps:</b>
+        1. Delete invitation.
+        2. Check that invitation is no longer present in invitations list.
+        """
         invitation.delete(short_cmd=self.SHORT)
         assert_not_in_with_retry(invitation, CliInvitation.get_list, tap_cli)
 

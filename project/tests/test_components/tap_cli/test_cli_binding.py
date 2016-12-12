@@ -73,6 +73,23 @@ class TestCliBinding:
     @pytest.mark.usefixtures("cleanup_bindings")
     @priority.high
     def test_bind_and_unbind_services(self, service_instance_1, service_instance_2):
+        """
+        <b>Description:</b>
+        Check that service instance can be bind to other service instance.
+
+        <b>Input data:</b>
+        1. Service instance to bind to
+        2. Second service instance that will be bind
+
+        <b>Expected results:</b>
+        Service instances are successfully bind and than successfully unbind.
+
+        <b>Steps:</b>
+        1. Bind second service to first one.
+        2. Check that second service is on first service binding list
+        3. Unbind second service from first.
+        4. Check that second service is not shown on first service binding list
+        """
         step("Bind one service instance to another")
         service_instance_2.bind(service_instance_1)
         step("Check that the services are bound")
@@ -86,24 +103,84 @@ class TestCliBinding:
 
     @priority.low
     def test_cannot_bind_invalid_service(self, service_instance_1, nonexistent_service):
+        """
+        <b>Description:</b>
+        Check that attempt to bind non existent service instance will return proper information.
+
+        <b>Input data:</b>
+        1. Service instance to bind to
+        2. Non existent service instance to bind
+
+        <b>Expected results:</b>
+        Attempt to bind non existent instances will return proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command bind.
+        2. Verify that attempt to bind non existent service instance return expected message.
+        """
         step("Check that attempt to bind invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
         assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.bind, service_instance_1)
 
     @priority.low
     def test_cannot_bind_service_to_invalid_service(self, service_instance_1, nonexistent_service):
+        """
+        <b>Description:</b>
+        Check that attempt to bind to non existent service instance will return proper information.
+
+        <b>Input data:</b>
+        1. Non existent service instance to bind to
+        2. Service instance to bind
+
+        <b>Expected results:</b>
+        Attempt to bind non existent instances will return proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command bind.
+        2. Verify that attempt bind to non existent service instance return expected message.
+        """
         step("Check that attempt to bind to invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
         assert_raises_command_execution_exception(1, expected_msg, service_instance_1.bind, nonexistent_service)
 
     @priority.low
     def test_cannot_unbind_invalid_service(self, service_instance_1, nonexistent_service):
+        """
+        <b>Description:</b>
+        Check that attempt to unbind non existent service instance will return proper information.
+
+        <b>Input data:</b>
+        1. Service instance to unbind from
+        2. Non existent service instance to unbind
+
+        <b>Expected results:</b>
+        Attempt to unbind non existent instances will return proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command unbind.
+        2. Verify that attempt unbind non existent service instance return expected message
+        """
         step("Check that attempt to unbind invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
         assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.unbind, service_instance_1)
 
     @priority.low
     def test_cannot_unbind_service_from_invalid_service(self, service_instance_1, nonexistent_service):
+        """
+        <b>Description:</b>
+        Check that attempt to unbind non existent service instance will return proper information.
+
+        <b>Input data:</b>
+        1. Non existent service instance to unbind from
+        2. Service instance to unbind
+
+        <b>Expected results:</b>
+        Attempt to unbind non existent instances will return proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command unbind.
+        2. Verify that attempt unbind from non existent service instance return expected message.
+        """
         step("Check that attempt to unbind from invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
         assert_raises_command_execution_exception(1, expected_msg, service_instance_1.unbind, nonexistent_service)
@@ -111,6 +188,24 @@ class TestCliBinding:
     @priority.low
     @pytest.mark.usefixtures("cleanup_bindings")
     def test_cannot_delete_bound_service(self, service_instance_1, service_instance_2):
+        """
+        <b>Description:</b>
+        Check that an attempt to delete bound service instance fails with an error and instance won't be removed.
+
+        <b>Input data:</b>
+        1. Service instance to unbind from
+        2. Service instance to unbind
+
+        <b>Expected results:</b>
+        Attempt to delete bounded instance will return proper message and not delete service.
+
+        <b>Steps:</b>
+        1. Bind second service to first one.
+        2. Check that second service is on first service binding list.
+        3. Verify that attempt to delete bounded service instance return expected message.
+        4. Check that second service is shown on services list.
+        5. Check that second service is shown on first service binding list
+        """
         step("Bind service instances")
         service_instance_2.bind(service_instance_1)
         assert service_instance_2.name in service_instance_1.get_binding_names()
