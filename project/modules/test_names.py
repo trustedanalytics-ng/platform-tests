@@ -47,3 +47,7 @@ def generate_test_object_name(email=False, short=False, prefix=None, separator="
 def escape_hive_name(string):
     escaped_chars = ",./<>?;':\"\|}{[]~`!@#$%^&*()_+-="
     return "".join([c if c not in escaped_chars else "_" for c in string])
+
+
+def decode_org_id(org_guid):
+    return org_guid.replace("-", "").decode("hex").rstrip("\x00")
