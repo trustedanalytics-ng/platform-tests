@@ -278,10 +278,13 @@ def get_service_credentials(*, client: HttpClient, service_id: str):
                           msg="Get service instance credentials")
 
 
-def expose_service(*, client: HttpClient, service_id: str):
+def expose_service(*, client: HttpClient, service_id: str, should_expose: bool=True):
     """ PUT /services/s{service_id}/expose """
+    body = {
+        "exposed": should_expose
+    }
     return client.request(method=HttpMethod.PUT, path="services/{}/expose".format(service_id),
-                          msg="Expose service instance")
+                          msg="Expose service instance", body=body)
 
 
 def get_service_logs(*, client: HttpClient, service_id):

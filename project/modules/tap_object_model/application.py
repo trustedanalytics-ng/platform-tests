@@ -308,3 +308,13 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             self.stop()
             self.ensure_stopped()
         self.delete()
+
+    @classmethod
+    def get_image(cls, app_inst_id: str, client: HttpClient = None):
+        get_sample_python_app = api.get_application(client=client, app_id=app_inst_id)
+        metadata = get_sample_python_app['metadata']
+        image = ''
+        for key in metadata:
+            if 'APPLICATION_IMAGE_ADDRESS' in key['key']:
+                image = key['value']
+        return image

@@ -17,7 +17,6 @@
 import math
 import pytest
 from retry import retry
-
 from modules.exceptions import UnexpectedResponseError, CommandExecutionException
 from modules.tap_logger import step
 from modules.tap_object_model import User

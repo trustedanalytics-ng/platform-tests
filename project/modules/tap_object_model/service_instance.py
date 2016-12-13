@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import requests
 from retry import retry
-
+from modules.constants import ApiServiceHttpStatus
 from modules import test_names
 from modules.constants import TapEntityState
 from modules.http_client import HttpClient
@@ -195,6 +195,20 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
             self.stop()
             self.ensure_stopped()
         self.delete()
+
+    @classmethod
+    def get_credentials(cls, service_id: str, client: HttpClient=None):
+        return api.get_service_credentials(client=client, service_id=service_id)
+
+    @classmethod
+    def expose_urls(cls, service_id: str, should_expose: bool=True, client: HttpClient=None):
+        return api.expose_service(client=client, service_id=service_id, should_expose=should_expose)
+
+    @classmethod
+    @retry(AssertionError, tries=5, delay=10)
+    def ensure_responding(cls, url: str):
+        r = requests.get(url)
+        assert str(ApiServiceHttpStatus.CODE_OK) in str(r)
 
 
 class AtkInstance(ServiceInstance):
