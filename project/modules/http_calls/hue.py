@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-import functools
-
 import config
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
@@ -23,32 +21,19 @@ from modules.http_client.configuration_provider.service_tool import ServiceToolC
 from modules.http_client.http_client_factory import HttpClientFactory
 
 
-def _get_client():
-    console_client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
+def get_logged_client(username=None, password=None):
+    console_client = HttpClientFactory.get(ConsoleConfigurationProvider.get(username, password))
     client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(url=config.hue_url))
     client.session = console_client.session
+    client.request(method=HttpMethod.GET, path="", msg="login")
     return client
 
 
-def login_required(func):
-    """Wrapper tries login to hue, when unsuccessfully AssertionError is raised"""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        login_tries = 10
-        for _ in range(login_tries):
-            response = func(*args, **kwargs)
-            if "login required" in response:
-                _get_client().request(method=HttpMethod.GET, path="", msg="login")
-            else:
-                return response
-        raise AssertionError("Could not login to hue api")
-    return wrapper
-
-
-@login_required
-def get_databases():
+def get_databases(client=None):
     """GET metastore/databases"""
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="metastore/databases",
         params={"format": "json"},
@@ -56,10 +41,11 @@ def get_databases():
     )
 
 
-@login_required
-def get_tables(database_name):
+def get_tables(database_name, client=None):
     """GET metastore/tables/{database_name}"""
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="metastore/tables/{}".format(database_name),
         params={"format": "json"},
@@ -67,20 +53,22 @@ def get_tables(database_name):
     )
 
 
-@login_required
-def get_table(database_name, table_name):
+def get_table(database_name, table_name, client=None):
     """GET metastore/table/{database_name}/{table_name}"""
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="metastore/table/{}/{}".format(database_name, table_name),
         msg="HUE: get table"
     )
 
 
-@login_required
-def get_table_metadata(database_name, table_name):
+def get_table_metadata(database_name, table_name, client=None):
     """GET metastore/table/{database_name}/{table_name}/metadata"""
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="metastore/table/{}/{}/metadata".format(database_name, table_name),
         params={"format": "json"},
@@ -88,10 +76,11 @@ def get_table_metadata(database_name, table_name):
     )
 
 
-@login_required
-def get_file_browser():
+def get_file_browser(client=None):
     """GET filebrowser"""
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="filebrowser",
         params={"format": "json"},
@@ -99,10 +88,11 @@ def get_file_browser():
     )
 
 
-@login_required
-def get_job_browser():
+def get_job_browser(client=None):
     """GET jobbrowser"""
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="jobbrowser",
         params={"format": "json"},
@@ -110,36 +100,86 @@ def get_job_browser():
     )
 
 
-@login_required
-def create_java_job_design(name, jar_path, main_class, args="", description=""):
+def create_java_job_design(name, jar_path, main_class, args="", description="", client=None):
     """POST jobsub/designs/java/new"""
-
-    headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-               "X-CSRFToken": _get_client().cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"
-               }
-
+    if client is None:
+        client = get_logged_client()
     files = "node_type=java&files=[]&name={}&jar_path={}&job_properties=[]&prepares=[]&archives=[]&main_class={}" \
             "&args={}&description={}&".format(name, jar_path, main_class, args, description)
 
-    return _get_client().request(
+    return client.request(
         method=HttpMethod.POST,
         path="jobsub/designs/java/new",
         files={(files, "")},
-        headers=headers,
+        headers=_get_headers(client, True),
         msg="HUE: create java job design"
     )
 
 
-@login_required
-def get_job_workflow(workflow_id):
+def get_job_workflow(workflow_id, client=None):
     """GET oozie/list_oozie_workflow/{workflow_id}/"""
-
-    headers = {"X-CSRFToken": _get_client().cookies.get('csrftoken'), "X-Requested-With": "XMLHttpRequest"}
-
-    return _get_client().request(
+    if client is None:
+        client = get_logged_client()
+    return client.request(
         method=HttpMethod.GET,
         path="oozie/list_oozie_workflow/{}/".format(workflow_id),
-        headers=headers,
+        headers=_get_headers(client),
         params={"format": "json"},
         msg="HUE: get job workflow"
     )
+
+
+def query_execute(database, query, client=None):
+    """POST beeswax/api/query/execute/1"""
+    if client is None:
+        client = get_logged_client()
+    return client.request(
+        method=HttpMethod.POST,
+        path="beeswax/api/query/execute/1",
+        data={
+            "query-query": query,
+            "query-database": database,
+            "settings-next_form_id": 0,
+            "file_resources-next_form_id": 0,
+            "functions-next_form_id": 0,
+            "query-email_notify": False,
+            "query-is_parameterized": True
+        },
+        msg="HUE: query execute",
+        headers=_get_headers(client, True)
+    )
+
+
+def query_watch(id, client=None):
+    """POST beeswax/api/watch/json"""
+    if client is None:
+        client = get_logged_client()
+    return client.request(
+        method=HttpMethod.POST,
+        path="beeswax/api/watch/json/{}".format(id),
+        msg="HUE: query watch",
+        headers=_get_headers(client, True)
+    )
+
+
+def query_result(id, client):
+    """POST beeswax/results"""
+    if client is None:
+        client = get_logged_client()
+    return client.request(
+        method=HttpMethod.GET,
+        path="beeswax/results/{}/0".format(id),
+        msg="HUE: query watch",
+        data={"format": "json"}
+    )
+
+
+def _get_headers(client, referer=False):
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-CSRFToken": client.cookies.get('csrftoken'),
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    if referer:
+        headers["Referer"] = "{}/beeswax/execute/design/".format(client.url)
+    return headers

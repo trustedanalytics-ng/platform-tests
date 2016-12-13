@@ -13,44 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from retry import retry
 
-import config
-from . import kerberos
-from .http_client.configuration_provider.uaa import UaaConfigurationProvider
-from .http_client.http_client_factory import HttpClientFactory
-from .tap_logger import get_logger
-from .tap_object_model import User
-
-logger = get_logger(__name__)
+from modules.http_calls import hue
 
 
 class Hive(object):
-    __JDBC_URL = "jdbc:hive2://cdh-master-0:10000/default"
-    __JDBC_KERBEROS_PARAMS = ";principal=hive/cdh-master-0@CLOUDERA;auth=kerberos"
+    def __init__(self, username=None, password=None):
+        self.hue_client = hue.get_logged_client(username, password)
 
-    def __init__(self, user=None):
-        raise NotImplementedError("Will be refactored in DPNG-8899")
-        self.__is_kerberos = kerberos.is_kerberos_environment()
-        self.__url = self.__get_url()
-        if user is None:
-            user = User.get_admin()
-        self.__user = user
+    def exec_query(self, query, database="default"):
+        execute_response = hue.query_execute(database, query, self.hue_client)
+        assert execute_response["status"] == 0
 
-    def __get_url(self):
-        url = self.__JDBC_URL
-        if self.__is_kerberos:
-            url += self.__JDBC_KERBEROS_PARAMS
-        return url
+        self._wait_for_query(execute_response["id"])
 
-    def exec_query(self, query):
-        cmds = [["beeline", "-n", "hive", "-u", "'{}'".format(self.__url), "--showHeader=false", "--outputformat=csv2", "-e", query]]
+        result_response = hue.query_result(execute_response["id"], self.hue_client)
+        assert result_response["error"] == False
 
-        if self.__is_kerberos:
-            client = HttpClientFactory.get(UaaConfigurationProvider.get(self.__user.username, self.__user.password))
-            cmds.insert(0, ["ktinit", "-t", client.auth.token])
-        else:
-            cmds[0] = ["sudo", "-u", self.__user.guid] + cmds[0]
+        return result_response["results"]
 
-        return CdhMasterClient(config.cdh_master_2_hostname).exec_commands(cmds)[-1][0].split()
-
-
+    @retry(AssertionError, tries=10, delay=3)
+    def _wait_for_query(self, id):
+        watch_response = hue.query_watch(id, self.hue_client)
+        if watch_response["status"] != 0:
+            raise ValueError("Bad status: {}".format(watch_response["status"]))
+        assert watch_response["isFailure"] == False and watch_response["isSuccess"] == True

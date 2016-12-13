@@ -36,7 +36,7 @@ def log_deleted_objects(object_list, object_type_name):
 
 def remove_hive_databases():
     hive = Hive()
-    dbs = hive.exec_query("show databases;")
+    dbs = map(lambda row: row[0], hive.exec_query("show databases;"))
     dbs = filter(lambda name: is_test_object_name(name), dbs)
     dbs = list(dbs)
 
