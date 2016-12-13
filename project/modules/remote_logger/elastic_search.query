@@ -3,7 +3,7 @@
   "from": _OFFSET_,
   "sort": [
     {
-      "timestamp": {
+      "@timestamp": {
         "order": "asc",
         "mode": "min"
       }
@@ -19,17 +19,16 @@
           "must": [
             {
               "query": {
-                "match": {
-                  "cf_app_name": {
-                    "query": "_APP_NAME_",
-                    "type": "phrase"
+                "query_string": {
+                  "default_field": "tag",
+                  "query": "_APP_NAME_"
                   }
                 }
               }
-            },
+            ,
             {
               "range": {
-                "received_at": {
+                "@timestamp": {
                   "gte": _DATE_FROM_,
                   "lte": _DATE_TO_
                 }
@@ -45,6 +44,6 @@
     "_source"
   ],
   "fielddata_fields": [
-    "timestamp"
+    "@timestamp"
   ]
 }

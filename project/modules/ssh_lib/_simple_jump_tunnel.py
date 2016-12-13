@@ -22,7 +22,7 @@ from retry import retry
 import config
 from modules.tap_logger import get_logger
 from ._jump_client import JumpClient
-
+from project.modules.remote_logger.config import Config
 
 class SimpleJumpTunnel(object):
     _logger = get_logger(__name__)
@@ -43,6 +43,7 @@ class SimpleJumpTunnel(object):
         try:
             self._logger.info("Wait until tunnel is established")
             self._check_tunnel_established()
+            Config.TUNNEL_AVAILABLE = True
         except:
             self.close()
             raise

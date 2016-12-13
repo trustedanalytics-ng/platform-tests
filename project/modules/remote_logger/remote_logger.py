@@ -16,15 +16,14 @@
 
 import os
 from multiprocessing import Queue
-from enum import Enum
 
 from ..tap_logger import get_logger
 from ..constants.logger_type import LoggerType
-from .config import Config
+from project.modules.remote_logger.config import Config
 from .log_provider import LogProvider
 from .log_provider_configuration import LogProviderConfiguration
 from .remote_logger_configuration import RemoteLoggerConfiguration
-from .ssh_connector import SshConnector
+from project.modules.ssh_lib import JumpTunnel
 
 logger = get_logger(LoggerType.REMOTE_LOGGER)
 
@@ -34,18 +33,27 @@ class RemoteLogger(object):
 
     def __init__(self, configuration: RemoteLoggerConfiguration):
         self.__configuration = configuration
-        self.__ssh_connector = SshConnector()
 
-    def log_to_file(self):
-        """Read remote logs and write them to file."""
+    def run_logging_procedure(self):
+        """Block which connects methods."""
         try:
-            self.__ssh_connector.open_ssh_tunnel()
             logs = self.__get_logs()
             self.__save_logs(logs)
         except Exception as e:
             logger.error(e)
-        finally:
-            self.__ssh_connector.close_ssh_tunnel()
+
+    def log_to_file(self):
+        """Read remote logs and write them to file."""
+        if Config.TUNNEL_AVAILABLE:
+            self.run_logging_procedure()
+        else:
+            logger.info("Ssh tunnel not available, creating tunnel for remote logger.")
+            jump_tunnel = JumpTunnel()
+            jump_tunnel.open()
+            try:
+                self.run_logging_procedure()
+            finally:
+                jump_tunnel.close()
 
     def __get_logs(self):
         """Run multiple log providers, one for each application.

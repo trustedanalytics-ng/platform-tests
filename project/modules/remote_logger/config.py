@@ -21,6 +21,9 @@ import config
 
 class Config(object):
 
+    # Remote logger check whether tunnel need be opened or not
+    TUNNEL_AVAILABLE = False
+
     # Root directory for storing remote log files
     ROOT_DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "..", "..", "logs")
 
@@ -30,20 +33,15 @@ class Config(object):
     # How long (in seconds) to wait before make request to elastic search
     TIME_BEFORE_NEXT_CALL = 15
 
-    # Ssh tunnel configuration - local port
-    ELASTIC_SSH_TUNNEL_LOCAL_PORT = 9200
-
-    # Ssh tunnel configuration - elastic search url address
-    ELASTIC_SSH_TUNNEL_URL = "http://localhost:{}/logstash-{}/_search"
-
-    # Ssh tunnel configuration - remote username
-    ELASTIC_SSH_TUNNEL_USER = "ubuntu"
+    # Elastic search url address
+    ELASTIC_QUERY_URL = "http://{}:{}/logstash-{}/_search"
 
     # Elastic search host
-    ELASTIC_SEARCH_HOST = config.logsearch_elastic_search_host
+    # do not change empty value.
+    # value is updated automatically after connection with master
+    ELASTIC_SEARCH_HOST = ''
 
-    # Elastic search port
-    ELASTIC_SEARCH_PORT = 9200
+    ELASTIC_SEARCH_HOST_PORT = 9200
 
     # How long (in seconds) to wait for elastic search api to send data before giving up
     ELASTIC_SEARCH_REQUEST_TIMEOUT = 120

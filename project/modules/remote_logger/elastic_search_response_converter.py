@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-from json import loads
 from os import linesep
 
 
@@ -34,11 +33,9 @@ class ElasticSearchResponseConverter(object):
     @classmethod
     def __convert_hits(cls, hits):
         """Convert json hits into string."""
-        cls.__validate_key("_source", hits)
-        cls.__validate_key("@message", hits["_source"])
-        message = loads(hits["_source"]["@message"])
-        cls.__validate_key("msg", message)
-        return "{}{}".format(message["msg"], linesep)
+        cls.__validate_key("log", hits["_source"])
+        message = str(hits["_source"]["log"])
+        return "{}".format(message)
 
     @staticmethod
     def __validate_key(key, data):
