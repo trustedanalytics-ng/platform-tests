@@ -100,6 +100,7 @@ class TestTemplateRepository:
             "image": "testImage",
             "hostname": "testHostname",
             "memory_limit": "100M",
+            "cert_hash": "xyz",
         }
         template = Template.get_parsed(template_id=generic_application_template_id, instance_id=instance_id,
                                        optional_params=other_params)
@@ -113,6 +114,7 @@ class TestTemplateRepository:
             "image": "",
             "hostname": "",
             "memory_limit": "100M",  # mandatory parameter, mandatory numeric format
+            "cert_hash": "",
         }
         template = Template.get_parsed(template_id=generic_application_template_id, instance_id=instance_id,
                                        optional_params=other_params)
