@@ -71,6 +71,22 @@ class TestJupyterConsole:
 
     @priority.high
     def test_jupyter_terminal(self, jupyter_instance, terminal_index):
+        """
+        <b>Description:</b>
+        Checks if Python interpreter works in newly created Jupyter terminal.
+
+        <b>Input data:</b>
+        1. Jupyter instance
+        2. Terminal index
+
+        <b>Expected results:</b>
+        Test passes when Python interpreter works in Jupyter terminal.
+
+        <b>Steps:</b>
+        1. Create new Jupyter terminal
+        2. Start python interpreter.
+        3. Verify that Python interpreter runs.
+        """
         step("Create new jupyter terminal")
         terminal = jupyter_instance.connect_to_terminal(terminal_no=terminal_index)
         step("Check that Python interpreter runs OK in Jupyter terminal")
@@ -80,6 +96,22 @@ class TestJupyterConsole:
 
     @priority.high
     def test_jupyter_interactive_mode_hello_world(self, jupyter_instance):
+        """
+        <b>Description:</b>
+        Checks if a simple command is properly handled in newly created Jupyter notebook.
+
+        <b>Input data:</b>
+        1. Jupyter instance.
+        2. Python command.
+
+        <b>Expected results:</b>
+        Test passes when Python command works in Jupyter notebook.
+
+        <b>Steps:</b>
+        1. Create new notebook in Jupyter.
+        2. Send print command to the notebook.
+        3. Check if Python command works properly.
+        """
         step("Create new notebook in Jupyter")
         notebook = jupyter_instance.create_notebook()
         step("Check that a simple command is properly handled in Jupyter")
@@ -90,6 +122,37 @@ class TestJupyterConsole:
 
     @priority.medium
     def test_connect_to_atk_from_jupyter_using_server_atk_client(self, jupyter_instance, terminal_index, core_space):
+        """
+        <b>Description:</b>
+        Checks if connection to ATK can be established from Jupyter via server ATK client.
+
+        <b>Input data:</b>
+        1. Jupyter instance.
+        2. URL to the ATK application.
+        3. Username.
+        4. Password.
+
+        b>Expected results:</b>
+        Test passes when connection is established.
+
+        <b>Steps:</b>
+        1. Get ATK application URL.
+        2. Create new python terminal.
+        3. Connect to the terminal and install ATK client.
+        4. Verify that ATK client was successfully installed
+        5. Create new Jupyter notebook.
+        6. Import ATK client in the notebook.
+        7. Verify that command status is OK.
+        8. Create credentials file using atk client.
+        9. Check if prompt text contains "URI of the ATK server".
+        10. Send ATK application URL.
+        11. Verify if wait for a username prompt.
+        12. Send username.
+        13. Verify if wait for a password.
+        14. Send password.
+        15. Connect to the ATK.
+        16. Check if connection is established.
+        """
         step("Get atk app from core space")
         atk_app = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
                         if app.name == "atk"), None)
@@ -122,12 +185,45 @@ class TestJupyterConsole:
     @priority.medium
     @pytest.mark.parametrize("notebook_path", NOTEBOOKS_PATHS[1:])
     def test_spark_tk_in_jupyter(self, jupyter_instance, notebook_path):
+        """
+        <b>Description:</b>
+        Checks if notebooks scripts can be RUN.
+
+        <b>Input data:</b>
+        1. Jupyter instance.
+        2. Notebooks paths.
+
+        <b>Expected results:</b>
+        Test passes when all scripts are executed.
+
+        <b>Steps:</b>
+        1. Run scripts from all notebooks except the first one.
+        2. Verify that scripts run properly.
+        """
         step("Run {} notebook".format(notebook_path))
         self.run_cells(notebook=jupyter_instance.create_notebook(),
                        cells=jupyter_instance.get_notebook_source(notebook_path))
 
     @priority.medium
     def test_spark_tk_readme_in_jupyter(self, jupyter_instance):
+        """
+        <b>Description:</b>
+        Checks if readme scripts can be RUN.
+
+        <b>Input data:</b>
+        1. Jupyter instance.
+        2. Notebook paths.
+
+        <b>Expected results:</b>
+        Test passes when script is executed.
+
+        <b>Steps:</b>
+        1. Run README notebook.
+        2. Run SparkContext in local mode.
+        3. Verify that script run properly.
+        4. Run SparkContext in yarn-client mode.
+        5. Verify that script run properly.
+        """
         readme_path = NOTEBOOKS_PATHS[0]
         step("Run README notebook")
         cells = jupyter_instance.get_notebook_source(readme_path)

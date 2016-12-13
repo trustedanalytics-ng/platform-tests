@@ -52,6 +52,22 @@ class TestGearpumpConsole:
     @pytest.mark.bugs("DPNG-12899 'Cannot parse ApiServiceInstance list: key PLAN_ID not found!' ")
     @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
     def test_0_create_gearpump_instance(self, class_context, test_org):
+        """
+        <b>Description:</b>
+        Checks if creating gearpump instance with given PLAN_ID works.
+
+        <b>Input data:</b>
+        1. Plan name.
+        2. Instance name.
+
+        <b>Expected results:</b>
+        Test passes when newly created instance is RUNNING and YARN application is also RUNNING.
+
+        <b>Steps:</b>
+        1. Create gearpump instance.
+        2. Verify that HTTP response status code is 200 and instance status is RUNNING.
+        3. Verify that YARN application status is RUNNING.
+        """
         step("Create gearpump instance with plan {} ".format(self.PLAN_NAME))
         self.__class__.gearpump = Gearpump(class_context, service_plan_name=self.PLAN_NAME)
         step("Ensure that instance is running")
@@ -61,6 +77,20 @@ class TestGearpumpConsole:
         assert yarn_app_status == YarnAppStatus.RUNNING
 
     def test_1_check_gearpump_ui_app_created(self):
+        """
+        <b>Description:</b>
+        Checks if gearpumpdashboard instance is automatically created during creating gearpump instance.
+
+        <b>Input data:</b>
+        1. Gearpump instance.
+
+        <b>Expected results:</b>
+        Test passes when gearpumpdashboard instance was successfully created.
+
+        <b>Steps:</b>
+        1. Check if gearpumpdashboard instance was automatically created.
+        2. Get gearpump credentials.
+        """
         step("Check that gearpump ui app has been created")
         gearpump_ui_app = self.gearpump.get_ui_app()
         assert gearpump_ui_app is not None, "Gearpump ui application was not created"
@@ -68,12 +98,40 @@ class TestGearpumpConsole:
 
     def test_2_submit_complexdag_app_to_gearpump_dashboard(self, go_to_dashboard,
                                                            complexdag_app_path):
+        """
+        <b>Description:</b>
+        Checks if submitted Application is RUNNING on gearpump dashboard.
+
+        <b>Input data:</b>
+        1. Complexdag sample application(jar file)
+
+        <b>Expected results:</b>
+        Test passes when submitted Application is RUNNING on gearpump dashboard.
+
+        <b>Steps:</b>
+        1. Verify that application is submitted on gearpump dashboard.
+        2. Check if submitted application is RUNNING.
+        """
         step("Submit application complexdag to gearpump dashboard")
         self.__class__.dag_app = self.gearpump.submit_application_jar(complexdag_app_path, self.COMPLEXDAG_APP_NAME)
         step("Check that submitted application is started")
         assert self.dag_app.is_started
 
     def test_3_kill_complexdag_app(self, go_to_dashboard):
+        """
+        <b>Description:</b>
+        Checks if Gearpump application can be STOPPED.
+
+        <b>Input data:</b>
+        1. Gearpump application.
+
+        <b>Expected results:</b>
+        Test passes when application is STOPPED.
+
+        <b>Steps:</b>
+        1. Send DELETE request with application id.
+        2. Check that application is STOPPED.
+        """
         step("Kill application")
         self.dag_app.kill_application()
         step("Check that application is stopped")
@@ -81,6 +139,23 @@ class TestGearpumpConsole:
 
     @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
     def test_4_delete_gearpump_instance(self):
+        """
+        <b>Description:</b>
+        Checks if Gearpump instance can be DELETED.
+
+        <b>Input data:</b>
+        1. Gearpump instance.
+
+        <b>Expected results:</b>
+        Test passes when instance is DELETED and Yarn application status is KILLED.
+
+        <b>Steps:</b>
+        1. Send the stop command to service instance.
+        2. Check if instance is STOPPED (status == STOPPED)
+        3. Send DELETE request with service id.
+        4. Check if application disappeared from instance list.
+        5. Verify that yarn application status is KILLED.
+        """
         step("Stop service instance")
         self.gearpump.instance.stop()
         self.gearpump.instance.ensure_stopped()
@@ -93,6 +168,19 @@ class TestGearpumpConsole:
         assert yarn_app_status == YarnAppStatus.KILLED
 
     def test_5_check_gearpump_ui_app_is_deleted(self):
+        """
+        <b>Description:</b>
+        Checks if gearpumpdashboard instance is automatically deleted during removing gearpump instance.
+
+        <b>Input data:</b>
+        1. Gearpump instance.
+
+        <b>Expected results:</b>
+        Test passes when gearpumpdashboard instance was successfully deleted.
+
+        <b>Steps:</b>
+        1. Verify that gearpump ui application disappeared from instance list.
+        """
         step("Check that gearpump ui application is deleted")
         gearpump_ui_app = self.gearpump.get_ui_app()
         assert gearpump_ui_app is None, "Gearpump ui app was not deleted"
