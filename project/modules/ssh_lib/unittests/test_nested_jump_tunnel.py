@@ -39,6 +39,7 @@ class TestNestedJumpTunnel:
     REMOTE_PROCESS_GET_LIST_METHOD = "modules.ssh_lib._nested_jump_tunnel.RemoteProcess.get_list"
     REMOTE_TUNNEL_COMMAND_PROPERTY = "modules.ssh_lib._nested_jump_tunnel.NestedJumpTunnel._remote_tunnel_command"
     SIMPLE_TUNNEL_CLOSE = "modules.ssh_lib._simple_jump_tunnel.SimpleJumpTunnel.close"
+    REMOTE_PROCESS_GET_AVAILABLE_PORT = "modules.ssh_lib._nested_jump_tunnel.NestedJumpTunnel._get_available_jump_port"
 
     MOCK_SSH_COMMAND = ["mock", "ssh", "command"]
     MOCK_AUTH_OPTIONS = ["mock", "auth", "options"]
@@ -75,7 +76,6 @@ class TestNestedJumpTunnel:
         assert jump_tunnel._key_path == mock_config.ng_jump_key_path
         assert jump_tunnel._local_port == mock_config.ng_socks_proxy_port
         assert jump_tunnel._master_0_host == mock_config.master_0_hostname
-        assert isinstance(jump_tunnel._local_tunnel_command, list)
         assert jump_tunnel._tunnel is None
         assert jump_tunnel._NestedJumpTunnel__jump_port is None
 
@@ -119,7 +119,7 @@ class TestNestedJumpTunnel:
         assert port == port_b
 
     def test_remote_tunnel_command(self, jump_tunnel):
-        with mock.patch.object(jump_tunnel, "_get_available_jump_port", mock.Mock(return_value=1234)) as mock_port:
+        with mock.patch.object(jump_tunnel, "_get_available_jump_port", mock.Mock(return_value=None)) as mock_port:
             remote_tunnel_command = jump_tunnel._remote_tunnel_command
         assert str(mock_port.return_value) in remote_tunnel_command
 
@@ -139,8 +139,9 @@ class TestNestedJumpTunnel:
         jump_tunnel._jump_client.scp_to_remote.assert_not_called()
         jump_tunnel._jump_client.ssh.assert_not_called()
 
+    @mock.patch(REMOTE_PROCESS_GET_AVAILABLE_PORT, mock.Mock(return_value="5557"))
     def test_tunnel_command(self, jump_tunnel):
-        with mock.patch.object(jump_tunnel, "_copy_key_to_remote_host", mock.DEFAULT) as mock_copy_key:
+        with mock.patch.object(jump_tunnel, "_copy_key_to_remote_host") as mock_copy_key:
             with mock.patch(self.REMOTE_TUNNEL_COMMAND_PROPERTY, "abc") as mock_remote_tunnel_cmd:
                 tunnel_command = jump_tunnel._tunnel_command
         mock_copy_key.assert_called_with()

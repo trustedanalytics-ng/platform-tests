@@ -56,6 +56,8 @@ class LogProvider(Process):
         except Exception as e:
             logger.error(self.EXCEPTION_LOG.format(getpid(), self.__configuration.app_name, e))
             self.__log = self.EMPTY_LOG
+        else:
+            logger.info("Logs collected and converted successfully")
         finally:
             self.__update_queue()
 

@@ -19,9 +19,10 @@ from datetime import datetime
 
 import requests
 
-from .config import Config
+from project.modules.remote_logger.config import Config
 from .log_provider_configuration import LogProviderConfiguration
 from .elastic_search_response_converter import ElasticSearchResponseConverter
+from config import ng_socks_proxy_port
 
 
 class ElasticSearch(object):
@@ -67,10 +68,12 @@ class ElasticSearch(object):
 
     def __request(self, query):
         """Make search request and return response converted into json object."""
+        proxies = {'http': "socks5://localhost:{}".format(ng_socks_proxy_port)}
         response = requests.post(
             url=self.__request_url(),
             timeout=Config.ELASTIC_SEARCH_REQUEST_TIMEOUT,
-            data=query
+            data=query,
+            proxies=proxies
         )
         if not response.ok:
             raise ElasticSearchUnexpectedResponseException(response.text)
@@ -80,7 +83,7 @@ class ElasticSearch(object):
     def __request_url():
         """Create request url address."""
         date = datetime.now().strftime("%Y.%m.%d")
-        return Config.ELASTIC_SSH_TUNNEL_URL.format(Config.ELASTIC_SSH_TUNNEL_LOCAL_PORT, date)
+        return Config.ELASTIC_QUERY_URL.format(Config.ELASTIC_SEARCH_HOST, Config.ELASTIC_SEARCH_HOST_PORT, date)
 
 
 class ElasticSearchResultPaginationNotImplementedException(Exception):

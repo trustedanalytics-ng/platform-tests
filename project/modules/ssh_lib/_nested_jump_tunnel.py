@@ -40,21 +40,23 @@ class NestedJumpTunnel(SimpleJumpTunnel):
         self._key_path = self._jump_client.key_path
         self._local_port = config.ng_socks_proxy_port
         self._master_0_host = config.master_0_hostname
-        self._remote_tunnel_command_no_port = "ssh {} {} -N -D ".format(" ".join(self._auth_options), self._master_0_host)
-        self._local_tunnel_command = ["-L", "{0}:{1}:{0}".format(self._local_port, self._LOCALHOST)]
         self.__jump_port = None
+        self._remote_tunnel_command_no_port = "ssh {} {} -N -D ".format(" ".join(self._auth_options), self._master_0_host)
+        self._local_tunnel_command = None
 
     @property
     def _remote_tunnel_command(self):
         """
         Before remote tunnel command is built, available port on jumpbox is first established.
         """
-        return self._remote_tunnel_command_no_port + str(self._get_available_jump_port())
+        return self._remote_tunnel_command_no_port + str(self.__jump_port)
 
     @property
     def _tunnel_command(self):
         self._logger.warning("Kubernetes not available directly from jumpbox.")
         self._copy_key_to_remote_host()
+        self._get_available_jump_port()
+        self._local_tunnel_command = ["-L", "{0}:{1}:{2}".format(self._local_port, self._LOCALHOST, self.__jump_port)]
         return self._ssh_command + self._local_tunnel_command + [self._remote_tunnel_command]
 
     def close(self):
