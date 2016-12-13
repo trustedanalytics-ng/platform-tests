@@ -42,7 +42,7 @@ class TestGateway:
         gateway_instance = ServiceInstance.create_with_name(
             class_context,
             offering_label=ServiceLabels.GATEWAY,
-            plan_name=ServicePlan.FREE,
+            plan_name=ServicePlan.SINGLE,
             client=test_org_user_client
         )
         gateway_instance.ensure_running()
@@ -66,6 +66,9 @@ class TestGateway:
             raise AssertionError(str(e))
 
     def test_2_delete_gateway_instance(self, test_org_user_client):
+        step("Stop gateway instance")
+        self.gateway_instance.stop()
+        self.gateway_instance.ensure_stopped()
         step("Delete gateway instance")
         self.gateway_instance.delete(client=test_org_user_client)
         self.gateway_instance.ensure_deleted()
