@@ -78,6 +78,14 @@ class ApiServiceApplicationFlow:
         step("Check application is ready")
         sample_application.ensure_running()
 
+    @priority.high
+    def test_restart_application(self, sample_application):
+        """Test attempts to restart application and verify it's running"""
+        step("Restart application")
+        sample_application.restart()
+        step("Check application is ready")
+        sample_application.ensure_running()
+
     @priority.medium
     def test_get_application_logs(self, sample_application, api_service_admin_client):
         step("Check that getting application logs returns no error")

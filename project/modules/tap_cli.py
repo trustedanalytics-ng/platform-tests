@@ -18,15 +18,10 @@ import json
 import os
 import re
 
-from retry import retry
-
 import config
 from modules import command
-from modules.constants import HttpStatus, TapMessage
+from modules.constants import TapMessage
 from modules.exceptions import TapCliException
-from modules.http_client import HttpClientFactory
-from modules.http_client.client_auth.http_method import HttpMethod
-from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 
 
 class TapCli:
@@ -47,6 +42,7 @@ class TapCli:
     APPS = "applications"
     START = "start"
     STOP = "stop"
+    RESTART = "restart"
     SCALE = "scale"
     DELETE = "delete"
     PUSH_HELP = [PUSH, "--help"]
@@ -176,6 +172,20 @@ class TapCli:
 
     def stop_app(self, application_name):
         return self._run_command([self.STOP, application_name])
+
+    def restart_app(self, application_name: str):
+        """Restarts the application
+
+        Args:
+            application_name: Name of the application to restart
+
+        Returns:
+            Output of the command
+
+        Raises:
+            CommandExecutionException
+        """
+        return self._run_command([self.RESTART, application_name])
 
     def scale_app(self, application_name, instances):
         return self._run_command([self.SCALE, application_name, instances])

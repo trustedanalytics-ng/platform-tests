@@ -75,6 +75,15 @@ class TestApiServiceApplication:
                                                 api_service.scale_application, app_id=incorrect_id, replicas=3,
                                                 client=api_service_admin_client)
 
+    def test_cannot_restart_with_incorrect_id(self, api_service_admin_client):
+        """Attempts to restart non existent applicatin id"""
+        step("Restart application with incorrect id")
+        incorrect_id = "wrong_id"
+        expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_APP_INSTANCE.format(incorrect_id)
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, expected_message,
+                                                api_service.restart_application, app_id=incorrect_id,
+                                                client=api_service_admin_client)
+
     @priority.low
     @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_incorrect_instances_number(self, sample_app, api_service_admin_client):
@@ -91,6 +100,17 @@ class TestApiServiceApplication:
         expected_message = ApiServiceHttpStatus.MSG_MINIMUM_ALLOWED_REPLICA
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, expected_message,
                                                 sample_app.scale, replicas=-1, client=api_service_admin_client)
+
+    @priority.high
+    @pytest.mark.components(TAP.api_service)
+    def test_restart_application(self, sample_app):
+        """Attempts to restart an application and verifies it's running"""
+        step("Make sure the application is running so we can restart it")
+        sample_app.ensure_running()
+        step("Restart application")
+        sample_app.restart()
+        step("Verify the application is running")
+        sample_app.ensure_running()
 
     @priority.high
     @pytest.mark.components(TAP.api_service)

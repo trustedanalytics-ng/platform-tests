@@ -62,6 +62,19 @@ class CliApplication(CliObjectSuperclass):
         assert self.EXPECTED_SUCCESS_RESPONSE in stop_output
         return stop_output
 
+    def restart(self):
+        """Attempts to restart application
+
+        Returns:
+            Command output
+
+        Raises:
+            CommandExecutionException
+        """
+        output = self.tap_cli.restart_app(application_name=self.name)
+        assert self.EXPECTED_SUCCESS_RESPONSE in output
+        return output
+
     def scale(self, scale_app_instances):
         scale_output = self.tap_cli.scale_app(application_name=self.name, instances=scale_app_instances)
         assert self.EXPECTED_SUCCESS_RESPONSE in scale_output

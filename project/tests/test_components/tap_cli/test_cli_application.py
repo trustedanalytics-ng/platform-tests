@@ -77,6 +77,12 @@ class TestCliCommandsWithNonExistingApplication:
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.start_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
+    @priority.low
+    def test_try_restart_non_existing_app(self, tap_cli, cli_login):
+        step("Try to restart app with non existing name")
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.restart_app,
+                                                  application_name=self.NON_EXISTING_APP_NAME)
+
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
@@ -238,6 +244,12 @@ class TestPythonCliApp:
         sample_cli_app.ensure_app_state(state=TapEntityState.STOPPED)
         step("Start app")
         sample_cli_app.start()
+        step("Ensure app is running")
+        sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
+
+    def test_restart_app(self, sample_cli_app):
+        step("Restart app")
+        sample_cli_app.restart()
         step("Ensure app is running")
         sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
 
