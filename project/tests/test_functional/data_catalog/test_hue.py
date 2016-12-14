@@ -14,13 +14,10 @@
 # limitations under the License.
 #
 
-import csv
-
 import pytest
-from bs4 import BeautifulSoup
 
 from modules.constants import TapComponent as TAP, Urls
-from modules.file_utils import download_file
+from modules.file_utils import download_file, get_csv_data
 from modules.hive import Hive
 from modules.http_calls import hue
 from modules.markers import priority, incremental
@@ -103,7 +100,6 @@ class TestHue:
         table_metadata = hue.get_table_metadata(database_name=self.database_name, table_name=self.transfer.title)
         assert table_metadata["status"] == 0
 
-    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_3_check_table_content(self):
         """
         <b>Description:</b>
@@ -123,17 +119,8 @@ class TestHue:
         """
         step("Check table content against submitted transfer")
         table_response = hue.get_table(database_name=self.database_name, table_name=self.transfer.title)
-        expected_csv = list(csv.reader(open(download_file(url=self.TRANSFER_SOURCE))))
-        table_soup = BeautifulSoup(table_response, "html.parser")
-        sample_table = table_soup.find("table", {"id": "sampleTable"})
-        assert all(val in str(sample_table) for val in sum(expected_csv, [])), "Not all table values are in hue"
-        sample_table_soup = BeautifulSoup(str(sample_table), "html.parser")
-        rows = sample_table_soup.find_all("tr")
-        assert len(rows) - 1 == len(expected_csv), "The number of rows is incorrect"
-        columns = sample_table_soup.find_all("th")
-        assert len(columns) - 1 == 8, "The number of columns is incorrect"
+        assert table_response["rows"] == get_csv_data(download_file(url=self.TRANSFER_SOURCE))
 
-    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_4_check_file_browser(self, admin_user):
         """
         <b>Description:</b>
@@ -152,7 +139,6 @@ class TestHue:
         response = hue.get_file_browser()
         assert response["home_directory"] == "/user/{}".format(admin_user.guid)
 
-    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_5_check_jobs_in_job_browser(self, admin_user):
         """
         <b>Description:</b>
@@ -171,7 +157,6 @@ class TestHue:
         response = hue.get_job_browser()
         assert all(item["user"] == admin_user.guid for item in response["jobs"])
 
-    @pytest.mark.skip(reason="DPNG-11942 [api-tests] Adjust test_hue to new TAP")
     def test_6_execute_hive_queries(self):
         """
         <b>Description:</b>
@@ -191,9 +176,6 @@ class TestHue:
         step("Connect to hive")
         hive = Hive()
         step("Execute SQL queries in hive")
-        hive_data = hive.exec_query("SELECT * FROM {}.{};".format(self.database_name, self.transfer.title))
-        record_count = hive.exec_query("SELECT COUNT(*) FROM {}.{};".format(self.database_name, self.transfer.title))
+        hive_data = hive.exec_query("SELECT * FROM {};".format(self.transfer.title), self.database_name)
         step("Check data from hive is equal to data from transfer")
-        test_csv = list(map(lambda x: x.strip(), open(download_file(url=self.TRANSFER_SOURCE)).readlines()))
-        assert hive_data == test_csv
-        assert record_count == [str(len(test_csv))]
+        assert hive_data == get_csv_data(download_file(url=self.TRANSFER_SOURCE))

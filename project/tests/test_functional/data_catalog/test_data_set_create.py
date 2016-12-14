@@ -20,7 +20,7 @@ from datetime import datetime
 import pytest
 
 from modules.constants import TapComponent as TAP, Urls
-from modules.file_utils import download_file, get_csv_data, get_csv_record_count
+from modules.file_utils import download_file, get_csv_first_row, get_csv_record_count
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, DataSet, DatasetAccess as Access, Transfer
@@ -86,7 +86,7 @@ class TestCreateDataSets(object):
             'size': os.path.getsize(local_file_path),
             'orgUUID': test_org.guid,
             'format': "CSV",
-            'dataSample': ",".join(get_csv_data(local_file_path)),
+            'dataSample': ",".join(get_csv_first_row(local_file_path)),
             'isPublic': Access.PRIVATE.value,
             'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
         }
@@ -161,7 +161,7 @@ class TestCreateDataSetsFromFile(TestCreateDataSets):
             'size': os.path.getsize(local_file_path),
             'orgUUID': test_org.guid,
             'format': "CSV",
-            'dataSample': ",".join(get_csv_data(local_file_path)),
+            'dataSample': ",".join(get_csv_first_row(local_file_path)),
             'isPublic': Access.PRIVATE.value,
             'creationTime': datetime.utcfromtimestamp(transfer.timestamps["FINISHED"]).strftime("%Y-%m-%dT%H:%M")
         }

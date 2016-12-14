@@ -69,6 +69,14 @@ def get_csv_record_count(file_path):
 
 def get_csv_data(file_path):
     """
+    Return data from chosen csv file
+    """
+    with open(file_path, newline="") as csv_file:
+        return list(csv.reader(csv_file))
+
+
+def get_csv_first_row(file_path):
+    """
     Return first row from chosen csv file
     """
     with open(file_path, newline="") as csv_file:

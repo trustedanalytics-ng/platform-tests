@@ -54,12 +54,12 @@ def get_tables(database_name, client=None):
 
 
 def get_table(database_name, table_name, client=None):
-    """GET metastore/table/{database_name}/{table_name}"""
+    """GET beeswax/api/table/{}/{}/sample"""
     if client is None:
         client = get_logged_client()
     return client.request(
         method=HttpMethod.GET,
-        path="metastore/table/{}/{}".format(database_name, table_name),
+        path="beeswax/api/table/{}/{}/sample".format(database_name, table_name),
         msg="HUE: get table"
     )
 
