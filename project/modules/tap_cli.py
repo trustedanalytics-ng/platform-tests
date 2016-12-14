@@ -36,6 +36,7 @@ class TapCli:
     DELETE_SERVICE = "delete-service", "ds"
     SERVICES = "services", "svcs"
     SERVICE = "service", "s"
+    SERVICE_STOP = "service-stop"
     LOGS = "logs", "log"
     PUSH = "push"
     APP = "application"
@@ -111,6 +112,9 @@ class TapCli:
     def service_log(self, service_name, short=False):
         return self._run_command([self.LOGS[1] if short else self.LOGS[0], service_name],
                                  filter_logs=False)
+
+    def service_stop(self, service_name):
+        return self._run_command([self.SERVICE_STOP, service_name], filter_logs=False)
 
     def bindings(self, instance_name):
         output = self._run_command([self.BINDINGS, instance_name])

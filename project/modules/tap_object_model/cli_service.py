@@ -87,6 +87,9 @@ class CliService(CliObjectSuperclass):
     def delete(self):
         return self.tap_cli.delete_service([self.name])
 
+    def stop(self):
+        self.tap_cli.service_stop(self.name)
+
     @retry(AssertionError, tries=60, delay=5)
     def ensure_service_state(self, state):
         self.state = self.get(self.name, self.tap_cli).state
