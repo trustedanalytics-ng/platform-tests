@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-import itertools
-
 import pytest
 
 from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ApiServiceHttpStatus, ServiceLabels, ServicePlan, \
@@ -24,10 +22,8 @@ from modules.exceptions import UnexpectedResponseError
 from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance, ServiceOffering
-from modules.test_names import generate_test_object_name
-from tests.fixtures import assertions
-from tests.fixtures.assertions import assert_no_errors, assert_raises_http_exception, assert_in_with_retry, \
+from modules.tap_object_model import ServiceInstance
+from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry, \
     assert_unordered_list_equal
 
 
@@ -53,6 +49,18 @@ class TestMarketplaceServices:
         terminal = jupyter.connect_to_terminal(terminal_no=0)
         _ = terminal.get_output()
         return terminal
+
+    @pytest.fixture(scope="class")
+    def service_instance(self, class_context):
+        step("Create service instance")
+        instance = ServiceInstance.create_with_name(
+            context=class_context,
+            offering_label=ServiceLabels.RABBIT_MQ,
+            plan_name=ServicePlan.SINGLE_SMALL,
+        )
+        step("Ensure that instance is running")
+        instance.ensure_running()
+        return instance
 
     @long
     @priority.high
@@ -96,31 +104,17 @@ class TestMarketplaceServices:
         assert "{}={}".format(param_key, param_value) in output
 
     @priority.medium
-    def test_cannot_create_service_instance_with_name_of_an_existing_instance(self, context, marketplace_offerings):
-        existing_name = generate_test_object_name(short=True)
+    def test_cannot_create_service_instance_with_name_of_an_existing_instance(self, context):
         step("Create service instance")
-        instance = ServiceInstance.create_with_name(
-            context=context,
-            offering_label=ServiceLabels.RABBIT_MQ,
-            name=existing_name,
-            plan_name=ServicePlan.SINGLE_SMALL,
-        )
+        instance = ServiceInstance.create_with_name(context, offering_label=ServiceLabels.RABBIT_MQ,
+                                                    plan_name=ServicePlan.SINGLE_SMALL)
         step("Ensure that instance is running")
         instance.ensure_running()
-        step("Check that the instance was created")
-        instances = ServiceInstance.get_list()
-        assert instance in instances, "Instance was not created"
-        errors = []
-        for offering in marketplace_offerings:
-            offering_id = offering.id
-            plan_id = offering.service_plans[0].id
-            step("Try to create {} service instance".format(offering.label))
-            with pytest.raises(UnexpectedResponseError) as e:
-                ServiceInstance.create(context, offering_id=offering_id,  plan_id=plan_id, name=existing_name)
-            if e is None or e.value.status != HttpStatus.CODE_CONFLICT:
-                errors.append("Service '{}' failed to respond with given error status.".format(offering.label))
-        assert_no_errors(errors)
-        assert_unordered_list_equal(instances, ServiceInstance.get_list(), "Some new services were created")
+        step("Try to create service instance with already taken name")
+        with pytest.raises(UnexpectedResponseError) as e:
+            ServiceInstance.create_with_name(context, offering_label=ServiceLabels.REDIS,
+                                             plan_name=ServicePlan.SINGLE_SMALL, name=instance.name)
+        assert e.value.status == HttpStatus.CODE_CONFLICT, "Created service instance with already taken name"
 
     @priority.low
     def test_cannot_create_instance_without_a_name(self, context):
