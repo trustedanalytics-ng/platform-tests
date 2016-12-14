@@ -32,6 +32,27 @@ class TestAuthGateway:
 
     @priority.high
     def test_add_user(self, test_org, context):
+        """ Verify if user data are properly saved in HDFS while creating user and uploading data file to TAP.
+
+            After create user test verifies that user is synchronized. Then login to platform as new user.
+            Create transfer to HDFS and check that transfer is completed.
+
+            Input data:
+                user name: name for new user
+                data file: file which is transferred to HDFS
+                organization: organization wherein will be new user
+
+            Expected results:
+               It is possible to create new user and login to platform as new user. New user is able to create
+               transfer to HDFS. User data are properly saved on HDFS.
+
+            Steps:
+                1. Create new user
+                2. Check that user is created completely
+                3. Login as new registered user
+                4. Check that the user is able to create a transfer
+                5. Ensure that transfer is completed successfully
+        """
         step("Create new user")
         user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid,
                                                      role=User.ORG_ROLE["user"])
@@ -46,6 +67,25 @@ class TestAuthGateway:
 
     @priority.high
     def test_remove_user(self, context, test_org):
+        """ Validate if user is properly removed from organization and from HDFS
+
+            Create user, check that user is synchronized. Then remove user from organization and check that user is
+            deleted from there. After remove check that user is not removed in auth-gateway.
+
+            Input data:
+                organization: organization wherein will be new user
+                user name: name for new user
+
+            Expected results:
+                It is possible to create new user by adding to organization and remove by deleting from organization.
+                User removed from organization is not in auth-gateway.
+
+            Steps:
+                1. Create new user
+                2. Admin removes user from organization
+                3. Check that the user is removed from organization
+                4. Check that the user is removed in auth-gateway
+        """
         step("Create new user")
         user_to_delete = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid,
                                                                role=User.ORG_ROLE["user"])
