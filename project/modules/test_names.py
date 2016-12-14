@@ -14,9 +14,10 @@
 # limitations under the License.
 #
 
-from datetime import datetime
 import re
 import socket
+import uuid
+from datetime import datetime
 
 import config
 
@@ -25,7 +26,7 @@ def is_test_object_name(name):
     """Return True if object's name matches pattern for test names, False otherwise."""
     if name is None:
         return False  # there are users with username=None
-    test_name_regex = r'^.*[0-9]{8}(.?)[0-9]{6}\1[0-9]{0,6}(@gmail.com)?$'
+    test_name_regex = r'^.*[0-9]{8}(.?)[0-9]{6}\1([a-z0-9]{0,32}|([0-9]{6})?@gmail.com)?$'
     return re.match(test_name_regex, name) is not None
 
 
@@ -35,13 +36,20 @@ def generate_test_object_name(email=False, short=False, prefix=None, separator="
        Short version: ubuntuitdp20620160822131159
     """
     # TODO add global counter
+    date_format, time_format, ms_format = "%Y%m%d", "%H%M%S", "%f"
+    now = datetime.now()
+    date, time = now.strftime(date_format), now.strftime(time_format)
+    milliseconds = "" if short else now.strftime(ms_format)
+    guid = "" if short else str(uuid.uuid4()).replace("-", "")
     separator = "" if short else separator
-    str_format = "%Y%m%d{0}%H%M%S".format(separator) if short else "%Y%m%d{0}%H%M%S{0}%f".format(separator)
-    now = datetime.now().strftime(str_format)
-    name_format = config.test_user_email.replace('@', '+{}{}{}@') if email else "{}{}{}"
     if prefix is None:
         prefix = socket.gethostname().split(".", 1)[0].replace("-", separator).lower()
-    return name_format.format(prefix, separator, now)
+    if email:
+        email_format = config.test_user_email.replace('@', '+{}@')
+        name = separator.join([prefix, date, time, milliseconds])
+        return email_format.format(name)
+    else:
+        return separator.join([prefix, date, time, guid])
 
 
 def escape_hive_name(string):
