@@ -32,23 +32,6 @@ from tests.fixtures.assertions import assert_raises_command_execution_exception
 pytestmark = [pytest.mark.components(TAP.cli)]
 
 
-def copy_dir_as_symlinks(*, src_root, dst_root):
-    """ Copies a directory using symbolic links.
-        - directories are copied as directories
-        - files are copied as symbolic links to the files
-        - symbolic links are copied as symbolic links to the symbolic links
-    """
-    shutil.rmtree(dst_root, ignore_errors=True)
-    for current_root, dirs, files in os.walk(src_root):
-        src_dir = current_root
-        tgt_dir = src_dir.replace(src_root, dst_root)
-        os.mkdir(tgt_dir)
-        for file in files:
-            src_file = os.path.join(src_dir, file)
-            tgt_file = os.path.join(tgt_dir, file)
-            os.symlink(src_file, tgt_file)
-
-
 class TestCheckAppPushHelp:
 
     @priority.medium
@@ -256,13 +239,18 @@ class TestAppBase:
 
         sample_app_target_directory_with_symlinks = os.path.join(os.path.dirname(os.path.normpath(sample_app_source_dir)),
                                                                  "sample_{}_app_target_with_symlinks".format(self.APP_TYPE))
-        copy_dir_as_symlinks(src_root=sample_app_source_dir,
-                             dst_root=sample_app_target_directory_with_symlinks)
+        step("Make copy of application directory with symbolic links preserved")
+        shutil.rmtree(sample_app_target_directory_with_symlinks, ignore_errors=True)
+        shutil.copytree(sample_app_source_dir,
+                        sample_app_target_directory_with_symlinks,
+                        symlinks=True)
         step("Create internal directory symlink")
-        run_sh = os.path.join(sample_app_target_directory_with_symlinks, "run.sh")
-        runfile = os.path.join(sample_app_target_directory_with_symlinks, "test-copy-of-run.sh")
-        shutil.move(src=run_sh, dst=runfile)
-        os.symlink(src=runfile, dst=run_sh)
+        runfile_name = "run.sh"
+        runfile_copy_name = "test-copy-of-{}".format(runfile_name)
+        runfile = os.path.join(sample_app_target_directory_with_symlinks, runfile_name)
+        runfile_copy = os.path.join(sample_app_target_directory_with_symlinks, runfile_copy_name)
+        shutil.move(src=runfile, dst=runfile_copy)
+        os.symlink(src=runfile_copy_name, dst=runfile) # create relative symbolic link - no absolute target path
         yield sample_app_target_directory_with_symlinks
         # Fixture finalization
         shutil.rmtree(sample_app_target_directory_with_symlinks, ignore_errors=True)
