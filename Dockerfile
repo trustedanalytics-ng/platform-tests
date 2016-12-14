@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-FROM tapimages.us.enableiot.com:8080/tap-base-python:python3.4
+FROM tapimages:8080/tap-base-python:python3.4
 MAINTAINER Dariusz Ciemiega <dariuszx.ciemiega@intel.com>
 
 RUN apt-get update \
