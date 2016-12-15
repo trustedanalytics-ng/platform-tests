@@ -151,37 +151,6 @@ class TestContainerBroker:
         response = container_broker_instance.get_envs()
         assert ContainerBrokerInstance.ENVS_KEY in response[0]
 
-    @pytest.mark.components(TAP.catalog, TAP.container_broker)
-    def test_scale_instance(self, catalog_instance_a):
-        for scaled_instances in [3, 1]:
-            step("CONTAINER-BROKER: Scale instance to {}".format(scaled_instances))
-            container_broker_instance = ContainerBrokerInstance(instance_id=catalog_instance_a.id)
-            container_broker_instance.scale(instance_number=scaled_instances)
-            self._assert_pod_count_with_retry(instance_id=container_broker_instance.id,
-                                              expected_pod_count=scaled_instances)
-
-    @pytest.mark.components(TAP.catalog, TAP.container_broker)
-    def test_destroy_scaled_instance(self, context, offering_a):
-        step("CATALOG: Create service instance in REQUESTED state")
-        instance = CatalogServiceInstance.create(context, service_id=offering_a.id, plan_id=offering_a.plans[0].id,
-                                                 state=TapEntityState.REQUESTED)
-        step("Wait for the monitor and container-broker to move the instance to RUNNING state")
-        instance.ensure_in_state(expected_state=TapEntityState.RUNNING)
-
-        step("CONTAINER-BROKER: scale instance")
-        container_broker_instance = ContainerBrokerInstance(instance_id=instance.id)
-        container_broker_instance.scale(instance_number=2)
-
-        step("CATALOG: Stop service instance")
-        instance.stop()
-        step("CATALOG: Destroy service instance and check it's gone")
-        instance.destroy()
-        assertions.assert_not_in_with_retry(instance, CatalogServiceInstance.get_list_for_service,
-                                            service_id=offering_a.id)
-
-        step("KUBERNETES: Check that no pod exists for the scaled instance")
-        self._assert_pod_count_with_retry(instance_id=instance.id, expected_pod_count=0)
-
     @pytest.mark.bugs("DPNG-12415 container-broker: Insufficient information in error message")
     @pytest.mark.components(TAP.container_broker)
     def test_cannot_get_logs_with_incorrect_instance_id(self):
