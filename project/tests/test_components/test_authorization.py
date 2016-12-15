@@ -52,6 +52,13 @@ class TestApiServiceAuthorization:
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
                                      api.get_offerings, client=self.basic_auth_client)
 
+    @priority.high
+    def test_cannot_get_platform_info_with_basic_auth(self):
+        step("Check that basic auth does not work with platform info")
+        assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
+                                     api.get_platform_info, client=self.basic_auth_client)
+
+
     def test_login_to_console_with_valid_credentials(self):
         step("Login using uaa endpoint")
         client = HttpClientFactory.get(

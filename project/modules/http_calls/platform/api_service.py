@@ -407,3 +407,19 @@ def get_metrics_organizations(*, client: HttpClient, org_id: str, time_from: str
     }
     return client.request(method=HttpMethod.GET, path="metrics/organizations/{}".format(org_id), body=body,
                           msg="Get organization metrics")
+
+# --------------------------------------- platform info --------------------------------------- #
+
+def get_platform_info(*, client: HttpClient) -> dict:
+    """GET /platform/info
+
+    Attempts to retrieve the platform info
+
+    Args:
+        client: HttpClient to use
+
+    Return:
+        Platform info as a dictionary
+    """
+    return client.request(method=HttpMethod.GET, path="platform_info",
+                          msg="Get platform info")
