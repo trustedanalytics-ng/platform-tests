@@ -34,8 +34,8 @@ class TestServiceInstantiation:
     @classmethod
     @pytest.fixture(scope="class")
     def instance(cls, class_context, api_service_admin_client):
-        instance = ServiceInstance.create_with_name(context=class_context, offering_label=ServiceLabels.REDIS,
-                                                    plan_name=ServicePlan.SINGLE_SMALL, client=api_service_admin_client)
+        instance = ServiceInstance.create_with_name(context=class_context, offering_label=ServiceLabels.KAFKA,
+                                                    plan_name=ServicePlan.SHARED, client=api_service_admin_client)
         instance.ensure_running(client=api_service_admin_client)
         return instance
 
@@ -59,8 +59,8 @@ class TestServiceInstantiation:
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_CONFLICT,
                                                 ApiServiceHttpStatus.MSG_SERVICE_INSTANCE_ALREADY_EXISTS
                                                 .format(instance.name), ServiceInstance.create_with_name,
-                                                context=class_context, offering_label=ServiceLabels.REDIS,
-                                                plan_name=ServicePlan.SINGLE_SMALL, name=instance.name,
+                                                context=class_context, offering_label=ServiceLabels.KAFKA,
+                                                plan_name=ServicePlan.SHARED, name=instance.name,
                                                 client=api_service_admin_client)
 
     @priority.medium
@@ -123,8 +123,8 @@ class TestServiceInstantiationOther:
     @pytest.fixture(scope="class")
     def etcd_offering(cls, api_service_admin_client):
         offerings = ServiceOffering.get_list(client=api_service_admin_client)
-        offering = next((o for o in offerings if o.label == ServiceLabels.REDIS), None)
-        assert offering is not None, "{} not found".format(ServiceLabels.REDIS)
+        offering = next((o for o in offerings if o.label == ServiceLabels.KAFKA), None)
+        assert offering is not None, "{} not found".format(ServiceLabels.KAFKA)
         return offering
 
     @classmethod
@@ -206,5 +206,5 @@ class TestServiceInstantiationOther:
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 ApiServiceHttpStatus.MSG_FIELD_INCORRECT_VALUE.format("Name"),
                                                 ServiceInstance.create_with_name, context=class_context,
-                                                offering_label=ServiceLabels.REDIS, plan_name=ServicePlan.SINGLE_SMALL,
+                                                offering_label=ServiceLabels.KAFKA, plan_name=ServicePlan.SHARED,
                                                 name="name with space", client=api_service_admin_client)

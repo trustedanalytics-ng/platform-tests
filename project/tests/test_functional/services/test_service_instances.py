@@ -29,8 +29,8 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.api_service)]
 class TestTapServiceInstance:
     @pytest.fixture(scope="function")
     def instance(self, context):
-        instance = ServiceInstance.create_with_name(context=context, offering_label=ServiceLabels.REDIS,
-                                                    plan_name=ServicePlan.SINGLE_SMALL)
+        instance = ServiceInstance.create_with_name(context=context, offering_label=ServiceLabels.KAFKA,
+                                                    plan_name=ServicePlan.SHARED)
         instance.ensure_running()
         return instance
 
