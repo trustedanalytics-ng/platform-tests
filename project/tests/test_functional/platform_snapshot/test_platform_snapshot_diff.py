@@ -30,7 +30,6 @@ pytestmark = [pytest.mark.components(TAP.platform_snapshot)]
 
 @incremental
 @priority.medium
-@pytest.mark.skip(reason="DPNG-11945 [api-tests] Adjust test_snapshot tests to new TAP")
 class TestSnapshotDiff:
     def test_0_create_platform_snapshot_before_changes(self):
         step("Save number of snapshots")
@@ -73,7 +72,7 @@ class TestSnapshotDiff:
                                                                            snapshot_1_number=len(snapshots))
         step("Check platform snapshots diff has all elements")
         assert all(self.element in platform_snapshots_diff for self.element in ["applications", "cdh_services",
-                                                                                "cf_services", "created_at_before",
+                                                                                "tap_services", "created_at_before",
                                                                                 "created_at_after"]),\
             "{} element is not present in diff".format(self.element)
         step("Get applications json diff")
