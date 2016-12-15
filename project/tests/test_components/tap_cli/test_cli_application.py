@@ -107,9 +107,7 @@ class TestCliCommandsWithNonExistingApplication:
                                                   tap_cli.delete_app, application_name=self.NON_EXISTING_APP_NAME)
 
 
-@pytest.mark.usefixtures("cli_login")
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestPythonCliApp:
+class TestAppBase:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_TYPE = TapApplicationType.PYTHON27
@@ -165,6 +163,27 @@ class TestPythonCliApp:
         # Fixture finalization
         shutil.rmtree(sample_app_target_directory_with_symlinks, ignore_errors=True)
 
+class TestBadApplication(TestAppBase):
+    def test_no_manifest(self, class_context, sample_app_target_directory, tap_cli):
+        """Try to push an application, but don't provide the manifest"""
+        p_a = PrepApp(sample_app_target_directory)
+        step("Create/update manifest")
+        manifest_params = {"type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+        step("Remove the manifest")
+        os.remove(manifest_path)
+        step("Try to push the app without manifest")
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_FIND_MANIFEST,
+                                                  CliApplication.push,
+                                                  class_context, tap_cli=tap_cli,
+                                                  app_type=self.APP_TYPE,
+                                                  app_path=sample_app_target_directory,
+                                                  name=p_a.app_name,
+                                                  instances=p_a.instances)
+
+@pytest.mark.usefixtures("cli_login")
+@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
+class TestPythonCliApp(TestAppBase):
     @pytest.fixture(scope="class")
     def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
         step("Update the manifest")
