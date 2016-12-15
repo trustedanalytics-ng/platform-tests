@@ -72,9 +72,18 @@ class TestCatalogApplicationInstances:
     def test_update_application_instance_class_id(self, context, catalog_application):
         step("Create application instance in catalog")
         test_instance = CatalogApplicationInstance.create(context, application_id=catalog_application.id)
+        step("Get class id for application instance before update")
+        class_id_before_update = test_instance.class_id
         step("Update application instance class id")
         test_instance.update(field_name="classId", value=self.SAMPLE_CLASS_ID)
         step("Check that the application instance was updated")
+        instance = CatalogApplicationInstance.get(application_id=catalog_application.id, instance_id=test_instance.id)
+        assert test_instance == instance
+
+        step("Update application instance class id value to the original value")
+        test_instance.class_id = class_id_before_update
+        test_instance.update(field_name="classId", value=class_id_before_update)
+        step("Check that the application instance was updated to the original value")
         instance = CatalogApplicationInstance.get(application_id=catalog_application.id, instance_id=test_instance.id)
         assert test_instance == instance
 

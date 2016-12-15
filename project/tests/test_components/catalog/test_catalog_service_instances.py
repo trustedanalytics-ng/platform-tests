@@ -76,9 +76,19 @@ class TestCatalogServiceInstances:
         step("Create service instance in catalog")
         catalog_service_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id,
                                                                  plan_id=catalog_service.plans[0].id)
+        step("Get class id for application instance before update")
+        class_id_before_update = catalog_service_instance.class_id
         step("Update service instance class id")
         catalog_service_instance.update(field_name="classId", value=self.SAMPLE_CLASS_ID)
         step("Check that the service instance was updated")
+        service_instance = CatalogServiceInstance.get(service_id=catalog_service.id,
+                                                      instance_id=catalog_service_instance.id)
+        assert catalog_service_instance == service_instance
+
+        step("Update service instance class id value to the original value")
+        catalog_service_instance.class_id = class_id_before_update
+        catalog_service_instance.update(field_name="classId", value=class_id_before_update)
+        step("Check that the service instance was updated to the original value")
         service_instance = CatalogServiceInstance.get(service_id=catalog_service.id,
                                                       instance_id=catalog_service_instance.id)
         assert catalog_service_instance == service_instance
