@@ -17,7 +17,7 @@
 import pytest
 
 import config
-from modules.constants import HttpStatus, TapComponent as TAP
+from modules.constants import HttpStatus, ServiceLabels, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
@@ -29,11 +29,22 @@ from modules.tap_object_model.k8s_service import K8sService
 from tap_component_config import TAP_core_services, third_party_services, api_service, offerings_as_parameters
 
 
+not_tested_components = [TAP.das, TAP.data_catalog, TAP.dataset_publisher, TAP.downloader,
+                        TAP.h2o_scoring_engine_publisher, TAP.metadata_parser, TAP.metrics_grafana,
+                        TAP.metrics_prometheus, TAP.nginx_ingress, TAP.uploader, TAP.user_management]
+
+not_tested_offerings = [ServiceLabels.H2O, ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.HIVE,
+                        ServiceLabels.JUPYTER, ServiceLabels.SCORING_ENGINE, ServiceLabels.SCORING_PIPELINES,
+                        ServiceLabels.ZOOKEEPER]
+filtered_offerings_as_parameters = list(filter(lambda x: x[0] not in not_tested_offerings, offerings_as_parameters))
+
+
 @priority.high
 @pytest.mark.usefixtures("open_tunnel")
 class TestK8sComponents:
-    k8s_core_service_params = sorted(TAP_core_services.items(), key=lambda x: x[0])
-    k8s_core_service_ids = sorted([c for c in TAP_core_services.keys()])
+    k8s_core_service_params = list(filter(lambda x: x[0] not in not_tested_components,
+                                          sorted(TAP_core_services.items(), key=lambda x: x[0])))
+    k8s_core_service_ids = sorted([c for c in TAP_core_services.keys() if c not in not_tested_components])
     third_party_service_params = sorted(third_party_services.items(), key=lambda x: x[0])
     third_party_service_ids = sorted([c for c in third_party_services.keys()])
 
@@ -129,7 +140,8 @@ class TestK8sComponents:
                                          raise_exception=True, msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
-    @pytest.mark.parametrize("expected_app", TAP.get_list_internal())
+    @pytest.mark.parametrize("expected_app", list(filter(lambda x: x not in not_tested_components,
+                                                         TAP.get_list_internal())))
     def test_k8s_component_presence_on_platform(self, expected_app, running_tap_components):
         """
         <b>Description:</b>
@@ -147,7 +159,7 @@ class TestK8sComponents:
         step("Check that '{}' app is present on platform".format(expected_app))
         assert expected_app in running_tap_components, "No such service {}".format(expected_app)
 
-    @pytest.mark.parametrize("expected_offering,plan_name", offerings_as_parameters)
+    @pytest.mark.parametrize("expected_offering,plan_name", filtered_offerings_as_parameters)
     def test_available_offerings(self, expected_offering, plan_name, test_marketplace):
         """
         <b>Description:</b>
@@ -173,7 +185,7 @@ class TestK8sComponents:
 class TestSmokeTrustedAnalyticsComponents:
 
     @pytest.mark.bugs("DPNG-13413 user-management is no longer reachable from outside network")
-    @pytest.mark.parametrize("component", [TAP.user_management, TAP.api_service, TAP.uaa])
+    @pytest.mark.parametrize("component", [TAP.api_service, TAP.uaa])
     def test_components_check_healthz(self, component):
         """
         <b>Description:</b>

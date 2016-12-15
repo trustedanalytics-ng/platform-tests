@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import Guid, TapComponent as TAP, Urls
+from modules.constants import Guid, ServiceLabels, TapComponent as TAP, Urls
 from modules.constants.http_status import PlatformTestsHttpStatus
 from modules.constants.model_metadata import MODEL_METADATA
 from modules.exceptions import UnexpectedResponseError
@@ -40,6 +40,11 @@ pytestmark = [priority.high]
 
 expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
                          "private_datasets", "public_datasets"]
+not_tested_offerings = [ServiceLabels.ELASTICSEARCH17, ServiceLabels.GEARPUMP, ServiceLabels.H2O, ServiceLabels.HBASE,
+                        ServiceLabels.HDFS, ServiceLabels.HIVE, ServiceLabels.INFLUX_DB_110, ServiceLabels.JUPYTER,
+                        ServiceLabels.ORIENT_DB, ServiceLabels.RABBIT_MQ, ServiceLabels.SCORING_ENGINE,
+                        ServiceLabels.SCORING_PIPELINES, ServiceLabels.ZOOKEEPER]
+filtered_offerings_as_parameters = list(filter(lambda x: x[0] not in not_tested_offerings, offerings_as_parameters))
 
 
 def test_login():
@@ -246,7 +251,7 @@ def test_add_and_delete_transfer_from_file(core_org, context):
 @pytest.mark.components(TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
-@pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
+@pytest.mark.parametrize("service_label,plan_name", filtered_offerings_as_parameters)
 def test_create_and_delete_marketplace_service_instances(context, service_label, plan_name):
     """
     <b>Description:</b>
@@ -306,32 +311,32 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     assert response.status_code == 200
 
 
-@pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-@pytest.mark.parametrize("sample_db_app_key", (["app_bound_mysql", "app_bound_mongodb", "app_bound_psql"]))
-def test_push_db_app_check_response(sample_db_app, sample_db_app_key):
-    """
-    <b>Description:</b>
-    Checks if application pushed to the platform with postgres or mysql database service bound work.
-
-    <b>Input data:</b>
-    1. Application names.
-    2. Application gzip paths.
-    3. Application manifest paths.
-
-    <b>Expected results:</b>
-    Test passes when application with postgres or mysql database service bound are in RUNNING state and returns OK
-    status to HTTP GET request.
-
-    <b>Steps:</b>
-    1. Create HTTP client.
-    2. Send GET request with the client.
-    3. Verify response is not None and response status code equals 200.
-    """
-    sample_db_app = sample_db_app[sample_db_app_key]
-    client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_db_app.urls[0]))
-    response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
-    assert response is not None
-    assert response.status_code == 200
+# @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+# @pytest.mark.parametrize("sample_db_app_key", (["app_bound_mysql", "app_bound_mongodb", "app_bound_psql"]))
+# def test_push_db_app_check_response(sample_db_app, sample_db_app_key):
+#     """
+#     <b>Description:</b>
+#     Checks if application pushed to the platform with postgres or mysql database service bound work.
+#
+#     <b>Input data:</b>
+#     1. Application names.
+#     2. Application gzip paths.
+#     3. Application manifest paths.
+#
+#     <b>Expected results:</b>
+#     Test passes when application with postgres or mysql database service bound are in RUNNING state and returns OK
+#     status to HTTP GET request.
+#
+#     <b>Steps:</b>
+#     1. Create HTTP client.
+#     2. Send GET request with the client.
+#     3. Verify response is not None and response status code equals 200.
+#     """
+#     sample_db_app = sample_db_app[sample_db_app_key]
+#     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_db_app.urls[0]))
+#     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
+#     assert response is not None
+#     assert response.status_code == 200
 
 
 @pytest.mark.skip(reason="DPNG-11944 [api-tests] adjust test_platform_tests to new TAP")
