@@ -95,7 +95,7 @@ class TestCliService:
         step("Check that logs are shown for a service instance")
         logs_output = service.logs()
         header_line = logs_output.split("\n", 1)[0]
-        assert header_line.startswith("x{}".format(service.id[:8]))
+        assert "x{}".format(service.id[:8]) in header_line
 
     @priority.low
     @pytest.mark.components(TAP.cli)
