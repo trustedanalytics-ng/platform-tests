@@ -31,7 +31,7 @@ from tap_component_config import TAP_core_services, third_party_services, api_se
 
 not_tested_components = [TAP.das, TAP.data_catalog, TAP.dataset_publisher, TAP.downloader,
                         TAP.h2o_scoring_engine_publisher, TAP.metadata_parser, TAP.metrics_grafana,
-                        TAP.metrics_prometheus, TAP.nginx_ingress, TAP.uploader, TAP.user_management]
+                        TAP.metrics_prometheus, TAP.nginx_ingress, TAP.uploader]
 
 not_tested_offerings = [ServiceLabels.H2O, ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.HIVE,
                         ServiceLabels.JUPYTER, ServiceLabels.SCORING_ENGINE, ServiceLabels.SCORING_PIPELINES,
