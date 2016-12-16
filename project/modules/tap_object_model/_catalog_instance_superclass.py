@@ -85,7 +85,8 @@ class CatalogInstanceSuperClass(object):
         self.update(field_name="state", value=TapEntityState.DESTROY_REQ)
 
     def cleanup(self):
-        self.stop()
+        if self.state == TapEntityState.RUNNING:
+            self.stop()
         self.destroy()
 
     @retry(AssertionError, tries=10, delay=10)
