@@ -39,9 +39,21 @@ class TestServiceInstance:
     SERVICE_NAME = "test"
     SERVICE_PLAN_ID = str(uuid.uuid4())
     SERVICE_PLAN_NAME = "test_plan"
+    SERVICE_URL = "www.some-url.com"
     INSTANCE_ID = str(uuid.uuid4())
     BINDINGS = None
     TYPE = "SERVICE"
+
+    METADATA_LIST = [
+        {
+            "key": "PLAN_ID",
+            "value": SERVICE_PLAN_ID
+        },
+        {
+            "key": "urls",
+            "value": SERVICE_URL
+        }
+    ]
 
     CREATE_SERVICE_RESPONSE_BODY_TEMPLATE = {
         "id": INSTANCE_ID,
@@ -50,12 +62,7 @@ class TestServiceInstance:
         "classId": OFFERING_ID,
         "bindings": BINDINGS,
         "serviceName": OFFERING_LABEL,
-        "metadata": [
-            {
-                "key": "PLAN_ID",
-                "value": SERVICE_PLAN_ID
-            }
-        ],
+        "metadata": METADATA_LIST,
         "state": None,
         "auditTrail": {
             "createdOn": int(time.time()),
@@ -109,7 +116,7 @@ class TestServiceInstance:
     @pytest.fixture(scope="class")
     def service_instance_running(cls):
         tt = ServiceInstance(service_id=cls.INSTANCE_ID, name=cls.SERVICE_NAME, plan_id=cls.SERVICE_PLAN_ID,
-                             offering_id=cls.OFFERING_ID, bindings=cls.BINDINGS, state=cls.RUNNING)
+                             offering_id=cls.OFFERING_ID, bindings=cls.BINDINGS, state=cls.RUNNING, url=cls.SERVICE_URL)
         return tt
 
     @classmethod
@@ -217,3 +224,26 @@ class TestServiceInstance:
         self.mock_api_service.get_service_logs.assert_called_with(client=service_instance_running._client,
                                                                   service_id=service_instance_running.id)
         assert logs == test_logs
+
+    @patch("modules.tap_object_model._api_model_superclass.HttpClientFactory", mock_http_client_factory)
+    @patch("modules.tap_object_model._api_model_superclass.ConsoleConfigurationProvider", mock_api_conf)
+    @patch("modules.tap_object_model.service_instance.api", mock_api_service)
+    def test_service_instance_url(self, service_instance_running):
+        """
+        Test retrieving url from metadata
+        """
+        context = Context()
+        self.mock_api_service.create_service.return_value = self.get_service_with_state(self.RUNNING)
+        service_instance = ServiceInstance.create(context, offering_id=self.OFFERING_ID, name=self.SERVICE_NAME,
+                                                  plan_id=self.SERVICE_PLAN_ID)
+        assert service_instance.url == service_instance_running.url
+
+    def test_service_instance_metadata_to_dict(self):
+        """
+        Test service instance _metadata_to_dict
+        """
+        metadata_dict = ServiceInstance._metadata_to_dict(self.METADATA_LIST)
+        assert type(metadata_dict) is dict
+        for metadata in self.METADATA_LIST:
+            assert metadata["key"] in metadata_dict.keys()
+            assert metadata["value"] == metadata_dict[metadata["key"]]

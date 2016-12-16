@@ -34,9 +34,10 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
 
     _COMPARABLE_ATTRIBUTES = ["id", "name", "plan_id", "state"]
     PLAN_ID_METADATA_KEY = "PLAN_ID"
+    URLS_METADATA_KEY = "urls"
 
     def __init__(self, *, service_id: str, name: str, offering_id: str, plan_id: str, bindings: list, state: str,
-                 offering_label: str=None, client: HttpClient=None):
+                 offering_label: str=None, url: str=None, client: HttpClient=None):
         super().__init__(object_id=service_id, client=client)
         self.name = name
         self.offering_id = offering_id
@@ -44,6 +45,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         self.plan_id = plan_id
         self.state = state
         self.bindings = [] if bindings is None else bindings
+        self.url = url
 
     def __repr__(self):
         return "{} (name={}, id={}, offering={})".format(self.__class__.__name__, self.name, self.id, self.offering_label)
@@ -152,12 +154,22 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         api.delete_service(service_id=self.id, client=self._get_client(client))
 
     @classmethod
+    def _metadata_to_dict(cls, metadata):
+        metadata_dict = {}
+        if metadata is not None:
+            for pair in metadata:
+                metadata_dict.update({pair["key"]: pair["value"]})
+        return metadata_dict
+
+    @classmethod
     def _from_response(cls, response, client=None):
-        plan_id = next((m["value"] for m in response["metadata"] if m["key"] == cls.PLAN_ID_METADATA_KEY), None)
+        metadata = cls._metadata_to_dict(response["metadata"])
+        plan_id = metadata.get(cls.PLAN_ID_METADATA_KEY, None)
         assert plan_id is not None, "No service instance plan id found in the response"
+        url = metadata.get(cls.URLS_METADATA_KEY, None)
         return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["classId"],
                    bindings=response["bindings"], state=response["state"], name=response["name"],
-                   offering_label=response.get("serviceName", None), client=client)
+                   offering_label=response.get("serviceName", None), url=url, client=client)
 
     def _refresh(self, client: HttpClient=None):
         instances = self.get_list(client=self._get_client(client))
