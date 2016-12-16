@@ -85,6 +85,14 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         return cls._from_response(response, client)
 
     @classmethod
+    def get_by_name(cls, name: str, client: HttpClient=None):
+        if client is None:
+            client = cls._get_default_client()
+        for service in api.get_services(client=client, name=name):
+            if service['name'] == name:
+                return cls._from_response(service, client)
+
+    @classmethod
     def get_list(cls, *, name: str=None, offering_id: str=None, plan_name: str=None, limit: int=None, skip: int=None,
                  client: HttpClient=None) -> list:
         if client is None:

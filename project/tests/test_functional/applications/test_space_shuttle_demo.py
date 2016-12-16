@@ -18,8 +18,9 @@ import pytest
 
 from modules.constants import ServiceLabels, TapEntityState, TapComponent as TAP
 from modules.markers import incremental, priority
-from modules.tap_object_model import ServiceInstance
-
+from modules.tap_logger import step
+from modules.tap_object_model import Application, ServiceInstance
+from retry import retry
 
 logged_components = (TAP.space_shuttle_demo,)
 pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
@@ -29,8 +30,37 @@ pytestmark = [pytest.mark.components(TAP.space_shuttle_demo)]
 @priority.low
 class TestSpaceShuttleDemo:
     SPACE_SHUTTLE_DEMO_APP_NAME = "space-shuttle-demo"
-    SPACE_SHUTTLE_DEMO_CLIENT_NAME = "space-shuttle-client"
+    SPACE_SHUTTLE_DEMO_CLIENT_NAME = "space-shuttle-demo-client"
+    SPACE_SHUTTLE_GATEWAY = "space-shuttle-gateway"
     EXPECTED_BINDINGS = [ServiceLabels.GATEWAY, ServiceLabels.INFLUX_DB_088]
+
+    @pytest.fixture(scope="class")
+    def space_shuttle_client(self):
+        return Application.get_by_name(self.SPACE_SHUTTLE_DEMO_CLIENT_NAME)
+
+    @pytest.fixture(scope="class")
+    def space_shuttle_gateway(self):
+        return ServiceInstance.get_by_name(self.SPACE_SHUTTLE_GATEWAY)
+
+    def format_logs(self, logs_data):
+        logs = list(logs_data.values())
+        return "".join(logs).split("\n")
+
+    def check_that_logs_contain_client_data(self, space_shuttle_data):
+        FEATURE_VECTOR_MAX_LENGTH = 10
+        TARGET_FOUND_MATCHING_VECTOR_COUNT = 9
+        for log_item in self.format_logs(space_shuttle_data):
+            feature_vector = log_item.split(", ")
+            if len(feature_vector) == FEATURE_VECTOR_MAX_LENGTH:
+                found_matching_vector_count = 0
+                for feature_vector_value in feature_vector:
+                    try:
+                        float(feature_vector_value)
+                        found_matching_vector_count += 1
+                        if found_matching_vector_count == TARGET_FOUND_MATCHING_VECTOR_COUNT:
+                            return True
+                    except ValueError:
+                        continue
 
     @priority.low
     def test_0_check_if_app_exist(self, space_shuttle_application):
@@ -87,6 +117,24 @@ class TestSpaceShuttleDemo:
         1. Verify the application is running.
         """
         assert space_shuttle_application.state == TapEntityState.RUNNING
+
+    @priority.low
+    def test_3_check_if_app_exist(self, space_shuttle_client):
+        assert space_shuttle_client.name == self.SPACE_SHUTTLE_DEMO_CLIENT_NAME
+
+    @priority.low
+    def test_4_check_if_client_running(self, space_shuttle_client):
+        assert space_shuttle_client.state == TapEntityState.RUNNING
+
+    @priority.low
+    def test_5_check_if_client_sending_data_to_gateway(self, space_shuttle_client):
+        application_log = space_shuttle_client.get_logs()
+        assert self.check_that_logs_contain_client_data(application_log)
+
+    @priority.low
+    def test_6_check_if_gateway_receiving_data_from_client(self, space_shuttle_gateway):
+        service_log = space_shuttle_gateway.get_logs()
+        assert self.check_that_logs_contain_client_data(service_log)
 
     @pytest.mark.skip(reason="DPNG-9278 [space shuttle demo] Enable usage os Scoring Engine")
     def test_2_check_app_model_dataset_title_and_uri(self, core_org):
