@@ -49,8 +49,9 @@ NEW_ENV_02 = "variable"
 NEW_ENV_02_VAL = "1234"
 ENVS = [(NEW_ENV_01, NEW_ENV_01_VAL), (NEW_ENV_02, NEW_ENV_02_VAL)]
 
-@pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
+
 class TestApplication(unittest.TestCase):
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     def test_update_manifest(self):
         """Tests if update manifest method works."""
         j = copy.deepcopy(MANIFEST)
@@ -65,6 +66,7 @@ class TestApplication(unittest.TestCase):
         assert j["env"][NEW_ENV_01] == NEW_ENV_01_VAL
         assert j["env"][NEW_ENV_02] == NEW_ENV_02_VAL
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     def test_update_manifest_delete_services(self):
         """Deletes services provided already present in manifest"""
         j = copy.deepcopy(MANIFEST)
@@ -80,6 +82,7 @@ class TestApplication(unittest.TestCase):
         assert j["env"][NEW_ENV_01] == NEW_ENV_01_VAL
         assert j["env"][NEW_ENV_02] == NEW_ENV_02_VAL
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     def test_update_manifest_no_envs(self):
         """Try not to add any envs"""
         j = copy.deepcopy(MANIFEST)
@@ -93,6 +96,7 @@ class TestApplication(unittest.TestCase):
         assert j["env"][ENV_NAME] == ENV_VAL
         assert len(j["env"]) == 1
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     def test_update_manifest_with_no_envs(self):
         """Update a manifest that has no envs defined"""
         j = copy.deepcopy(MANIFEST)
@@ -108,6 +112,7 @@ class TestApplication(unittest.TestCase):
         assert j["env"][NEW_ENV_02] == NEW_ENV_02_VAL
         assert len(j["env"]) == 2
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     def test_update_manifest_with_no_services(self):
         """Update a manifest that has no services defines"""
         j = copy.deepcopy(MANIFEST)
@@ -127,6 +132,7 @@ class TestApplication(unittest.TestCase):
 
     mock_proxy = HTTP_PROXY
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.config.cf_proxy", mock_proxy)
     def test_update_manifest_with_proxy(self):
         """Check if cf_proxy is present we get proxy env"""
@@ -146,6 +152,7 @@ class TestApplication(unittest.TestCase):
 
     mock_proxy = HTTP_PROXY
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.config.cf_proxy", mock_proxy)
     def test_update_manifest_no_env_with_proxy(self):
         """Check if cf_proxy is present we get proxy env, no env is present
@@ -167,6 +174,7 @@ class TestApplication(unittest.TestCase):
 
     mock_proxy = HTTP_PROXY
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.config.cf_proxy", mock_proxy)
     def test_update_manifest_no_env_with_proxy_no_env(self):
         """Check if cf_proxy is present we get proxy env, no env is present
@@ -183,6 +191,22 @@ class TestApplication(unittest.TestCase):
         assert j["env"]["http_proxy"] == "http://" + self.HTTP_PROXY + ":911"
         assert j["env"]["https_proxy"] == "https://" + self.HTTP_PROXY + ":912"
         assert len(j["env"]) == 2
+
+    TEST_DOMAINS = ['http://tap.com', 'https://tap.com', 'tap.com']
+
+    def test_set_scheme(self):
+        """Checks behaviour of method for different inputs"""
+        results_http = []
+        results_https = []
+
+        for domain in self.TEST_DOMAINS:
+            results_http.append(Application._set_scheme(url=domain, scheme='http'))
+            results_https.append(Application._set_scheme(url=domain, scheme='https'))
+
+        for domain in results_http:
+            assert domain == 'http://tap.com'
+        for domain in results_https:
+            assert domain == 'https://tap.com'
 
     SOURCE_DIR = "/tmp/intel/app/dir"
     APP_NAME = "el_generico"
@@ -270,6 +294,7 @@ class TestApplication(unittest.TestCase):
 
     mock_http_client_factory.get.return_value = user_admin
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("builtins.open", mock_open)
     @patch("modules.tap_object_model.application.json", mock_json)
     @patch("modules.tap_object_model.application.TapCli", mock_tap_cli)
@@ -303,6 +328,7 @@ class TestApplication(unittest.TestCase):
 
         assert a._client == self.user_luser
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("builtins.open", mock_open)
     @patch("modules.tap_object_model.application.json", mock_json)
     @patch("modules.tap_object_model.application.TapCli", mock_tap_cli)
@@ -320,6 +346,7 @@ class TestApplication(unittest.TestCase):
             a = Application.push(ctx, self.SOURCE_DIR, self.APP_NAME,
                                  self.BOUND_SERVICES, self.ENV)
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("builtins.open", mock_open)
     @patch("modules.tap_object_model.application.json", mock_json)
     @patch("modules.tap_object_model.application.TapCli", mock_tap_cli_exception)
@@ -345,6 +372,7 @@ class TestApplication(unittest.TestCase):
         self.mock_api_service.delete_application.assert_called_once_with(self.APP_ID,
                                                                          self.user_admin)
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("builtins.open", mock_open)
     @patch("modules.tap_object_model.application.json", mock_json)
     @patch("modules.tap_object_model.application.TapCli", mock_tap_cli)
@@ -366,6 +394,7 @@ class TestApplication(unittest.TestCase):
         msg = "App " + self.APP_NAME + " has not been created on the Platform"
         assert msg in ex.__str__()
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("builtins.open", mock_open)
     @patch("modules.tap_object_model.application.json", mock_json)
     @patch("modules.tap_object_model.application.TapCli", mock_tap_cli)
@@ -392,6 +421,7 @@ class TestApplication(unittest.TestCase):
         assert a.is_stopped == True
         assert a.is_running == False
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.ConsoleConfigurationProvider", mock_api_conf)
     @patch("modules.tap_object_model.application.HttpClientFactory", mock_http_client_factory)
     def test_lt_comparator(self):
@@ -404,6 +434,7 @@ class TestApplication(unittest.TestCase):
 
         assert a < b
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.ConsoleConfigurationProvider", mock_api_conf)
     @patch("modules.tap_object_model.application.HttpClientFactory", mock_http_client_factory)
     def test_repr(self):
@@ -413,6 +444,7 @@ class TestApplication(unittest.TestCase):
 
         assert a.__repr__() == "Application (name=" + self.APP_NAME + ", app_id=" + self.APP_ID + ")"
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.ConsoleConfigurationProvider", mock_api_conf)
     @patch("modules.tap_object_model.application.HttpClientFactory", mock_http_client_factory)
     def test_hash(self):
@@ -422,6 +454,7 @@ class TestApplication(unittest.TestCase):
 
         assert a.__hash__() == hash((a.name, a.app_id))
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.api_service", mock_api_service)
     @patch("modules.tap_object_model.application.ConsoleConfigurationProvider", mock_api_conf)
     @patch("modules.tap_object_model.application.HttpClientFactory", mock_http_client_factory)
@@ -450,6 +483,7 @@ class TestApplication(unittest.TestCase):
         self.mock_api_service.stop_application.assert_called_with(self.APP_ID,
                                                                   self.user_luser)
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.api_service", mock_api_service)
     @patch("modules.tap_object_model.application.ConsoleConfigurationProvider", mock_api_conf)
     @patch("modules.tap_object_model.application.HttpClientFactory", mock_http_client_factory)
@@ -503,6 +537,7 @@ class TestApplication(unittest.TestCase):
     mock_log_http_request = MagicMock()
     mock_log_http_response = MagicMock()
 
+    @pytest.mark.skip("DPNG-11296: Port test_application unittest to pytest")
     @patch("modules.tap_object_model.application.requests", mock_requests)
     @patch("modules.tap_object_model.application.log_http_request", mock_log_http_request)
     @patch("modules.tap_object_model.application.log_http_response", mock_log_http_response)

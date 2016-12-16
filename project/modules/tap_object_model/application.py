@@ -15,6 +15,7 @@
 #
 
 import json
+from urllib.parse import urlparse
 
 import requests
 from retry import retry
@@ -242,9 +243,10 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             Response to the request
         """
         hostname = hostname or self.urls[0]
+        hostname = self._set_scheme(url=hostname, scheme=scheme)
         request = self._request_session.prepare_request(requests.Request(
             method=method.upper(),
-            url="{}://{}/{}".format(scheme, hostname, path),
+            url="{}/{}".format(hostname, path),
             params=params,
             data=data,
             json=body
@@ -260,6 +262,26 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             return json.loads(response.text)
         except ValueError:
             return response.text
+
+    @classmethod
+    def _set_scheme(cls, *, url: str, scheme: str="http"):
+        """Checks if url has scheme.
+        If not - adds specified scheme (http by default),
+        else - replaces scheme with specified.
+
+        Args:
+            url: App url
+            scheme: Url scheme e.g. http, https
+
+        Returns:
+            Application url with scheme (default value is http)
+        """
+        url = urlparse(url)
+        if (url.scheme or url.netloc) == '':
+            return "{}://{}".format(scheme, url.geturl())
+        else:
+            url = url._replace(scheme=scheme)
+            return url.geturl()
 
     @classmethod
     def _from_response(cls, response: dict, client: HttpClient):
