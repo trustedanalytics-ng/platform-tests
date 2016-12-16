@@ -141,7 +141,7 @@ def start_application(*, client: HttpClient, app_id: str):
     """ PUT /applications/{app_id}/start """
     response = client.request(HttpMethod.PUT, path="applications/{}/start".format(app_id), raw_response=True,
                               msg="Start application")
-    assert response.status_code == HttpStatus.CODE_OK
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 
@@ -149,7 +149,7 @@ def stop_application(*, client: HttpClient, app_id: str):
     """ PUT /applications/{app_id}/stop """
     response = client.request(HttpMethod.PUT, path="applications/{}/stop".format(app_id), raw_response=True,
                               msg="Stop application")
-    assert response.status_code == HttpStatus.CODE_OK
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 
@@ -157,7 +157,7 @@ def restart_application(*, client: HttpClient, app_id: str):
     """ PUT /applications/{app_id}/restart """
     response = client.request(HttpMethod.PUT, path="applications/{}/restart".format(app_id), raw_response=True,
                               msg="Restart application")
-    assert response.status_code == HttpStatus.CODE_OK
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 def start_service(*, client: HttpClient, srv_id: str):
