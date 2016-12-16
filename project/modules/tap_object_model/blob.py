@@ -57,7 +57,7 @@ class Blob(TapObjectSuperclass):
     @classmethod
     def try_create_blob_with_no_content(cls):
         """ Expected error: 'Bad request' """
-        params = {"blob_id": str(uuid.uuid4())}
+        params = {"blobID": str(uuid.uuid4())}
         files = {"otherfile": b"some-binary-content"}
         blob_store_api.create_blob_raw_params(files=files, params=params)
 

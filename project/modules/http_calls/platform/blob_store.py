@@ -51,13 +51,13 @@ def create_blob_raw_params(*, files, params):
 
 def create_blob_from_file(*, blob_id, file_path):
     files = {"uploadfile": (file_path, open(file_path, "rb"))}
-    params = {"blob_id": blob_id}
+    params = {"blobID": blob_id}
     return create_blob_raw_params(files=files, params=params)
 
 
 def create_blob_from_data(*, blob_id, blob_content):
     files = {"uploadfile": blob_content}
-    params = {"blob_id": blob_id}
+    params = {"blobID": blob_id}
     return create_blob_raw_params(files=files, params=params)
 
 
