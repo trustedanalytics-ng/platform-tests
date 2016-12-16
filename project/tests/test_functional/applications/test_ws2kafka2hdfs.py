@@ -86,6 +86,23 @@ class TestWs2kafka2hdfs:
 
     @pytest.mark.usefixtures("login_to_cf")
     def test_step_0_push_ws2kafka2hdfs(self, test_space, class_context):
+        """
+        <b>Description:</b>
+        Checks if ws2kafka and kafka2hdfs can be pushed.
+
+        <b>Input data:</b>
+        1. Ws2kafka repository.
+
+        <b>Expected results:</b>
+        Applications can be pushed.
+
+        <b>Steps:</b>
+        1. Clone repository.
+        2. Push ws2kafka.
+        3. Push kafka2hdfs.
+        4. Verify ws2kafka was started.
+        5. Verify kafka2hdfs was started.
+        """
         step("Clone and compile ingestion app sources")
         ingestion_repo = AppSources.get_repository(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=self.REPO_OWNER)
         ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
@@ -115,12 +132,39 @@ class TestWs2kafka2hdfs:
         assert self.app_kafka2hdfs.is_started is True, "kafka2hdfs app is not started"
 
     def test_step_1_send_from_ws2kafka2hdfs(self):
+        """
+        <b>Description:</b>
+        Checks if a message can be sent to ws2kafka.
+
+        <b>Input data:</b>
+        1. Ws2kafka application.
+
+        <b>Expected results:</b>
+        Message can be sent.
+
+        <b>Steps:</b>
+        1. Send message.
+        2. Verify message is in application stats.
+        """
         connection_string = "{}/{}".format(self.app_ws2kafka.urls[0], self.topic_name)
         self._send_ws_messages(connection_string)
         self._assert_message_count_in_app_stats(self.app_kafka2hdfs, self.MESSAGE_COUNT)
 
     @pytest.mark.bugs("DPNG-6071 [api-tests] Error reading SSH protocol banner")
     def test_step_2_check_messages_in_hdfs(self):
+        """
+        <b>Description:</b>
+        Checks if a message is in hdfs.
+
+        <b>Input data:</b>
+        1. Kafka2hdfs application.
+
+        <b>Expected results:</b>
+        Message can be read.
+
+        <b>Steps:</b>
+        1. Verify message was received.
+        """
         step("Get details of broker guid")
         broker_guid = self.app_kafka2hdfs.get_credentials("hdfs")["uri"].split("/", 3)[3]
         step("Get messages from hdfs")

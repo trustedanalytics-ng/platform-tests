@@ -65,6 +65,22 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_create_and_delete_table(self, db_type, db_type_key):
+        """
+        <b>Description:</b>
+        Checks if a table can be created and deleted.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table was created and then deleted.
+
+        <b>Steps:</b>
+        1. Create a table.
+        2. Verify the table was created.
+        3. Delete the table.
+        4. Verify the table was deleted.
+        """
         app = db_type[db_type_key]
         self.__class__.test_table_name = generate_test_object_name(prefix=DbInput.test_table_name)
         test_table = Table.post(app, self.test_table_name, self.test_columns)
@@ -78,6 +94,20 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_get_table_columns_msql(self, db_type):
+        """
+        <b>Description:</b>
+        Checks if a table with columns can be created.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table was created and has columns.
+
+        <b>Steps:</b>
+        1. Create a table with columns.
+        2. Verify columns were created.
+        """
         app = db_type["app_binded_mysql"]
         test_table = Table.post(app, self.test_table_name, self.test_columns)
         expected_columns = [Column.from_json_definition(c) for c in self.mysql_specyfic_columns]
@@ -91,6 +121,20 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_get_table_columns_psql(self, db_type):
+        """
+        <b>Description:</b>
+        Checks if a table with columns can be created.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table was created and has columns.
+
+        <b>Steps:</b>
+        1. Create a table with columns.
+        2. Verify columns were created.
+        """
         app = db_type["app_binded_psql"]
         test_table = Table.post(app, self.test_table_name, self.test_columns)
         expected_columns = [Column.from_json_definition(c) for c in self.test_columns]
@@ -106,6 +150,21 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_post_row(self, row_values, db_type, db_type_key):
+        """
+        <b>Description:</b>
+        Checks if a row can be inserted.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table with a row.
+
+        <b>Steps:</b>
+        1. Create a table.
+        2. Insert a row.
+        3. Verify a row was inserted.
+        """
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
         new_row_id = Row.post(app, self.test_table_name, row_values)
@@ -120,6 +179,21 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_post_multiple_rows(self, db_type, db_type_key):
+        """
+        <b>Description:</b>
+        Checks if a multiple rows can be inserted.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table with multiple rows inserted.
+
+        <b>Steps:</b>
+        1. Create a table.
+        2. Insert multiple rows.
+        3. Verify a row was inserted.
+        """
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
         expected_rows = self._get_expected_rows(app)
@@ -131,6 +205,22 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_put_row(self, db_type, db_type_key):
+        """
+        <b>Description:</b>
+        Checks if a row can be updated.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table with a updated row.
+
+        <b>Steps:</b>
+        1. Create a table.
+        2. Insert multiple rows with test data.
+        3. Update a row.
+        4. Verify a row was updated.
+        """
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
         expected_rows = self._get_expected_rows(app)
@@ -144,6 +234,22 @@ class TestMysqlAndPsql(object):
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_delete_row(self, db_type, db_type_key):
+        """
+        <b>Description:</b>
+        Checks if a row can be deleted.
+
+        <b>Input data:</b>
+        1. sql-api-example app with bound database
+
+        <b>Expected results:</b>
+        A table with a deleted row.
+
+        <b>Steps:</b>
+        1. Create a table.
+        2. Insert multiple rows.
+        3. Delete a row.
+        4. Verify a row was deleted.
+        """
         app = db_type[db_type_key]
         Table.post(app, self.test_table_name, self.test_columns)
         posted_rows = self._get_expected_rows(app)

@@ -34,10 +34,36 @@ class TestSpaceShuttleDemo:
 
     @priority.low
     def test_0_check_if_app_exist(self, space_shuttle_application):
+        """
+        <b>Description:</b>
+        Checks if space-shuttle-demo application exists.
+
+        <b>Input data:</b>
+        1. space-shuttle-demo application
+
+        <b>Expected results:</b>
+        The application exists.
+
+        <b>Steps:</b>
+        1. Verify the application has correct name.
+        """
         assert space_shuttle_application.name == self.SPACE_SHUTTLE_DEMO_APP_NAME
 
     @priority.low
     def test_1_check_if_app_bindings_exist(self, space_shuttle_application):
+        """
+        <b>Description:</b>
+        Checks if space-shuttle-demo application has bindings.
+
+        <b>Input data:</b>
+        1. space-shuttle-demo application
+
+        <b>Expected results:</b>
+        The application has bindings.
+
+        <b>Steps:</b>
+        1. Verify the application has correct bindings.
+        """
         app_binding = []
 
         for binding in space_shuttle_application.bindings:
@@ -47,10 +73,37 @@ class TestSpaceShuttleDemo:
 
     @priority.low
     def test_2_check_if_app_running(self, space_shuttle_application):
+        """
+        <b>Description:</b>
+        Checks if space-shuttle-demo application is running.
+
+        <b>Input data:</b>
+        1. space-shuttle-demo application
+
+        <b>Expected results:</b>
+        The application is running.
+
+        <b>Steps:</b>
+        1. Verify the application is running.
+        """
         assert space_shuttle_application.state == TapEntityState.RUNNING
 
     @pytest.mark.skip(reason="DPNG-9278 [space shuttle demo] Enable usage os Scoring Engine")
     def test_2_check_app_model_dataset_title_and_uri(self, core_org):
+        """
+        <b>Description:</b>
+        Checks if space-shuttle-demo application has correct dataset title and uri.
+
+        <b>Input data:</b>
+        1. Organization
+
+        <b>Expected results:</b>
+        The application has correct a dataset and a title.
+
+        <b>Steps:</b>
+        1. Verify the title.
+        2. Verify the uri.
+        """
         step('Check model title is as expected')
         dataset_list = DataSet.api_get_list(org_guid_list=[core_org.guid])
         model = next((d for d in dataset_list if d.title == self.MODEL_TITLE), None)
@@ -60,6 +113,21 @@ class TestSpaceShuttleDemo:
 
     @pytest.mark.skip(reason="DPNG-9278 [space shuttle demo] Enable usage os Scoring Engine")
     def test_3_space_shuttle_anomaly_detection(self, space_shuttle_demo_app, space_shuttle_client_app):
+        """
+        <b>Description:</b>
+        Checks if space-shuttle-demo application anomalies are detected correctly.
+
+        <b>Input data:</b>
+        1. space-shuttle-demo application
+        2. space-shuttle client
+
+        <b>Expected results:</b>
+        Anomalies are detected correctly.
+
+        <b>Steps:</b>
+        1. Post samples.
+        2. Verify the anomalies.
+        """
         step('Check that anomalies are detected correctly')
         now = time.time()
         an_hour_ago = now - 3600

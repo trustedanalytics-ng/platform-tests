@@ -54,6 +54,23 @@ class TestBindings:
 
     @priority.high
     def test_app_bind_unbind_service_instance(self, sample_python_app, test_instance):
+        """
+        <b>Description:</b>
+        Checks if a service instance can be bound/unbound to an application.
+
+        <b>Input data:</b>
+        1. Sample python application.
+        2. Service instance.
+
+        <b>Expected results:</b>
+        Service instance can be bind and unbind.
+
+        <b>Steps:</b>
+        1. Verify that the application has no service bindings.
+        2. Bind the service instance.
+        3. Verify the binding.
+        4. Unbound the service instance.
+        """
         step("Check that test app has no service bindings")
         bindings = Binding.api_get_list(sample_python_app.guid)
         assert len(bindings) == 0
@@ -68,6 +85,22 @@ class TestBindings:
 
     @priority.high
     def test_cannot_delete_service_instance_bound_to_app(self, sample_python_app, test_instance, test_binding):
+        """
+        <b>Description:</b>
+        Checks if a bound service instance cannot be deleted.
+
+        <b>Input data:</b>
+        1. Sample python application.
+        2. Service instance.
+        3. Binding.
+
+        <b>Expected results:</b>
+        Service instance cannot be deleted.
+
+        <b>Steps:</b>
+        1. Check if the service instance cannot be deleted.
+        2. Verify the binding exists.
+        """
         step("Try to delete service instance")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
                                                 ServiceCatalogHttpStatus.MSG_BOUND_INSTANCE,
@@ -79,6 +112,24 @@ class TestBindings:
     @priority.medium
     @pytest.mark.usefixtures("test_binding")
     def test_delete_app_with_bound_service(self, test_space, sample_python_app, test_instance):
+        """
+        <b>Description:</b>
+        Checks if an application with a bound service can be deleted.
+
+        <b>Input data:</b>
+        1. Sample python application.
+        2. Service instance.
+        3. Binding.
+
+        <b>Expected results:</b>
+        The application and the service instance are deleted.
+
+        <b>Steps:</b>
+        1. Delete the application.
+        2. Verify the application is deleted.
+        3. Delete the service instance.
+        4. Verify the service instance is deleted.
+        """
         step("Check that the app can be deleted")
         sample_python_app.api_delete()
         apps = Application.api_get_list(test_space.guid)
@@ -95,24 +146,82 @@ class TestCreateDeleteBinding:
 
     @priority.medium
     def test_0_create_binding(self, test_instance, sample_java_app):
+        """
+        <b>Description:</b>
+        Checks if a binding can be created.
+
+        <b>Input data:</b>
+        1. Sample java application.
+        2. Service instance.
+
+        <b>Expected results:</b>
+        Binding is made.
+
+        <b>Steps:</b>
+        1. Create a binding.
+        2. Verify the binding exists.
+        """
         self.__class__.binding = Binding.api_create(sample_java_app.guid, test_instance.guid)
         bindings = sample_java_app.cf_api_get_summary()['service_names']
         assert list((test_instance.name,)) == bindings
 
     @priority.medium
     def test_1_compare_bindings_list_with_cf(self, sample_java_app):
+        """
+        <b>Description:</b>
+        Checks if a TAP bindings and CF bindings are the same.
+
+        <b>Input data:</b>
+        1. Sample java application.
+
+        <b>Expected results:</b>
+        Bindings are the same.
+
+        <b>Steps:</b>
+        1. Retrieve bindings.
+        2. Verify they are the same.
+        """
         platform_bindings_list = Binding.api_get_list(sample_java_app.guid)
         cf_bindings_list = cf.cf_api_get_apps_bindings(sample_java_app.guid)['resources']
         assert len(cf_bindings_list) == len(platform_bindings_list) and len(cf_bindings_list)
 
     @priority.medium
     def test_2_delete_binding(self, sample_java_app):
+        """
+        <b>Description:</b>
+        Checks if a binding can be removed.
+
+        <b>Input data:</b>
+        1. Binding.
+        2. Sample java application
+
+        <b>Expected results:</b>
+        Binding is deleted.
+
+        <b>Steps:</b>
+        1. Delete binding.
+        2. Verify the binding is deleted.
+        """
         self.__class__.binding.api_delete()
         bindings = sample_java_app.cf_api_get_summary()['service_names']
         assert bindings == []
 
     @priority.medium
     def test_3_compare_bindings_list_with_cf(self, sample_java_app):
+        """
+        <b>Description:</b>
+        Checks if a TAP bindings and CF bindings are the same.
+
+        <b>Input data:</b>
+        1. Sample java application.
+
+        <b>Expected results:</b>
+        Bindings are the same.
+
+        <b>Steps:</b>
+        1. Retrieve bindings.
+        2. Verify they are the same.
+        """
         platform_bindings_list = Binding.api_get_list(sample_java_app.guid)
         cf_bindings_list = cf.cf_api_get_apps_bindings(sample_java_app.guid)['resources']
         assert cf_bindings_list == platform_bindings_list
@@ -135,6 +244,19 @@ class TestBindingErrors:
 
     @pytest.mark.sample_apps_test
     def test_cannot_bind_not_existing_service_instance(self, sample_python_app):
+        """
+        <b>Description:</b>
+        Checks if a binding cannot be made with not existing service instance.
+
+        <b>Input data:</b>
+        1. Sample python application.
+
+        <b>Expected results:</b>
+        A binding cannot be made.
+
+        <b>Steps:</b>
+        1. Verify making a binding fails.
+        """
         step("Try to create service binding to a non-existing service instance")
         expected_error_message = ServiceCatalogHttpStatus.MSG_SERVICE_INST_NOT_FOUND.format(self.NOT_EXISTING_GUID)
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
@@ -142,12 +264,38 @@ class TestBindingErrors:
 
     @pytest.mark.sample_apps_test
     def test_cannot_bind_instance_with_incorrect_guid(self, sample_python_app):
+        """
+        <b>Description:</b>
+        Checks if a binding cannot be made with incorrect guid.
+
+        <b>Input data:</b>
+        1. Sample python application.
+
+        <b>Expected results:</b>
+        A binding cannot be made.
+
+        <b>Steps:</b>
+        1. Verify making a binding fails.
+        """
         step("Try to create service binding with an incorrect service instance guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
                                                 ServiceCatalogHttpStatus.MSG_BAD_REQUEST,
                                                 Binding.api_create, sample_python_app.guid, self.INCORRECT_GUID)
 
     def test_cannot_bind_instance_to_not_existing_app(self, test_instance):
+        """
+        <b>Description:</b>
+        Checks if a binding cannot be made with not existing application.
+
+        <b>Input data:</b>
+        1. Service instance.
+
+        <b>Expected results:</b>
+        A binding cannot be made.
+
+        <b>Steps:</b>
+        1. Verify making a binding fails.
+        """
         step("Try to create service binding to a non existing app")
         expected_error_message = ServiceCatalogHttpStatus.MSG_APP_NOT_FOUND.format(self.NOT_EXISTING_GUID)
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
@@ -155,12 +303,37 @@ class TestBindingErrors:
 
     @pytest.mark.bugs("DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid")
     def test_cannot_bind_instance_with_incorrect_app_guid(self, test_instance):
+        """
+        <b>Description:</b>
+        Checks if a binding cannot be made with incorrect application guid.
+
+        <b>Input data:</b>
+        1. Service instance.
+
+        <b>Expected results:</b>
+        A binding cannot be made.
+
+        <b>Steps:</b>
+        1. Verify making a binding fails.
+        """
         step("Try to create service binding with incorrect app guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,
                                                 ServiceCatalogHttpStatus.MSG_BAD_REQUEST,
                                                 Binding.api_create, self.INCORRECT_GUID, test_instance.guid)
 
     def test_cannot_delete_not_existing_binding(self):
+        """
+        <b>Description:</b>
+        Checks if a not existing binding cannot be deleted.
+
+        <b>Input data:</b>
+
+        <b>Expected results:</b>
+        A binding cannot be deleted.
+
+        <b>Steps:</b>
+        1. Verify deleting a binding fails.
+        """
         step("Try to delete non-existing binding")
         test_binding = Binding(self.NOT_EXISTING_GUID, self.NOT_EXISTING_GUID, self.NOT_EXISTING_GUID)
         expected_error_message = ServiceCatalogHttpStatus.MSG_SERVICE_BINDING_NOT_FOUND.format(self.NOT_EXISTING_GUID)
@@ -169,6 +342,18 @@ class TestBindingErrors:
 
     @pytest.mark.bugs("DPNG-6964 http status 500 when creating/deleting service binding by providing incorrect guid")
     def test_cannot_delete_binding_using_incorrect_binding_guid(self):
+        """
+        <b>Description:</b>
+        Checks if a binding cannot be deleted with incorrect binding guid.
+
+        <b>Input data:</b>
+
+        <b>Expected results:</b>
+        A binding cannot be deleted.
+
+        <b>Steps:</b>
+        1. Verify deleting a binding fails.
+        """
         test_binding = Binding(self.INCORRECT_GUID, self.INCORRECT_GUID, self.INCORRECT_GUID)
         step("Try to delete service binding by providing incorrect binding guid")
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_BAD_REQUEST,

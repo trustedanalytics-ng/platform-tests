@@ -47,6 +47,26 @@ class Mqtt:
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_mqtt_demo(self, context, test_org, test_space, login_to_cf, class_context):
+        """
+        <b>Description:</b>
+        Checks if a mqtt service can communicate with mqtt demo app and test client.
+
+        <b>Input data:</b>
+        1. Mqtt demo repository.
+        2. Organization
+
+        <b>Expected results:</b>
+        A mqtt demo app logs contain data send through test client.
+
+        <b>Steps:</b>
+        1. Create influxdb service.
+        2. Create mosquitto service.
+        3. Push mqtt demo app.
+        4. Get mqtt service credentials.
+        5. Connect test client to mqtt service.
+        6. Publish test data through test client.
+        7. Verify mqtt demo app logs contain test data.
+        """
         step("Clone repository")
         mqtt_demo_sources = AppSources.get_repository(repo_name=self.REPO_NAME, repo_owner=self.SOURCES_OWNER)
         step("Compile the sources")

@@ -142,6 +142,20 @@ class TestWs2kafka2gearpump2hbase:
         pass
 
     def test_0_create_gearpump_instance(self, class_context, test_org, test_space):
+        """
+        <b>Description:</b>
+        Checks if gearpump instance can be created.
+
+        <b>Input data:</b>
+        1. Organization
+
+        <b>Expected results:</b>
+        Gearpump instance was created.
+
+        <b>Steps:</b>
+        1. Create instance.
+        2. Verify the instance exists.
+        """
         step("Create gearpump instance")
         self.__class__.gearpump = Gearpump(class_context, test_org.guid, test_space.guid,
                                            service_plan_name=self.ONE_WORKER_PLAN_NAME)
@@ -161,12 +175,39 @@ class TestWs2kafka2gearpump2hbase:
         pass
 
     def test_2_get_hbase_namespace(self):
+        """
+        <b>Description:</b>
+        Checks if hbase namespace can be retrieved.
+
+        <b>Input data:</b>
+        1. Hbase application.
+
+        <b>Expected results:</b>
+        Hbase namespace was retrieved.
+
+        <b>Steps:</b>
+        1. Verify the namespace.
+        """
         step("Get hbase namespace")
         hbase_namespace = self.instances_credentials["hbase"][0]["credentials"].get("hbase.namespace")
         assert hbase_namespace is not None, "hbase namespace is not set"
         self.__class__.db_and_table_name = "{}:{}".format(hbase_namespace, self.HBASE_TABLE_NAME)
 
     def test_3_create_hbase_table(self):
+        """
+        <b>Description:</b>
+        Checks if hbase table can be created.
+
+        <b>Input data:</b>
+        1. Hbase client.
+
+        <b>Expected results:</b>
+        Hbase table was created.
+
+        <b>Steps:</b>
+        1. Create a table.
+        1. Verify the table was created.
+        """
         step("Create hbase table pipeline")
         self.hbase_reader.create_table(self.HBASE_TABLE_NAME, column_families=[self.HBASE_COLUMN_FAMILY])
         step("Check that pipeline table was created")
@@ -174,6 +215,22 @@ class TestWs2kafka2gearpump2hbase:
         assert self.db_and_table_name in hbase_tables, "No pipeline table"
 
     def test_4_submit_kafka2hbase_app_to_gearpump_dashboard(self, add_admin_to_test_org, go_to_dashboard):
+        """
+        <b>Description:</b>
+        Checks if Kafka2hbase application can be submited to gearpump dashboard.
+
+        <b>Input data:</b>
+        1. Ws2kafka application.
+        2. Gearpump instance.
+
+        <b>Expected results:</b>
+        Application can be submited.
+
+        <b>Steps:</b>
+        1. Create topics.
+        2. Submit the application.
+        3. Verify the application was started.
+        """
         step("Create input and output topics by sending messages")
         self._send_messages(self.app_ws2kafka.urls[0], ["init_message"], self.TOPIC_IN)
         self._send_messages(self.app_ws2kafka.urls[0], ["init_message"], self.TOPIC_OUT)
@@ -190,6 +247,21 @@ class TestWs2kafka2gearpump2hbase:
 
     @pytest.mark.bugs("DPNG-7938 'HBase is security enabled' error - kerberos env")
     def test_5_check_messages_flow(self):
+        """
+        <b>Description:</b>
+        Checks if messages send through ws2kafka can be retrieved by hbase application.
+
+        <b>Input data:</b>
+        1. Ws2kafka application.
+        2. Hbase application.
+
+        <b>Expected results:</b>
+        Hbase can read the messages.
+
+        <b>Steps:</b>
+        1. Send messages.
+        2. Verify the messages was received.
+        """
 
         @retry(AssertionError, tries=10, delay=2)
         def _assert_messages_in_hbase():

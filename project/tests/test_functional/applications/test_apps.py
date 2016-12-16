@@ -44,6 +44,27 @@ class TestTapApp:
                       "after trying to check Marketplace->Services and details of applications.")
     @pytest.mark.parametrize("role", ["admin", "user"])
     def test_user_can_do_app_flow(self, test_user_clients, role, context):
+        """
+        <b>Description:</b>
+        Checks if different type of users can do the application flow.
+
+        <b>Input data:</b>
+        1. Username.
+        2. User password.
+        3. Sample java application.
+
+        <b>Expected results:</b>
+        Different users can do an application flow.
+
+        <b>Steps:</b>
+        1. Push an application.
+        2. Verify is running.
+        3. Verify can be stopped.
+        4. Verify can be started.
+        5. Verify can be restarted.
+        6. Verify can be deleted.
+        7. Verify is doesn't exist.
+        """
         client = test_user_clients[role]
 
         step("Compile the app")
@@ -85,6 +106,21 @@ class TestTapApp:
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_app_register_as_offering(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if an offering can be created from an application.
+
+        <b>Input data:</b>
+        1. Sample application.
+        2. Organization id
+
+        <b>Expected results:</b>
+        An offering can be created from an application.
+
+        <b>Steps:</b>
+        1. Create offering.
+        2. Verify is on the offerings list.
+        """
         register_offering = ServiceOffering.create_from_binary(context, org_guid=test_org.guid)
         register_offering.ensure_ready()
         assertions.assert_in_with_retry(register_offering, ServiceOffering.get_list)
@@ -92,6 +128,25 @@ class TestTapApp:
     @pytest.mark.skip(reason="DPNG-12190 cascade flag is not supported yet")
     @priority.medium
     def test_cascade_app_delete(self, context, instance, admin_client):
+        """
+        <b>Description:</b>
+        Checks if cascade removal of an application removes bound service instance too.
+
+        <b>Input data:</b>
+        1. Sample service instance.
+        2. Sample java application.
+        3. Admin client
+
+        <b>Expected results:</b>
+        The application and the service instance are deleted.
+
+        <b>Steps:</b>
+        1. Push an application with bound service instance.
+        2. Verify the application is running.
+        3. Delete the application with cascade flag.
+        4. Verify the application is deleted.
+        5. Verify the service instance is deleted.
+        """
         step("Compile the app")
         test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
         test_app_sources.compile_mvn()
@@ -121,6 +176,22 @@ class TestTapApp:
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_delete_app(self, sample_java_app):
+        """
+        <b>Description:</b>
+        Checks if an application can be deleted.
+
+        <b>Input data:</b>
+        1. Sample java application.
+
+        <b>Expected results:</b>
+        The application doesn't exist.
+
+        <b>Steps:</b>
+        1. Stop the application.
+        2. Verify is stopped.
+        3. Delete the application.
+        4. Verify is doesn't exist.
+        """
         step("Stop application")
         sample_java_app.stop()
         sample_java_app.ensure_stopped()

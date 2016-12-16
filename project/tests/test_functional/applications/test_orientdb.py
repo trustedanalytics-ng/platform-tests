@@ -63,6 +63,20 @@ class TestOrientDB(object):
 
     @priority.high
     def test_create_database(self):
+        """
+        <b>Description:</b>
+        Checks if a database can be created.
+
+        <b>Input data:</b>
+        1. orientdb-api app with bound database
+
+        <b>Expected results:</b>
+        A database was created.
+
+        <b>Steps:</b>
+        1. Create a database.
+        2. Verify a database was created.
+        """
         step("Create database")
         self._API.database_create()
         response = self._API.database_get()
@@ -70,6 +84,21 @@ class TestOrientDB(object):
 
     @priority.medium
     def test_create_class(self):
+        """
+        <b>Description:</b>
+        Checks if a class can be created.
+
+        <b>Input data:</b>
+        1. orientdb-api app with bound database
+
+        <b>Expected results:</b>
+        A class was created.
+
+        <b>Steps:</b>
+        1. Create a database.
+        2. Create a class.
+        3. Verify there are no records.
+        """
         step("Create database")
         self._API.database_create()
         step("Create class")
@@ -81,6 +110,22 @@ class TestOrientDB(object):
 
     @priority.low
     def test_drop_class(self):
+        """
+        <b>Description:</b>
+        Checks if a class can be deleted.
+
+        <b>Input data:</b>
+        1. orientdb-api app with bound database
+
+        <b>Expected results:</b>
+        A class was deleted.
+
+        <b>Steps:</b>
+        1. Create a database.
+        2. Create a class.
+        3. Delete the class.
+        4. Verify the deleted response.
+        """
         step("Create database")
         self._API.database_create()
         step("Create class")
@@ -91,6 +136,22 @@ class TestOrientDB(object):
 
     @priority.medium
     def test_create_record(self):
+        """
+        <b>Description:</b>
+        Checks if a record can be created.
+
+        <b>Input data:</b>
+        1. orientdb-api app with bound database
+
+        <b>Expected results:</b>
+        A record was created.
+
+        <b>Steps:</b>
+        1. Create a database.
+        2. Create a class.
+        3. Create a record.
+        4. Verify the record.
+        """
         step("Create database")
         self._API.database_create()
         step("Create class")
@@ -104,6 +165,23 @@ class TestOrientDB(object):
 
     @priority.low
     def test_drop_record(self):
+        """
+        <b>Description:</b>
+        Checks if a record can be deleted.
+
+        <b>Input data:</b>
+        1. orientdb-api app with bound database
+
+        <b>Expected results:</b>
+        A record was deleted.
+
+        <b>Steps:</b>
+        1. Create a database.
+        2. Create a class.
+        3. Create a record.
+        4. Delete the record.
+        5. Verify the record was deleted.
+        """
         step("Create database")
         self._API.database_create()
         step("Create class")
