@@ -158,7 +158,7 @@ class TestCatalogImages:
     def test_cannot_update_image_without_field(self, sample_catalog_image):
         step("Check that it's not possible to update image without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message, catalog_api.update_image,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message, catalog_api.update_image,
                                      image_id=sample_catalog_image.id, field_name=None, value=TapEntityState.PENDING)
 
     @priority.low
@@ -167,7 +167,7 @@ class TestCatalogImages:
     def test_cannot_update_image_without_value(self, sample_catalog_image):
         step("Check that it's not possible to update image without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message, catalog_api.update_image,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message, catalog_api.update_image,
                                      image_id=sample_catalog_image.id, field_name="state", value=None)
 
     @priority.low

@@ -170,7 +170,7 @@ class TestCatalogServiceInstances:
         step("Check that is't not possible to update service instance with incorrect prev_value of class id")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_CLASS_ID,
                                                                        catalog_service_instance.class_id)
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_service_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
                                      prev_value=self.WRONG_PREV_CLASS_ID)
 
@@ -180,7 +180,7 @@ class TestCatalogServiceInstances:
     def test_cannot_update_service_instance_without_field(self, catalog_service_instance):
         step("Check that it's not possible to update service instance without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_service_instance.update, field_name=None, value=self.NEW_CLASS_ID)
 
     @priority.low
@@ -189,7 +189,7 @@ class TestCatalogServiceInstances:
     def test_cannot_update_service_without_value(self, catalog_service_instance):
         step("Check that it's not possible to update service instance without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_service_instance.update, field_name="classId", value=None)
 
     @priority.low

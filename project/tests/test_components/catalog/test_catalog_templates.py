@@ -102,7 +102,7 @@ class TestCatalogTemplates:
     def test_cannot_update_template_without_field_name(self, catalog_template):
         step("Check that it's not possible to update template without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message, catalog_api.update_template,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message, catalog_api.update_template,
                                      template_id=catalog_template.id, field_name=None, value=TapEntityState.IN_PROGRESS)
 
     @priority.low
@@ -111,7 +111,7 @@ class TestCatalogTemplates:
     def test_cannot_update_template_without_value(self, catalog_template):
         step("Check that it's not possible to update template without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message, catalog_api.update_template,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message, catalog_api.update_template,
                                      template_id=catalog_template.id, field_name="state", value=None)
 
     @priority.low

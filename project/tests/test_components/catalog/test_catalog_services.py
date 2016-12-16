@@ -140,7 +140,7 @@ class TestCatalogServices:
     def test_cannot_update_service_without_field(self, catalog_service):
         step("Check that it's not possible to update service without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message, catalog_api.update_service,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message, catalog_api.update_service,
                                      service_id=catalog_service.id, field_name=None, value=TapEntityState.READY)
 
     @priority.low
@@ -149,7 +149,7 @@ class TestCatalogServices:
     def test_cannot_update_service_without_value(self, catalog_service):
         step("Check that it's not possible to update service without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message, catalog_api.update_service,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message, catalog_api.update_service,
                                      service_id=catalog_service.id, field_name="state", value=None)
 
     @priority.low

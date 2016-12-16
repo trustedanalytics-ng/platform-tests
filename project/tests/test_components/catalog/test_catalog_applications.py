@@ -112,7 +112,7 @@ class TestCatalogApplications:
         step("Check that is't not possible to update application with incorrect prev_value of description")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_DESCRIPTION,
                                                                        self.SAMPLE_APPLICATION_DESCRIPTION)
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      sample_app_image.update, field_name="description", value="new-test-description",
                                      prev_value=self.WRONG_PREV_DESCRIPTION)
 
@@ -123,7 +123,7 @@ class TestCatalogApplications:
         step("Check that is't not possible to update application with incorrect prev_value of replication")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_REPLICA_VALUE,
                                                                        self.SAMPLE_APPLICATION_REPLICATION)
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      sample_app_image.update, field_name="replication", value=2,
                                      prev_value=self.WRONG_PREV_REPLICA_VALUE)
 
@@ -131,7 +131,7 @@ class TestCatalogApplications:
     @pytest.mark.bugs("DPNG-13416: Wrong status code and error messages for catalog requests.")
     def test_cannot_update_application_replication_to_non_int_number_of_replicas(self, sample_app_image):
         step("Update the template state to nonexistent state")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, CatalogHttpStatus.MSG_INCORRECT_TYPE,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_INCORRECT_TYPE,
                                      sample_app_image.update, field_name="replication",
                                      value=self.NON_INT_REPLICA_NUMBER)
 
@@ -141,7 +141,7 @@ class TestCatalogApplications:
     def test_cannot_update_application_without_field(self, sample_app_image):
         step("Check that it's not possible to update application without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_api.update_application, application_id=sample_app_image.id, field_name=None,
                                      value=2)
 
@@ -151,7 +151,7 @@ class TestCatalogApplications:
     def test_cannot_update_application_without_value(self, sample_app_image):
         step("Check that it's not possible to update application without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
-        assert_raises_http_exception(CatalogHttpStatus.MSG_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_api.update_application, application_id=sample_app_image.id,
                                      field_name="replication", value=None)
 
