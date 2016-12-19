@@ -31,6 +31,7 @@ logged_components = (TAP.catalog, TAP.container_broker, )
 class TestContainerBroker:
     TEST_OFFERING_LABEL_A = ServiceLabels.PSQL
     TEST_OFFERING_LABEL_B = ServiceLabels.RABBIT_MQ
+    POSTGRESQL_ENV_NAME = "SERVICES_BOUND_POSTGRESQL_93"
 
     @pytest.fixture(scope="class")
     def catalog_offerings(self):
@@ -57,9 +58,9 @@ class TestContainerBroker:
         all_pods = KubernetesPod.get_list()
         pods = [p for p in all_pods if p.instance_id_label == instance_id]
         assert len(pods) > 0, "No pods found for instance"
-        bindings = [c["name"] for c in pods[0].containers]
-        assert offering_label in bindings, "Binding for {} not found in pod. Bindings: {}".format(offering_label,
-                                                                                                  ",".join(bindings))
+        envs = [c["env"] for c in pods[0].containers]
+        env = next((e for e in envs[0] if e["name"] == self.POSTGRESQL_ENV_NAME), None)
+        assert env is not None, "Env for {} not found in pod".format(offering_label)
 
     @pytest.fixture(scope="class")
     def offering_a(self, catalog_offerings):
