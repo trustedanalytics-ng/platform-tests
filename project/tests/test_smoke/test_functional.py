@@ -85,6 +85,7 @@ def sample_db_app(app_bound_mongodb, app_bound_mysql, app_bound_psql):
 
 
 @pytest.mark.components(TAP.metrics_grafana)
+@pytest.mark.bugs("DPNG-13789 Values for memory_usage and cpu_usage for organization are not passed by Grafana")
 def test_dashboard_metrics():
     """
     <b>Description:</b>
