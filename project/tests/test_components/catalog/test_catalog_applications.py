@@ -121,7 +121,7 @@ class TestCatalogApplications:
                       "catalog: applications)")
     def test_cannot_update_application_with_wrong_prev_replication_value(self, sample_app_image):
         step("Check that is't not possible to update application with incorrect prev_value of replication")
-        expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_REPLICA_VALUE,
+        expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED_NO_QUOTES.format(self.WRONG_PREV_REPLICA_VALUE,
                                                                        self.SAMPLE_APPLICATION_REPLICATION)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      sample_app_image.update, field_name="replication", value=2,

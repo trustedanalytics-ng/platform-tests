@@ -89,7 +89,7 @@ class TestCatalogInstances:
     @priority.low
     def test_cannot_update_instance_name(self, catalog_instance):
         step("Check that it's not possible to update instance name")
-        assert_raises_http_exception(CatalogHttpStatus.CODE_INTERNAL_SERVER_ERROR,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS,
                                      catalog_instance.update, field_name="name", value="Simple3")
         step("Check that the instance was not updated")
