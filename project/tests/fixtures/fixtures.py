@@ -149,6 +149,8 @@ def sample_python_app(class_context):
 
     log_fixture("sample_python_app: Check the application is running")
     app.ensure_running()
+    log_fixture("sample_python_app: Check the application is responding")
+    app.ensure_responding()
     return app
 
 
@@ -187,6 +189,8 @@ def sample_java_app(class_context, compiled_sample_java_app):
 
     log_fixture("sample_java_app: Check the application is running")
     app.ensure_running()
+    log_fixture("sample_java_app: Check the application is responding")
+    app.ensure_responding()
     return app
 
 
