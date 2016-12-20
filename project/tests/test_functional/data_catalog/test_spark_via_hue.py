@@ -75,6 +75,21 @@ class TestSparkViaHue:
         return workflow
 
     def test_0_create_transfer_and_dataset_with_csv(self, class_context, test_org, add_admin_to_test_org):
+        """
+        <b>Description:</b>
+        Create transfer and dataset from local file and retrieve a hdfs path of a source file.
+
+        <b>Input data:</b>
+        1. organization id
+        2. csv file path
+
+        <b>Expected results:</b>
+        Test passes when transfer and dataset are created successfully and the hdfs path is retrieved
+
+        <b>Steps:</b>
+        1. Create transfer and dataset from a csv local file
+        2. Retrieve a hdfs source file path
+        """
         step("Create dataset from csv link")
         _, dataset = create_dataset_from_file(context=class_context, org_guid=test_org.guid,
                                               file_path=self.CSV_FILE_PATH)
@@ -83,6 +98,22 @@ class TestSparkViaHue:
 
     def test_1_create_transfer_and_dataset_from_hadoop_mapreduce_examples(self, class_context, test_org,
                                                                           add_admin_to_test_org):
+        """
+        <b>Description:</b>
+        Create transfer and dataset from hadoop mapreduce examples.
+
+        <b>Input data:</b>
+        1. organization id
+        2. Url with hadoop mapreduce examples
+
+        <b>Expected results:</b>
+        Test passes when transfer and dataset are created successfully with hadoop mapreduce examples
+        and hdfs path is retrieved.
+
+        <b>Steps:</b>
+        1. Create transfer and dataset from hadoop mapreduce examples.
+        2. Retrieve a hdfs source file path
+        """
         step("Create dataset from hadoop mapreduce examples jar")
         _, dataset = create_dataset_from_link(context=class_context, org_guid=test_org.guid,
                                               source=Urls.hadoop_mapreduce_examples)
@@ -90,6 +121,23 @@ class TestSparkViaHue:
         self.__class__.jar_path = dataset.target_uri.replace("hdfs://nameservice1", "")
 
     def test_2_create_java_job_design(self):
+        """
+        <b>Description:</b>
+        Check that creating a java job works.
+
+        <b>Input data:</b>
+        1. csv hdfs path
+        2. hadoop mapreduce examples hdfs path
+
+        <b>Expected results:</b>
+        Test passes when java job is successfully created.
+
+        <b>Steps:</b>
+        1. Pass a job output name as an argument.
+        2. Pass a job name.
+        3. Create job.
+        4. Check that created job has a correct name.
+        """
         step("Create output name")
         self.__class__.output_name = generate_test_object_name(prefix="/tmp/out_test")
         step("Create arguments for a job")
@@ -105,6 +153,26 @@ class TestSparkViaHue:
         assert self.job_name == java_job_design["name"], "Java job design in Hue has wrong name"
 
     def test_3_submit_java_job_design(self, admin_user):
+        """
+        <b>Description:</b>
+        Check that submitting a new job works.
+
+        <b>Input data:</b>
+        1. user admin id
+        2. job.properties file
+        3. workflow.xml file
+
+        <b>Expected results:</b>
+        Test passes when java job is submitted to platform.
+
+        <b>Steps:</b>
+        1. Create cdh master client.
+        2. Create job.properties and workflow.xml.
+        3. Create hdfs directory.
+        4. Copy workflow.xml to hdfs directory.
+        5. Submit java job to platform.
+        6. Check that job was successfully submited.
+        """
         step("Create application hdfs path name")
         app_hdfs_path = generate_test_object_name(prefix="hdfs://nameservice1/user/hue/oozie/workspaces/_{}_-oozie-".
                                                   format(admin_user.guid))
@@ -154,6 +222,21 @@ class TestSparkViaHue:
 
     @retry(AssertionError, tries=8, delay=15)
     def test_4_ensure_job_is_completed(self):
+        """
+        <b>Description:</b>
+        Check that job is completed.
+
+        <b>Input data:</b>
+        1. workflow id
+
+        <b>Expected results:</b>
+        Test passes when job status is succeeded and job progress equals 100.
+
+        <b>Steps:</b>
+        1. Retrieve job by id.
+        2. Check job status.
+        3. Check job progress.
+        """
         job_workflow = hue.get_job_workflow(workflow_id=self.workflow_id)
         step("Check job status is SUCCEEDED")
         assert job_workflow["status"] == JobStatus.SUCCEEDED.value
@@ -161,6 +244,20 @@ class TestSparkViaHue:
         assert job_workflow["progress"] == 100
 
     def test_5_check_job_output(self):
+        """
+        <b>Description:</b>
+        Check that job created an output file and its content is correct.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when output file exists and its content is correct.
+
+        <b>Steps:</b>
+        1. Check that output file is on the file list retrieved from hdfs.
+        2. Check that content of output file is the same as test csv file.
+        """
         step("Check if there is output file in /tmp folder")
         files_list = self.client.exec_commands([["hdfs", "dfs", "-ls", "/tmp"]])
         assert self.output_name in files_list[0][0], "Output file is unavailable"

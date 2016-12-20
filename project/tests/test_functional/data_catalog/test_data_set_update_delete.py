@@ -47,6 +47,21 @@ class TestUpdateDeleteDataSet:
 
     @priority.high
     def test_delete_dataset(self, test_org, dataset):
+        """
+        <b>Description:</b>
+        Check that dataset can be deleted.
+
+        <b>Input data:</b>
+        1. dataset
+        2. organization id
+
+        <b>Expected results:</b>
+        Test passes when dataset can be deleted and is not on the dataset list.
+
+        <b>Steps:</b>
+        1. Delete dataset.
+        2. Check that deleted dataset is not on the dataset list.
+        """
         step("Delete the data set")
         dataset.api_delete()
         step("Get data set list and check the deleted one is not on it")
@@ -55,6 +70,20 @@ class TestUpdateDeleteDataSet:
 
     @priority.low
     def test_cannot_delete_data_set_twice(self, dataset):
+        """
+        <b>Description:</b>
+        Try to delete a dataset twice.
+
+        <b>Input data:</b>
+        1. dataset
+
+        <b>Expected results:</b>
+        Test passes when platform returns an 404 http status when trying to delete already deleted dataset.
+
+        <b>Steps:</b>
+        1. Delete dataset.
+        2. Try to delete already deleted dataset.
+        """
         step("Delete data set")
         dataset.api_delete()
         step("Try to delete the dataset again")
@@ -65,6 +94,22 @@ class TestUpdateDeleteDataSet:
     @priority.medium
     @pytest.mark.public_dataset
     def test_change_private_to_public_to_private(self, dataset):
+        """
+        <b>Description:</b>
+        Check that dataset acces rights can be updated from private to public and from public to private.
+
+        <b>Input data:</b>
+        1. dataset
+
+        <b>Expected results:</b>
+        Test passes when dataset access rights can be updated from private to public and from public to private.
+
+        <b>Steps:</b>
+        1. Update dataset from private to public.
+        2. Check that dataset is public.
+        3. Update dataset from public to private.
+        4. Check that dataset is private
+        """
         step("Update data set from private to public")
         dataset.api_update(is_public=True)
         step("Check that private data set was changed to public")
@@ -76,6 +121,22 @@ class TestUpdateDeleteDataSet:
 
     @priority.low
     def test_update_data_set_category(self, dataset):
+        """
+        <b>Description:</b>
+        Check that dataset access rights can be updated from private to public and from public to private.
+
+        <b>Input data:</b>
+        1. dataset
+
+        <b>Expected results:</b>
+        Test passes when dataset access rights can be updated from private to public and from public to private.
+
+        <b>Steps:</b>
+        1. Update dataset from private to public.
+        2. Check that dataset is public.
+        3. Update dataset from public to private.
+        4. Check that dataset is private
+        """
         new_category = next(c for c in DataSet.CATEGORIES if c != dataset.category)
         step("Update data set, change category")
         dataset.api_update(category=new_category)
@@ -83,6 +144,20 @@ class TestUpdateDeleteDataSet:
 
     @priority.low
     def test_update_dataset_to_non_existing_category(self, dataset):
+        """
+        <b>Description:</b>
+        Check that dataset category can be updated to nonexisting value.
+
+        <b>Input data:</b>
+        1. dataset
+
+        <b>Expected results:</b>
+        Test passes when dataset category can be updated to nonexisting value.
+
+        <b>Steps:</b>
+        1. Update dataset category to nonexisting value.
+        2. Check that dataset category changed to chosen category.
+        """
         new_category = "user_category"
         step("Update data set with new category")
         dataset.api_update(category=new_category)

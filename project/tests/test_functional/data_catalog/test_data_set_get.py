@@ -57,6 +57,21 @@ class TestGetDataSets(object):
 
     @priority.high
     def test_match_dataset_to_transfer(self):
+        """
+        <b>Description:</b>
+        Check that all created transfers have corresponding datasets.
+
+        <b>Input data:</b>
+        1. dataset list
+        2. transfer list
+
+        <b>Expected results:</b>
+        Every transfer has a corresponding dataset (same titles).
+
+        <b>Steps:</b>
+        1. Get list of all transfer titles.
+        2. Check that for every transfer, there is a dataset with the same name.
+        """
         step("Check if a data set was created for each transfer")
         missing_ds = []
         dataset_titles = [ds.title for ds in self.datasets]
@@ -68,6 +83,22 @@ class TestGetDataSets(object):
     @priority.medium
     @pytest.mark.parametrize("category", DataSet.CATEGORIES)
     def test_get_datasets_by_category(self, category, test_org):
+        """
+        <b>Description:</b>
+        Check that datasets can be retrieved by category.
+
+        <b>Input data:</b>
+        1. category
+        2. organization id
+        3. dataset list
+
+        <b>Expected results:</b>
+        Test passes when its possible to retrieve a dataset with chosen category.
+
+        <b>Steps:</b>
+        1. Retrieve datasets with chosen category.
+        2. Check retrieved datasets that they are in desired category.
+        """
         step("Retrieve datasets by categories")
         filtered_datasets = self._filter_datasets(test_org, ({"category": [category]},))
         expected_datasets = [d for d in self.datasets if d.category == category]
@@ -75,6 +106,22 @@ class TestGetDataSets(object):
 
     @priority.medium
     def test_get_datasets_by_creation_date(self, test_org):
+        """
+        <b>Description:</b>
+        Check that datasets can be retrieved by creation date.
+
+        <b>Input data:</b>
+        1. time range
+        2. organization id
+        3. dataset list
+
+        <b>Expected results:</b>
+        Test passes when returned datasets were created within chosen time range.
+
+        <b>Steps:</b>
+        1. Retrieve datasets with chosen creation date.
+        2. Check retrieved datasets that they were created in chosen time range.
+        """
         step("Sort datasets by creation time and retrieve first two")
         time_range = sorted([dataset.creation_time for dataset in self.datasets][:2])
         step("Retrieve datasets for specified time range")
@@ -85,6 +132,22 @@ class TestGetDataSets(object):
     @priority.medium
     @pytest.mark.parametrize("file_format", DataSet.FILE_FORMATS)
     def test_get_datasets_by_file_format(self, file_format, test_org):
+        """
+        <b>Description:</b>
+        Check that datasets can be retrieved by source file format.
+
+        <b>Input data:</b>
+        1. file format
+        2. organization id
+        3. dataset list
+
+        <b>Expected results:</b>
+        Test passes when returned datasets were created from a source with selected file format.
+
+        <b>Steps:</b>
+        1. Retrieve datasets created from source with specified file format.
+        2. Check retrieved datasets that they were created from source with specified file format.
+        """
         # Test should be updated when we will receive answer about supported file formats.
         step("Retrieve datasets by file format")
         filtered_datasets = self._filter_datasets(test_org, ({"format": [file_format]},))
@@ -94,6 +157,21 @@ class TestGetDataSets(object):
     @priority.medium
     @pytest.mark.public_dataset
     def test_get_public_datasets_from_current_org(self, test_org):
+        """
+        <b>Description:</b>
+        Check that public datasets can be retrieved by organization.
+
+        <b>Input data:</b>
+        1. organization id
+        2. dataset list
+
+        <b>Expected results:</b>
+        Test passes when public datasets can be retrieved by organization.
+
+        <b>Steps:</b>
+        1. Retrieve public datasets by organization.
+        2. Check retrieved datasets that they belong to chosen organization.
+        """
         step("Retrieve only public datasets")
         filtered_datasets = self._filter_datasets(test_org, only_public=True)
         expected_datasets = [d for d in self.datasets if d.is_public]
@@ -101,6 +179,21 @@ class TestGetDataSets(object):
 
     @priority.medium
     def test_get_private_datasets_from_current_org(self, test_org):
+        """
+        <b>Description:</b>
+        Check that private datasets can be retrieved by organization.
+
+        <b>Input data:</b>
+        1. organization id
+        2. dataset list
+
+        <b>Expected results:</b>
+        Test passes when private datasets can be retrieved by organization.
+
+        <b>Steps:</b>
+        1. Retrieve private datasets by organization.
+        2. Check retrieved datasets that they belong to chosen organization.
+        """
         step("Retrieve only private datasets")
         filtered_datasets = self._filter_datasets(test_org, only_private=True)
         expected_datasets = [d for d in self.datasets if not d.is_public]
@@ -108,6 +201,20 @@ class TestGetDataSets(object):
 
     @priority.medium
     def test_compare_dataset_details_with_transfer_details(self):
+        """
+        <b>Description:</b>
+        Check that dataset details are the same as corresponding transfer details.
+
+        <b>Input data:</b>
+        1. test transfer
+        2. dataset list
+
+        <b>Expected results:</b>
+        Test passes when dataset details and transfer details are the same.
+
+        <b>Steps:</b>
+        1. Compare dataset and transfer details.
+        """
         step("Get transfer and matching dataset")
         transfer = self.transfers[0]
         dataset = next(iter([ds for ds in self.datasets if ds.title == transfer.title]), None)
@@ -126,6 +233,21 @@ class TestGetDataSets(object):
 
     @priority.medium
     def test_get_datasets_by_keyword_title(self, test_org):
+        """
+        <b>Description:</b>
+        Check that dataset can be retrieved by title.
+
+        <b>Input data:</b>
+        1. transfer title
+        2. dataset list
+
+        <b>Expected results:</b>
+        Test passes when dataset can be retrieved by title.
+
+        <b>Steps:</b>
+        1. Retrieve dataset by title.
+        2. Check that retrieved dataset is correct.
+        """
         title = self.transfer_titles[0]
         step("Retrieve datasets by title keyword")
         filtered_datasets = self._filter_datasets(test_org, query=title)
@@ -134,6 +256,21 @@ class TestGetDataSets(object):
 
     @priority.medium
     def test_get_datasets_by_keyword_source_uri(self, test_org):
+        """
+        <b>Description:</b>
+        Check that dataset can be retrieved by source uri.
+
+        <b>Input data:</b>
+        1. source uri
+        2. dataset list
+
+        <b>Expected results:</b>
+        Test passes when dataset can be retrieved by source uri.
+
+        <b>Steps:</b>
+        1. Retrieve dataset by source uri.
+        2. Check that retrieved dataset is correct.
+        """
         step("Retrieve datasets by source uri keyword")
         filtered_datasets = self._filter_datasets(test_org, query=self.TEST_FILE_URL)
         assert sorted(filtered_datasets) == sorted(self.datasets)
@@ -141,6 +278,21 @@ class TestGetDataSets(object):
     @priority.medium
     @pytest.mark.parametrize("data_sample", data_sample)
     def test_get_datasets_by_keyword_data_sample(self, data_sample, test_org):
+        """
+        <b>Description:</b>
+        Check that dataset can be retrieved by data sample.
+
+        <b>Input data:</b>
+        1. data sample
+        2. organization id
+
+        <b>Expected results:</b>
+        Test passes when dataset can be retrieved by data sample.
+
+        <b>Steps:</b>
+        1. Retrieve dataset by data sample.
+        2. Check that retrieved dataset is correct.
+        """
         step("Retrieve datasets by data sample keyword")
         filtered_datasets = self._filter_datasets(test_org, query=data_sample)
         assert sorted(filtered_datasets) == sorted(self.datasets)

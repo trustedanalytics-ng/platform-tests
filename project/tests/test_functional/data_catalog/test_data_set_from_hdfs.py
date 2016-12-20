@@ -33,6 +33,22 @@ class TestDataSetFromHdfs(object):
 
     @priority.medium
     def test_create_dataset_from_hdfs_uri(self, context, test_org):
+        """
+        <b>Description:</b>
+        Check that dataset can be created by passing hdfs uri as source.
+
+        <b>Input data:</b>
+        1. organization id
+        2. hdfs URI
+
+        <b>Expected results:</b>
+        Test passes when dataset is successfully created and it has a hdfs uri in source_uri property.
+
+        <b>Steps:</b>
+        1. Create dataset from an url.
+        3. Get dataset target_uri (hdfs path) and create new dataset with it.
+        4. Compare second dataset source_uri is the same as first dataset target_uri.
+        """
         step("Create source dataset")
         _, source_dataset = data_catalog.create_dataset_from_link(context, test_org.guid, self.TEST_FILE_URL)
         step("Create dataset from hdfs uri")

@@ -94,11 +94,45 @@ class TestCreateDataSets(object):
     @priority.medium
     @pytest.mark.parametrize("key", DETAILS_TO_COMPARE)
     def test_create_dataset(self, key, dataset, expected_dataset_details):
+        """
+        <b>Description:</b>
+        Check that dataset can be created.
+
+        <b>Input data:</b>
+        1. organization id
+        2. source file
+        3. list of metadata types to compare
+        4. transfer category
+        5. transfer title
+
+        <b>Expected results:</b>
+        Test passes when dataset is successfully created and has expected details.
+
+        <b>Steps:</b>
+        1. Create private transfer from file/url.
+        2. Get dataset that matches the created transfer.
+        3. Compare dataset details with expected details.
+        """
         step("Compare dataset details with expected values")
         assert expected_dataset_details[key] == dataset.get_details()[key]
 
     @priority.medium
     def test_create_dataset_recordcount(self, dataset, local_file_path):
+        """
+        <b>Description:</b>
+        Check that dataset record count is the same as in the source file.
+
+        <b>Input data:</b>
+        1. Created dataset
+        2. Source file
+
+        <b>Expected results:</b>
+        Dataset record count is the same as in the source file.
+
+        <b>Steps:</b>
+        1. Get created dataset.
+        2. Compare dataset record count with source file record count.
+        """
         step("Check that record count is valid")
         assert dataset.record_count == get_csv_record_count(local_file_path)
 
