@@ -28,8 +28,6 @@ from modules.tap_logger import step
 from modules.tap_object_model.flows.data_catalog import create_dataset_from_link
 from modules.test_names import escape_hive_name
 
-from project.modules.test_names import decode_org_id
-
 logged_components = (TAP.data_catalog, TAP.dataset_publisher, TAP.das)
 pytestmark = [pytest.mark.components(TAP.dataset_publisher)]
 
@@ -76,7 +74,7 @@ class TestHue:
         2. Check if database name exists in hue database list.
         """
         step("Check organization database is on the list of hive databases")
-        self.__class__.database_name = decode_org_id(test_org.guid)
+        self.__class__.database_name = escape_hive_name(test_org.guid)
         response = hue.get_databases()
         assert self.database_name in response["databases"]
 
