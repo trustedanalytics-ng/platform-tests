@@ -37,7 +37,6 @@ class TestGetOrganizationUsers:
         }
     
     @priority.high
-    @pytest.mark.skip(reason="DPNG-10987 User-management is not able to add admin user (blocked prerequisite)")
     def test_org_admin_can_get_org_users(self, test_org, test_org_admin_client):
         step("Check that admin can get a list of users in org")
         expected_users = User.get_list_in_organization(org_guid=test_org.guid, client=test_org_admin_client)
@@ -45,7 +44,6 @@ class TestGetOrganizationUsers:
         assert sorted(user_list) == sorted(expected_users)
 
     @priority.high
-    @pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
     def test_platform_admin_can_get_org_users(self, admin_user, test_org, admin_client, remove_admin_from_test_org):
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
         step("Check that platform admin can get a list of users in any org")

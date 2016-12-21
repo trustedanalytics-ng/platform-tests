@@ -24,7 +24,7 @@ from ...http_client.http_client_factory import HttpClientFactory
 from ...constants import Guid
 
 
-def onboard(context, username=None, password=None, inviting_client=None, check_email=True):
+def onboard(context, org_guid, username=None, password=None, inviting_client=None, check_email=True):
     """
     Onboard new user. Check email for registration code and register.
     Returns objects for newly created user and org.
@@ -35,10 +35,11 @@ def onboard(context, username=None, password=None, inviting_client=None, check_e
         code = gmail_api.get_invitation_code_for_user(username=invitation.username)
     else:
         code = invitation.code
-    return register(context=context, code=code, username=invitation.username, password=password)
+    return register(context=context, org_guid=org_guid, code=code,
+                    username=invitation.username, password=password)
 
 
-def register(context, code, username, password=None):
+def register(context, org_guid, code, username, password=None):
     """
     Set password for new user. Returns objects for newly created user.
     """
@@ -49,11 +50,11 @@ def register(context, code, username, password=None):
     except UnexpectedResponseError as e:
         # If exception occurred, other than conflict, check whether org and user are on the list and if so, delete it.
         if e.status != HttpStatus.CODE_CONFLICT:
-            user = next((u for u in User.get_all_users() if u.username == username), None)
+            user = next((u for u in User.get_all_users(org_guid) if u.username == username), None)
             if user is not None:
                 user.cleanup()
         raise
     new_user = User(guid=response["userGuid"], username=username, password=response["password"],
-                    org_role={Guid.CORE_ORG_GUID: User.ORG_ROLE["admin"]})
+                    org_role={org_guid: User.ORG_ROLE["admin"]})
     context.test_objects.append(new_user)
     return new_user

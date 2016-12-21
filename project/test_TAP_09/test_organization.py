@@ -135,7 +135,7 @@ class TestOrganization:
         org1 = test_org
         user1 = admin_user
         step("Create second user and organization")
-        user2, org2 = onboard(context)
+        user2, org2 = onboard(context, test_org.guid)
         org1_database_name = escape_hive_name(org1.guid)
         user1_databases = self._get_hive_databases(user1)
         org2_database_name = escape_hive_name(org2.guid)

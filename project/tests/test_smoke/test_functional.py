@@ -105,9 +105,8 @@ def test_dashboard_metrics():
     assert_dict_values_set(vars(dashboard_metrics), expected_metrics_keys)
 
 
-@pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
-def test_onboarding(context):
+def test_onboarding(context, test_org):
     """
     <b>Description:</b>
     Checks if user can be added to the platform with onboarding functionality.
@@ -126,11 +125,10 @@ def test_onboarding(context):
     step("Onboard new user")
     test_user = onboarding.onboard(context=context, check_email=False)
     step("Check that user is created")
-    users = User.get_all_users()
+    users = User.get_all_users(test_org.guid)
     assert test_user in users
 
 
-@pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_add_new_user_to_and_delete_from_org(core_org, context):
     """
@@ -151,7 +149,8 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     5. Verify that the user was removed from the organization.
     """
     step("Add new user to organization")
-    test_user = onboarding.onboard(context=context, check_email=False)
+    test_user = onboarding.onboard(context=context, org_guid=core_org.guid,
+                                   check_email=False)
     test_user.add_to_organization(org_guid=core_org.guid, role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
     users = User.get_list_in_organization(org_guid=core_org.guid)

@@ -15,6 +15,7 @@
 #
 
 import pytest
+import config
 
 from modules.constants import TapComponent as TAP, UserManagementHttpStatus as HttpStatus
 from modules.http_calls.platform import user_management
@@ -69,16 +70,28 @@ class TestUpdateOrganizationUser:
         assert_user_in_org_and_role(updated_user, test_org.guid, role_expected)
 
     @priority.low
-    @pytest.mark.skip(reason="DPNG-10987 User-management is not able to add admin user")
-    def test_cannot_remove_org_admin_role_from_the_last_org_admin(self, test_org, test_org_admin):
-        test_org_users = User.get_list_in_organization(org_guid=test_org.guid)
-        admins = [u for u in test_org_users
-                  if u.org_role[test_org.guid] == User.ORG_ROLE["admin"] and u.guid != test_org_admin.guid]
+    def test_cannot_remove_admin_role_from_the_last_org_admin(self, test_org):
+        step("Retrieve all admins and the platform admin")
+        org_users = User.get_all_users(org_guid=test_org.guid)
+        admins = [user for user in org_users
+                  if user.org_role[test_org.guid] == User.ORG_ROLE["admin"]]
+        platform_admin = next(a for a in admins
+                              if a.username == config.admin_username)
+
+        step("Remove admin role from all admins except from platform admin")
         for admin in admins:
-            admin.update_org_role(test_org.guid, new_role=User.ORG_ROLE["user"])
-        step("Remove admin role from the last admin")
-        test_org_admin.update_org_role(org_guid=test_org.guid, new_role=User.ORG_ROLE["user"])
-        assert_user_in_org_and_role(test_org_admin, test_org.guid, User.ORG_ROLE["admin"])
+            if admin != platform_admin:
+                admin.update_org_role(org_guid=test_org.guid,
+                                      new_role=User.ORG_ROLE["user"])
+
+        step("Remove admin role from the last admin (platform admin),"
+             " assert raises exception")
+        assert_raises_http_exception(
+            HttpStatus.CODE_FORBIDDEN,
+            HttpStatus.MSG_CANNOT_PERFORM_REQ_ON_YOURSELF,
+            platform_admin.update_org_role, org_guid=test_org.guid,
+            new_role=User.ORG_ROLE["user"]
+        )
 
     @priority.low
     def test_cannot_update_user_with_invalid_guid(self, test_org):

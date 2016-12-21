@@ -38,8 +38,8 @@ class TestCliInvitationsShort:
         return invitation
 
     @pytest.fixture(scope="function")
-    def user(self, context):
-        return onboard(context=context, check_email=False)
+    def user(self, context, test_org):
+        return onboard(context=context, org_guid=test_org.guid, check_email=False)
 
     @priority.high
     @pytest.mark.components(TAP.cli)

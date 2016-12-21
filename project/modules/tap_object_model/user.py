@@ -115,18 +115,17 @@ class User(object):
         um.api_delete_organization_user(org_guid=org_guid, user_guid=self.guid, client=client)
 
     @classmethod
-    def get_admin(cls):
+    def get_admin(cls, org_guid):
         """Return User object for admin user"""
-        users = User.get_all_users()
+        users = User.get_all_users(org_guid=org_guid)
         admin = next((user for user in users if user.username == config.admin_username), None)
         if admin is None:
             raise AssertionError("Admin with username {} not found".format(config.admin_username))
         return admin
 
     @classmethod
-    def get_all_users(cls):
-        # TODO: For now we have only one org. To be changed in Tap v0.9
-        return cls.get_list_in_organization(org_guid=Guid.CORE_ORG_GUID)
+    def get_all_users(cls, org_guid):
+        return cls.get_list_in_organization(org_guid=org_guid)
 
     def cleanup(self):
         self.delete_from_organization(org_guid=Guid.CORE_ORG_GUID)

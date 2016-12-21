@@ -79,7 +79,7 @@ class TestOnboarding:
                 self._assert_message_correct(message["subject"], message["content"], message["sender"])
 
     @priority.high
-    def test_simple_onboarding(self, context):
+    def test_simple_onboarding(self, context, test_org):
         step("Send an invite to a new user")
         invitation = Invitation.api_send(context)
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=1)
@@ -87,9 +87,11 @@ class TestOnboarding:
         message = messages[0]
         self._assert_message_correct(message["subject"], message["content"], message["sender"])
         step("Register the new user")
-        user = onboarding.register(context=context, code=invitation.code, username=invitation.username)
+        user = onboarding.register(context=context, org_guid=test_org.guid,
+                                   code=invitation.code,
+                                   username=invitation.username)
         step("Check that the user and their organization exist")
-        assert_user_in_org_and_role(user, Guid.CORE_ORG_GUID, User.ORG_ROLE["user"])
+        assert_user_in_org_and_role(user, test_org.guid, User.ORG_ROLE["user"])
 
     @priority.medium
     def test_cannot_invite_existing_user(self, context, test_org_user):
@@ -113,23 +115,28 @@ class TestOnboarding:
         self._assert_user_received_messages(username, 0)
 
     @priority.medium
-    def test_cannot_create_an_account_with_invalid_code(self, context):
+    def test_cannot_create_an_account_with_invalid_code(self, context, test_org):
         step("An error is returned when user registers with invalid code")
         username = generate_test_object_name(email=True)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                     onboarding.register, context=context, code="FFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
+                                     onboarding.register, context=context,
+                                     org_guid=test_org.guid,
+                                     code="FFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
                                      username=username)
 
     @priority.medium
     @pytest.mark.bugs("DPNG-13519 500 is returned on using the same activation code twice")
-    def test_cannot_use_the_same_activation_code_twice(self, context):
+    def test_cannot_use_the_same_activation_code_twice(self, context, test_org):
         step("Invite a user")
         invitation = Invitation.api_send(context)
         step("The new user registers")
-        onboarding.register(context=context, code=invitation.code, username=invitation.username)
+        onboarding.register(context=context, org_guid=test_org.guid,
+                            code=invitation.code, username=invitation.username)
         step("Check that error is returned when the user tries to use code twice")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
-                                     onboarding.register, context=context, code=invitation.code,
+                                     onboarding.register, context=context,
+                                     org_guid=test_org.guid,
+                                     code=invitation.code,
                                      username=invitation.username)
 
     @priority.low
@@ -140,7 +147,7 @@ class TestOnboarding:
                                      Invitation.api_send, context=context, username=username)
 
     @priority.medium
-    def test_user_cannot_register_without_password(self, context):
+    def test_user_cannot_register_without_password(self, context, test_org):
         step("Invite a new user")
         invitation = Invitation.api_send(context)
         step("Check that an error is returned when the user tries to register without a password")
@@ -148,6 +155,6 @@ class TestOnboarding:
                                      user_management.api_register_new_user, code=invitation.code,
                                      org_name=generate_test_object_name())
         step("Check that the user was not created")
-        username_list = [user.username for user in User.get_all_users()]
+        username_list = [user.username for user in User.get_all_users(test_org.guid)]
         assert invitation.username not in username_list, "User was created"
 

@@ -485,9 +485,9 @@ def sample_service(class_context, sample_app_jar):
 
 
 @pytest.fixture(scope="session")
-def admin_user():
+def admin_user(test_org):
     log_fixture("admin_user: Retrieve admin user")
-    admin_user = User.get_admin()
+    admin_user = User.get_admin(test_org.guid)
     admin_user.password = config.admin_password
     return admin_user
 
