@@ -59,7 +59,7 @@ class TestServiceInstance:
         "id": INSTANCE_ID,
         "name": SERVICE_NAME,
         "type": TYPE,
-        "classId": OFFERING_ID,
+        "offeringId": OFFERING_ID,
         "bindings": BINDINGS,
         "serviceName": OFFERING_LABEL,
         "metadata": METADATA_LIST,
