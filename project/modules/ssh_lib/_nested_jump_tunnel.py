@@ -54,7 +54,6 @@ class NestedJumpTunnel(SimpleJumpTunnel):
     @property
     def _tunnel_command(self):
         self._logger.warning("Kubernetes not available directly from jumpbox.")
-        self._copy_key_to_remote_host()
         return self._ssh_command + self._local_tunnel_command + [self._remote_tunnel_command]
 
     def close(self):
@@ -69,17 +68,6 @@ class NestedJumpTunnel(SimpleJumpTunnel):
         else:
             tunnel_process_on_jump.kill()
         super().close()
-
-    def _copy_key_to_remote_host(self):
-        """
-        Required when access to kubernetes and core tap services is not available on jump, only on master-0.
-        """
-        if not self._KEY_COPIED:
-            self._logger.info("Copy key to jump")
-            target_path = os.path.join(self._home_directory_on_jump, ".ssh", "id_rsa")
-            self._jump_client.scp_to_remote(source_path=self._key_path, target_path=target_path)
-            self._jump_client.ssh("chmod 600 {}".format(target_path))
-            self.__class__._KEY_COPIED = True
 
     @classmethod
     def _get_port_from_remote_tunnel_command(cls, actual_command):

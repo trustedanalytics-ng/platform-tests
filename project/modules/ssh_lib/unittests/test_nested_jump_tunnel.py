@@ -123,27 +123,9 @@ class TestNestedJumpTunnel:
             remote_tunnel_command = jump_tunnel._remote_tunnel_command
         assert str(mock_port.return_value) in remote_tunnel_command
 
-    def test_copy_key_to_remote_host(self, jump_tunnel):
-        assert jump_tunnel._KEY_COPIED is False
-        with mock.patch.multiple(jump_tunnel._jump_client, scp_to_remote=mock.DEFAULT, ssh=mock.DEFAULT) as methods:
-            jump_tunnel._copy_key_to_remote_host()
-        target_path = os.path.join(jump_tunnel._home_directory_on_jump, ".ssh", "id_rsa")
-        methods["scp_to_remote"].assert_called_with(source_path=jump_tunnel._key_path, target_path=target_path)
-        methods["ssh"].assert_called_with("chmod 600 {}".format(target_path))
-        assert jump_tunnel._KEY_COPIED is True
-
-    def test_copy_key_to_remote_host_once(self, jump_tunnel):
-        NestedJumpTunnel._KEY_COPIED = True
-        with mock.patch.multiple(jump_tunnel._jump_client, scp_to_remote=mock.DEFAULT, ssh=mock.DEFAULT):
-            jump_tunnel._copy_key_to_remote_host()
-        jump_tunnel._jump_client.scp_to_remote.assert_not_called()
-        jump_tunnel._jump_client.ssh.assert_not_called()
-
     def test_tunnel_command(self, jump_tunnel):
-        with mock.patch.object(jump_tunnel, "_copy_key_to_remote_host", mock.DEFAULT) as mock_copy_key:
-            with mock.patch(self.REMOTE_TUNNEL_COMMAND_PROPERTY, "abc") as mock_remote_tunnel_cmd:
-                tunnel_command = jump_tunnel._tunnel_command
-        mock_copy_key.assert_called_with()
+        with mock.patch(self.REMOTE_TUNNEL_COMMAND_PROPERTY, "abc") as mock_remote_tunnel_cmd:
+            tunnel_command = jump_tunnel._tunnel_command
         assert tunnel_command == jump_tunnel._ssh_command + jump_tunnel._local_tunnel_command + [mock_remote_tunnel_cmd]
 
     def test_tunnel_process_on_jump(self, jump_tunnel):
