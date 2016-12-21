@@ -25,7 +25,7 @@ from modules.exceptions import TapCliException
 
 
 class TapCli:
-    TARGET = "target"
+    INFO = "info"
     HELP = "help", "h"
     VERSION = "--version", "-v"
     LOGIN = "login"
@@ -57,6 +57,10 @@ class TapCli:
     DELETE_INVITATION = "delete-invitation", "di"
     DELETE_USER = "delete-user", "du"
 
+    API_PARAM = "--api"
+    USERNAME_PARAM = "--username"
+    PASSWORD_PARAM = "--password"
+
     LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
 
     def __init__(self, cli_app_path):
@@ -77,13 +81,16 @@ class TapCli:
     def login(self, login_domain=config.api_url, tap_auth=None):
         if tap_auth is None:
             tap_auth = [config.admin_username, config.admin_password]
-        output = self._run_command([self.LOGIN, "http://{}".format(login_domain), tap_auth[0], tap_auth[1]])
+        output = self._run_command([self.LOGIN,
+                                    self.API_PARAM, "http://{}".format(login_domain),
+                                    self.USERNAME_PARAM, tap_auth[0],
+                                    self.PASSWORD_PARAM, tap_auth[1]])
         if TapMessage.AUTHENTICATION_SUCCEEDED not in output:
             raise TapCliException(output)
         return output
 
-    def target(self):
-        return self._run_command([self.TARGET])
+    def info(self):
+        return self._run_command([self.INFO])
 
     def help(self, short=False):
         return self._run_command([self.HELP[1] if short else self.HELP[0]])

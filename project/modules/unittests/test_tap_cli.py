@@ -93,8 +93,8 @@ class TestTapCli(unittest.TestCase):
         assert "Authentication succeeded" == self.tap_cli.login(tap_auth=tap_auth)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_target(self):
-        assert ["target"] == self.tap_cli.target()
+    def test_info(self):
+        assert ["info"] == self.tap_cli.info()
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_help(self):

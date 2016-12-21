@@ -39,26 +39,26 @@ class TestCliBasicFlow:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.high
-    def test_target(self, tap_cli, cli_login):
+    def test_info(self, tap_cli, cli_login):
         """
         <b>Description:</b>
-        Check that command 'target' print proper credentials
+        Check that command 'info' prints proper credentials
 
         <b>Input data:</b>
-        1. Command name: target
+        1. Command name: info
         2. TAP domain api address
         3. Username
 
         <b>Expected results:</b>
-        Test passes when Tap CLI 'target' command returns proper credentials.
+        Test passes when Tap CLI 'info' command returns proper credentials.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command 'target'.
+        1. Run TAP CLI with command 'info'.
         2. Verify response contains expected address.
         3. Verify response contains expected username.
         """
-        step("Run tap target")
-        output = tap_cli.target()
+        step("Run tap info")
+        output = tap_cli.info()
         assert config.cf_api_url in output
         assert config.admin_username in output
 
@@ -86,7 +86,7 @@ class TestCliBasicFlow:
         assert "VERSION" in output
         assert "COMMANDS" in output
         assert "GLOBAL OPTIONS" in output
-        assert tap_cli.TARGET in output
+        assert tap_cli.INFO in output
         assert tap_cli.HELP[0] in output
         assert tap_cli.VERSION[0] in output
         assert tap_cli.LOGIN in output
