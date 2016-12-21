@@ -51,21 +51,29 @@ class TestCatalogInstances:
         assert instance is not None, "Service instance was not found on the list of all instances"
         return instance
 
-    @priority.high
-    def test_update_instance(self, catalog_instance):
-        step("Get class id for instance before update")
-        class_id_before_update = catalog_instance.class_id
-        step("Update the instance class id")
-        catalog_instance.update(field_name="classId", value=self.SAMPLE_CLASS_ID)
-        step("Check that the instance was updated")
-        instance = CatalogInstance.get(instance_id=catalog_instance.id)
-        assert catalog_instance == instance
+    @priority.medium
+    def test_cannot_update_instance_class_id(self, catalog_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating instance field classId.
 
-        step("Update instance class id value to the original value")
-        catalog_instance.update(field_name="classId", value=class_id_before_update)
-        step("Check that the instance was updated to the original value")
-        instance = CatalogInstance.get(instance_id=catalog_instance.id)
-        assert catalog_instance == instance
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+        4. new classId value
+
+        <b>Expected results:</b>
+        Test passes when field classId of instance is not updated and status code 400 with error message:
+        'ClassID fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update instance field classId
+        """
+        step("Check that it's not possible to update instance class id")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
+                                     catalog_instance.update, field_name="classId", value=self.SAMPLE_CLASS_ID)
 
     @priority.high
     def test_delete_instance(self, catalog_instance):
@@ -99,10 +107,28 @@ class TestCatalogInstances:
     @priority.low
     @pytest.mark.bugs("DPNG-13600: User can update catalog instance using wrong prevValue classId")
     def test_cannot_update_instance_with_wrong_prev_class_id_value(self, catalog_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating instance field classId giving value classId and wrong prev_value
+        of classId.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+        4. new classId value
+        5. wrong prev_value of classId
+
+        <b>Expected results:</b>
+        Test passes when field classId of instance is not updated and status code 400 with error message:
+        'ClassID fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update instance field classId giving values: classId and wrong prev_value of classId.
+        """
         step("Check that is't not possible to update instance with incorrect prev_value of class id")
-        expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_CLASS_ID,
-                                                                       catalog_instance.class_id)
-        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
                                      prev_value=self.WRONG_PREV_CLASS_ID)
 

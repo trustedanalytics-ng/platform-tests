@@ -45,6 +45,26 @@ class TestCatalogApplicationInstances:
 
     @priority.high
     def test_create_and_delete_application_instance(self, context, catalog_application):
+        """
+        <b>Description:</b>
+        Checks if new instance of application can be created and deleted.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+
+        <b>Expected results:</b>
+        Test passes when new instance of application can be created and deleted. According to this, instance should be
+        available on the list of application instances after being created and shouldn't be on this list after deletion.
+
+        <b>Steps:</b>
+        1. Create application instance.
+        2. Check that the instance is on the list of catalog application instances.
+        3. Stop the application instance if their state is RUNNING.
+        4. Delete the application instance.
+        5. Check that application instance is no longer on the list of catalog application instances.
+        """
         step("Create application instance")
         app_instance = CatalogApplicationInstance.create(context, application_id=catalog_application.id)
 
@@ -69,24 +89,31 @@ class TestCatalogApplicationInstances:
                                      CatalogApplicationInstance.get, application_id=catalog_application.id,
                                      instance_id=app_instance.id)
 
-    @priority.high
-    def test_update_application_instance_class_id(self, context, catalog_application):
-        step("Create application instance in catalog")
-        test_instance = CatalogApplicationInstance.create(context, application_id=catalog_application.id)
-        step("Get class id for application instance before update")
-        class_id_before_update = test_instance.class_id
-        step("Update application instance class id")
-        test_instance.update(field_name="classId", value=self.SAMPLE_CLASS_ID)
-        step("Check that the application instance was updated")
-        instance = CatalogApplicationInstance.get(application_id=catalog_application.id, instance_id=test_instance.id)
-        assert test_instance == instance
+    @priority.medium
+    def test_cannot_update_application_instance_class_id(self, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating application instance field classId.
 
-        step("Update application instance class id value to the original value")
-        test_instance.class_id = class_id_before_update
-        test_instance.update(field_name="classId", value=class_id_before_update)
-        step("Check that the application instance was updated to the original value")
-        instance = CatalogApplicationInstance.get(application_id=catalog_application.id, instance_id=test_instance.id)
-        assert test_instance == instance
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+        5. new classId value
+
+        <b>Expected results:</b>
+        Test passes when field classId of application instance is not updated and status code 400 with error message:
+        'ClassID fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update application instance field classId
+        """
+        step("Check that it's not possible to update instance class id")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
+                                     catalog_application_instance.update, field_name="classId",
+                                     value=self.SAMPLE_CLASS_ID)
 
     @priority.medium
     def test_cannot_create_application_instance_with_existing_name(self, context, catalog_application_instance):
@@ -158,10 +185,29 @@ class TestCatalogApplicationInstances:
     @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services, "
                       "catalog: applications)")
     def test_cannot_update_application_instance_with_wrong_prev_class_id_value(self, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating application instance field classId giving value classId and
+        wrong prev_value of classId.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+        5. new classId value
+        6. wrong prev_value of classId
+
+        <b>Expected results:</b>
+        Test passes when field classId of application instance is not updated and status code 400 with error message:
+        'ClassID fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update application instance field classId giving values: classId and wrong prev_value of classId.
+        """
         step("Check that is't not possible to update application instance with incorrect prev_value of class id")
-        expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_CLASS_ID,
-                                                                       catalog_application_instance.class_id)
-        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_application_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
                                      prev_value=self.WRONG_PREV_CLASS_ID)
 

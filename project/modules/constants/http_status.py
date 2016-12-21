@@ -230,6 +230,7 @@ class CatalogHttpStatus(HttpStatus):
     MSG_APP_FORBIDDEN_CHARACTERS = "field Name has incorrect value: {}"
     MSG_SERVICE_DOES_NOT_EXIST = "service with id: {} does not exists!"
     MSG_APPLICATION_DOES_NOT_EXIST = "application with id: {} does not exists!"
+    MSG_CLASS_ID_CANNOT_BE_CHANGED = "ClassID fields can not be changed!"
 
 
 class ApiServiceHttpStatus(HttpStatus):

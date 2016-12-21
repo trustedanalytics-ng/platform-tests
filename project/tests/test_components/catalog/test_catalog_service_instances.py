@@ -72,26 +72,28 @@ class TestCatalogServiceInstances:
                                      instance_id=catalog_service_instance.id)
 
     @priority.high
-    def test_update_service_instance_class_id(self, context, catalog_service):
-        step("Create service instance in catalog")
-        catalog_service_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id,
-                                                                 plan_id=catalog_service.plans[0].id)
-        step("Get class id for application instance before update")
-        class_id_before_update = catalog_service_instance.class_id
-        step("Update service instance class id")
-        catalog_service_instance.update(field_name="classId", value=self.SAMPLE_CLASS_ID)
-        step("Check that the service instance was updated")
-        service_instance = CatalogServiceInstance.get(service_id=catalog_service.id,
-                                                      instance_id=catalog_service_instance.id)
-        assert catalog_service_instance == service_instance
+    def test_cannot_update_service_instance_class_id(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service instance field classId.
 
-        step("Update service instance class id value to the original value")
-        catalog_service_instance.class_id = class_id_before_update
-        catalog_service_instance.update(field_name="classId", value=class_id_before_update)
-        step("Check that the service instance was updated to the original value")
-        service_instance = CatalogServiceInstance.get(service_id=catalog_service.id,
-                                                      instance_id=catalog_service_instance.id)
-        assert catalog_service_instance == service_instance
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        4. sample catalog service instance
+        5. new classId value
+
+        <b>Expected results:</b>
+        Test passes when field classId of service instance is not updated and status code 400 with error message:
+        'ClassID fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update service instance field classId
+        """
+        step("Check that it's not possible to update instance class id")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
+                                     catalog_service_instance.update, field_name="classId", value=self.SAMPLE_CLASS_ID)
 
     @priority.medium
     def test_cannot_create_service_instance_without_plan_id(self, context, catalog_service):
@@ -167,10 +169,28 @@ class TestCatalogServiceInstances:
     @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services, "
                       "catalog: applications)")
     def test_cannot_update_service_instance_with_wrong_prev_class_id_value(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service instance field classId giving value classID and
+        wrong prev_value of classId.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+        4. new classId value
+        5. wrong prev_value of classId
+
+        <b>Expected results:</b>
+        Test passes when field classId of service instance is not updated and status code 400 with error message:
+        'ClassID fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update service instance field classId giving values: classId and wrong prev_value of classId.
+        """
         step("Check that is't not possible to update service instance with incorrect prev_value of class id")
-        expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_CLASS_ID,
-                                                                       catalog_service_instance.class_id)
-        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_service_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
                                      prev_value=self.WRONG_PREV_CLASS_ID)
 
