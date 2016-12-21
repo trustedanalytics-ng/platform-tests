@@ -58,4 +58,4 @@ def escape_hive_name(string):
 
 
 def decode_org_id(org_guid):
-    return org_guid.replace("-", "").decode("hex").rstrip("\x00")
+    return bytes.fromhex(org_guid.replace("-", "")).decode('utf-8').rstrip("\x00")
