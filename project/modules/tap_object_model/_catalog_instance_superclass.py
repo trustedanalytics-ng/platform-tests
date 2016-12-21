@@ -29,7 +29,6 @@ class CatalogInstanceSuperClass(object):
     """
 
     _COMPARABLE_ATTRIBUTES = ["id", "name", "type", "class_id"]
-    _STOP_STATE_SEQUENCE = [TapEntityState.STOP_REQ, TapEntityState.STOPPING, TapEntityState.STOPPED]
 
     def __init__(self, instance_id: str, name: str, instance_type: str, class_id: str, state: str,
                  bound_instance_ids: list):
@@ -77,9 +76,8 @@ class CatalogInstanceSuperClass(object):
         return NotImplemented
 
     def stop(self):
-        for state in self._STOP_STATE_SEQUENCE:
-            self.update(field_name="state", value=state)
-            self.ensure_in_state(expected_state=state)
+        self.update(field_name="state", value=TapEntityState.STOP_REQ)
+        self.ensure_in_state(expected_state=TapEntityState.STOPPED)
 
     def destroy(self):
         self.update(field_name="state", value=TapEntityState.DESTROY_REQ)
