@@ -167,7 +167,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         plan_id = metadata.get(cls.PLAN_ID_METADATA_KEY, None)
         assert plan_id is not None, "No service instance plan id found in the response"
         url = metadata.get(cls.URLS_METADATA_KEY, None)
-        return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["classId"],
+        return cls(service_id=response["id"], plan_id=plan_id, offering_id=response["offeringId"],
                    bindings=response["bindings"], state=response["state"], name=response["name"],
                    offering_label=response.get("serviceName", None), url=url, client=client)
 
