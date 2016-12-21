@@ -204,7 +204,10 @@ class BlobStoreHttpStatus(HttpStatus):
 class TemplateRepositoryHttpStatus(HttpStatus):
     MSG_TOO_SHORT_INSTANCE_ID = "instanceId has to be longer than 15 characters!"
     MSG_TEMPLATE_DOES_NOT_EXIST = "template doesn't exist!"
+    MSG_NO_TEMPLATE = "there is no template \\\"{}\\\""
     MSG_UUID_CANNOT_BE_EMPTY = "uuid can't be empty!"
+    MSG_CANT_FIND_TEMPLATE = "can't find template by id: {}"
+    MSG_REMOVE_TEMPLATE_FORBIDDEN = "removing template {} is forbidden"
 
 
 class CatalogHttpStatus(HttpStatus):
