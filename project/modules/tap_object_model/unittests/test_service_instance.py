@@ -72,6 +72,23 @@ class TestServiceInstance:
         }
     }
 
+    CREATE_SERVICE_RESPONSE_BODY_TEMPLATE_CLASS_ID = {
+        "id": INSTANCE_ID,
+        "name": SERVICE_NAME,
+        "type": TYPE,
+        "classId": OFFERING_ID,
+        "bindings": BINDINGS,
+        "serviceName": OFFERING_LABEL,
+        "metadata": METADATA_LIST,
+        "state": None,
+        "auditTrail": {
+            "createdOn": int(time.time()),
+            "createdBy": "admin",
+            "lastUpdateOn": int(time.time()),
+            "lastUpdateBy": "admin"
+        }
+    }
+
     GET_CATALOG_RESPONSE = \
         [
             {
@@ -247,3 +264,13 @@ class TestServiceInstance:
         for metadata in self.METADATA_LIST:
             assert metadata["key"] in metadata_dict.keys()
             assert metadata["value"] == metadata_dict[metadata["key"]]
+
+    @patch("modules.tap_object_model._api_model_superclass.HttpClientFactory", mock_http_client_factory)
+    def test_from_response_class_id(self, service_instance_running):
+        """
+        Test _from_response command with classId field
+        """
+        expected_instance = service_instance_running
+        response = self.CREATE_SERVICE_RESPONSE_BODY_TEMPLATE_CLASS_ID
+        instance = ServiceInstance._from_response(response)
+        assert instance.offering_id == expected_instance.offering_id
