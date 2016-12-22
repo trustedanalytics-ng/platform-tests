@@ -36,8 +36,8 @@ class TestMysqlAndPsql(object):
     @pytest.fixture(scope="module")
     def db_type(self, app_bound_psql, app_bound_mysql):
         return {
-            "app_binded_psql": app_bound_psql,
-            "app_binded_mysql": app_bound_mysql,
+            "app_bound_psql": app_bound_psql,
+            "app_bound_mysql": app_bound_mysql,
         }
 
     @pytest.fixture(scope="function", autouse=True)
@@ -61,7 +61,7 @@ class TestMysqlAndPsql(object):
         return expected_rows
 
     @priority.medium
-    @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_create_and_delete_table(self, db_type, db_type_key):
@@ -108,7 +108,7 @@ class TestMysqlAndPsql(object):
         1. Create a table with columns.
         2. Verify columns were created.
         """
-        app = db_type["app_binded_mysql"]
+        app = db_type["app_bound_mysql"]
         test_table = Table.post(app, self.test_table_name, self.test_columns)
         expected_columns = [Column.from_json_definition(c) for c in self.mysql_specyfic_columns]
         expected_columns.append(Column("id", "BIGINT", False, 20))
@@ -135,7 +135,7 @@ class TestMysqlAndPsql(object):
         1. Create a table with columns.
         2. Verify columns were created.
         """
-        app = db_type["app_binded_psql"]
+        app = db_type["app_bound_psql"]
         test_table = Table.post(app, self.test_table_name, self.test_columns)
         expected_columns = [Column.from_json_definition(c) for c in self.test_columns]
         expected_columns.append(Column("id", "INTEGER", False, None))
@@ -145,11 +145,11 @@ class TestMysqlAndPsql(object):
             assert column in columns
 
     @priority.medium
-    @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     @pytest.mark.parametrize("row_values", row_value_list)
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
-    def test_post_row(self, row_values, db_type, db_type_key):
+    def test_post_row(self, db_type, db_type_key, row_values):
         """
         <b>Description:</b>
         Checks if a row can be inserted.
@@ -175,7 +175,7 @@ class TestMysqlAndPsql(object):
         assert row == expected_row
 
     @priority.low
-    @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_post_multiple_rows(self, db_type, db_type_key):
@@ -201,7 +201,7 @@ class TestMysqlAndPsql(object):
         assert rows == expected_rows
 
     @priority.medium
-    @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_put_row(self, db_type, db_type_key):
@@ -230,7 +230,7 @@ class TestMysqlAndPsql(object):
         assert expected_rows[1] == row
 
     @priority.medium
-    @pytest.mark.parametrize("db_type_key", ("app_binded_mysql", "app_binded_psql"))
+    @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     @pytest.mark.bugs("DPNG-12912 TAP NG - offering naming unification & new plans")
     @pytest.mark.bugs("DPNG-12956 Applications are not packed before push action in platform tests")
     def test_delete_row(self, db_type, db_type_key):

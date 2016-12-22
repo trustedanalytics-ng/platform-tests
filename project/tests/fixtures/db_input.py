@@ -18,13 +18,13 @@ class DbInput:
     test_table_name = "oh_hai"
 
     test_columns = [
-        {"name": "col0", "type": "VARCHAR", "max_len": 35},
+        {"name": "col0", "type": "VARCHAR", "max_len": 60},
         {"name": "col1", "type": "INTEGER", "is_nullable": False},
         {"name": "col2", "type": "BOOLEAN", "is_nullable": True}
     ]
 
     mysql_specyfic_test_columns = [
-        {"name": "col0", "type": "VARCHAR", "max_len": 35},
+        {"name": "col0", "type": "VARCHAR", "max_len": 60},
         {"name": "col1", "type": "INTEGER", "max_len": 11, "is_nullable": False},
         {"name": "col2", "type": "TINYINT", "max_len": 1, "is_nullable": True}
     ]
