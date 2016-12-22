@@ -61,6 +61,22 @@ class TestMonitorApplication:
     @pytest.mark.bugs("DPNG-12343 [api-tests] Tests which push app using cli fail immediately instead of waiting")
     def test_app_deployment(self, context, sample_app_target_directory, tap_cli,
                             sample_app_tar_content):
+        """
+        <b>Description:</b>
+        Check monitor during app deployment
+
+        <b>Input data:</b>
+        Sample application
+
+        <b>Expected results:</b>
+        Monitor logs can be retrieved
+
+        <b>Steps:</b>
+        - Update application manifest
+        - Push the application and wait for it to receive id
+        - Retrieve applicaiton logs
+        - Verify presence of monitor logs
+        """
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory)
         manifest_params = {"type" : self.APP_TYPE}

@@ -48,18 +48,59 @@ class TestApiServiceAuthorization:
 
     @priority.high
     def test_cannot_get_catalog_with_basic_auth(self):
+        """
+        <b>Description:</b>
+        Checks if it's possible to retrieve catalog with basic credentials
+
+        <b>Input data:</b>
+        Basic credentials
+
+        <b>Expected results:</b>
+        It's not possible to retrieve offerings via catalog with basic
+        credentials
+
+        <b>Steps:</b>
+        - Try to retrieve offerings with basic authentication credentials
+        """
         step("Check that basic auth does not work with api service")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
                                      api.get_offerings, client=self.basic_auth_client)
 
     @priority.high
     def test_cannot_get_platform_info_with_basic_auth(self):
+        """
+        <b>Description:</b>
+        Checks if it's possible to retrieve platform info with basic credentials
+
+        <b>Input data:</b>
+        Basic credentials
+
+        <b>Expected results:</b>
+        It's not possible to retrieve platform info via catalog with basic
+        credentials
+
+        <b>Steps:</b>
+        - Try to retrieve platform info with basic authentication credentials
+        """
         step("Check that basic auth does not work with platform info")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
                                      api.get_platform_info, client=self.basic_auth_client)
 
 
     def test_login_to_console_with_valid_credentials(self):
+        """
+        <b>Description:</b>
+        Log in to console with valid credentials
+
+        <b>Input data:</b>
+        Valid credentials
+
+        <b>Expected results:</b>
+        It's possible to log in to platform with valid credentials
+
+        <b>Steps:</b>
+        Log in to console with valid credentials
+        """
         step("Login using uaa endpoint")
         client = HttpClientFactory.get(
             ConsoleConfigurationProvider.get(
@@ -68,6 +109,19 @@ class TestApiServiceAuthorization:
         client.request(method=HttpMethod.GET, path="users/current")
 
     def test_login_to_console_with_invalid_credentials(self):
+        """
+        <b>Description:</b>
+        Log in to console with invalid credentials
+
+        <b>Input data:</b>
+        Invalid credentials
+
+        <b>Expected results:</b>
+        It's impossible to log in to platform with invalid credentials
+
+        <b>Steps:</b>
+        Log in to console with invalid credentials
+        """
         step("Login using uaa endpoint")
         configuration = ConsoleConfigurationProvider.get(
                 username=generate_test_object_name(separator=""),
@@ -76,6 +130,19 @@ class TestApiServiceAuthorization:
             HttpClientFactory.get(configuration)
 
     def test_login_to_console_with_empty_credentials(self):
+        """
+        <b>Description:</b>
+        Log in to console with empty credentials
+
+        <b>Input data:</b>
+        None
+
+        <b>Expected results:</b>
+        It's impossible to log in to platform with empty credentials
+
+        <b>Steps:</b>
+        Log in to console with empty credentials
+        """
         step("Login using uaa endpoint")
         configuration = ConsoleConfigurationProvider.get(
                 username="",
@@ -84,6 +151,19 @@ class TestApiServiceAuthorization:
             HttpClientFactory.get(configuration)
 
     def test_login_to_console_without_password(self):
+        """
+        <b>Description:</b>
+        Log in to console without password
+
+        <b>Input data:</b>
+        Credentials without password
+
+        <b>Expected results:</b>
+        It's impossible to log in to platform without password
+
+        <b>Steps:</b>
+        Log in to console without password
+        """
         step("Login using uaa endpoint")
         configuration = ConsoleConfigurationProvider.get(
                 username=config.admin_username,

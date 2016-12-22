@@ -45,6 +45,23 @@ class TestBlobStore:
 
     @priority.high
     def test_create_and_delete_blob(self, context, nodejs_app_path):
+        """
+        <b>Description:</b>
+        Create and delete blob from blob store
+
+        <b>Input data:</b>
+        nodejs application that will be used to create the blob
+
+        <b>Expected results:</b>
+        - It's possible to create the blob
+        - It's possible to delete the blob
+
+        <b>Steps:</b>
+        - Create blob and push it
+        - Verify the blob can be retrieved by id
+        - Delete the blob
+        - Verify that the blob is no longer in blob store
+        """
         step("Create artifact in blob-store")
         test_blob = Blob.create_from_file(context, file_path=nodejs_app_path)
 
@@ -62,6 +79,21 @@ class TestBlobStore:
 
     @priority.low
     def test_cannot_create_artifact_in_blob_store_with_existing_id(self, context, sample_blob, nodejs_app_path):
+        """
+        <b>Description:</b>
+        Attempt to create blob with duplicated id
+
+        <b>Input data:</b>
+        - nodejs application turned to blob
+        - id of the blob
+
+        <b>Expected results:</b>
+        It's not possible to create another blob with the same id
+
+        <b>Steps:</b>
+        - Push blob
+        - Push another blob with the id same one as previous blob
+        """
         step("Creating artifact for application in blob-store with existing id should return an error")
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_CONFLICT,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_ALREADY_IN_USE,
@@ -70,6 +102,21 @@ class TestBlobStore:
 
     @priority.low
     def test_empty_blob(self, context):
+        """
+        <b>Description:</b>
+        Try pushing an empty blob
+
+        <b>Input data:</b>
+        Empty blob
+
+        <b>Expected results:</b>
+        It's possible to push and remove later an empty blob
+
+        <b>Steps:</b>
+        - Create a blob of 0 size
+        - Push the blob and verify it's presence on platform
+        - Remove the blob and verify it's no longer present
+        """
         step("Create blob of size 0")
         stor_blob = Blob.create_from_data(context, blob_content=bytes())
         assert stor_blob.content == bytes()
@@ -90,6 +137,20 @@ class TestBlobStore:
 
     @priority.medium
     def test_operations_on_one_blob_do_not_affect_others(self, context):
+        """
+        <b>Description:</b>
+        Verify that working on one blob doesn't affect other blobs
+
+        <b>Input data:</b>
+        Multiple blobs
+
+        <b>Expected results:</b>
+        Blobs remain intact
+
+        <b>Steps:</b>
+        - Push multiple blobs and verify their contents
+        - Remove the blobs and verify they were removed
+        """
         NUM_BLOBS = 5
         BLOB_CONTENTS = [bytes("test_blob_content_{0}".format(i), "utf-8") for i in range(NUM_BLOBS)]
 
@@ -113,6 +174,20 @@ class TestBlobStore:
 
     @priority.low
     def test_cannot_create_blob_if_blob_id_is_empty(self, context):
+        """
+        <b>Description:</b>
+        Try pushing blob with empty id
+
+        <b>Input data:</b>
+        Blob with empty id
+
+        <b>Expected results:</b>
+        It's not possible to push blob with empty id
+
+        <b>Steps:</b>
+        - Push blob but do not provide any id
+        - Verify that platform returns error
+        """
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_MISSING,
                                      Blob.create_from_data,
@@ -120,18 +195,60 @@ class TestBlobStore:
 
     @priority.low
     def test_cannot_create_blob_if_blob_id_is_missing(self):
+        """
+        <b>Description:</b>
+        Try pushing blob with id field remove
+
+        <b>Input data:</b>
+        Blob that has no id field
+
+        <b>Expected results:</b>
+        It's not possible to push blob with no id field
+
+        <b>Steps:</b>
+        - Push blob with no id field
+        - Verify that platform returned error
+        """
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_MISSING,
                                      Blob.try_create_blob_with_no_id)
 
     @priority.low
     def test_cannot_create_blob_if_uploadfile_is_missing(self):
+        """
+        <b>Description:</b>
+        Try pushing blob with no uploadfile
+
+        <b>Input data:</b>
+        Blob with missing uploadfile
+
+        <b>Expected results:</b>
+        It's not possible to push blob with missing uploadfile
+
+        <b>Steps:</b>
+        - Push blob with missing uploadfile
+        - Verify that platform returned error
+        """
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_BAD_REQUEST,
                                      BlobStoreHttpStatus.MSG_BLOB_CONTENT_MISSING,
                                      Blob.try_create_blob_with_no_content)
 
     @priority.low
     def test_cannot_retrieve_nonexistent_blob(self):
+        """
+        <b>Description:</b>
+        Try to retrieve non-existent blob
+
+        <b>Input data:</b>
+        Made up id
+
+        <b>Expected results:</b>
+        It's not possible to retrieve blob with non-existent id
+
+        <b>Steps:</b>
+        - Ask for id that does not exist
+        - Verify platform returned error
+        """
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.get,
@@ -139,6 +256,20 @@ class TestBlobStore:
 
     @priority.low
     def test_cannot_delete_nonexistent_blob(self):
+        """
+        <b>Description:</b>
+        Try
+
+        <b>Input data:</b>
+        Made up id
+
+        <b>Expected results:</b>
+        It's not possible to delete id that does not exist
+
+        <b>Steps:</b>
+        - Delete blob that has wrong id
+        - Verify the platform returned error
+        """
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_NOT_FOUND,
                                      BlobStoreHttpStatus.MSG_BLOB_DOES_NOT_EXIST,
                                      Blob.delete_by_id,

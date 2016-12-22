@@ -76,6 +76,22 @@ class TestImageFactory:
     @pytest.mark.components(TAP.blob_store, TAP.catalog, TAP.image_factory, TAP.image_repository)
     @pytest.mark.bugs("DPNG-12932 State of the NODEJS image does not reach state READY")
     def test_create_image_in_image_factory(self, context, catalog_image):
+        """
+        <b>Description:</b>
+        Create image with image factory
+
+        <b>Input data:</b>
+        Catalog image
+        Image id
+
+        <b>Expected results:</b>
+        - It's possible to create image and later remove it
+
+        <b>Steps:</b>
+        - Create image in image factory
+        - Verify it's ready
+        - Remove the image and verify it was removed
+        """
         step("IMAGE-FACTORY: Create an image")
         Image.create(context, image_id=catalog_image.id)
 
@@ -92,6 +108,20 @@ class TestImageFactory:
     @pytest.mark.parametrize("body", ["invalid body", ""])
     @pytest.mark.bugs("DPNG-12932 State of the NODEJS image does not reach state READY")
     def test_create_image_factory_with_wrong_body(self, class_context, body, catalog_image):
+        """
+        <b>Description:</b>
+        Create image in image factor with wrong body
+
+        <b>Input data:</b>
+        Image with wrong body
+
+        <b>Expected results:</b>
+        It's not possible to create image with wrong body
+
+        <b>Steps:</b>
+        - Create image with wrong body in image factory
+        - Verify the platform returned error
+        """
         step("Create image in image-factory with invalid body")
         assert_raises_http_exception(
             HttpStatus.CODE_BAD_REQUEST,

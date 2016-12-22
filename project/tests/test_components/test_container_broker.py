@@ -84,6 +84,20 @@ class TestContainerBroker:
     @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog)
     def test_create_and_destroy_service_instance(self, context, offering_a):
+        """
+        <b>Description:</b>
+        Create and destroy service instance
+
+        <b>Input data:</b>
+        Offering
+
+        <b>Expected results:</b>
+        It's possible to create and later destroy service instance
+
+        <b>Steps:</b>
+        - Create service instance and verify it's running
+        - Destroy service instance and verify it was removed
+        """
         step("CATALOG: Create service instance in {} state".format(TapEntityState.REQUESTED))
         # REQUESTED state will trigger monitor to grab the instance from catalog and send it to container-broker queue
         instance = CatalogServiceInstance.create(context, service_id=offering_a.id, plan_id=offering_a.plans[0].id,
@@ -108,6 +122,21 @@ class TestContainerBroker:
     @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog, TAP.container_broker)
     def test_bind_and_unbind_instances(self, offering_a, catalog_instance_a, catalog_instance_b):
+        """
+        <b>Description:</b>
+        Bind two container broker instances to each other
+
+        <b>Input data:</b>
+        Two instances
+
+        <b>Expected results:</b>
+        It's possible to bind two instances to each other
+
+        <b>Steps:</b>
+        - Create two instances
+        - Bind them to each other and verify they have a bond
+        - Unbind the instances and verify that the bond was lost
+        """
         step("CONTAINER-BROKER: Bind two instances")
         src_instance = ContainerBrokerInstance(instance_id=catalog_instance_a.id)
         dst_instance = ContainerBrokerInstance(instance_id=catalog_instance_b.id)
@@ -138,6 +167,20 @@ class TestContainerBroker:
 
     @pytest.mark.components(TAP.catalog, TAP.container_broker)
     def test_get_instance_logs_in_container_broker(self, catalog_instance_a):
+        """
+        <b>Description:</b>
+        Retrieve service instance logs from container broker
+
+        <b>Input data:</b>
+        Catalog broker instance
+
+        <b>Expected results:</b>
+        It's possible to retrieve logs from container broker
+
+        <b>Steps:</b>
+        - Create container broker instance
+        - Ask for logs for newly created instance from service broker
+        """
         step("CONTAINER-BROKER: Get instance logs")
         container_broker_instance = ContainerBrokerInstance(instance_id=catalog_instance_a.id)
         response = container_broker_instance.get_logs()
@@ -146,6 +189,20 @@ class TestContainerBroker:
     @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog, TAP.container_broker)
     def test_get_instance_envs_in_container_broker(self, catalog_instance_a):
+        """
+        <b>Description:</b>
+        Retrieve environment variables for instance from container broker
+
+        <b>Input data:</b>
+        Catalog broker instance
+
+        <b>Expected results:</b>
+        It's possible to retrieve all envs from instance
+
+        <b>Steps:</b>
+        - Create container broker instance
+        - Retrieve the environment variables
+        """
         step("CONTAINER-BROKER: Get instance envs")
         container_broker_instance = ContainerBrokerInstance(instance_id=catalog_instance_a.id)
         response = container_broker_instance.get_envs()
@@ -154,6 +211,21 @@ class TestContainerBroker:
     @pytest.mark.bugs("DPNG-12415 container-broker: Insufficient information in error message")
     @pytest.mark.components(TAP.container_broker)
     def test_cannot_get_logs_with_incorrect_instance_id(self):
+        """
+        <b>Description:</b>
+        Retrieve logs from an non-existent instance
+
+        <b>Input data:</b>
+        Wrong instance id
+
+        <b>Expected results:</b>
+        It's not possible retrieve any logs
+
+        <b>Steps:</b>
+        - Create container broker instance with bad id
+        - Retrieve the logs
+        - Verify platform returned error
+        """
         non_existing_instance = ContainerBrokerInstance(instance_id=Guid.NON_EXISTING_GUID)
         expected_msg = ContainerBrokerHttpStatus.MSG_DEPLOYMENTS_NOT_FOUND.format(non_existing_instance.id)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
@@ -162,6 +234,21 @@ class TestContainerBroker:
     @pytest.mark.bugs("DPNG-12415 container-broker: Insufficient information in error message")
     @pytest.mark.components(TAP.container_broker)
     def test_cannot_get_envs_with_incorrect_instance_id(self):
+        """
+        <b>Description:</b>
+        Retrieve envs from an non-existent instance
+
+        <b>Input data:</b>
+        Wrong instance id
+
+        <b>Expected results:</b>
+        It's not possible retrieve any environment variables
+
+        <b>Steps:</b>
+        - Create container broker instance with bad id
+        - Retrieve the environment variables
+        - Verify platform returned error
+        """
         non_existing_instance = ContainerBrokerInstance(instance_id=Guid.NON_EXISTING_GUID)
         expected_msg = ContainerBrokerHttpStatus.MSG_DEPLOYMENTS_NOT_FOUND.format(non_existing_instance.id)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
