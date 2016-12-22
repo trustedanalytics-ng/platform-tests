@@ -32,6 +32,22 @@ pytestmark = [pytest.mark.components(TAP.platform_snapshot)]
 @priority.medium
 class TestSnapshotDiff:
     def test_0_create_platform_snapshot_before_changes(self):
+        """
+        <b>Description:</b>
+        Save number of snapshots and trigger new platform snapshot before tests execution.
+
+        <b>Input data:</b>
+        -
+
+        <b>Expected results:</b>
+        1. Number of snapshots before changes is saved.
+        2. New snapshot is triggered.
+
+        <b>Steps:</b>
+        1. Retrieve platform snapshots.
+        2. Save number of snapshots.
+        3. Trigger new snapshot.
+        """
         step("Save number of snapshots")
         self.__class__.number_of_snapshots = len(platform_snapshot.api_get_snapshots())
         step("Trigger new platform snapshot before changes in platform")
@@ -39,6 +55,22 @@ class TestSnapshotDiff:
 
     @retry(AssertionError, delay=3, tries=10)
     def test_1_ensure_snapshot_was_created(self):
+        """
+        <b>Description:</b>
+        Ensure that new platform snapshot was created.
+
+        <b>Input data:</b>
+        -
+
+        <b>Expected results:</b>
+        Test passes when new platform snapshot is successfully created.
+
+        <b>Steps:</b>
+        1. Retrieve platform snapshots.
+        2. Save number of snapshots after creating new snapshot.
+        3. Check that newly created snapshot was added.
+        4. Verify that first retrieved snapshot is same as created.
+        """
         step("Get platform snapshots before changes")
         snapshots = platform_snapshot.api_get_snapshots()
         self.__class__.number_of_snapshots_after_adding_one = len(snapshots)
@@ -50,22 +82,68 @@ class TestSnapshotDiff:
         assert self.snapshot_0 is not None, "Snapshot was not found"
 
     def test_2_add_app_to_platform_and_create_snapshot(self, sample_python_app):
+        """
+        <b>Description:</b>
+        Push new app to platform and trigger snapshot.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        1. Platform snapshot is triggered.
+
+        <b>Steps:</b>
+        1. Push sample application.
+        2. Trigger platform snapshot.
+        """
         step("Trigger new platform snapshot after adding app to platform")
         platform_snapshot.api_trigger_snapshots()
 
     @retry(AssertionError, delay=3, tries=10)
     def test_3_ensure_snapshot_was_created_after_changes(self):
+        """
+        <b>Description:</b>
+        Ensure that new platform snapshot was created.
+
+        <b>Input data:</b>
+        -
+
+        <b>Expected results:</b>
+        Test passes when new platform snapshot is successfully created.
+
+        <b>Steps:</b>
+        1. Retrieve platform snapshots.
+        2. Verify that number of snapshots was increased.
+        3. Check that newly created snapshot was added.
+        """
         step("Get platform snapshots after changes")
         snapshots = platform_snapshot.api_get_snapshots()
         step("Check if snapshot after changes was added")
-        assert len(
-            snapshots) == self.number_of_snapshots_after_adding_one + 1, "Snapshot was not created"
+        assert len(snapshots) == self.number_of_snapshots_after_adding_one + 1, "Snapshot was not created"
         step("Find second snapshot to compare")
         self.__class__.snapshot_1 = next(
             (snapshot for snapshot in snapshots if snapshot["id"] == len(snapshots)), None)
         assert self.snapshot_1 is not None, "Snapshot was not found"
 
     def test_4_compare_snapshots_diff(self, sample_python_app):
+        """
+        <b>Description:</b>
+        Compare created snapshots.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when platform snapshots diff show proper data.
+
+        <b>Steps:</b>
+        1. Fetch platform snapshots.
+        2. Retrieve diff of two latest snapshots.
+        3. Validate that retrieved diff has all expected fields.
+        4. Create diff of applications lists in snapshots.
+        5. Verify that snapshots created dates are correct.
+        6. Check that sample application is present in platform snapshot diff and in created diff.
+        """
         step("Get platform snapshots diff")
         snapshots = platform_snapshot.api_get_snapshots()
         platform_snapshots_diff = platform_snapshot.api_get_snapshots_diff(snapshot_0_number=len(snapshots) - 1,

@@ -36,6 +36,23 @@ class TestSnapshot:
 
     @priority.medium
     def test_trigger_snapshot(self):
+        """
+        <b>Description:</b>
+        Trigger new snapshot versions and compare with platform and components versions.
+
+        <b>Input data:</b>
+        -
+
+        <b>Expected results:</b>
+        Test passes when created snapshot versions is same as platform and components.
+
+        <b>Steps:</b>
+        1. Retrieve platform snapshots
+        2. Trigger new snapshot
+        3. Fetch snapshots after triggering
+        4. Get platform and components version
+        5. Verify that platform and components versions are same as snapshot
+        """
         step("Get snapshots")
         snapshots_before = PlatformSnapshot.api_get_snapshots()
         step("Trigger new snapshot")
