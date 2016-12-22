@@ -87,7 +87,7 @@ class CatalogInstanceSuperClass(object):
             self.stop()
         self.destroy()
 
-    @retry(AssertionError, tries=10, delay=10)
+    @retry(AssertionError, tries=60, delay=5)
     def ensure_in_state(self, *, expected_state):
         instance = self.get(instance_id=self.id)
         self.state = instance.state
