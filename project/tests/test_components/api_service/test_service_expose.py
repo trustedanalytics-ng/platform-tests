@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import pytest
 import uuid
+import pytest
 import modules.http_calls.platform.api_service as api
 from fixtures.k8s_templates import template_example
 from modules.constants import ApiServiceHttpStatus
@@ -146,7 +146,7 @@ class TestServiceExpose:
             Steps:
                 1. Create instance of new offering
                 2. Try to expose non existing service instance
-            """
+        """
         step("Create offering from sample_python_app")
         offering_from_python_app
         step("Create invalid service id")

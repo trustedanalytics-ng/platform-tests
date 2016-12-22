@@ -32,6 +32,24 @@ class TestApiServiceOfferings:
     @priority.high
     @pytest.mark.bugs("DPNG-11864 [api-tests] create new offering - problem to compare created offering with offering from response")
     def test_create_and_delete_new_offering(self, context, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Create and later remove offering via api service
+
+        <b>Input data:</b>
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's possible to create offering
+        - It's possible to remove the offering
+
+        <b>Steps:</b>
+        - Create the offering via api service
+        - Verify the offering is on list
+        - Verify it's possible to retrieve offering via id
+        - Remove the offering
+        - Verify the offering was removed
+        """
         step("Create new offering")
         test_offering = ServiceOffering.create(context, client=api_service_admin_client)
         step("Check that the new offering is in catalog")
@@ -52,6 +70,21 @@ class TestApiServiceOfferings:
     @priority.low
     @pytest.mark.bugs("DPNG-11864 [api-tests] create new offering - problem to compare created offering with offering from response")
     def test_cannot_create_the_same_offering_twice(self, context, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Attempts to create offering twice via api service
+
+        <b>Input data:</b>
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's not possible to create the same offering twice
+
+        <b>Steps:</b>
+        - Create the offering via api service and verify it's on the list
+        - Try to create that offering again
+        - Verify that catalog has not changed
+        """
         step("Create new offering")
         test_offering = ServiceOffering.create(context, client=api_service_admin_client)
         step("Check that the offering exists")

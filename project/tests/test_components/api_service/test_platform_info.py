@@ -13,16 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import json
 
-import config
-from modules.constants import ApiServiceHttpStatus
 from modules.http_client import HttpClientFactory, HttpClientConfiguration, HttpClientType, HttpMethod
 from modules.tap_logger import step
 from modules.http_calls.platform import api_service
 
 class TestApiServicePlatformInfo:
     def test_get_platform_info(self, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Attempts retrieve platform info
+
+        <b>Input data:</b>
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's possible to retrieve platform info
+        - The platform info has all the required fields
+
+        <b>Steps:</b>
+        - Log in as admin
+        - platform info is retrieved by api service
+        - verify returned response has all needed fields
+        """
         step("Retrieve the platform info")
         response = api_service.get_platform_info(client=api_service_admin_client)
         assert "api_endpoint" in response

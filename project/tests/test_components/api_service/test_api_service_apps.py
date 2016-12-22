@@ -53,6 +53,21 @@ class TestApiServiceApplication:
     @pytest.mark.components(TAP.api_service)
     def test_cannot_push_application_twice(self, context, sample_app_path, sample_app,
                                            api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to push the same application twice
+
+        <b>Input data:</b>
+        - Sample application that will be pushed twice
+
+        <b>Expected results:</b>
+        - The second push is not possible
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Application is pushed again in the test itself
+        - The second push is blocked
+        """
         step("Check that pushing the same application again causes an error")
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
@@ -69,6 +84,20 @@ class TestApiServiceApplication:
     @priority.low
     @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_incorrect_id(self, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to scale application that doesn't exist
+
+        <b>Input data:</b>
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's not possible to scale non-existent application
+
+        <b>Steps:</b>
+        - Scale the application that has incorrect id
+
+        """
         step("Scale application with incorrect id")
         incorrect_id = "wrong_id"
         expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_APP_INSTANCE.format(incorrect_id)
@@ -77,7 +106,19 @@ class TestApiServiceApplication:
                                                 client=api_service_admin_client)
 
     def test_cannot_restart_with_incorrect_id(self, api_service_admin_client):
-        """Attempts to restart non existent applicatin id"""
+        """
+        <b>Description:</b>
+        Tries to restart application that does not exist
+
+        <b>Input data:</b>
+        - Admin credentials
+
+        <b>Expected results:</b>
+        It's not possible to restart non-existent application
+
+        <b>Steps:</b>
+        - Restart the non-existent application
+        """
         step("Restart application with incorrect id")
         incorrect_id = "wrong_id"
         expected_message = ApiServiceHttpStatus.MSG_CANNOT_FETCH_APP_INSTANCE.format(incorrect_id)
@@ -88,6 +129,21 @@ class TestApiServiceApplication:
     @priority.low
     @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_incorrect_instances_number(self, sample_app, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to scale the application with bad data
+
+        <b>Input data:</b>
+        - Sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's not possible to scale application with bad data
+
+        <b>Steps:</b>
+        - Download the application and push it to platform
+        - Scale the app by providing bad amount of replicas
+        """
         step("Scale application with incorrect replicas number")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 ApiServiceHttpStatus.MSG_INCORRECT_TYPE,
@@ -97,6 +153,21 @@ class TestApiServiceApplication:
     @priority.low
     @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_negative_instances_number(self, sample_app, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to scale the application with negative instances number
+
+        <b>Input data:</b>
+        - Sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's not possible to scale application with negative instances number
+
+        <b>Steps:</b>
+        - Download the application and push it to platform
+        - Scale the app by providing negative amount of replicas
+        """
         step("Scale application with negative replicas number")
         expected_message = ApiServiceHttpStatus.MSG_MINIMUM_ALLOWED_REPLICA
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -105,6 +176,22 @@ class TestApiServiceApplication:
     def test_cannot_push_application_with_invalid_name(self, context, sample_app,
                                                        sample_app_path,
                                                        api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to push the application with invalid name
+
+        <b>Input data:</b>
+        - Sample application that was already pushed
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Pushing the application with invalid name is forbidden
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Application is prepared again and it's name is changed to invalid
+        - Application with the changed name is pushed
+        """
         step("Change the application name to invalid")
         p_a = PrepApp(sample_app_path)
         app_name = "invalid_-application-_name"
@@ -121,7 +208,24 @@ class TestApiServiceApplication:
     @priority.high
     @pytest.mark.components(TAP.api_service)
     def test_restart_application(self, sample_app):
-        """Attempts to restart an application and verifies it's running"""
+        """
+        <b>Description:</b>
+        Restarts the application
+
+        <b>Input data:</b>
+        - Application that was already pushed to platform
+
+        <b>Expected results:</b>
+        - It's possible to restart the application and the application will
+          be running after such procedure
+
+        <b>Steps:</b>
+        - Download sample app
+        - Push the sample app
+        - Make sure the application is running
+        - Restart the application
+        - Verify that application is running
+        """
         step("Make sure the application is running so we can restart it")
         sample_app.ensure_running()
         step("Restart application")
@@ -132,6 +236,23 @@ class TestApiServiceApplication:
     @priority.high
     @pytest.mark.components(TAP.api_service)
     def test_get_application(self, sample_app, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to retrieve the application by its id
+
+        <b>Input data:</b>
+        - Pushed sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        It's possible to retrieve the application by id
+
+        <b>Steps:</b>
+        - Pushed the sample app
+        - Make sure the application has received id
+        - Retrieve the application by it's id
+        - Compare the application that was pushed and received by id
+        """
         step("Make sure the sample app has updated id")
         sample_app._ensure_has_id()
         step("Get application")
@@ -142,6 +263,23 @@ class TestApiServiceApplication:
     @priority.low
     @pytest.mark.components(TAP.api_service)
     def test_scale_application_with_zero_instances_number(self, sample_app, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to scale the application with zero instances number
+
+        <b>Input data:</b>
+        - Sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - After scaling the application down to zero, it should stop
+
+        <b>Steps:</b>
+        - Download the application and push it to platform
+        - Scale the app by providing zero amount of replicas
+        - Make sure the application has stopped
+        - Verify the number of replication and running instances
+        """
         step("Scale application with zero replicas number")
         replicas_number = 0
         sample_app.scale(replicas=replicas_number, client=api_service_admin_client)
@@ -158,6 +296,26 @@ class TestApiServiceApplication:
     @pytest.mark.components(TAP.api_service, TAP.catalog)
     def test_change_app_state_in_catalog_and_delete_it(self, context, sample_app_path,
                                                        api_service_admin_client):
+        """
+        <b>Description:</b>
+        Change the application state in catalog and later delete it
+
+        <b>Input data:</b>
+        - Path to application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Application state can be changed in catalog
+        - Application state can be set back via api service
+
+        <b>Steps:</b>
+        - Prepare the application and push it
+        - Make sure the application is running
+        - Change the state of the application via catalog
+        - Make sure the state has changed
+        - Stop the application via api service client and remove it
+        - Verify the application was removed
+        """
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
         manifest_params = {"type" : TapApplicationType.PYTHON27}

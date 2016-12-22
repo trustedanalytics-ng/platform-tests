@@ -48,6 +48,29 @@ class ApiServiceApplicationFlow:
     @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
     @priority.high
     def test_push_and_delete_application(self, context, sample_app_path, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Attempts to push application, stop it and then delete it.
+
+        <b>Input data:</b>
+        - Sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Application is successfully pushed to platform
+        - Apllication is in running state
+        - It's possible to stop the application
+        - it's possible to remove the application
+        - After removal application is no longer available
+
+        <b>Steps:</b>
+        - Sample application is downloaded
+        - Manifest is updated with unique name
+        - Application is pushed to platform using admin
+        - It's verified that the application is in running state
+        - Application is stopped and it's verified that the application has stopped
+        - Remove the application and verify it's no longer available
+        """
         log_fixture("sample_application: update manifest")
         p_a = PrepApp(sample_app_path)
         manifest_params = {"type": self.APP_TYPE}
@@ -69,6 +92,23 @@ class ApiServiceApplicationFlow:
 
     @priority.high
     def test_stop_and_start_application(self, sample_application):
+        """
+        <b>Description:</b>
+        Verifies it's possible to stop and later start the application
+
+        <b>Input data:</b>
+        - Sample application
+
+        <b>Expected results:</b>
+        - It's possible to stop the application
+        - It's possible to start the application
+        - After such operations application is running
+
+        <b>Steps:</b>
+        - Download and push sample application
+        - Stop the application and make sure it's in stopped state
+        - Start the application and make sure it's running
+        """
         step("Stop application")
         sample_application.stop()
         step("Check that the application is stopped")
@@ -80,7 +120,21 @@ class ApiServiceApplicationFlow:
 
     @priority.high
     def test_restart_application(self, sample_application):
-        """Test attempts to restart application and verify it's running"""
+        """
+        <b>Description:</b>
+        Restart the application and verify it's running
+
+        <b>Input data:</b>
+        - Fixture sample_application that is already pushed application
+
+        <b>Expected results:</b>
+        - Application can be restarted
+        - Application is running after restart
+
+        <b>Steps:</b>
+        - Download and push sample application
+        - Restart the application and make sure it's in running state
+        """
         step("Restart application")
         sample_application.restart()
         step("Check application is ready")
@@ -88,6 +142,21 @@ class ApiServiceApplicationFlow:
 
     @priority.medium
     def test_get_application_logs(self, sample_application, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Retrieves logs from the application
+
+        <b>Input data:</b>
+        - Sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Logs from the application are retrieved
+
+        <b>Steps:</b>
+        - Download and push sample application
+        - Retrieve logs from the application
+        """
         step("Check that getting application logs returns no error")
         response = sample_application.get_logs(client=api_service_admin_client)
         # TODO assert something more meaningful
@@ -95,6 +164,22 @@ class ApiServiceApplicationFlow:
 
     @priority.medium
     def test_scale_application(self, sample_application, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Scales the application and verifies that it was scaled
+
+        <b>Input data:</b>
+        - Sample application
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - It's possible to scale application
+
+        <b>Steps:</b>
+        - Download and push sample application
+        - scale application and verifies that application was scaled by checking
+          the replication amount
+        """
         step("Scale application")
         replicas_number = 3
         response = sample_application.scale(replicas=replicas_number, client=api_service_admin_client)

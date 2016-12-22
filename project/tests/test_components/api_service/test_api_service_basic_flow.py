@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
+import json
 import pytest
 import config
-import json
 
 from modules.http_client import HttpClientFactory, HttpClientConfiguration, HttpClientType, HttpMethod
 from modules.tap_logger import step
@@ -44,6 +44,19 @@ class TestApiServiceBasicFlow:
         return HttpClientFactory.get(configuration)
 
     def test_login_without_providing_credentials(self):
+        """
+        <b>Description:</b>
+        Tries to login to platform without providing credentials
+
+        <b>Input data:</b>
+        - None
+
+        <b>Expected results:</b>
+        It's not possible to log in to platform without credentials
+
+        <b>Steps:</b>
+        - Login with no credentials and verify it's not possible
+        """
         step("Login without providing credentials")
         client = self._get_client(client_type=HttpClientType.NO_AUTH)
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST, self.MSG_NO_CREDENTIALS_PROVIDED,
@@ -51,6 +64,19 @@ class TestApiServiceBasicFlow:
                                      msg="Login without credentials")
 
     def test_login_providing_invalid_credentials(self):
+        """
+        <b>Description:</b>
+        Tries to login to platform with invalid credentials
+
+        <b>Input data:</b>
+        - Invalid credentials
+
+        <b>Expected results:</b>
+        It's not possible to log in to platform with invalid credentials
+
+        <b>Steps:</b>
+        - Login with bad credentials and verify it's not possible
+        """
         step("Login providing invalid credentials")
         client = self._get_client(username=generate_test_object_name(), password=generate_test_object_name())
 
@@ -59,6 +85,19 @@ class TestApiServiceBasicFlow:
                                      msg="Login with invalid credentials")
 
     def test_login_providing_valid_credentials(self):
+        """
+        <b>Description:</b>
+        Tries to login to platform with valid credentials
+
+        <b>Input data:</b>
+        - Valid credentials
+
+        <b>Expected results:</b>
+        It's possible to log in to platform with valid credentials
+
+        <b>Steps:</b>
+        - Login with good credentials and verify we have logged in
+        """
         step("Login providing valid credentials")
         client = self._get_client(username=config.admin_username,
                                   password=config.admin_password)
