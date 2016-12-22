@@ -170,7 +170,7 @@ def start_service(*, client: HttpClient, srv_id: str):
     """
     response = client.request(HttpMethod.PUT, path="services/{}/start".format(srv_id),
                               raw_response=True, msg="Start service instance")
-    assert response.status_code == HttpStatus.CODE_OK
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 
@@ -184,7 +184,7 @@ def stop_service(*, client: HttpClient, srv_id: str):
     """
     response = client.request(HttpMethod.PUT, path="services/{}/stop".format(srv_id),
                               raw_response=True, msg="Stop service instance")
-    assert response.status_code == HttpStatus.CODE_OK
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 
@@ -198,7 +198,7 @@ def restart_service(*, client: HttpClient, srv_id: str):
     """
     response = client.request(HttpMethod.PUT, path="services/{}/restart".format(srv_id),
                               raw_response=True, msg="Restart service instance")
-    assert response.status_code == HttpStatus.CODE_OK
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
 # --------------------------------------- application bindings --------------------------------------- #
