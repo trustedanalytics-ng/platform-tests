@@ -30,7 +30,8 @@ class Dummy:
 
 
 TEST_DOCSTRING = "test-docstring"
-TEST_ITEMS = ("abc", "def")
+TEST_COMPONENTS = ("abc", "def")
+TEST_DEFECTS = ("lorem", "ipsum")
 TEST_LOG = "test-log"
 TEST_PRIORITY = "test-priority"
 TEST_KEYWORDS = ("a", "b", "c")
@@ -47,9 +48,9 @@ report.duration = 0.123
 report.keywords = TEST_KEYWORDS
 
 TEST_COMMON_REPORT = {
-    "components": TEST_ITEMS,
+    "components": TEST_COMPONENTS,
     "docstring": TEST_DOCSTRING,
-    "defects": ", ".join(TEST_ITEMS),
+    "defects": ", ".join(TEST_DEFECTS),
     "priority": TEST_PRIORITY,
     "tags": ", ".join(TEST_KEYWORDS),
     "log": TEST_LOG,
@@ -58,10 +59,18 @@ TEST_COMMON_REPORT = {
     "test_type": TEST_TEST_TYPE,
 }
 
+
+def _marker_args_from_item(self, item, marker_name):
+    if marker_name == "bugs":
+        return TEST_DEFECTS
+    elif marker_name == "components":
+        return TEST_COMPONENTS
+
+
 @mock.patch.multiple("modules.mongo_reporter.reporter.MongoReporter",
                      _get_test_docstring=lambda *args, **kwargs: TEST_DOCSTRING,
                      _get_test_type_from_report=lambda *args, **kwargs: TEST_TEST_TYPE,
-                     _marker_args_from_item=lambda *args, **kwargs: TEST_ITEMS,
+                     _marker_args_from_item=_marker_args_from_item,
                      _priority_from_report=lambda *args, **kwargs: TEST_PRIORITY,
                      _stacktrace_from_report=lambda *args, **kwargs: TEST_STACKTRACE,
                      _test_status_from_report=lambda *args, **kwargs: TEST_STATUS)
