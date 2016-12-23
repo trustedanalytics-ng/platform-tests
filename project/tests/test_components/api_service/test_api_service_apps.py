@@ -33,7 +33,6 @@ logged_components = (TAP.api_service, TAP.catalog)
 class TestApiServiceApplication:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
-    APP_WITH_INVALID_NAME_MSG = "Message with invalid name"
 
     @pytest.fixture(scope="class")
     def sample_app(self, class_context, sample_app_path, api_service_admin_client):
@@ -200,9 +199,9 @@ class TestApiServiceApplication:
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(app_name),
+                                                CatalogHttpStatus.MSG_APP_FORBIDDEN_CHARACTERS.format(app_name),
                                                 Application.push, context, app_path=sample_app_path,
-                                                name=sample_app.name, manifest_path=manifest_path,
+                                                name=app_name, manifest_path=manifest_path,
                                                 client=api_service_admin_client)
 
     @priority.high
