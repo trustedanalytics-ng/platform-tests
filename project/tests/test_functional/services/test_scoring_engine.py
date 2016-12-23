@@ -38,6 +38,22 @@ class TestScoringEngineInstance:
     expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
 
     def test_0_create_instance(self, model_hdfs_path, core_org, core_space, space_users_clients_core, class_context):
+        """
+        <b>Description:</b>
+        Check creation of scoring engine instance.
+
+        <b>Input data:</b>
+        1. model hdfs path
+        2. organization id
+        3. user client
+
+        <b>Expected results:</b>
+        Test passes if scoring engine instance is created successfully.
+
+        <b>Steps:</b>
+        1. Create scoring engine instance.
+        2. Check that created instance is present on instances list.
+        """
         self.__class__.client = space_users_clients_core["developer"]
         step("Create scoring engine instance")
         self.__class__.instance = ServiceInstance.api_create_with_plan_name(
@@ -54,12 +70,39 @@ class TestScoringEngineInstance:
         assert self.instance in instances_list, "Scoring Engine was not found on the instance list"
 
     def test_1_check_service_bindings(self):
+        """
+        <b>Description:</b>
+        Check service bindings.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if scoring engine has correct bindings.
+
+        <b>Steps:</b>
+        1. Check that scoring engine has correct bindings.
+        """
         step("Check scoring engine has correct bindings")
         validator = ApplicationStackValidator(self.instance)
         validator.validate(expected_bindings=self.expected_se_bindings)
         self.__class__.se_app = validator.application
 
     def test_2_check_request_to_se_application(self):
+        """
+        <b>Description:</b>
+        Check sending request to scoring engine application.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if scoring engine application returns correct response.
+
+        <b>Steps:</b>
+        1. Send request to scoring engine application.
+        2. Check scoring engine application response.
+        """
         step("Check that Scoring Engine app responds to an HTTP request")
         url = "http://{}/v1/score?data=10.0,1.5,200.0".format(self.se_app.urls[0])
         headers = {"Accept": "text/plain", "Content-Types": "text/plain; charset=UTF-8"}
@@ -88,6 +131,20 @@ class TestScoringEngineInstance:
         pass
 
     def test_5_delete_instance(self, core_space):
+        """
+        <b>Description:</b>
+        Check that scoring engine instance can be deleted.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if scoring engine instance is successfully deleted.
+
+        <b>Steps:</b>
+        1. Delete scoring engine instance.
+        2. Check that scoring engine instance was successfully deleted.
+        """
         self.instance.api_delete(client=self.client)
         instances = ServiceInstance.api_get_list(space_guid=core_space.guid)
         assert self.instance not in instances, "Scoring engine instance was not deleted"
@@ -101,6 +158,21 @@ class TestScoringEngineUnauthorizedUsers:
 
     @pytest.mark.parametrize("user_role", unauthorized_roles)
     def test_cannot_create_scoring_engine(self, context, test_org, test_space, space_users_clients, model_hdfs_path, user_role):
+        """
+        <b>Description:</b>
+        Check that scoring engine instance cannot be created by unauthorized user.
+
+        <b>Input data:</b>
+        1. Test organization
+        2. unauthorized user client
+        3. model hdfs path
+
+        <b>Expected results:</b>
+        Test passes if scoring engine cannot be created by unauthorized user.
+
+        <b>Steps:</b>
+        1. Try to create a scoring engine instance by unauthorized user results with proper error.
+        """
         step("Check that unauthorized user cannot create scoring engine")
         client = space_users_clients[user_role]
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_FORBIDDEN,

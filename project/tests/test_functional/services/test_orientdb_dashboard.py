@@ -33,6 +33,20 @@ class TestOrientdbDashboard:
     ORIENTDB_DASHBOARD_APP_NAME = "orientdb-dashboard"
 
     def test_0_validate_core_orientdb_dashboard_app_and_service(self, core_space):
+        """
+        <b>Description:</b>
+        Check that orientdb dashboard application is present.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when orientdb dashboard application is present.
+
+        <b>Steps:</b>
+        1. Get orientdb service instance.
+        2. Validate that service instance has an orientdb dashboard application.
+        """
         step("Validate orientdb dashboard app in core space")
         self.__class__.orientdb_instance = next((s for s in ServiceInstance.api_get_list(core_space.guid)
                                                  if s.service_label == ServiceLabels.ORIENT_DB and
@@ -42,6 +56,20 @@ class TestOrientdbDashboard:
         self.__class__.orientdb_dashboard_app = validator.application
 
     def test_1_check_orientdb_dashboard_service_is_available_in_marketplace(self, core_space):
+        """
+        <b>Description:</b>
+        Check that orientdb dashboard service is available in marketplace.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when orientdb dashboard is present in marketplace.
+
+        <b>Steps:</b>
+        1. Get marketplace offering list.
+        2. Check that orientdb dashboard offering is on the list.
+        """
         step("Check if orientdb dashboard service is in marketplace")
         marketplace = ServiceOffering.get_list()
         orientdb_dashboard_service = next((service for service in marketplace
@@ -63,6 +91,21 @@ class TestOrientdbDashboard:
         pass
 
     def test_3_push_test_orientdb_api_app(self, class_context, core_space, login_to_cf_core):
+        """
+        <b>Description:</b>
+        Check that it's possible to push orientdb api application.
+
+        <b>Input data:</b>
+        1. orientdb api application
+
+        <b>Expected results:</b>
+        Test passes when orientdb api application is running.
+
+        <b>Steps:</b>
+        1. Push application.
+        2. Check that pushed application contains an url.
+        3. Check that pushed app is running.
+        """
         step("Push orientdb-api application to cf")
         self.__class__.orientdb_api_app = Application.push(context=class_context,
                                                            source_directory=ApplicationPath.ORIENTDB_API,
@@ -74,6 +117,20 @@ class TestOrientdbDashboard:
         self.orientdb_api_app.ensure_started()
 
     def test_4_create_database_in_orientdb(self):
+        """
+        <b>Description:</b>
+        Check that it's possible to create database in orientdb.
+
+        <b>Input data:</b>
+        1. orientdb api application
+
+        <b>Expected results:</b>
+        Test passes if database was created.
+
+        <b>Steps:</b>
+        1. Create database.
+        2. Check that database was created.
+        """
         step("Create and check database in orientdb")
         self.__class__.orientdb_api = OrientDbApi(app=self.orientdb_api_app)
         self.__class__.database_name = self.orientdb_api.database_create()
@@ -82,6 +139,22 @@ class TestOrientdbDashboard:
         assert len(response) == 1
 
     def test_5_create_class_and_record_in_orientdb(self):
+        """
+        <b>Description:</b>
+        Check that it's possible to create class and add record to orientdb.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if class and record are created.
+
+        <b>Steps:</b>
+        1. Create class in orientdb.
+        2. Check that class was created.
+        3. Create record in orientdb.
+        4. Check that record was added.
+        """
         step("Create and check class in database in orientdb")
         self.__class__.class_name = self.orientdb_api.class_create()
         assert self.class_name is not None, "Class was not created"
@@ -91,6 +164,25 @@ class TestOrientdbDashboard:
         assert len(response["Records"]) == 1
 
     def test_6_check_orientdb_dashboard_app(self):
+        """
+        <b>Description:</b>
+        Check orientdb dashboard app.
+
+        <b>Input data:</b>
+        1. tested database name
+
+        <b>Expected results:</b>
+        Test passes if all orientdb dashboard application functionalities work properly.
+
+        <b>Steps:</b>
+        1. Retrieve database names using application.
+        2. Check that database name is in retrieved list.
+        3. Get database information using application.
+        4. Check that retrieved informations contain class name.
+        5. Get user roles using app.
+        6. Check that all retrieved roles are 'ACTIVE'.
+        7. Get records from class and compare them with expected records.
+        """
         step("Create OrientDB dashboard application API")
         self.__class__.orientdb_dashboard_api = OrientDbDashboardApi(orientdb_api_app=self.orientdb_api_app,
                                                                      orientdb_dashboard_app=self.orientdb_dashboard_app)
@@ -111,6 +203,20 @@ class TestOrientdbDashboard:
         assert all(result[key] == value for key, value in expected_record.items() if key != "id")
 
     def test_7_drop_database(self):
+        """
+        <b>Description:</b>
+        Check that database can be deleted.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if database is successfully deleted.
+
+        <b>Steps:</b>
+        1. Delete database.
+        2. Check that database was deleted.
+        """
         step("Delete database")
         self.orientdb_api.database_delete()
         step("Check database does not exist")

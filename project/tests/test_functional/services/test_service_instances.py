@@ -36,6 +36,23 @@ class TestTapServiceInstance:
 
     @priority.medium
     def test_create_and_delete_service_instance(self, instance):
+        """
+        <b>Description:</b>
+        Check that service instance can be created and deleted.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if service instance can be created and deleted.
+
+        <b>Steps:</b>
+        1. Create service instance.
+        2. Check that instance is on the service instance list.
+        3. Stop service instance.
+        4. Delete service instance.
+        5. Check that service instance on the list.
+        """
         step("Get service instances list from ApiService")
         api_service_instances_list = ServiceInstance.get_list()
         step("Check if instance is on the list")

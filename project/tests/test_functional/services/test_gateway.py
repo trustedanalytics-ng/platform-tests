@@ -39,6 +39,21 @@ class TestGateway:
     gateway_app = None
 
     def test_0_create_gateway_instance(self, class_context, test_org_user_client):
+        """
+        <b>Description:</b>
+        Check that by creating a gateway instance the gateway application is created.
+
+        <b>Input data:</b>
+        1. user client
+
+        <b>Expected results:</b>
+        Test passes when gateway instance is successfully created.
+
+        <b>Steps:</b>
+        1. Create gateway instance with plan single.
+        2. Check that gateway instance is running.
+        3. Check that gateway application was created.
+        """
         step("Create gateway instance")
         gateway_instance = ServiceInstance.create_with_name(
             class_context,
@@ -53,6 +68,21 @@ class TestGateway:
         self.__class__.gateway_app = validator.application
 
     def test_1_send_message_to_gateway_instance(self, test_org_user_client):
+        """
+        <b>Description:</b>
+        Check that it's possible to send messages to gateway instance.
+
+        <b>Input data:</b>
+        1. gateway app
+
+        <b>Expected results:</b>
+        Test passes when message is sent to gateway instance without errors.
+
+        <b>Steps:</b>
+        1. Expose service instance url.
+        2. Send message to gateway instance.
+        3. Check that no error is raised.
+        """
         step("Expose service instance url")
         urls = ServiceInstance.expose_urls(service_id=self.gateway_instance.id, client=test_org_user_client)
         ServiceInstance.ensure_responding(url=urls[0])
@@ -70,6 +100,23 @@ class TestGateway:
             raise AssertionError(str(e))
 
     def test_2_delete_gateway_instance(self, test_org_user_client):
+        """
+        <b>Description:</b>
+        Check that gateway instance can be deleted.
+
+        <b>Input data:</b>
+        1. gateway instance
+
+        <b>Expected results:</b>
+        Test passes when gateway instance is deleted
+        and doesn't appear on the instance list.
+
+        <b>Steps:</b>
+        1. Stop gateway instance.
+        2. Check that gateway instance was stopped.
+        3. Delete gateway instance.
+        4. Check that gateway instance was deleted.
+        """
         step("Stop gateway instance")
         self.gateway_instance.stop()
         self.gateway_instance.ensure_stopped()

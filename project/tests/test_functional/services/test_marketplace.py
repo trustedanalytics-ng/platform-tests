@@ -70,6 +70,23 @@ class TestMarketplaceServices:
     @pytest.mark.parametrize("role", ["user"])
     def test_create_and_delete_service_instance(self, context, non_parametrized_marketplace_services,
                                                 test_user_clients, role):
+        """
+        <b>Description:</b>
+        Check service instance creation and deletion.
+
+        <b>Input data:</b>
+        1. non parametized marketplace services
+
+        <b>Expected results:</b>
+        Test passes when service instance is created and deleted successfully.
+
+        <b>Steps:</b>
+        1. Create service instance.
+        2. Ensure that instance is running.
+        3. Check that service instance is present on instances list.
+        4. Stop service instance.
+        5. Delete service instance.
+        """
         client = test_user_clients[role]
         offering, plan = non_parametrized_marketplace_services
         self._skip_if_service_excluded(offering)
@@ -94,6 +111,22 @@ class TestMarketplaceServices:
     @pytest.mark.skip(reason="DPNG-10885 credentials endpoint is not implemented yet")
     @priority.low
     def test_create_instance_with_non_required_parameter_and_check_credentials(self, context):
+        """
+        <b>Description:</b>
+        Check that if service instance can be created with additional parameters.
+
+        <b>Input data:</b>
+        1. Jupyter offering
+
+        <b>Expected results:</b>
+        Test passes when service is created and passed parameters
+        can be viewed in jupyter terminal output.
+
+        <b>Steps:</b>
+        1. Create jupyter service instance with additional parameters.
+        2. Run 'env' command in jupyter terminal.
+        3. Check that output contains passed parameters.
+        """
         param_key = "test_param"
         param_value = "test_value"
         step("Create service instance with additional params")
@@ -105,6 +138,24 @@ class TestMarketplaceServices:
 
     @priority.medium
     def test_cannot_create_service_instance_with_name_of_an_existing_instance(self, context):
+        """
+        <b>Description:</b>
+        Check that it's impossible to create a service instance
+        with name that is already used by another instance.
+
+        <b>Input data:</b>
+        1. Rabbit mq offering
+        2. Redis offering
+
+        <b>Expected results:</b>
+        Test passes if platform returns 409 http code.
+
+        <b>Steps:</b>
+        1. Create rabbit mq service instance.
+        2. Check that instance is running.
+        3. Try to create redis service insance with same name as rabbit mq instance.
+        4. Check that platform returns 409 http code.
+        """
         step("Create service instance")
         instance = ServiceInstance.create_with_name(context, offering_label=ServiceLabels.RABBIT_MQ,
                                                     plan_name=ServicePlan.SINGLE_SMALL)
@@ -118,6 +169,22 @@ class TestMarketplaceServices:
 
     @priority.low
     def test_cannot_create_instance_without_a_name(self, context):
+        """
+        <b>Description:</b>
+        Check that it's impossible to create a service instance without a name.
+
+        <b>Input data:</b>
+        1. Rabbit mq offering
+
+        <b>Expected results:</b>
+        Test passes if platform returns 402 http code.
+
+        <b>Steps:</b>
+        1. Get current service instance list.
+        2. Try to create a rabbit mq service instance without a name.
+        3. Check that platform returns 402 http status code.
+        4. Check that no new service instances were created.
+        """
         expected_instance_list = ServiceInstance.get_list()
         step("Check that instance cannot be created with empty name")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, ApiServiceHttpStatus.MSG_BAD_REQUEST,

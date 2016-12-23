@@ -32,7 +32,6 @@ label = ServiceLabels.HDFS
 @priority.medium
 class TestHdfsPlainDir(object):
 
-
     def test_0_hdfs_plain_dir(self, class_context):
         """
         <b>Description:</b>
@@ -52,7 +51,7 @@ class TestHdfsPlainDir(object):
         """
         step("Create HDFS instance in plan Plain-Dir")
         self.__class__.instance_hdfs = ServiceInstance.create_with_name(class_context, offering_label=ServiceLabels.HDFS,
-                                                                       plan_name=ServicePlan.PLAIN_DIR)
+                                                                        plan_name=ServicePlan.PLAIN_DIR)
         step("Ensure instance is in RUNNING state")
         self.instance_hdfs.ensure_running()
 

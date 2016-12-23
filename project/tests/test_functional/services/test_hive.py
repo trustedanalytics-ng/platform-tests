@@ -111,6 +111,26 @@ class TestHive:
 
     def test_0_push_hdfs_hive_demo(self, dataset_target_uri, hdfs_instance, kerberos_instance, hive_instance,
                                    cups_sso_instance, login_to_cf, class_context):
+        """
+        <b>Description:</b>
+        Check that hdfs hive demo can run on platform.
+
+        <b>Input data:</b>
+        1. hdfs hive demo sources
+        2. hdfs instance
+        3. kerberos instance
+        4. hive instance
+        5. cups sso instance
+
+        <b>Expected results:</b>
+        Test passes when hdfs hive demo is successfully pushed
+         to platform and app has an url.
+
+        <b>Steps:</b>
+        1. Get hdfs hive demo sources from repository.
+        2. Push hdfs hive demo to platform.
+        3. Check that pushed app has an url address.
+        """
         step("Get app sources")
         repo = AppSources.get_repository(repo_name=TapGitHub.hdfs_hive_demo, repo_owner=TapGitHub.intel_data)
         repo.compile_mvn()
@@ -122,6 +142,22 @@ class TestHive:
         assert len(self.hdfs_reader_app.urls) == 1
 
     def test_1_create_and_get_table_content(self, dataset_target_uri, expected_transfer_content):
+        """
+        <b>Description:</b>
+        Check that table can be created in hive and content can be retrieved from it.
+
+        <b>Input data:</b>
+        1. hdfs hive demo application
+
+        <b>Expected results:</b>
+        Test passes when table is created using hive and data can be retrieved from it.
+
+        <b>Steps:</b>
+        1. Create hdfs hive client.
+        2. Create table.
+        3. Retrieve content from table.
+        4. Check that retrieved content is as expected.
+        """
         self.__class__.hive_client = HttpClientFactory.get(
             CloudFoundryConfigurationProvider.get(url="http://{}/rest/hive".format(self.hdfs_reader_app.urls[0])))
         dir_path = dataset_target_uri[:dataset_target_uri.rfind("/")]
@@ -136,6 +172,20 @@ class TestHive:
         assert hive_table_content == expected_transfer_content
 
     def test_2_get_table_column_content(self, expected_transfer_content):
+        """
+        <b>Description:</b>
+        Check that content of table column is correct.
+
+        <b>Input data:</b>
+        1. hdfs hive demo application client
+
+        <b>Expected results:</b>
+        Test passes when table column contains expected content.
+
+        <b>Steps:</b>
+        1. Retrieve hive column content.
+        2. Check that column content is the same as expected.
+        """
         step("Get hive table column content")
         path = "{}/{}".format(self.TABLE_NAME, self.COLUMN_NAME)
         hive_table_column_content = self.hive_client.request(method=HttpMethod.GET, path=path)
@@ -145,6 +195,20 @@ class TestHive:
         assert hive_table_column_content == expected_column_0
 
     def test_3_delete_table(self, test_org, test_space):
+        """
+        <b>Description:</b>
+        Check that table can be deleted.
+
+        <b>Input data:</b>
+        1. hdfs hive demo application client
+
+        <b>Expected results:</b>
+        Test passes when table is successfully deleted.
+
+        <b>Steps:</b>
+        1. Send request for table deletion.
+        2. Check that table was deleted.
+        """
         self.hive_client.request(method=HttpMethod.DELETE, path=self.TABLE_NAME)
         assert_raises_http_exception(HttpStatus.CODE_INTERNAL_SERVER_ERROR, HttpStatus.MSG_INTERNAL_SERVER_ERROR,
                                      self.hive_client.request, method=HttpMethod.GET, path=self.TABLE_NAME)

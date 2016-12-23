@@ -37,6 +37,22 @@ class TestDeleteService:
     @pytest.mark.skip(reason="DPNG-12855 Deleting service broker offering - not yet implemented")
     @pytest.mark.parametrize("role", ["user"])
     def test_cannot_delete_public_service_as_non_admin(self, test_user_clients, role, public_service):
+        """
+        <b>Description:</b>
+        Try to delete public service as non admin user.
+
+        <b>Input data:</b>
+        1. user client
+        2. public service
+
+        <b>Expected results:</b>
+        Test passes when public service cannot be stopped by non admin user.
+
+        <b>Steps:</b>
+        1. Try to delete public service
+        2. Check that platform returned with 403 http status code
+         and message that user is not authorized.
+        """
         client = test_user_clients[role]
         step("Attempt to delete public service")
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE,
@@ -44,6 +60,24 @@ class TestDeleteService:
 
     @pytest.mark.parametrize("role", ["admin"])
     def test_cannot_remove_service_with_instance(self, context, sample_service, test_user_clients, role):
+        """
+        <b>Description:</b>
+        Try to delete a service offering with created service instance.
+
+        <b>Input data:</b>
+        1. user client
+        2. sample service offering
+
+        <b>Expected results:</b>
+        Test passes when service offering cannot be deleted.
+
+        <b>Steps:</b>
+        1. Create service instance.
+        2. Ensure that instance is running.
+        3. Try to delete service offering.
+        4. Check that platform returns a 405 http status code
+        and message that service offering with instance cannot be deleted.
+        """
         client = test_user_clients[role]
         offering_id = sample_service.id
         plan_id = sample_service.service_plans[0].id

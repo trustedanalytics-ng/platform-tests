@@ -31,6 +31,23 @@ TESTED_ROLES = ["user", "admin"]
 @priority.high
 @pytest.mark.parametrize("role", TESTED_ROLES)
 def test_create_instance_as_authorized_user(context, role, sample_service, test_user_clients):
+    """
+    <b>Description:</b>
+    Create service instance as authorized user.
+
+    <b>Input data:</b>
+    1. user client
+    2. offering
+
+    <b>Expected results:</b>
+    Test passes when service instance is created by authorized user
+    and is present on the instance list.
+
+    <b>Steps:</b>
+    1. Create service instance.
+    2. Ensure that instance is in state RUNNING.
+    3. Check that instance is present on the instance list.
+    """
     client = test_user_clients[role]
     step("Create an instance")
     instance = ServiceInstance.create_with_name(context, offering_label=sample_service.label,

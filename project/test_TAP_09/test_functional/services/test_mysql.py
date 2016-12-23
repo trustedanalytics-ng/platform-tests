@@ -62,6 +62,22 @@ class TestMySQLClusteredService:
 
     @pytest.mark.bugs("DPNG-9701 500 Internal Server Error while successful creating organization")
     def test_0_create_mysql_clustered_service(self, class_context, test_org, test_space):
+        """
+        <b>Description:</b>
+        Check that mysql service instance can be created with plan clustered.
+
+        <b>Input data:</b>
+        1. test organization
+
+        <b>Expected results:</b>
+        Test passes if mysql service instance is successfully created and in state running.
+
+        <b>Steps:</b>
+        1. Get marketplace offering list.
+        2. Check that mysql offering is present in marketplace.
+        3. Create mysql service instance.
+        4. Check that created mysql service instance is in state running.
+        """
         marketplace = ServiceOffering.get_list()
         self.__class__.k8s_service = next((s for s in marketplace if s.label == self.service_label), None)
         assert self.k8s_service is not None, "{} not available".format(self.service_label)
@@ -80,6 +96,23 @@ class TestMySQLClusteredService:
 
     @pytest.mark.bugs("DPNG-9520 Pending status for mysql56-clustered")
     def test_2_expose_service_instance(self, test_org, test_space):
+        """
+        <b>Description:</b>
+        Check that kubernetes instance visibility can be changed.
+
+        <b>Input data:</b>
+        1. test organization
+
+        <b>Expected results:</b>
+        Test passes if service instance can be changed from not visible to visible.
+
+        <b>Steps:</b>
+        1. Create kubernetes instance from service instance.
+        2. Check that kubernetes instance is running in cluster.
+        3. Change kubernetes instance to visible.
+        4. Get kubernetes instance information.
+        5. Check that kubernetes instance is visible.
+        """
         plan_guid = next((p["guid"] for p in self.k8s_service.service_plans if p["name"] == self.plan_name), None)
         self.__class__.k8s_instance = KubernetesInstance.from_service_instance(self.instance.guid, plan_guid,
                                                                                test_space.guid, test_org.guid)
@@ -89,11 +122,41 @@ class TestMySQLClusteredService:
         assert self.k8s_instance.is_visible, "Instance is not exposed"
 
     def test_3_check_cluster_name_is_equal_to_org_guid(self, test_org):
+        """
+        <b>Description:</b>
+        Check that cluster name is equal to organization id.
+
+        <b>Input data:</b>
+        1. test organization
+
+        <b>Expected results:</b>
+        Test passes if name of the cluster is the same as organization id.
+
+        <b>Steps:</b>
+        1. Retrieve list of existing clusters.
+        2. Check that there is a cluster with the same name as organization id.
+        """
         clusters = KubernetesCluster.demiurge_api_get_list()
         self.__class__.cluster = next((cluster for cluster in clusters if cluster.name == test_org.guid), None)
         assert self.cluster is not None, "Cluster was not found on demiurge list"
 
     def test_4_get_legacy_address(self, ssh_client):
+        """
+        <b>Description:</b>
+        Check that its possible to retrieve a cluster legacy address.
+
+        <b>Input data:</b>
+        1. ssh client
+
+        <b>Expected results:</b>
+        Test passes when legacy address is retrieved.
+
+        <b>Steps:</b>
+        1. Get cluster username and password.
+        2. Get cluster endpoint.
+        3. Run curl command to retrieve a cluster legacy address.
+        4. Check that retrieved address is valid.
+        """
         user_credentials = "{}:{}".format(self.cluster.username, self.cluster.password)
         endpoint_address = self.cluster.api_server + "/api/v1/nodes"
         cmd = ["curl", "-k", "--basic", "--user", user_credentials, endpoint_address]
@@ -104,6 +167,21 @@ class TestMySQLClusteredService:
 
     @pytest.mark.usefixtures("ensure_kubectl_exists")
     def test_5_get_k8s_pods_info(self, ssh_client, cluster_prefix):
+        """
+        <b>Description:</b>
+        Check pods informations.
+
+        <b>Input data:</b>
+        1. ssh client
+
+        <b>Expected results:</b>
+        Test passes when all pods informations are valid.
+
+        <b>Steps:</b>
+        1. Retrieve pods list.
+        2. Check that pods names are valid.
+        3. Check that pods statuses are valid.
+        """
         response, _ = ssh_client.exec_command(cluster_prefix + GET_PODS_LIST_CMD)
         assert response
         self.__class__.pods_info = parse_pod_response(response)
@@ -116,6 +194,20 @@ class TestMySQLClusteredService:
         assert self.pods_info[2]['STATUS'] == "Running"
 
     def test_6_get_k8s_services_info(self, ssh_client, cluster_prefix):
+        """
+        <b>Description:</b>
+        Check kerberos services informations.
+
+        <b>Input data:</b>
+        1. ssh client
+
+        <b>Expected results:</b>
+        Test passes when all pods informations are valid.
+
+        <b>Steps:</b>
+        1. Retrieve pods list.
+        2. Check all services names.
+        """
         response, _ = ssh_client.exec_command(cluster_prefix + GET_SERVICES_LIST_CMD)
         self.__class__.services_info = parse_service_response(response)
         assert response
@@ -125,21 +217,86 @@ class TestMySQLClusteredService:
         assert self.services_info[3]["NAME"].endswith("-node3")
 
     def test_7_should_login_to_db(self, mysql_clients):
+        """
+        <b>Description:</b>
+        Check that it's possible to login to database.
+
+        <b>Input data:</b>
+        1. mysql client
+
+        <b>Expected results:</b>
+        Test passes when it's possible to login to database and retrieve cluster size.
+
+        <b>Steps:</b>
+        1. Get mysql client.
+        2. Execute query.
+        3. Check that query response is valid.
+        """
         client = mysql_clients[0]
         response, _ = client.exec_query(CLUSTER_SIZE_QUERY)
         assert CLUSTER_SIZE_RESPONSE in response
 
     def test_8_should_not_login_with_corrupted_credentials(self, mysql_client_invalid_user):
+        """
+        <b>Description:</b>
+        Check that it's not possible to login to database with corrupted credentials.
+
+        <b>Input data:</b>
+        1. invalid mysql client
+
+        <b>Expected results:</b>
+        Test passes when executed query returns access denied error.
+
+        <b>Steps:</b>
+        1. Get mysql client.
+        2. Execute query.
+        3. Check that query response contains an access denied error.
+        """
         response, _ = mysql_client_invalid_user.exec_query(CLUSTER_SIZE_QUERY)
         assert CLUSTER_SIZE_RESPONSE not in response
         assert ACCESS_DENIED_RESPONSE in response
 
     def test_9_should_not_login_with_empty_credentials(self, mysql_client_empty_user):
+        """
+        <b>Description:</b>
+        Check that it's not possible to login to database with empty credentials.
+
+        <b>Input data:</b>
+        1. invalid mysql client
+
+        <b>Expected results:</b>
+        Test passes when executed query returns access denied error.
+
+        <b>Steps:</b>
+        1. Get mysql client.
+        2. Execute query.
+        3. Check that query response contains an access denied error.
+        """
         response, _ = mysql_client_empty_user.exec_query(CLUSTER_SIZE_QUERY)
         assert CLUSTER_SIZE_RESPONSE not in response
         assert ACCESS_DENIED_RESPONSE in response
 
     def test_10_create_db_and_insert_data(self, mysql_client_from_kubectl):
+        """
+        <b>Description:</b>
+        Check that database can be created and populated with data.
+
+        <b>Input data:</b>
+        1. mysql client
+
+        <b>Expected results:</b>
+        Test passes when:
+        - database is created
+        - table is created
+        - data are added to table
+
+        <b>Steps:</b>
+        1. Create database.
+        2. Create table.
+        3. Insert data into table.
+        4. Retrieve data from database.
+        5. Validate retrieved data.
+        """
         mysql_client_from_kubectl.exec_query(CREATE_DB)
         mysql_client_from_kubectl.exec_query(CREATE_TABLE)
         mysql_client_from_kubectl.exec_query(INSERT[0])
@@ -147,11 +304,41 @@ class TestMySQLClusteredService:
         assert RECORD[0] in response
 
     def test_11_db_should_be_created_on_all_nodes(self, mysql_clients):
+        """
+        <b>Description:</b>
+        Check that database is created on all nodes.
+
+        <b>Input data:</b>
+        1. mysql client
+
+        <b>Expected results:</b>
+        Test passes when database is created on all nodes.
+
+        <b>Steps:</b>
+        1. Connect to a node.
+        2. Check that data can be accessed from a node.
+        3. Repeat steps for all nodes.
+        """
         for node_nb, client in enumerate(mysql_clients, start=1):
             response, _ = client.exec_query(SELECT)
             assert RECORD[0] in response, "Record not exists on {} node".format(node_nb)
 
     def test_12_deleted_pod_should_be_recreated(self, ssh_client, cluster_prefix):
+        """
+        <b>Description:</b>
+        Check that deleted pod is recreated.
+
+        <b>Input data:</b>
+        1. ssh client
+
+        <b>Expected results:</b>
+        Test passes when deleted pod is recreated.
+
+        <b>Steps:</b>
+        1. Delete pod.
+        2. Check that pod was deleted.
+        3. Check that new pod was created.
+        """
         old_pod_name = self.pods_info[2]["NAME"]
         cmd = ["./kubectl", "delete", "pod", old_pod_name]
         ssh_client.exec_command(cluster_prefix + cmd)
@@ -165,6 +352,23 @@ class TestMySQLClusteredService:
         self.__class__.pods_info = get_pods_info()
 
     def test_13_nodes_should_be_synchronized(self, mysql_clients):
+        """
+        <b>Description:</b>
+        Check that nodes are synchronized.
+
+        <b>Input data:</b>
+        1. mysql client
+
+        <b>Expected results:</b>
+        Test passes when all nodes are synchronized.
+
+        <b>Steps:</b>
+        1. Validate data from node.
+        2. Add new data.
+        3. Check that new data were added.
+        4. Switch to next node and check that previously added data are present.
+        5. Repeat all steps for all nodes.
+        """
         for node_nb, client in enumerate(mysql_clients, start=1):
             response, _ = client.exec_query(SELECT)
             assert "\r\n".join(RECORD[:node_nb]) in response

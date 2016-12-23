@@ -43,6 +43,20 @@ class TestCreateService:
     @pytest.mark.sample_apps_test
     def test_cannot_create_service_with_no_name(self, context, app_jar,
                                                 manifest_json):
+        """
+        <b>Description:</b>
+        Try to create service offering without a name.
+
+        <b>Input data:</b>
+        1. jar application
+        2. manifest.json file
+
+        <b>Expected results:</b>
+        Test passes when platform returns a 402 http status with meaningful message.
+
+        <b>Steps:</b>
+        1. Try to create service offering without a name.
+        """
         step("Prepare offering json")
         offering_file = ServiceOffering.create_offering_json(name="")
         step("Attempt to create service with empty name")
@@ -56,6 +70,30 @@ class TestCreateService:
     @pytest.mark.bugs("DPNG-13211 api-service responses don't relate to swagger definition")
     def test_create_and_delete_service_offering(self, context, app_jar, offering_json,
                                                 manifest_json, test_user_clients, role):
+        """
+        <b>Description:</b>
+        Create service offering, create an instance of it, delete instance and delete offering.
+
+        <b>Input data:</b>
+        1. application jar file
+        2. manifest.json file
+        3. offering.json file
+        4. user client
+
+        <b>Expected results:</b>
+        Test passes when:
+        - New offering is created from application jar file.
+        - Instance of newly created offering is created.
+        - Instance can be deleted.
+        - New offering can be deleted from marketplace.
+
+        <b>Steps:</b>
+        1. Create service offering from a application jar file.
+        2. Create service instance.
+        3. Stop service instance.
+        4. Delete service instance.
+        5. Delete service offering.
+        """
         client = test_user_clients[role]
         step("Register in marketplace")
         service = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
@@ -85,6 +123,24 @@ class TestCreateService:
     @pytest.mark.sample_apps_test
     def test_create_service_with_icon(self, context, app_jar, manifest_json,
                                       example_image):
+        """
+        <b>Description:</b>
+        Create new service offering with custom icon.
+
+        <b>Input data:</b>
+        1. application jar file
+        2. manifest.json file
+        3. example image
+
+        <b>Expected results:</b>
+        Test passes when new offering is created with custom icon.
+
+        <b>Steps:</b>
+        1. Prepare offering json file with custom icon.
+        2. Create service offering.
+        3. Check that created offering is present on the offering list.
+        4. Check that offering has a custom icon.
+        """
         step("Prepare offering json")
         metadata = [{"key": "imageUrl", "value": example_image.decode()}, ]
         offering_file = ServiceOffering.create_offering_json(metadata=metadata)
@@ -100,6 +156,23 @@ class TestCreateService:
     @pytest.mark.sample_apps_test
     @pytest.mark.bugs("DPNG-12742 /v2/api/offerings in tap-api-service does not return Service name and Metadata")
     def test_create_service_with_tag(self, context, app_jar, manifest_json):
+        """
+        <b>Description:</b>
+        Create new service offering with tag.
+
+        <b>Input data:</b>
+        1. application jar file
+        2. manifest.json file
+
+        <b>Expected results:</b>
+        Test passes when new offering is created with tags.
+
+        <b>Steps:</b>
+        1. Prepare offering json file with tags.
+        2. Create service offering.
+        3. Check that created offering is present on the offering list.
+        4. Check that offering has custom tags.
+        """
         step("Prepare offering json")
         tags = [generate_test_object_name(short=True)]
         offering_file = ServiceOffering.create_offering_json(tags=tags)
@@ -114,6 +187,23 @@ class TestCreateService:
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_create_service_with_display_name(self, context, app_jar, manifest_json):
+        """
+        <b>Description:</b>
+        Create new service offering with display name.
+
+        <b>Input data:</b>
+        1. application jar file
+        2. manifest.json file
+
+        <b>Expected results:</b>
+        Test passes when new offering is created with display name.
+
+        <b>Steps:</b>
+        1. Prepare offering json file with display name.
+        2. Create service offering.
+        3. Check that created offering is present on the offering list.
+        4. Check that offering has custom display name.
+        """
         step("Prepare offering json")
         display_name = generate_test_object_name()
         metadata = [{"key": "displayName", "value": display_name}, ]
