@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import re
 import functools
 
 from modules import gmail_api
@@ -39,7 +40,8 @@ class CliUser(CliObjectSuperclass):
     @classmethod
     def get_list(cls, *, tap_cli):
         output = tap_cli.users()
-        return [cls(tap_cli=tap_cli, username=line) for line in output.split("\n")]
+        user_list = re.findall(r'[\w\.-@+]{3,}', output)
+        return [cls(tap_cli=tap_cli, username=user) for user in user_list]
 
     def delete(self, short_cmd=False):
         self.tap_cli.delete_user(self.name, short=short_cmd)
