@@ -31,6 +31,22 @@ pytestmark = [pytest.mark.components(TAP.platform_tests)]
 class TestSelfTests:
 
     def test_1_start_self_tests_or_get_suite_in_progress(self):
+        """
+        <b>Description:</b>
+        Tries to create new test suite if no test suite is running.
+        If some test suits are running its status is checked.
+
+        <b>Input data:</b>
+        no input data
+
+        <b>Expected results:</b>
+        New test suite is created, it's status is running.
+
+        <b>Steps:</b>
+        1. Create new test suite.
+        2. Verify that its status is running.
+        3. If other suite is in progress inform user, and check does tests running in suite exist.
+        """
         step("Start tests")
         try:
             new_test = TestSuite.api_create()
@@ -48,6 +64,20 @@ class TestSelfTests:
             self.__class__.suite_id = test_in_progress.suite_id
 
     def test_2_get_suite_details(self):
+        """
+        <b>Description:</b>
+        Gets test suite details.
+
+        <b>Input data:</b>
+        no input data
+
+        <b>Expected results:</b>
+        Verifies that results created by test suite are not None.
+
+        <b>Steps:</b>
+        1. Get results of test suite.
+        2. Verify that results are not None.
+        """
         step("Get suite details")
         created_test_results = TestSuite.api_get_test_suite_results(self.suite_id)
         assert created_test_results is not None
