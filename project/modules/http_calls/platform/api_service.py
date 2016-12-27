@@ -426,3 +426,10 @@ def get_platform_info(*, client: HttpClient) -> dict:
     """
     return client.request(method=HttpMethod.GET, path="platform_info",
                           msg="Get platform info")
+
+# --------------------------------------- CLI resources --------------------------------------- #
+
+def get_cli_resource(*, client: HttpClient, resource_id: str):
+    """ GET /resources/cli/{resource_id} """
+    return client.request(method=HttpMethod.GET, path="resources/cli/{}".format(resource_id),
+                          msg="Get CLI resource", raw_response=True)

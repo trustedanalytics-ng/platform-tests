@@ -17,6 +17,7 @@
 import pytest
 
 import config
+
 from modules.constants import HttpStatus, ServiceLabels, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.http_client import HttpClientFactory, HttpMethod
@@ -28,6 +29,7 @@ from modules.tap_logger import step
 from modules.tap_object_model.k8s_service import K8sService
 from tap_component_config import TAP_core_services, third_party_services, api_service, offerings_as_parameters
 
+from tests.test_components.api_service.test_api_service_resources import TestApiServiceResources
 
 not_tested_components = [TAP.das, TAP.data_catalog, TAP.dataset_publisher, TAP.downloader,
                         TAP.h2o_scoring_engine_publisher, TAP.metadata_parser, TAP.metrics_grafana,
@@ -279,3 +281,10 @@ class TestSmokeTrustedAnalyticsComponents:
         assert response.headers['x-platform'] == 'TAP'
         assert response.text == ''
 
+    @pytest.mark.skip(reason="DPNG-14808 [api-tests] Some API tests take a very long time to execute")
+    @pytest.mark.parametrize("resource", ["linux32"])
+    def test_api_resource_cli_returns_tap_cli_binary(self, api_service_admin_client, resource):
+        step('Smoke test for CLI resources api')
+        test_api_resources = TestApiServiceResources()
+        # Re-use existing test for API component, but run it only for one resource (not all)
+        test_api_resources.test_api_resource_cli_returns_tap_cli_binary(api_service_admin_client, resource)
