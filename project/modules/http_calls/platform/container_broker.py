@@ -74,3 +74,64 @@ def scale_service_instance(*, instance_id, replicas):
                                      msg="CONTAINER-BROKER: scale service instance")
     return response
 
+
+def get_core_components_version():
+    """ GET /deployment/core/versions """
+    response = _get_client().request(HttpMethod.GET,
+                                     path="deployment/core/versions",
+                                     raw_response=True,
+                                     msg="CONTAINER-BROKER: get core components version")
+    assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
+    return response.json()
+
+
+def get_secret(*, secret_name):
+    """ GET /secret/{secret_name} """
+    response = _get_client().request(HttpMethod.GET,
+                                     path="secret/{}".format(secret_name),
+                                     raw_response=True,
+                                     msg="CONTAINER-BROKER: get secret")
+    assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
+    return response.json()
+
+
+def get_configmap(*, configmap_name):
+    """ GET /configmap/{configmap_name} """
+    response = _get_client().request(HttpMethod.GET,
+                                     path="configmap/{}".format(configmap_name),
+                                     raw_response=True,
+                                     msg="CONTAINER-BROKER: get configmap")
+    assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
+    return response.json()
+
+
+def expose_service_instance(*, instance_id, hostname, ports: list, body=None):
+    """ POST /service/{instance_id}/expose """
+    if body is None:
+        body = {
+            "hostname": hostname,
+            "ports": ports
+        }
+    response = _get_client().request(HttpMethod.POST,
+                                     path="service/{}/expose".format(instance_id),
+                                     body=body,
+                                     msg="CONTAINER-BROKER: expose service instance")
+    return response
+
+
+def unexpose_service_instance(*, instance_id):
+    """ DELETE /service/{instance_id}/expose """
+    response = _get_client().request(HttpMethod.DELETE,
+                                     path="service/{}/expose".format(instance_id),
+                                     msg="CONTAINER-BROKER: unexpose service instance")
+    return response
+
+
+def get_hosts(*, instance_id):
+    """ GET /service/{instance_id}/hosts """
+    response = _get_client().request(HttpMethod.GET,
+                                     path="service/{}/hosts".format(instance_id),
+                                     raw_response=True,
+                                     msg="CONTAINER-BROKER: get hosts")
+    assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
+    return response.json()

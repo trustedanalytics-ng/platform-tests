@@ -46,3 +46,36 @@ class ContainerBrokerInstance(object):
     def scale(self, instance_number):
         response = container_broker_api.scale_service_instance(instance_id=self.id, replicas=instance_number)
         assert response["message"] == TapMessage.SUCCESS
+
+    @classmethod
+    def get_version(cls):
+        response = container_broker_api.get_core_components_version()
+        return response
+
+    @classmethod
+    def get_secret(cls, secret_name):
+        response = container_broker_api.get_secret(secret_name=secret_name)
+        return response
+
+    @classmethod
+    def get_configmap(cls, configmap_name):
+        response = container_broker_api.get_configmap(configmap_name=configmap_name)
+        return response
+
+    def expose_service_instance(self, hostname, ports: list, body=None):
+        response = container_broker_api.expose_service_instance(instance_id=self.id, hostname=hostname, ports=ports,
+                                                                body=body)
+        return response
+
+    def unexpose_service_instance(self):
+        response = container_broker_api.unexpose_service_instance(instance_id=self.id)
+        return response
+
+    @classmethod
+    def unexpose_service_with_instance_id(cls, instance_id):
+        response = container_broker_api.unexpose_service_instance(instance_id=instance_id)
+        return response
+
+    def get_hosts(self):
+        response = container_broker_api.get_hosts(instance_id=self.id)
+        return response

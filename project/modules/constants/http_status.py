@@ -248,6 +248,16 @@ class ApiServiceHttpStatus(HttpStatus):
 
 class ContainerBrokerHttpStatus(HttpStatus):
     MSG_DEPLOYMENTS_NOT_FOUND = "Deployments associated with the service {} are not found"
+    MSG_CONFIGMAPS_NOT_FOUND = "configmaps \\\"{}\\\" not found"
+    MSG_SECRET_NOT_FOUND = "secrets \\\"{}\\\" not found"
+    MSG_CANNOT_EXPOSE = "can not expose instance: {} port: {} does not exist in Service!"
+    MSG_EMPTY_HOSTNAME = "Ingress.extensions \\\"{}\\\" is invalid: spec.rules[0].host: Invalid value: " \
+                         "\\\"{}\\\": must match the regex " \
+                         "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)* (e.g. 'example.com')"
+    MSG_INGRESS_ALREADY_EXISTS = "ingresses.extensions \\\"{}\\\" already exists"
+    MSG_INGRESS_NOT_FOUND = "ingresses.extensions \\\"{}\\\" not found"
+    MSG_INGRESS_KEY_NOT_FOUND = "\\\"getting key \\\\\\\"/default/Instances/{}\\\\\\\" error: " \
+                                "100: Key not found (/default/Instances/{})"
     
 
 class ModelCatalogHttpStatus(HttpStatus):

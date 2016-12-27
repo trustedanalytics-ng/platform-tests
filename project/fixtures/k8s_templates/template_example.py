@@ -607,3 +607,197 @@ sample_python_app_offering = {
     }],
     "hooks": None
   }
+
+nats_template = {
+    "body": [{
+        "componentType": "instance",
+        "persistentVolumeClaims": None,
+        "deployments": [{
+            "kind": "Deployment",
+            "apiVersion": "extensions\/v1beta1",
+            "metadata": {
+                "name": "$idx_and_short_instance_id",
+                "creationTimestamp": None,
+                "labels": {
+                    "plan_id": "$plan_id",
+                    "offering_id": "$offering_id",
+                    "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                    "managed_by": "TAP",
+                    "org": "$org",
+                    "instance_id": "$instance_id",
+                    "space": "$space"
+                }
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "matchLabels": {
+                        "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                        "instance_id": "$instance_id"
+                    }
+                },
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": None,
+                        "labels": {
+                            "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                            "managed_by": "TAP",
+                            "instance_id": "$instance_id"
+                        }
+                    },
+                    "spec": {
+                        "volumes": None,
+                        "containers": [{
+                            "name": "k-nats",
+                            "image": "127.0.0.1:30000/nats:0.8.1",
+                            "ports": [{
+                                "containerPort": 4222,
+                                "protocol": "TCP"
+                            },
+                            {
+                                "containerPort": 8333,
+                                "protocol": "TCP"
+                            }],
+                            "env": [{
+                                "name": "MANAGED_BY",
+                                "value": "TAP"
+                            },
+                            {
+                                "name": "NATS_PASSWORD",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "Name": "$short_instance_id-nats-credentials",
+                                        "key": "nats-password"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "NATS_USERNAME",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "Name": "$short_instance_id-nats-credentials",
+                                        "key": "nats-username"
+                                    }
+                                }
+                            }],
+                            "resources": {
+                                "limits": {
+                                    "memory": "500M"
+                                },
+                                "requests": {
+                                    "memory": "100M"
+                                }
+                            },
+                            "imagePullPolicy": "IfNotPresent"
+                        }],
+                        "restartPolicy": "Always",
+                        "dnsPolicy": "ClusterFirst",
+                        "serviceAccountName": ""
+                    }
+                },
+                "strategy": {
+
+                }
+            },
+            "status": {
+
+            }
+        }],
+        "ingresses": None,
+        "services": [{
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "$idx_and_short_instance_id",
+                "creationTimestamp": None,
+                "labels": {
+                    "plan_id": "$plan_id",
+                    "offering_id": "$offering_id",
+                    "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                    "managed_by": "TAP",
+                    "org": "$org",
+                    "instance_id": "$instance_id",
+                    "space": "$space"
+                }
+            },
+            "spec": {
+                "type": "NodePort",
+                "ports": [{
+                    "name": "rest",
+                    "protocol": "TCP",
+                    "port": 4222,
+                    "targetPort": 0,
+                    "nodePort": 0
+                },
+                {
+                    "name": "transport",
+                    "protocol": "TCP",
+                    "port": 8333,
+                    "targetPort": 0,
+                    "nodePort": 0
+                }],
+                "selector": {
+                    "instance_id": "$instance_id"
+                }
+            },
+            "status": {
+                "loadBalancer": {
+
+                }
+            }
+        }],
+        "serviceAccounts": [{
+            "kind": "ServiceAccount",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "$idx_and_short_instance_id",
+                "creationTimestamp": None,
+                "labels": {
+                    "plan_id": "$plan_id",
+                    "offering_id": "$offering_id",
+                    "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                    "managed_by": "TAP",
+                    "org": "$org",
+                    "instance_id": "$instance_id",
+                    "space": "$space"
+                }
+            },
+            "secrets": None
+        }],
+        "secrets": [{
+            "kind": "Secret",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "$short_instance_id-nats-credentials",
+                "creationTimestamp": None,
+                "labels": {
+                    "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                    "managed_by": "TAP",
+                    "instance_id": "$instance_id"
+                }
+            },
+            "data": {
+                "nats-password": "$base64-$random1",
+                "nats-username": "$base64-$random2"
+            }
+        }],
+        "configMaps": [{
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "$short_instance_id-nats-credentials",
+                "creationTimestamp": None,
+                "labels": {
+                    "idx_and_short_instance_id": "$idx_and_short_instance_id",
+                    "managed_by": "TAP",
+                    "instance_id": "$instance_id"
+                }
+            },
+            "data": {
+                "nats-password": "$base64-$random1",
+                "nats-username": "$base64-$random2"
+            }
+        }]
+    }],
+    "hooks": None
+}

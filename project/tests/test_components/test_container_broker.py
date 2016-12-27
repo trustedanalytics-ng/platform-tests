@@ -15,14 +15,19 @@
 #
 
 import pytest
-
 import retry
 
+import config
+from fixtures.k8s_templates import template_example
 from modules.constants import ContainerBrokerHttpStatus, TapEntityState, Guid, ServiceLabels, TapComponent as TAP
+from modules.http_client import HttpMethod
+from modules.http_client.http_client_configuration import HttpClientConfiguration
+from modules.http_client.http_client_factory import HttpClientFactory
+from modules.http_client.http_client_type import HttpClientType
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import CatalogServiceInstance, ContainerBrokerInstance, CatalogService, KubernetesPod
+from modules.tap_object_model import ServiceOffering
 from tests.fixtures import assertions
-
 
 logged_components = (TAP.catalog, TAP.container_broker, )
 
@@ -32,6 +37,10 @@ class TestContainerBroker:
     TEST_OFFERING_LABEL_A = ServiceLabels.PSQL
     TEST_OFFERING_LABEL_B = ServiceLabels.RABBIT_MQ
     POSTGRESQL_ENV_NAME = "SERVICES_BOUND_POSTGRESQL_93"
+    INVALID_PARAM = "xxxxxxxx"
+    HOSTNAME = "kolcz1"
+    PORT = 4222
+    INVALID_PORT = 598
 
     @pytest.fixture(scope="class")
     def catalog_offerings(self):
@@ -45,6 +54,26 @@ class TestContainerBroker:
                                                          plan_id=offering.plans[0].id, state=TapEntityState.REQUESTED)
         catalog_instance.ensure_in_state(expected_state=TapEntityState.RUNNING)
         return catalog_instance
+
+    def _get_configmap(self, tunnel, configmap_name_suffix):
+        configmaps = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + ["kubectl", "get", "configmaps"])
+        configmaps = str(configmaps)
+        idx = configmaps.index(configmap_name_suffix)
+        return configmaps[idx - 14:idx + len(configmap_name_suffix)]
+
+    def _get_secret(self, tunnel, secret_name_suffix):
+        secrets = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + ["kubectl", "get", "secret"])
+        secrets = str(secrets)
+        idx = secrets.index(secret_name_suffix)
+        return secrets[idx - 14:idx + len(secret_name_suffix)]
+
+    @retry.retry(AssertionError, tries=12, delay=2)
+    def _send_request(self, url):
+        configuration = HttpClientConfiguration(client_type=HttpClientType.BROKER, url=url)
+        response = HttpClientFactory.get(configuration).request(method=HttpMethod.GET, path="",
+                                                                raw_response=True, raise_exception=False)
+        assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
+        return response
 
     @retry.retry(AssertionError, tries=30, delay=2)
     def _assert_pod_count_with_retry(self, instance_id, expected_pod_count):
@@ -75,12 +104,30 @@ class TestContainerBroker:
         return offering
 
     @pytest.fixture(scope="class")
+    def offering_nats(self, class_context, api_service_admin_client):
+        test_offering = ServiceOffering.create(class_context, template_body=template_example.nats_template["body"],
+                                               client=api_service_admin_client)
+        catalog_offerings = CatalogService.get_list()
+        offering = next((o for o in catalog_offerings if o.name == test_offering.label), None)
+        assert offering is not None, "No such offering {}".format(test_offering.label)
+        return offering
+
+    @pytest.fixture(scope="class")
     def catalog_instance_a(self, class_context, offering_a):
         return self._create_catalog_instance(context=class_context, offering=offering_a)
 
     @pytest.fixture(scope="class")
     def catalog_instance_b(self, class_context, offering_b):
         return self._create_catalog_instance(context=class_context, offering=offering_b)
+
+    @pytest.fixture(scope="class")
+    def catalog_instance_nats(self, class_context, offering_nats):
+        return self._create_catalog_instance(context=class_context, offering=offering_nats)
+
+    @pytest.fixture(scope="class")
+    def configmaps_list(self, class_context, open_tunnel):
+        tunnel = open_tunnel
+        out = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + ["kubectl", "get", "secret"])
 
     @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog)
@@ -254,3 +301,275 @@ class TestContainerBroker:
         expected_msg = ContainerBrokerHttpStatus.MSG_DEPLOYMENTS_NOT_FOUND.format(non_existing_instance.id)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
                                                 non_existing_instance.get_envs)
+
+    def test_get_core_components_version(self):
+        """
+        <b>Description:</b>
+        Get version information about core components.
+
+        <b>Input data:</b>
+        Container broker instance.
+
+        <b>Expected results:</b>
+        Information about core components.
+
+        <b>Steps:</b>
+        - Get version about core components.
+        - Verify if core component is on the list.
+        """
+        step("Get version information about core components")
+        response = ContainerBrokerInstance.get_version()
+        assert response is not None
+        components = [c["name"] for c in response]
+        assert TAP.auth_gateway in components
+
+    def test_get_specific_configmap(self):
+        """
+        <b>Description:</b>
+        Get specific configmap.
+
+        <b>Input data:</b>
+        Container broker instance.
+
+        <b>Expected results:</b>
+        Information about specific configmap.
+
+        <b>Steps:</b>
+        - Get information about specific configmap.
+        - Verify if information contains configmap name.
+        """
+        step("Get specific configmap")
+        response = ContainerBrokerInstance.get_configmap(configmap_name="minio")
+        assert response is not None
+        assert response["metadata"]["labels"]["app"] == "minio"
+
+    def test_get_non_existing_configmap(self):
+        """
+        <b>Description:</b>
+        Get non existing configmap.
+
+        <b>Input data:</b>
+        Container broker instance.
+
+        <b>Expected results:</b>
+        It is not possible to get non existing configmap.
+
+        <b>Steps:</b>
+        - Get information about configmap.
+        - Verify that HTTP response status code is 404 with proper message.
+        """
+        step("Try to get non existing configmap")
+        expected_msg = ContainerBrokerHttpStatus.MSG_CONFIGMAPS_NOT_FOUND.format(self.INVALID_PARAM)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
+                                                ContainerBrokerInstance.get_configmap,
+                                                configmap_name=self.INVALID_PARAM)
+
+    def test_get_specific_secret(self):
+        """
+        <b>Description:</b>
+        Get specific secret.
+
+        <b>Input data:</b>
+        Container broker instance.
+
+        <b>Expected results:</b>
+        Information about specific secret.
+
+        <b>Steps:</b>
+        - Get information about specific secret.
+        - Verify if information contains secret name.
+        """
+        step("Get specific secret")
+        response = ContainerBrokerInstance.get_secret(secret_name="minio")
+        assert response is not None
+        assert response["metadata"]["name"] == "minio"
+
+    def test_get_non_existing_secret(self):
+        """
+        <b>Description:</b>
+        Get non existing secret.
+
+        <b>Input data:</b>
+        Container broker instance.
+
+        <b>Expected results:</b>
+        It is not possible to get non existing secret.
+
+        <b>Steps:</b>
+        - Get information about secret.
+        - Verify that HTTP response status code is 404 with proper message.
+        """
+        step("Try to get non existing secret")
+        expected_msg = ContainerBrokerHttpStatus.MSG_SECRET_NOT_FOUND.format(self.INVALID_PARAM)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
+                                                ContainerBrokerInstance.get_secret, secret_name=self.INVALID_PARAM)
+
+    def test_expose_unexpose_service(self, catalog_instance_nats):
+        """
+        <b>Description:</b>
+        Expose and unexpose service instance
+
+        <b>Input data:</b>
+        - Container broker instance
+        - Hostname
+        - Port
+
+        <b>Expected results:</b>
+        It is possible to expose and unexpose service instance.
+
+        <b>Steps:</b>
+        - Verify hosts number of unexposed service instance.
+        - Expose service instance.
+        - Send request to exposed service instance.
+        - Try to expose service instance again.
+        - Verify that HTTP response status code is 409 with proper message.
+        - Unexpose service instance.
+        - Try to unexpose instance once again
+        - Verify that HTTP response status code is 404 with proper message.
+        """
+        step("Verify hosts number of unexposed service instance")
+        nats_instance = ContainerBrokerInstance(instance_id=catalog_instance_nats.id)
+        hosts = nats_instance.get_hosts()
+        assert len(hosts) == 0
+        step("Expose service instance")
+        nats_instance.expose_service_instance(hostname=self.HOSTNAME, ports=[self.PORT])
+        hosts = nats_instance.get_hosts()
+        expected_host = "http://{}-{}.{}".format(self.HOSTNAME, self.PORT, config.tap_domain)
+        assert expected_host in hosts
+        step("Send request to exposed service instance")
+        response = self._send_request(url=expected_host)
+        assert str(self.PORT) in str(response.text)
+        step("Try to expose service instance again")
+        expected_msg = ContainerBrokerHttpStatus.MSG_INGRESS_ALREADY_EXISTS.format(catalog_instance_nats.id)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_CONFLICT, expected_msg,
+                                                nats_instance.expose_service_instance,
+                                                hostname=self.HOSTNAME, ports=[self.PORT])
+        step("Unexpose service instance")
+        nats_instance.unexpose_service_instance()
+        hosts = nats_instance.get_hosts()
+        assert len(hosts) == 0
+        step("Try to unexpose instance once again")
+        expected_msg = ContainerBrokerHttpStatus.MSG_INGRESS_NOT_FOUND.format(catalog_instance_nats.id)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
+                                                nats_instance.unexpose_service_instance)
+
+    def test_unexpose_service_with_invalid_service_id(self):
+        """
+        <b>Description:</b>
+        Try to unexpose service instance with invalid service id
+
+        <b>Input data:</b>
+        - Container broker instance.
+        - Invalid instance id.
+
+        <b>Expected results:</b>
+        It is not possible to unexpose service with invalid instance id.
+
+        <b>Steps:</b>
+        - Try to unexpose service instance.
+        - Verify that HTTP response status code is 404 with proper message.
+        """
+        step("Try to unexpose service instance with invalid service id")
+        expected_msg = ContainerBrokerHttpStatus.MSG_INGRESS_KEY_NOT_FOUND.format(self.INVALID_PARAM,
+                                                                                  self.INVALID_PARAM)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
+                                                ContainerBrokerInstance.unexpose_service_with_instance_id,
+                                                instance_id=self.INVALID_PARAM)
+
+    def test_expose_service_invalid_port(self, catalog_instance_nats):
+        """
+        <b>Description:</b>
+        Try to expose service instance with invalid port
+
+        <b>Input data:</b>
+        - Container broker instance.
+        - Hostname
+        - Invalid port.
+
+        <b>Expected results:</b>
+        It is not possible to expose service with invalid port.
+
+        <b>Steps:</b>
+        - Try to expose service instance.
+        - Verify that HTTP response status code is 500 with proper message.
+        """
+        nats_instance = ContainerBrokerInstance(instance_id=catalog_instance_nats.id)
+        step("Try to expose service instance with invalid port")
+        expected_msg = ContainerBrokerHttpStatus.MSG_CANNOT_EXPOSE.format(catalog_instance_nats.id, self.INVALID_PORT)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_INTERNAL_SERVER_ERROR, expected_msg,
+                                                nats_instance.expose_service_instance, hostname=self.HOSTNAME,
+                                                ports=[self.INVALID_PORT])
+
+    def test_expose_service_without_hostname(self, catalog_instance_nats):
+        """
+        <b>Description:</b>
+        Try to expose service instance without hostname
+
+        <b>Input data:</b>
+        - Container broker instance.
+        - Port.
+
+        <b>Expected results:</b>
+        It is not possible to expose service without hostname.
+
+        <b>Steps:</b>
+        - Try to expose service instance.
+        - Verify that HTTP response status code is 400 with proper message.
+        """
+        nats_instance = ContainerBrokerInstance(instance_id=catalog_instance_nats.id)
+        body = {"ports": [self.PORT]}
+        step("Try to expose service instance without hostname")
+        expected_msg = ContainerBrokerHttpStatus.MSG_EMPTY_HOSTNAME.format(catalog_instance_nats.id,
+                                                                           "-{}.{}".format(self.PORT,
+                                                                                           config.tap_domain))
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_BAD_REQUEST, expected_msg,
+                                                nats_instance.expose_service_instance, hostname=None, ports=None,
+                                                body=body)
+
+    def test_get_custom_configmap_secret(self, open_tunnel, catalog_instance_nats):
+        """
+        <b>Description:</b>
+        Get custom configmap and secret.
+
+        <b>Input data:</b>
+        - Container broker service instance
+
+        <b>Expected results:</b>
+        It is possible to get cucstom configmap and secret.
+
+        <b>Steps:</b>
+        - Get custom configmap name.
+        - Get custom configmap details.
+        - Get custom secret name.
+        - Get custom secret details.
+        - Delete service instance.
+        - Verify if custom configmap exists - HTTP response status code is 404 with proper message.
+        - Verify if custom secret exists - HTTP response status code is 404 with proper message
+        """
+        step("Get custom configmap name")
+        configmap_name_suffix = "-nats-credentials"
+        configmap_name = self._get_configmap(open_tunnel, configmap_name_suffix)
+        step("Get custom configmap details")
+        response = ContainerBrokerInstance.get_configmap(configmap_name=configmap_name)
+        assert configmap_name == response["metadata"]["name"]
+        assert response["metadata"]["labels"]["instance_id"] == catalog_instance_nats.id
+
+        step("Get custom secret name")
+        secret_name_suffix = "-nats-credentials"
+        secret_name = self._get_secret(open_tunnel, secret_name_suffix)
+        step("Get custom secret details")
+        response = ContainerBrokerInstance.get_secret(secret_name=secret_name)
+        assert secret_name == response["metadata"]["name"]
+        assert response["metadata"]["labels"]["instance_id"] == catalog_instance_nats.id
+
+        step("Delete service instance")
+        catalog_instance_nats.stop()
+        catalog_instance_nats.cleanup()
+        step("Verify if custom configmap exists")
+        expected_msg = ContainerBrokerHttpStatus.MSG_CONFIGMAPS_NOT_FOUND.format(configmap_name)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
+                                                ContainerBrokerInstance.get_configmap, configmap_name=configmap_name)
+        step("Verify if custom secret exists")
+        expected_msg = ContainerBrokerHttpStatus.MSG_SECRET_NOT_FOUND.format(secret_name)
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
+                                                ContainerBrokerInstance.get_secret, secret_name=secret_name)
