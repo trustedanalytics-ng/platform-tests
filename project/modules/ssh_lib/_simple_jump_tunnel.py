@@ -22,7 +22,7 @@ from retry import retry
 import config
 from modules.tap_logger import get_logger
 from ._jump_client import JumpClient
-from project.modules.remote_logger.config import Config
+from modules.remote_logger.config import Config
 
 class SimpleJumpTunnel(object):
     _logger = get_logger(__name__)

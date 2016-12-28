@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 
+TAR_NAME=app.tar.gz
 VENDOR=vendor
 
 # prepare dependencies
@@ -24,3 +25,6 @@ fi
 mkdir $VENDOR
 
 python2 -m pip install --download $VENDOR -r requirements.txt
+
+rm -f $TAR_NAME
+tar -zcvf $TAR_NAME *

@@ -14,4 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+TAR_NAME=app.tar.gz
+
 mvn clean package
+
+rm -f TAR_NAME
+tar -zcvf $TAR_NAME *

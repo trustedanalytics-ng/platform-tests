@@ -26,5 +26,7 @@ class ApplicationPath(object):
     SAMPLE_APPS_PATH = os.path.join(BASE_PATH, "sample-apps")
     SQL_API_EXAMPLE = os.path.join(BASE_PATH, "sql-api-example")
     SAMPLE_PYTHON_APP = os.path.join(SAMPLE_APPS_PATH, "sample-python-app")
+    SAMPLE_PYTHON_APP_TAR = os.path.join(SAMPLE_PYTHON_APP, "app.tar.gz")
     SAMPLE_JAVA_APP = os.path.join(SAMPLE_APPS_PATH, "sample-java-application")
+    SAMPLE_JAVA_APP_TAR = os.path.join(SAMPLE_JAVA_APP, "app.tar.gz")
 

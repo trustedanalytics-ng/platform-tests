@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import json
+from io import StringIO
+
 from modules.constants import HttpStatus
 from modules.http_client import HttpMethod
 from modules.http_client.http_client import HttpClient
@@ -81,11 +84,24 @@ def delete_offering(*, client: HttpClient, offering_id):
 # --------------------------------------- applications --------------------------------------- #
 
 
-def create_application(*, client: HttpClient, file_path: str, manifest_path: str):
+def create_application_with_manifest_path(*, client: HttpClient, file_path: str, manifest_path: str):
     """ POST /applications """
     files = {
         "blob": (file_path, open(file_path, 'rb'), "multipart/form-data"),
         "manifest": (manifest_path, open(manifest_path, 'rb'), "multipart/form-data")
+    }
+    response = client.request(HttpMethod.POST, path="applications", files=files, raw_response=True,
+                              msg="Create an application")
+    assert response.status_code == HttpStatus.CODE_ACCEPTED
+    return response.json()
+
+
+def create_application_with_manifest(*, client: HttpClient, file_path: str, manifest: dict):
+    """ POST /applications """
+    manifest_str = json.dumps(manifest)
+    files = {
+        "blob": (file_path, open(file_path, 'rb'), "multipart/form-data"),
+        "manifest": (file_path, StringIO(manifest_str), "multipart/form-data")
     }
     response = client.request(HttpMethod.POST, path="applications", files=files, raw_response=True,
                               msg="Create an application")

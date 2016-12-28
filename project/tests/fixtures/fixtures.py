@@ -16,6 +16,7 @@
 
 import base64
 import io
+import json
 import os
 
 import pytest
@@ -127,24 +128,30 @@ def marketplace_offerings():
     return ServiceOffering.get_list()
 
 
+def push_app_from_tar(context, app_path):
+    archive_path = os.path.join(app_path, 'app.tar.gz')
+    log_fixture('using existing archive to push app: {}'.format(archive_path))
+
+    app_name = generate_test_object_name(separator='')
+
+    manifest_path = os.path.join(app_path, 'manifest.json')
+    with open(manifest_path) as manifest_file:
+        manifest = json.load(manifest_file)
+        manifest['name'] = app_name
+
+    return Application.push(context, app_path=archive_path,
+                            name=app_name, manifest=manifest,
+                            client=api_service_admin_client())
+
+
 @pytest.fixture(scope="class")
 def sample_python_app(class_context):
-    log_fixture("sample_python_app: download libraries")
-    test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_PYTHON_APP)
-    test_app_sources.run_build_sh()
-
-    log_fixture("sample_python_app: package sample application")
-    p_a = PrepApp(ApplicationPath.SAMPLE_PYTHON_APP)
-    gzipped_app_path = p_a.package_app(class_context)
-
-    log_fixture("sample_python_app: update manifest")
-    manifest_params = {"type" : TapApplicationType.PYTHON27}
-    manifest_path = p_a.update_manifest(params=manifest_params)
-
     log_fixture("sample_python_app: push sample application")
-    app = Application.push(class_context, app_path=gzipped_app_path,
-                           name=p_a.app_name, manifest_path=manifest_path,
-                           client=api_service_admin_client())
+    if not os.path.exists(ApplicationPath.SAMPLE_PYTHON_APP_TAR):
+        test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_PYTHON_APP)
+        test_app_sources.run_build_sh()
+
+    app = push_app_from_tar(class_context, ApplicationPath.SAMPLE_PYTHON_APP)
 
     log_fixture("sample_python_app: Check the application is running")
     app.ensure_running()
@@ -158,9 +165,6 @@ def compiled_sample_java_app():
     log_fixture("compiled_sample_java_app: download libraries")
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
     test_app_sources.run_build_sh()
-
-    log_fixture("compiled_sample_java_app: Compile the sources")
-    test_app_sources.compile_mvn()
     return test_app_sources.path
 
 
@@ -172,19 +176,12 @@ def sample_app_jar(compiled_sample_java_app):
 
 
 @pytest.fixture(scope="class")
-def sample_java_app(class_context, compiled_sample_java_app):
-    log_fixture("sample_java_app: package sample application")
-    p_a = PrepApp(compiled_sample_java_app)
-    gzipped_app_path = p_a.package_app(class_context)
-
-    log_fixture("sample_java_app: update manifest")
-    manifest_params = {"type": TapApplicationType.JAVA}
-    manifest_path = p_a.update_manifest(params=manifest_params)
-
+def sample_java_app(class_context):
     log_fixture("sample_java_app: Push app to tap")
-    app = Application.push(context=class_context, app_path=gzipped_app_path,
-                           name=p_a.app_name, manifest_path=manifest_path,
-                           client=api_service_admin_client())
+    if not os.path.exists(ApplicationPath.SAMPLE_JAVA_APP_TAR):
+        compiled_sample_java_app()
+
+    app = push_app_from_tar(class_context, ApplicationPath.SAMPLE_JAVA_APP)
 
     log_fixture("sample_java_app: Check the application is running")
     app.ensure_running()

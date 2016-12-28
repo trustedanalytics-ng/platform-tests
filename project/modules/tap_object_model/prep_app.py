@@ -64,7 +64,7 @@ class PrepApp():
         """Packages the application to the tar.gz format
 
         Args:
-           context: When application is no longer needed, context
+            context: When application is no longer needed, context
                     will run the cleanup method
 
         Returns:

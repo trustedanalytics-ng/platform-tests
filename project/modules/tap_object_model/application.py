@@ -75,8 +75,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
                                                 self.id)
 
     @classmethod
-    def push(cls, context, *, app_path: str, name: str, manifest_path: str,
-             client: HttpClient=None):
+    def push(cls, context, *, app_path: str, name: str, manifest_path: str = None,
+             manifest: dict = None, client: HttpClient=None):
         """Pushes the application from source directory with provided name,
         services and envs.
 
@@ -91,6 +91,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             app_path: path to the application archive or to the application directory
             name: Name of the application
             manifest_path: path to the manifest file
+            manifest: manifest file content (used only if manifest_path is None)
             client: The Http client to use. If None, default (admin via console)
                     will be used. It will be used to verify if the app was pushed
 
@@ -98,8 +99,14 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
                 Application class instance
         """
         try:
-            api.create_application(client=client, file_path=app_path,
-                                   manifest_path=manifest_path)
+            if manifest_path:
+                api.create_application_with_manifest_path(client=client, file_path=app_path,
+                                                          manifest_path=manifest_path)
+            elif manifest:
+                api.create_application_with_manifest(client=client, file_path=app_path,
+                                                     manifest=manifest)
+            else:
+                raise ValueError('Neither manifest_path nor manifest is passed')
         except UnexpectedResponseError as exc:
             # If the application already exists, than don't remove it (as this
             # will break later tests), just raise the error
