@@ -33,8 +33,23 @@ project_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
 logger = logging.getLogger(__name__)
 
 
+class AtomicCounter:
+
+    def __init__(self, start_with=0):
+        self.value = start_with
+        self.lock = logging.threading.Lock()
+
+    def get_and_increment(self):
+        with self.lock:
+            v = self.value
+            self.value += 1
+        return v
+
+
 class LocustClient(object):
     CAPTURE_PYTEST_OUTPUT = False
+
+    counter = AtomicCounter()
 
     def capture_start(self):
         if self.CAPTURE_PYTEST_OUTPUT:
@@ -70,12 +85,17 @@ class LocustClient(object):
                                         exception=out+err)
 
     def run_pytest(self, selector, params):
-        process = None
+        env = dict(os.environ)
+        unique_id = str(self.counter.get_and_increment())
+        env["PT_UNIQUE_ID"] = unique_id
+
         command = ["py.test", selector] + params
+
+        process = None
         self.capture_start()
         try:
             start_time = time.time()
-            process = subprocess.Popen(command, cwd=project_path, universal_newlines=True)
+            process = subprocess.Popen(command, env=env, cwd=project_path, universal_newlines=True)
             process.wait()
             total_time = int((time.time() - start_time) * 1000)
         except:

@@ -24,6 +24,7 @@ from modules.tap_logger import get_logger
 from ._jump_client import JumpClient
 from modules.remote_logger.config import Config
 
+
 class SimpleJumpTunnel(object):
     _logger = get_logger(__name__)
     _LOCALHOST = "localhost"

@@ -16,40 +16,60 @@
 
 import re
 import socket
-import uuid
 from datetime import datetime
 
 import config
+
+
+class TapObjectName:
+    _date_format, _time_format, _ms_format = "%Y%m%d", "%H%M%S", "%f"
+    _NON_ALPHA_NUM = r'[^a-z0-9]+'
+
+    def __init__(self, short=False, prefix=None, separator='_'):
+        self._prefix = prefix if prefix else socket.gethostname().split(".", 1)[0].lower()
+        self._separator = separator
+        self._short = short
+        self._now = datetime.now()
+
+    def __str__(self):
+        separator = '' if self._short else self._separator
+        parts = [self._prefix] + self.stem
+        name = separator.join(parts).lower()
+        return re.sub(self._NON_ALPHA_NUM, separator, name)
+
+    @property
+    def stem(self) -> list:
+        seed = [
+            self._now.strftime(self._date_format),
+            self._now.strftime(self._time_format),
+            self._now.strftime(self._ms_format)
+        ]
+
+        if config.unique_id:
+            seed[-1] = '{:0>6}'.format(config.unique_id)
+
+        return seed[:2] if self._short else seed
+
+    def build(self) -> str:
+        return str(self)
+
+    def as_email(self) -> str:
+        email_format = config.test_user_email.replace('@', '+{}@')
+        return email_format.format(self.build())
 
 
 def is_test_object_name(name):
     """Return True if object's name matches pattern for test names, False otherwise."""
     if name is None:
         return False  # there are users with username=None
-    test_name_regex = r'^.*[0-9]{8}(.?)[0-9]{6}\1([a-z0-9]{0,32}|([0-9]{6})?@gmail.com)?$'
+    test_name_regex = r'^.*[0-9]{8}(.*)[0-9]{6}\1([0-9]{6,})?(@gmail.com)?$'
     return re.match(test_name_regex, name) is not None
 
 
 def generate_test_object_name(email=False, short=False, prefix=None, separator="_"):
-    """Return string with hostname/prefix and date for use as name of test org, user, transfer, etc.
-       Long version: ubuntuit_dp2_06_20160822_131159_728113.
-       Short version: ubuntuitdp20620160822131159
-    """
     # TODO add global counter
-    date_format, time_format, ms_format = "%Y%m%d", "%H%M%S", "%f"
-    now = datetime.now()
-    date, time = now.strftime(date_format), now.strftime(time_format)
-    milliseconds = "" if short else now.strftime(ms_format)
-    guid = "" if short else str(uuid.uuid4()).replace("-", "")
-    separator = "" if short else separator
-    if prefix is None:
-        prefix = socket.gethostname().split(".", 1)[0].replace("-", separator).lower()[:15]
-    if email:
-        email_format = config.test_user_email.replace('@', '+{}@')
-        name = separator.join([prefix, date, time, milliseconds])
-        return email_format.format(name)
-    else:
-        return separator.join([prefix, date, time, guid])
+    name = TapObjectName(short=short, prefix=prefix, separator=separator)
+    return name.as_email() if email else name.build()
 
 
 def escape_hive_name(string):

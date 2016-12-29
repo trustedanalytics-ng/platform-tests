@@ -82,7 +82,7 @@ def pytest_sessionstart(session):
 
 
 def pytest_addoption(parser):
-    parser.addoption("--only-with-param", type=str, action="store",
+    parser.addoption("--only-with-param", type=str, action="store", metavar="PARAMETER",
                      help="run only tests with parameter (for performance test)")
 
 

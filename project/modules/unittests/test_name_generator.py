@@ -16,6 +16,7 @@
 import itertools
 import pytest
 
+import config
 from modules.tap_logger import step
 from modules.test_names import generate_test_object_name, is_test_object_name
 
@@ -23,7 +24,7 @@ ARGUMENT_COMBINATIONS = list(itertools.product(
     [True, False],  # email
     [True, False],  # short
     [None, 'PREFIX', '', ' '],  # prefix
-    ['_', ':', '', ' '],  # separator
+    ['_', ':', '', ' ', '--'],  # separator
 ))
 IDS = ['email={} short={} prefix={} separator={}'.format(*c) for c in ARGUMENT_COMBINATIONS]
 
@@ -32,6 +33,13 @@ class TestIsTestObjectName:
 
     @pytest.mark.parametrize('args_combination', ARGUMENT_COMBINATIONS, ids=IDS)
     def test_positive_cases(self, args_combination):
+        name = generate_test_object_name(*args_combination)
+        step('Testing if {} is recognized as test object name'.format(name))
+        assert is_test_object_name(name)
+
+    @pytest.mark.parametrize('args_combination', ARGUMENT_COMBINATIONS, ids=IDS)
+    def test_positive_cases_with_unique_id(self, args_combination):
+        config.unique_id = '1'
         name = generate_test_object_name(*args_combination)
         step('Testing if {} is recognized as test object name'.format(name))
         assert is_test_object_name(name)
