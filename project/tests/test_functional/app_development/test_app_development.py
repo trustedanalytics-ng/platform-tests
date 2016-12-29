@@ -30,6 +30,21 @@ class TestAppDevelopmentPage(object):
 
     @priority.low
     def test_get_app_development_page(self, admin_client, test_org_manager_client):
+        """
+        <b>Description:</b>
+        Checks if application development page is available and valid.
+
+        <b>Input data:</b>
+        1. URL to the the application development page
+
+        <b>Expected results:</b>
+        Valid app development page is downloaded from corresponding url.
+
+        <b>Steps:</b>
+        1. Check app development page as admin user.
+        2. Check app development page as test_org_manager.
+
+        """
         self._assert_app_development_page(admin_client)
         self._assert_app_development_page(test_org_manager_client)
 
