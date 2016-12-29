@@ -66,7 +66,7 @@ offerings = {
     ServiceLabels.GATEWAY: [Plan.SINGLE],
     ServiceLabels.GEARPUMP: [Plan.SMALL, Plan.MEDIUM],
     ServiceLabels.HBASE: [Plan.ORG_SHARED],
-    ServiceLabels.HDFS: [Plan.PLAN_DIR, Plan.ENCRYPTED_DIR],
+    ServiceLabels.HDFS: [Plan.PLAIN_DIR, Plan.ENCRYPTED_DIR],
     ServiceLabels.HIVE: [Plan.STANDARD],
     ServiceLabels.H2O: [Plan.SINGLE],
     ServiceLabels.INFLUX_DB_110: [Plan.SINGLE_SMALL],

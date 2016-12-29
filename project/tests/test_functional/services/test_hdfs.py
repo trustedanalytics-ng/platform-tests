@@ -15,118 +15,104 @@
 #
 
 import pytest
-
-import config
 from modules.constants import ServiceLabels, ServicePlan, TapComponent as TAP
-from modules.http_client.http_client_factory import HttpClientFactory
-from modules.http_client.client_auth.http_method import HttpMethod
-from modules.http_client.http_client_configuration import HttpClientConfiguration
-from modules.http_client.http_client_type import HttpClientType
 from modules.markers import incremental, priority
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance
-from modules.tap_object_model.flows import services
-from tests.fixtures import assertions
-
+from modules.tap_object_model import ServiceInstance, Organization
+from modules.hdfs import Hdfs
 
 logged_components = (TAP.hdfs_broker,)
 pytestmark = [pytest.mark.components(TAP.hdfs_broker)]
 
 
 label = ServiceLabels.HDFS
-special_plan_names = [ServicePlan.CREATE_USER_DIRECTORY, ServicePlan.GET_USER_DIRECTORY]
 
 
-@pytest.fixture(scope="module")
-def hdfs_service_offering(test_marketplace):
-    hdfs = next((s for s in test_marketplace if s.label == label), None)
-    assert hdfs is not None, "{} service was not found".format(label)
-    return hdfs
-
-
-@pytest.mark.skip(reason="DPNG-8771 Adjust test_hdfs tests to TAP NG")
-class TestHdfsRegularPlans(object):
-
-    @priority.high
-    def test_create_hdfs_service_instance_and_keys(self, context, test_org, test_space, hdfs_service_offering):
-        failures = []
-        for plan in hdfs_service_offering.service_plans:
-            if plan["name"] in special_plan_names:
-                continue
-            try:
-                step("Testing service {} plan {}".format(label, plan["name"]))
-                services.create_instance_and_key_then_delete_key_and_instance(
-                    context=context,
-                    org_guid=test_org.guid,
-                    space_guid=test_space.guid,
-                    service_label=label,
-                    plan_guid=plan["guid"],
-                    plan_name=plan["name"]
-                )
-            except Exception as e:
-                failures.append("{}\n{}".format(plan["guid"], e))
-        assertions.assert_no_errors(failures)
-
-
-@pytest.mark.skip(reason="DPNG-8771 Adjust test_hdfs tests to TAP NG")
 @incremental
 @priority.medium
-class TestHdfsUserDirectoryPlans(object):
+class TestHdfsPlainDir(object):
 
-    def test_0_hdfs_create_user_directory_instance(self, class_context, test_org, test_space, add_admin_to_test_org,
-                                                   add_admin_to_test_space, hdfs_service_offering):
-        step("Create {} instance with {} plan".format(label, ServicePlan.CREATE_USER_DIRECTORY))
-        create_directory_plan_guid = next((p["guid"] for p in hdfs_service_offering.service_plans
-                                           if p["name"] == ServicePlan.CREATE_USER_DIRECTORY), None)
-        assert create_directory_plan_guid is not None,\
-            "Plan with name {} for service {} not found".format(ServicePlan.CREATE_USER_DIRECTORY, label)
-        self.__class__.instance_cud = ServiceInstance.api_create(
-            context=class_context,
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
-            service_label=label,
-            service_plan_guid=create_directory_plan_guid
-        )
-        self.instance_cud.ensure_running()
 
-    def test_1_hdfs_key_for_create_user_directory_instance(self):
-        # This functionality changed in new TAP
-        # step("Create service key for the instance and check required keys are present")
-        # self.__class__.key = ServiceKey.api_create(service_instance_guid=self.instance_cud.guid)
-        # assert "uri" in self.key.credentials
-        # assert "user" in self.key.credentials
-        # assert "password" in self.key.credentials
-        pass
+    def test_0_hdfs_plain_dir(self, class_context):
+        """
+        <b>Description:</b>
+        Verify if is it possible to create instance of HDFS in plan Plain-Dir.
 
-    def test_2_hdfs_check_uaa_credentials_are_correct(self):
-        step("Check that uaa token can be retrieved using credentials from the service key")
-        username = self.key.credentials["user"]
-        password = self.key.credentials["password"]
-        uaa_client_configuration = HttpClientConfiguration(client_type=HttpClientType.UAA, url=config.uaa_url,
-                                                           username=username, password=password)
-        HttpClientFactory.get(uaa_client_configuration).request(method=HttpMethod.GET, path="", msg="UAA: test request")
+        Test create HDFS instance with plan Plain-Dir and check that instance running.
 
-    def test_3_hdfs_get_user_directory_instance(self, class_context, test_org, test_space, hdfs_service_offering):
-        step("Create {} instance with {} plan".format(ServiceLabels.HDFS, ServicePlan.GET_USER_DIRECTORY))
-        uri = self.key.credentials["uri"]
-        get_directory_plan_guid = next((p["guid"] for p in hdfs_service_offering.service_plans
-                                        if p["name"] == ServicePlan.GET_USER_DIRECTORY), None)
-        assert get_directory_plan_guid is not None,\
-            "Plan with name {} for service {} not found".format(ServicePlan.GET_USER_DIRECTORY, label)
-        self.__class__.instance_gud = ServiceInstance.api_create(
-            context=class_context,
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
-            service_label=label,
-            service_plan_guid=get_directory_plan_guid,
-            params={"uri": uri}
-        )
-        self.instance_gud.ensure_running()
+        <b>Input data:</b>
+            HDFS instance
 
-    def test_4_hdfs_delete_key_and_instances(self):
-        step("Delete {} instance with plan {}".format(label, ServicePlan.GET_USER_DIRECTORY))
-        self.instance_gud.api_delete()
-        step("Delete key for {} {}".format(label, ServicePlan.CREATE_USER_DIRECTORY))
-        self.key.api_delete()
-        step("Delete {} instance with plan {}".format(label, ServicePlan.CREATE_USER_DIRECTORY))
-        self.instance_cud.api_delete()
+        <b>Expected results:</b>
+            HDFS instance with plan Plain-Dir is created and running.
+
+        <b>Steps:</b>
+            1. Create HDFS instance with plan Plain-Dir
+            2. Check that instance is running
+        """
+        step("Create HDFS instance in plan Plain-Dir")
+        self.__class__.instance_hdfs = ServiceInstance.create_with_name(class_context, offering_label=ServiceLabels.HDFS,
+                                                                       plan_name=ServicePlan.PLAIN_DIR)
+        step("Ensure instance is in RUNNING state")
+        self.instance_hdfs.ensure_running()
+
+    def test_1_hdfs_check_directory_created(self, test_org):
+        """
+        <b>Description:</b>
+            Verify if HDFS directory is created properly.
+
+        <b>Input data:</b>
+            HDFS instance
+
+        <b>Expected results:</b>
+            HDFS directory is created with proper location and name.
+
+        <b>Steps</b>
+            1. Check that HDFS directory exists with right name
+        """
+        org = test_org
+        self.__class__.hdfs = Hdfs(org)
+        step("Check if hdfs directory exists in proper place")
+        self.hdfs.check_plain_dir_directory(service_instance_id=self.instance_hdfs.id)
+
+    def test_2_hdfs_check_directory_permissions(self):
+        """
+        <b>Description:</b>
+            Verify if HDFS directory has right permissions.
+
+        <b>Input data:</b>
+            HDFS instance
+            HDFS directory
+
+        <b>Expected results:</b>
+            HDFS directory has proper permissions.
+
+        <b>Steps:</b>
+            1. Check HDFS directory permissions
+        """
+        step("Check if hdfs directory has proper permissions")
+        self.hdfs.check_plain_dir_permissions(service_instance_id=self.instance_hdfs.id)
+
+    @pytest.mark.skip("DPNG-13935 Cannot update service instance state to 'DESTROY_REQ' in Catalog: currentState and"
+                      " stateToSet cannot be empty")
+    def test_3_delete_hdfs_service_instance(self):
+        """
+        <b>Description:</b>
+            Delete HDFS instance and check if it is deleted.
+
+        <b>Input data:</b>
+            HDFS instance
+
+        <b>Expected results:</b>
+           HDFS instance is deleted.
+
+        <b>Steps:</b>
+            1. Delete HDFS instance
+            2. Verify if HDFS instance is deleted
+        """
+        step("Delete HDFS instance")
+        self.instance_hdfs.stop()
+        self.instance_hdfs.ensure_stopped()
+        self.instance_hdfs.delete()
+        step("Ensure HDFS instance deleted properly")
+        self.instance_hdfs.ensure_deleted()

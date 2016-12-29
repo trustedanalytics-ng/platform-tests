@@ -79,7 +79,7 @@ class ServicePlan(object):
     MULTITENANT = "multitenant"
     ORG_SHARED = "org-shared"
     PERSISTENT = "persistent"
-    PLAN_DIR = "plan-dir"
+    PLAIN_DIR = "plain-dir"
     SHARED = "shared"
     SIMPLE = "simple"
     SIMPLE_ATK = "Simple"
