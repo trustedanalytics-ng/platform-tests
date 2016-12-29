@@ -33,7 +33,7 @@ logged_components = (TAP.mqtt_demo, TAP.service_catalog)
 pytestmark = [pytest.mark.components(TAP.mqtt_demo, TAP.service_catalog)]
 
 
-@pytest.mark.skip("DPNG-8659: Adjust Space-shuttle & mqtt: functional tests")
+@pytest.mark.skip("DPNG-14010 [api-tests] Adjust mqtt: functional tests")
 class Mqtt:
 
     SOURCES_OWNER = TapGitHub.intel_data
