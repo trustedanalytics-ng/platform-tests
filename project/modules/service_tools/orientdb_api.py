@@ -15,6 +15,7 @@
 #
 
 from datetime import datetime
+import json
 
 from modules.tap_object_model import Application
 
@@ -92,6 +93,11 @@ class OrientDbApi(object):
         }
         """
         return self._app.api_request(method="GET", path=self.PATH_TO_RECORDS)
+
+    def extract_record_from_all(self):
+        response = self.record_get_all()
+        records = json.loads(response["Records"][0].replace("'", '"'))
+        return records["@{}".format(self.TEST_CLASS)]
 
     def record_get_one(self, record_id):
         """Get one record."""

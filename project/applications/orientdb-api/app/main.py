@@ -110,6 +110,14 @@ class RecordResource(flask_restful.Resource):
         return flask.Response("OK")
 
 
+class AppCheckResource(flask_restful.Resource):
+    """Endpoint to check if the application responds to requests"""
+
+    def get(self):
+        return "OrientDb api example"
+
+
+api.add_resource(AppCheckResource, "/")
 api.add_resource(DatabasesResource, "/rest/databases")
 api.add_resource(DatabaseResource, "/rest/databases/<database_name>")
 api.add_resource(ClassesResource, "/rest/databases/<database_name>/classes")

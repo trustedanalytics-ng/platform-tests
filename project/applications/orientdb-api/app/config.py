@@ -15,13 +15,16 @@
 #
 
 import os
-import json
 
 
 class Config(object):
     """Main package configuration."""
 
-    SERVICES = "VCAP_SERVICES"
+    ENV_PREFIX_BOUND_ORIENTDB_NAME = "SERVICES_BOUND_ORIENTDB"
+    ENV_SUFFIX_ORIENTDB_HOSTNAME = "ORIENTDB_HOSTNAME"
+    ENV_SUFFIX_ORIENTDB_PORT = "ORIENTDB_BINARY_PORT"
+    ENV_SUFFIX_ORIENTDB_USERNAME = "ORIENTDB_USERNAME"
+    ENV_SUFFIX_ORIENTDB_PASSWORD = "ORIENTDB_ROOT_PASSWORD"
 
     def __init__(self):
         """
@@ -43,21 +46,34 @@ class Config(object):
             ]
         }
         """
-        credentials = self._get_credentials()
-        self.db_username = credentials.get("username", "root")
-        self.db_password = credentials.get("password")
-        self.db_hostname = credentials.get("hostname", "localhost")
-        ports = credentials.get("ports")
-        self.db_port = int(ports["2424/tcp"])
+        service_name = Config._get_env_var_by_prefix(Config.ENV_PREFIX_BOUND_ORIENTDB_NAME)
+        var_prefix = service_name.upper().replace('-', '_')
+        self.db_hostname = Config._get_env_var("{}_{}".format(var_prefix, Config.ENV_SUFFIX_ORIENTDB_HOSTNAME))
+        self.db_port = int(Config._get_env_var("{}_{}".format(var_prefix, Config.ENV_SUFFIX_ORIENTDB_PORT)))
+        self.db_username = Config._get_env_var("{}_{}".format(var_prefix, Config.ENV_SUFFIX_ORIENTDB_USERNAME))
+        self.db_password = Config._get_env_var("{}_{}".format(var_prefix, Config.ENV_SUFFIX_ORIENTDB_PASSWORD))
 
     @classmethod
-    def _get_credentials(cls):
-        """Get credentials from environment."""
+    def _get_env_var(cls, varname):
+        """Get variable from environment."""
         try:
-            services = os.environ[cls.SERVICES]
+            var = os.environ[varname]
         except KeyError:
-            raise MissingConfigurationError("Environment variable '{}' is missing.".format(cls.SERVICES))
-        return json.loads(services)["orientdb"][0]["credentials"]
+            raise MissingConfigurationError("Environment variable '{}' is missing.".format(varname))
+        return var
+
+    @classmethod
+    def _get_env_var_by_prefix(cls, var_prefix):
+        """Get single environment variable that starts with with var_prefix"""
+        results = {}
+        for key,val in os.environ.items():
+            if key.startswith(var_prefix):
+                results[key] = val
+        if not results:
+            raise MissingConfigurationError("Missing environment variable: no variable starts with prefix '{}'.".format(var_prefix))
+        if len(results) > 1:
+            raise MissingConfigurationError("Too many environment variables starting with prefix '{}': {}.".format(var_prefix, list(results.keys())))
+        return results.values()[0]
 
 
 class MissingConfigurationError(Exception):

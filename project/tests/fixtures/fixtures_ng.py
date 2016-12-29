@@ -23,7 +23,6 @@ import pytest
 
 import config
 from modules import file_utils
-from modules.constants.urls import Urls
 from modules.ssh_lib import JumpClient, JumpTunnel
 from modules.tap_cli import TapCli
 from modules.tap_logger import log_fixture

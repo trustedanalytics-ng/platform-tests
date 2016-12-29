@@ -225,6 +225,18 @@ def mysql_instance(session_context, api_service_admin_client):
 
 
 @pytest.fixture(scope="session")
+def orientdb_instance(session_context, api_service_admin_client):
+    log_fixture("orientdb_instance: create")
+    orientdb = ServiceInstance.create_with_name(context=session_context,
+                                                client=api_service_admin_client,
+                                                offering_label=ServiceLabels.ORIENT_DB,
+                                                plan_name=ServicePlan.SINGLE_SMALL)
+    log_fixture("orientdb_instance: ensure instance is running")
+    orientdb.ensure_running()
+    return orientdb
+
+
+@pytest.fixture(scope="session")
 def mongodb_instance(session_context, api_service_admin_client):
     log_fixture("create_mongodb_instance")
     mysql = ServiceInstance.create_with_name(context=session_context, client=api_service_admin_client,
@@ -287,6 +299,33 @@ def app_bound_mysql(module_context, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: Check the application is responding")
     db_app.ensure_responding()
     return db_app
+
+
+@pytest.fixture(scope="module")
+def app_bound_orientdb(module_context, orientdb_instance, api_service_admin_client):
+    log_fixture("orientdb_app: download libraries")
+    app_src = AppSources.from_local_path(ApplicationPath.ORIENTDB_API)
+    app_src.run_build_sh()
+
+    log_fixture("orientdb_app: package sample application")
+    p_a = PrepApp(app_src.path)
+    gzipped_app_path = p_a.package_app(module_context)
+
+    log_fixture("orientdb_app: update manifest")
+    manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [orientdb_instance.name]}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("orientdb_app: push orientdb-api application")
+    application = Application.push(module_context,
+                                   app_path=gzipped_app_path,
+                                   name=p_a.app_name,
+                                   manifest_path=manifest_path,
+                                   client=api_service_admin_client)
+    log_fixture("orientdb_app: Ensure app is running")
+    application.ensure_running()
+    log_fixture("orientdb_app: Ensure app is responding")
+    application.ensure_responding()
+    return application
 
 
 @pytest.fixture(scope="module")

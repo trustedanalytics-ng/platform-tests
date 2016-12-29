@@ -100,7 +100,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         try:
             api.create_application(client=client, file_path=app_path,
                                    manifest_path=manifest_path)
-        except Exception as exc:
+        except UnexpectedResponseError as exc:
             # If the application already exists, than don't remove it (as this
             # will break later tests), just raise the error
             if exc.status == 409:
