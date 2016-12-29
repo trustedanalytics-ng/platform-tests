@@ -30,7 +30,7 @@ class TestServiceExpose:
         app = sample_python_app
         image = Application.get_image(app_inst_id=app.id, client=api_service_admin_client)
         offering_json = template_example.sample_python_app_offering
-        offering_json['body']['deployments'][0]['spec']['template']['spec']['containers'][0]['image'] = image
+        offering_json['body'][0]['deployments'][0]['spec']['template']['spec']['containers'][0]['image'] = image
         offering = ServiceOffering.create(context, client=api_service_admin_client,
                                           template_body=offering_json['body'])
         service = ServiceInstance.create_with_name(context, offering_label=offering.label,
@@ -62,8 +62,7 @@ class TestServiceExpose:
         service = offering_from_python_app
         step("Expose urls")
         urls = ServiceInstance.expose_urls(service_id=service.id, client=api_service_admin_client)
-        url = ('http://{}'.format(urls[0]))
-        ServiceInstance.ensure_responding(url=url)
+        ServiceInstance.ensure_responding(url=urls[0])
         step("Get credentials and check that contains urls")
         credentials = ServiceInstance.get_credentials(service.id, api_service_admin_client)
         assert urls[0] in str(credentials)

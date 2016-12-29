@@ -68,4 +68,9 @@ class Template(TapObjectSuperclass):
 
     @classmethod
     def _from_response(cls, response):
-        return cls(template_id=response["id"], components=response["body"], hooks=response["hooks"])
+        components, hooks = "", ""
+        if "body" in response:
+            components = response["body"]
+        if "hooks" in response:
+            hooks = response["hooks"]
+        return cls(template_id=response["id"], components=components, hooks=hooks)

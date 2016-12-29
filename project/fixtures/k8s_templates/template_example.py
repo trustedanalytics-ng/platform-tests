@@ -15,7 +15,7 @@
 #
 
 
-example_template_body = {
+example_template_body = [{
     "componentType": "instance",
     "persistentVolumeClaims": None,
     "deployments": [
@@ -309,10 +309,10 @@ example_template_body = {
             }
         }
     ]
-}
+}]
 
 etcd_template = {
-    "body": {
+    "body": [{
         "componentType": "instance",
         "persistentVolumeClaims": None,
         "deployments": [
@@ -464,11 +464,11 @@ etcd_template = {
             }
         ],
         "secrets": None
-    },
+    }],
     "hooks": None
 }
 sample_python_app_offering = {
-    "body": {
+    "body": [{
       "componentType": "instance",
       "persistentVolumeClaims": None,
       "deployments": [
@@ -604,6 +604,6 @@ sample_python_app_offering = {
           "secrets": None
         }
       ],
-    },
+    }],
     "hooks": None
   }

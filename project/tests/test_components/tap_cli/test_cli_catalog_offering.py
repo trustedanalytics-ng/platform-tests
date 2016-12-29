@@ -26,7 +26,7 @@ from tests.fixtures.assertions import assert_raises_command_execution_exception
 
 pytestmark = [pytest.mark.components(TAP.cli)]
 
-
+@pytest.mark.usefixtures("cli_login")
 class TestCliCatalogOffering:
     short = False
 
