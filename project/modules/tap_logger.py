@@ -28,7 +28,6 @@ import config
 from .constants import LoggerType
 
 __LOGGING_LEVEL = config.logging_level
-LOGGED_RESPONSE_BODY_LENGTH = 1024
 
 
 class StdAndFileHandler(object):
@@ -125,7 +124,7 @@ def log_http_request(prepared_request, username, password=None, description="", 
 def log_http_response(response, logged_body_length=None):
     """If logged_body_length < 0, full response body is logged"""
     if logged_body_length is None:
-        logged_body_length = LOGGED_RESPONSE_BODY_LENGTH
+        logged_body_length = int(config.logged_response_body_length)
     body = response.text
     if logged_body_length == 0:
         body = "[...]"
