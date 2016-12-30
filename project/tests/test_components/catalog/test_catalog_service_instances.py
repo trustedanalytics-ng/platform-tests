@@ -46,6 +46,27 @@ class TestCatalogServiceInstances:
 
     @priority.high
     def test_create_and_delete_service_instance_in_catalog(self, context, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if new service instance can be created and deleted.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when new instance of service can be created and deleted. According to this, instance should be
+        available on the: list of all instances, list of all catalog service instances, list of service instances for
+        the service after being created and shouldn't be on the list of service instances after deletion.
+
+        <b>Steps:</b>
+        1. Create service instance.
+        2. Check that the service instance is on the list of all catalog instances.
+        3. Check that the service instance is on the list of all catalog service instances.
+        4. Check that the service instance is on the list of service instances for the service.
+        5. Delete the service instance.
+        6. Check that getting the deleted service instance returns an error
+        """
         step("Create service instance in catalog")
         catalog_service_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id,
                                                                  plan_id=catalog_service.plans[0].id)
@@ -97,6 +118,21 @@ class TestCatalogServiceInstances:
 
     @priority.medium
     def test_cannot_create_service_instance_without_plan_id(self, context, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating service instance without plan id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when service instance without plan id is not created and status code 400 with error message:
+        'key PLAN_ID not found!' is returned.
+
+        <b>Steps:</b>
+        1. Create service instance without plan id.
+        """
         step("Check that it's not possible to create instance without plan_id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_KEY_PLAN_ID_NOT_FOUND,
                                      CatalogServiceInstance.create, context, service_id=catalog_service.id)
@@ -104,6 +140,22 @@ class TestCatalogServiceInstances:
     @priority.medium
     def test_cannot_create_service_instance_with_existing_name(self, context, catalog_service,
                                                                catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating service instance with name which already exists.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+
+        <b>Expected results:</b>
+        Test passes when service instance with name which already exists is not created and status code 409 with
+        error message: 'instance with name: {sample_service_instance_name} already exists!' is returned.
+
+        <b>Steps:</b>
+        1. Create service instance with name which already exists on platform.
+        """
         step("Check that it's not possible to create instance with existing name")
         expected_message = CatalogHttpStatus.MSG_INSTANCE_EXISTS.format(catalog_service_instance.name)
         assert_raises_http_exception(CatalogHttpStatus.CODE_CONFLICT, expected_message, CatalogServiceInstance.create,
@@ -112,6 +164,21 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_create_service_instance_without_name(self, context, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating service instance with empty name: "".
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when service instance with empty name "" is not created and status code 400 with error message:
+        'Field: Name has incorrect value: ""' is returned.
+
+        <b>Steps:</b>
+        1. Create service instance with empty name: "".
+        """
         step("Create service instance without name")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME),
@@ -120,6 +187,22 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_update_service_instance_name(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service instance name.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+
+        <b>Expected results:</b>
+        Test passes when field name of service instance is not updated and status code 400 with message: "ID and Name
+        fields can not be changed!" is returned.
+
+        <b>Steps:</b>
+        1. Update service instance name.
+        """
         step("Check that it's not possible to update name instance by service")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS,
@@ -131,6 +214,20 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_create_instance_of_not_existing_service(self, context):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating instance of not-existing service.
+
+        <b>Input data:</b>
+        1. not-existing service id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'.
+
+        <b>Expected results:</b>
+        Test passes when service instance is not created and status code 404 with error message: 'service with id:
+        xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx does not exists!' is returned.
+
+        <b>Steps:</b>
+        1. Create instance of not-existing service.
+        """
         step("Check that it's not possible to create instance of not-existing service")
         expected_message = CatalogHttpStatus.MSG_SERVICE_DOES_NOT_EXIST.format(self.INVALID_ID)
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, expected_message,
@@ -138,6 +235,23 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_get_instance_of_not_existing_service(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting service instance using not-existing service id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+        4. not-existing service id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when service instance is not found on the list of service instances and status code: 404 with
+        message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Get service instance using not-existing service id.
+        """
         step("Check that getting instance with incorrect service id causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogServiceInstance.get, service_id=self.INVALID_ID,
@@ -145,6 +259,22 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_create_instance_with_invalid_name(self, context, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating service instance with invalid name.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. invalid name: 'instance!#'
+
+        <b>Expected results:</b>
+        Test passes when service instance is not created and status code 400 with error message: 'Field: Name has
+        incorrect value: instance!#' is returned.
+
+        <b>Steps:</b>
+        1. Create service instance with incorrect name.
+        """
         step("Try to create instance with name '{}'".format(self.INCORRECT_INSTANCE_NAME))
         expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -153,6 +283,21 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_create_instance_with_empty_body(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating service instance with empty body {}.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when service instance is not created and status code 400 with error message: 'key PLAN_ID not
+        found!' is returned.
+
+        <b>Steps:</b>
+        1. Create service instance with empty body {}.
+        """
         step("Check create instance with empty body")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_KEY_PLAN_ID_NOT_FOUND,
                                      catalog_api.create_service_instance, service_id=catalog_service.id, name=None,
@@ -160,6 +305,22 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_get_not_existing_service_instance(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting service instance using not-existing service instance id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. not-existing service instance id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when service instance is not found on the list of service instances and status code: 404 with
+        message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Get service instance using not-existing service instance id.
+        """
         step("Check that getting not-existing service instance causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogServiceInstance.get, service_id=catalog_service.id,
@@ -194,6 +355,22 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_update_service_instance_without_field(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service instance omitting argument: field.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+
+        <b>Expected results:</b>
+        Test passes when service instance is not updated and status code 400 with error message: 'field field is
+        empty!' is returned.
+
+        <b>Steps:</b>
+        1. Update service instance omitting argument: field.
+        """
         step("Check that it's not possible to update service instance without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -201,6 +378,22 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_update_service_without_value(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service instance omitting argument: value.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+
+        <b>Expected results:</b>
+        Test passes when service instance is not updated and status code 400 with error message: 'field value is
+        empty!' is returned.
+
+        <b>Steps:</b>
+        1. Update service instance omitting argument: value.
+        """
         step("Check that it's not possible to update service instance without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -208,6 +401,24 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_update_not_existing_service_instance(self, catalog_service_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service instance giving not-existing service instance id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+        4. new classId value
+        5. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when service instance is not updated and status code 404 with error message: '100: Key not found'
+        is returned.
+
+        <b>Steps:</b>
+        1. Update service instance giving not-existing service instance id.
+        """
         step("Check that it's not possible to update not-existing service instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.update_service_instance, service_id=catalog_service_instance.class_id,
@@ -215,6 +426,22 @@ class TestCatalogServiceInstances:
 
     @priority.low
     def test_cannot_delete_not_existing_service_instance(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of deleting not-existing service instance.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when there is no possibility of deleting service instance and status code 404 with error message:
+        '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Delete service instance giving not-existing service instance id.
+        """
         step("Check that it's not possible to delete not-existing service instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.delete_service_instance, service_id=catalog_service.id,

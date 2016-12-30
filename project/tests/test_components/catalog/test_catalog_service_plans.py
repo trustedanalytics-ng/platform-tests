@@ -49,12 +49,40 @@ class TestCatalogServicePlans:
 
     @priority.high
     def test_get_service_plan_list(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is possibility of getting service plan list.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when list of plans for sample service is returned and the length of the list is equal to 1.
+
+        <b>Steps:</b>
+        1. Get list of plans for sample service.
+        """
         step("Get service plan list")
         plans = ServicePlan.get_plans(service_id=catalog_service.id)
         assert len(plans) == 1
 
     @priority.low
     def test_get_service_plan_list_with_invalid_service_id(self):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting service plan list using invalid service id.
+
+        <b>Input data:</b>
+        1. service_id: generated test object name
+
+        <b>Expected results:</b>
+        Test passes when list of service plan is not returned for invalid service id and status code 404 with error
+        message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Get service plan list using invalid service id.
+        """
         step("Get service plan list with invalid service id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
                                      CatalogHttpStatus.MSG_KEY_NOT_FOUND,
@@ -62,6 +90,28 @@ class TestCatalogServicePlans:
 
     @priority.high
     def test_create_service_without_plans(self, context, catalog_template):
+        """
+        <b>Description:</b>
+        Checks if: service with plan as an empty list can be created, plan for service without plans can be created,
+        another plan for service can be created, another plan for service with id filled cannot be created, service
+        with plan can be listed.
+
+        <b>Input data:</b>
+        1. sample catalog template
+
+        <b>Expected results:</b>
+        Test passes when: service with plan as an empty list [] can be created and the length of the list is equal to
+        0, plan for service without plans can be created, another plan for service can be created, another plan for
+        service with id filled cannot be created and status code 400 with error message 'Id field has to be empty!'
+        is returned, service plans can be listed.
+
+        <b>Steps:</b>
+        1. Create service with plan as an empty list [].
+        2. Create plan for the service without plan.
+        3. Create another plan for service.
+        4. Create another plan for service with id filled.
+        5. Get created service plan.
+        """
         step("Create service without plans")
         catalog_service = CatalogService.create(context, template_id=catalog_template.id, plans=[])
         plans = ServicePlan.get_plans(service_id=catalog_service.id)
@@ -91,6 +141,22 @@ class TestCatalogServicePlans:
 
     @priority.low
     def test_get_service_plan_by_invalid_plan_id(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting service plan list using invalid plan id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. plan_id: generated test object name
+
+        <b>Expected results:</b>
+        Test passes when list of service plan is not returned for invalid plan id and status code 404 with error
+        message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Get service plan list using invalid plan id.
+        """
         step("Get service plan by invalid plan id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
                                      CatalogHttpStatus.MSG_KEY_NOT_FOUND,
@@ -99,6 +165,21 @@ class TestCatalogServicePlans:
 
     @priority.high
     def test_update_plan(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if service plan can be updated.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when service plan description is updated.
+
+        <b>Steps:</b>
+        1. Create plan for sample service with description 'plan_test'.
+        2. Update service plan description on 'plan_test_update'.
+        """
         step("Update existing plan")
         plan = self.create_plan_for_service(catalog_service)
         updated_plan = ServicePlan.update_plan(service_id=catalog_service.id, plan_id=plan.id,
@@ -107,6 +188,21 @@ class TestCatalogServicePlans:
 
     @priority.low
     def test_update_plan_with_invalid_plan_id(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating service plan using invalid plan id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. plan_id: generated test object name
+
+        <b>Expected results:</b>
+        Test passes when plan is not updated and status code 404 with error message '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Update plan using invalid plan id.
+        """
         step("Update plan using invalid plan id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
                                      CatalogHttpStatus.MSG_KEY_NOT_FOUND,
@@ -116,6 +212,21 @@ class TestCatalogServicePlans:
 
     @priority.low
     def test_delete_not_existing_service_plan(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of deleting not existing service plan.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. plan_id: generated test object name
+
+        <b>Expected results:</b>
+        Test passes when plan is not deleted and status code 404 with error message '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Delete plan using invalid plan id.
+        """
         step("Delete not existing service plan")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND,
                                      CatalogHttpStatus.MSG_KEY_NOT_FOUND,
@@ -124,6 +235,25 @@ class TestCatalogServicePlans:
 
     @priority.high
     def test_delete_plan(self, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if service plan can be deleted. Check if the same plan cannot be deleted twice. Check that there is no
+        possibility of getting removed service plan.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when: plan is deleted, plan is not deleted second time and status code 404 with error message:
+        '100: Key not found' is returned, deleted plan is not listed and status code 404 with error message: '100: Key
+        not found' is returned.
+
+        <b>Steps:</b>
+        1. Delete service plan.
+        2. Delete the same service plan again.
+        3. Get removed service plan.
+        """
         step("Delete service plan")
         plan = self.create_plan_for_service(catalog_service)
         ServicePlan.delete_plan(service_id=catalog_service.id, plan_id=plan.id)

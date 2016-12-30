@@ -114,9 +114,30 @@ class TestCatalogApplicationInstances:
                                      CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_application_instance.update, field_name="classId",
                                      value=self.SAMPLE_CLASS_ID)
+        step("Check that the instance was not updated")
+        instance = CatalogApplicationInstance.get(application_id=catalog_application_instance.class_id,
+                                                  instance_id=catalog_application_instance.id)
+        assert catalog_application_instance == instance
 
     @priority.medium
     def test_cannot_create_application_instance_with_existing_name(self, context, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating application instance with name which already exists.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+
+        <b>Expected results:</b>
+        Test passes when application instance with name which already exists is not created and status code 409 with
+        error message: 'instance with name: {instance_name} already exists!' is returned.
+
+        <b>Steps:</b>
+        1. Create application instance with name which already exists on platform.
+        """
         step("Check that it's not possible to create instance with existing name")
         expected_message = CatalogHttpStatus.MSG_INSTANCE_EXISTS.format(catalog_application_instance.name)
         assert_raises_http_exception(CatalogHttpStatus.CODE_CONFLICT, expected_message,
@@ -126,6 +147,22 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_create_application_instance_without_name(self, context, catalog_application):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating application instance with empty name: "".
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+
+        <b>Expected results:</b>
+        Test passes when application instance with empty name "" is not created and status code 400 with error message:
+        'Field: Name has incorrect value: ""' is returned.
+
+        <b>Steps:</b>
+        1. Create application instance with empty name: "".
+        """
         step("Create application instance without name")
         expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -134,6 +171,23 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_update_application_instance_name(self, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating application instance name.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+
+        <b>Expected results:</b>
+        Test passes when field name of application instance is not updated and status code 400 with message: 'ID and
+        Name fields can not be changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update application instance name.
+        """
         step("Check that it's not possible to update name instance by application")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS,
@@ -145,6 +199,20 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_create_instance_of_not_existing_application(self, context):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating instance of not-existing application.
+
+        <b>Input data:</b>
+        1. not-existing application id.
+
+        <b>Expected results:</b>
+        Test passes when application instance is not created and status code 404 with error message: 'application with
+        id: {not_existing_id} does not exists!' is returned.
+
+        <b>Steps:</b>
+        1. Create instance of not-existing application.
+        """
         step("Check that it's not possible to create instance of not-existing application")
         expected_message = CatalogHttpStatus.MSG_APPLICATION_DOES_NOT_EXIST.format(self.INVALID_ID)
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, expected_message,
@@ -152,6 +220,23 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_create_application_instance_with_invalid_name(self, context, catalog_application):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating application instance with invalid name.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. invalid name: 'instance!#'
+
+        <b>Expected results:</b>
+        Test passes when application instance is not created and status code 400 with error message: 'Field: Name has
+        incorrect value: instance!#' is returned.
+
+        <b>Steps:</b>
+        1. Create application instance with incorrect name.
+        """
         step("Try to create instance with name '{}'".format(self.INCORRECT_INSTANCE_NAME))
         expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -160,6 +245,19 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_get_application_instances_with_invalid_application_id(self):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting application instance using invalid application id.
+
+        <b>Input data:</b>
+        1. invalid id: '90982774-09198298'
+
+        <b>Expected results:</b>
+        Test passes when application instance is not found on the list of application instances and status code: 404 with message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Get application instance with incorrect application id.
+        """
         invalid_id = "90982774-09198298"
         step("List instances with invalid application id")
         # TODO this error message should be different
@@ -168,6 +266,22 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_create_instance_with_empty_body(self, catalog_application):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of creating application instance with empty body: {}.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+
+        <b>Expected results:</b>
+        Test passes when application instance is not created and status code 400 with error message: 'Field: Name has
+        incorrect value: ' is returned.
+
+        <b>Steps:</b>
+        1. Create application instance with empty body: {}.
+        """
         step("Check create instance with empty body")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME),
@@ -176,6 +290,23 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_get_not_existing_application_instance(self, catalog_application):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting application instance using invalid instance id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when application instance is not found on the list of application instances and status code: 404
+        with message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Get application instance with incorrect instance id.
+        """
         step("Check that getting not-existing application instance causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogApplicationInstance.get, application_id=catalog_application.id,
@@ -208,16 +339,60 @@ class TestCatalogApplicationInstances:
                                      CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_application_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
                                      prev_value=self.WRONG_PREV_CLASS_ID)
+        step("Check that the instance was not updated")
+        instance = CatalogApplicationInstance.get(application_id=catalog_application_instance.class_id,
+                                                  instance_id=catalog_application_instance.id)
+        assert catalog_application_instance == instance
 
     @priority.low
     def test_cannot_update_application_instance_without_field(self, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating application instance omitting argument: field.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+        5. new classId value
+
+        <b>Expected results:</b>
+        Test passes when application instance is not updated and status code 400 with error message: 'field field is
+        empty!' is returned.
+
+        <b>Steps:</b>
+        1. Update application instance omitting argument: field.
+        """
         step("Check that it's not possible to update application instance without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_application_instance.update, field_name=None, value=self.NEW_CLASS_ID)
+        step("Check that the instance was not updated")
+        instance = CatalogApplicationInstance.get(application_id=catalog_application_instance.class_id,
+                                                  instance_id=catalog_application_instance.id)
+        assert catalog_application_instance == instance
 
     @priority.low
     def test_cannot_update_application_without_value(self, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating application instance omitting argument: value.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+        5. field: 'classId'
+
+        <b>Expected results:</b>
+        Test passes when application instance is not updated and status code 400 with error message: 'field value is
+        empty!' is returned.
+
+        <b>Steps:</b>
+        1. Update application instance omitting argument: value.
+        """
         step("Check that it's not possible to update application instance without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
@@ -225,6 +400,25 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_update_not_existing_application_instance(self, catalog_application_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating application instance giving invalid instance id.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. sample catalog application instance
+        5. new classId value
+        6. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when application instance is not updated and status code 404 with error message: '100: Key not
+        found' is returned.
+
+        <b>Steps:</b>
+        1. Update application instance giving invalid instance id.
+        """
         step("Check that it's not possible to update not-existing application instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.update_application_instance,
@@ -233,6 +427,23 @@ class TestCatalogApplicationInstances:
 
     @priority.low
     def test_cannot_delete_not_existing_application_instance(self, catalog_application):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of deleting not-existing application instance.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog image
+        3. sample catalog application
+        4. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when there is no possibility of deleting application instance and status code 404 with error
+        message: '100: Key not found' is returned.
+
+        <b>Steps:</b>
+        1. Delete application instance giving invalid instance id.
+        """
         step("Check that it's not possible to delete not-existing application instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.delete_application_instance, application_id=catalog_application.id,

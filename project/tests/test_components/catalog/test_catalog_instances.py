@@ -53,6 +53,25 @@ class TestCatalogInstances:
 
     @priority.high
     def test_create_and_delete_instance(self, context, catalog_service):
+        """
+        <b>Description:</b>
+        Checks if instance can be created and deleted.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+
+        <b>Expected results:</b>
+        Test passes when new instance can be created and deleted. According to this, instance should be available on
+        the list of instances after being created and shouldn't be on this list after deletion.
+
+        <b>Steps:</b>
+        1. Create service instance in catalog.
+        2. Check that the service instance is on the list of all instances.
+        3. Delete instance.
+        4. Check that instance was deleted.
+        5. Check that getting the deleted instance returns an error.
+        """
         step("Create service instance in catalog")
         catalog_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id,
                                                          plan_id=catalog_service.plans[0].id)
@@ -96,12 +115,43 @@ class TestCatalogInstances:
 
     @priority.low
     def test_cannot_get_not_existing_instance(self):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of getting instance using not-existing instance id.
+
+        <b>Input data:</b>
+        1. id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when instance is not found on the list of instances and status code: 404 with message: '100: Key
+        not found' is returned.
+
+        <b>Steps:</b>
+        1. Get instance using not-existing instance id.
+        """
         step("Check that getting instance with incorrect id causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogInstance.get, instance_id=self.INVALID_ID)
 
     @priority.low
     def test_cannot_update_instance_name(self, catalog_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating instance name.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+
+        <b>Expected results:</b>
+        Test passes when instance is not updated and status code: 400 with message: 'ID and Name fields can not be
+        changed!' is returned.
+
+        <b>Steps:</b>
+        1. Update sample instance name.
+        2. Check that the instance was not updated.
+        """
         step("Check that it's not possible to update instance name")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS,
@@ -137,23 +187,79 @@ class TestCatalogInstances:
                                      CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_instance.update, field_name="classId", value=self.NEW_CLASS_ID,
                                      prev_value=self.WRONG_PREV_CLASS_ID)
+        step("Check that the instance was not updated")
+        instance = CatalogInstance.get(instance_id=catalog_instance.id)
+        assert catalog_instance == instance
 
     @priority.low
     def test_cannot_update_instance_without_field(self, catalog_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating instance omitting argument: field.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+        4. new classId
+
+        <b>Expected results:</b>
+        Test passes when instance is not updated and status code 400 with error message: 'field field is empty!' is
+        returned.
+
+        <b>Steps:</b>
+        1. Update instance omitting argument: field.
+        """
         step("Check that it's not possible to update instance without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_instance.update, field_name=None, value=self.NEW_CLASS_ID)
+        step("Check that the instance was not updated")
+        instance = CatalogInstance.get(instance_id=catalog_instance.id)
+        assert catalog_instance == instance
 
     @priority.low
     def test_cannot_update_instance_without_value(self, catalog_instance):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating instance omitting argument: value.
+
+        <b>Input data:</b>
+        1. sample catalog template
+        2. sample catalog service
+        3. sample catalog service instance
+
+        <b>Expected results:</b>
+        Test passes when instance is not updated and status code 400 with error message: 'field value is empty!' is
+        returned.
+
+        <b>Steps:</b>
+        1. Update instance omitting argument: value.
+        """
         step("Check that it's not possible to update instance without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      catalog_instance.update, field_name="classId", value=None)
+        step("Check that the instance was not updated")
+        instance = CatalogInstance.get(instance_id=catalog_instance.id)
+        assert catalog_instance == instance
 
     @priority.low
     def test_cannot_update_not_existing_instance(self):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of updating instance giving not-existing instance id.
+
+        <b>Input data:</b>
+        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when instance is not updated and status code 404 with error message: '100: Key not found' is
+        returned.
+
+        <b>Steps:</b>
+        1. Update instance giving not-existing instance id.
+        """
         step("Check that it's not possible to update not-existing instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.update_instance, instance_id=self.INVALID_ID, field_name="classId",
@@ -161,6 +267,20 @@ class TestCatalogInstances:
 
     @priority.low
     def test_cannot_delete_not_existing_instance(self):
+        """
+        <b>Description:</b>
+        Checks if there is no possibility of deleting instance giving not-existing instance id.
+
+        <b>Input data:</b>
+        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+
+        <b>Expected results:</b>
+        Test passes when instance is not deleted and status code 404 with error message: '100: Key not found' is
+        returned.
+
+        <b>Steps:</b>
+        1. Delete instance giving not-existing instance id.
+        """
         step("Check that it's not possible to delete not-existing instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.delete_instance, instance_id=self.INVALID_ID)
