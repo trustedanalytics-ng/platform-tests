@@ -253,10 +253,13 @@ def create_service(*, client: HttpClient, name: str=None, plan_id: str, offering
     if params is not None:
         metadata = metadata + [{"key": key, "value": val} for key, val in params.items()]
     body = {
-        "classId": offering_id,
         "metadata": metadata,
         "type": "SERVICE"
     }
+    if client.url.rstrip('/').endswith(('/rest', '/api/v1', '/api/v2')):
+        body["classId"] = offering_id
+    else:
+        body["offeringId"] = offering_id
     if name is not None:
         body["name"] = name
     return client.request(method=HttpMethod.POST, path="services", body=body, msg="Create service instance")
