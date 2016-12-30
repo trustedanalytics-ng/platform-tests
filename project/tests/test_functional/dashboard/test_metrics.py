@@ -29,7 +29,7 @@ logged_components = (TAP.metrics_grafana, TAP.api_service,)
 pytestmark = [pytest.mark.components(TAP.metrics_grafana)]
 
 expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
-                         "private_datasets", "public_datasets"]
+                         "datasets"]
 
 
 @pytest.mark.usefixtures("open_tunnel")
@@ -46,13 +46,42 @@ class TestMetrics(object):
 
     @priority.high
     def test_metrics_contains_all_values(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show values of expected metrics: "apps_running", "apps_down", "users_org",
+        "service_usage", "memory_usage_org", "cpu_usage_org", "datasets".
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when all metrics on Dashboard show values in correct formats.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metrics response contains all expected values: "apps_running", "apps_down", "users_org",
+        "service_usage", "memory_usage_org", "cpu_usage_org", "datasets".
+        """
         step("Check that metrics response contains all expected values")
         ref_metrics, grafana_metrics = org_metrics
         assert_dict_values_set(vars(grafana_metrics), expected_metrics_keys)
 
-    @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
     @priority.low
     def test_apps_running(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct value of running applications.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of running applications on Dashboard shows correct value.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of running applications on Dashboard shows correct value.
+        """
         step("Get running apps and check that apps down metrics is correct")
         ref_metrics, grafana_metrics = org_metrics
         apps = ref_metrics.apps_running
@@ -60,9 +89,23 @@ class TestMetrics(object):
         assert apps == dashboard_running_apps, "\nRunning apps in dashboard received from grafana: {}, " \
                                                "expected from reference: {}".format(dashboard_running_apps, apps)
 
-    @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
+    @pytest.mark.bugs("DPNG-14003 [dashboard] Number of applications doesn't equal actual apps amount")
     @priority.low
     def test_apps_down(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct value of stopped applications.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of stopped applications on Dashboard shows correct value.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of stopped applications on Dashboard shows correct value.
+        """
         step("Get down apps and check that apps down metrics is correct")
         ref_metrics, grafana_metrics = org_metrics
         apps = ref_metrics.apps_down
@@ -72,6 +115,20 @@ class TestMetrics(object):
 
     @priority.low
     def test_user_count(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct number of user accounts.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of user accounts on Dashboard shows correct value.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of user accounts on Dashboard shows correct value.
+        """
         step("Get org users and check that total users metrics is correct")
         ref_metrics, grafana_metrics = org_metrics
         user_list = ref_metrics.users_org
@@ -79,9 +136,23 @@ class TestMetrics(object):
         assert user_list == dashboard_total_users, "\nUsers in dashboard received from grafana: {}, expected from" \
                                                    "reference: {}".format(dashboard_total_users, user_list)
 
-    @pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
+    @pytest.mark.skip("DPNG-14019 [api-tests] Amend test_service_usage to compare running services amount")
     @priority.high
     def test_service_usage(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct number of running services.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of running services on Dashboard shows correct value.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of running services on Dashboard shows correct value.
+        """
         step("Get services and check that service usage metrics is correct")
         ref_metrics, grafana_metrics = org_metrics
         services = ref_metrics.service_usage
@@ -91,6 +162,20 @@ class TestMetrics(object):
 
     @priority.low
     def test_cpu_usage(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct value of CPU usage.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of CPU usage on Dashboard shows correct value within error margin.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of CPU usage on Dashboard shows correct value within error margin.
+        """
         step("Get CPU and check that cpu usage metrics is correct")
         ref_metrics, grafana_metrics = org_metrics
         cpu_metrics_ref = ref_metrics.cpu_usage_org
@@ -101,6 +186,20 @@ class TestMetrics(object):
 
     @priority.low
     def test_memory_usage(self, org_metrics):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct value of memory usage.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of memory usage on Dashboard shows correct value within error margin.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of memory usage on Dashboard shows correct value within error margin.
+        """
         step("Get memory and check that memory usage metrics is correct")
         ref_metrics, grafana_metrics = org_metrics
         memory_metrics_ref = ref_metrics.memory_usage_org
@@ -110,8 +209,22 @@ class TestMetrics(object):
             "{}".format(memory_metrics_dashboard, memory_metrics_ref)
 
     @priority.low
-    @pytest.mark.skip("DPNG-11818 [data-catalog] Service metrics instrumentation")
+    @pytest.mark.skip("DPNG-10769 [api-tests] Dashboard metrics - tests for datasets")
     def test_data_metrics(self, core_org):
+        """
+        <b>Description:</b>
+        Checks if metrics on Dashboard show correct number of datasets.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes when metric of datasets on Dashboard shows correct value.
+
+        <b>Steps:</b>
+        1. Gather metrics from grafana and reference sources.
+        2. Check that metric of datasets on Dashboard shows correct value.
+        """
         step("Get datasets and check datasetCount, privateDatasets, publicDatasets metrics are correct")
         public_datasets = []
         private_datasets = []

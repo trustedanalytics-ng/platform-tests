@@ -29,7 +29,10 @@ def api_get_metric(client=None, panel_id=None, metrics_level=None):
     step = "2"
     headers_referer = "{}/dashboard-solo/db/organization-dashboard?panelId={}&from=now&to=now".format(client.url, panel_id)
     dashboard_queries = {
+        "1": "tap_catalog_counts{component='applicationsRunning'}",
+        "2": "tap_catalog_counts{component='applicationsDown'}",
         "3": "tap_usermanagement_counts{component='users'}",
+        "4": "tap_catalog_counts{component='serviceInstancesRunning'}",
         "5": "sum(container_memory_usage_bytes{image!=''})",
         "6": "sum(sum by (kubernetes_pod_name)  (rate(container_cpu_usage_seconds_total{image!=''}[2m]))) / sum(machine_cpu_cores) "
     }
