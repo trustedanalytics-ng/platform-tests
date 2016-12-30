@@ -33,7 +33,6 @@ from modules.tap_object_model import Application, Organization, ServiceOffering,
     ScoringEngineModel, ModelArtifact
 from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
-from modules.test_names import generate_test_object_name
 from tap_component_config import api_service
 
 
@@ -433,6 +432,32 @@ def kafka2hdfs_app(class_context, kafka_instance, hdfs_instance, kerberos_instan
                            client=api_service_admin_client)
 
     log_fixture("kafka2hdfs: Check the application is running")
+    app.ensure_running()
+    return app
+
+
+@pytest.fixture(scope="class")
+def hbase_reader_app(class_context, kerberos_instance, api_service_admin_client):
+    log_fixture("hbase_reader: download libraries")
+    hbase_reader_repo = AppSources.get_repository(repo_name=TapGitHub.hbase_api_example, repo_owner=TapGitHub.intel_data)
+
+    log_fixture("Package hbase_reader app")
+
+    build_path = os.path.join(hbase_reader_repo.path, "deploy")
+    hbase_reader_repo.run_build_sh(cwd=build_path, command="./pack.sh")
+    app_path = os.path.join(build_path, "hbase-java-api-example-0.1.1.tar")
+
+    log_fixture("hbase_reader: update manifest")
+    p_a = PrepApp(build_path)
+    manifest_params = {"bindings": [kerberos_instance.name]}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("hbase_reader: push application")
+    app = Application.push(class_context, app_path=app_path,
+                           name=p_a.app_name, manifest_path=manifest_path,
+                           client=api_service_admin_client)
+
+    log_fixture("hbase_reader: Check the application is running")
     app.ensure_running()
     return app
 
