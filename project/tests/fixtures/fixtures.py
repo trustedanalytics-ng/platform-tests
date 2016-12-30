@@ -23,7 +23,7 @@ import pytest
 import config
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, \
-    TapComponent
+    TapComponent, TapGitHub
 from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
@@ -247,6 +247,36 @@ def mongodb_instance(session_context, api_service_admin_client):
     return mysql
 
 
+@pytest.fixture(scope="class")
+def kafka_instance(session_context, api_service_admin_client):
+    log_fixture("create_kafka_instance")
+    kafka = ServiceInstance.create_with_name(context=session_context, offering_label=ServiceLabels.KAFKA,
+                                     plan_name=ServicePlan.SHARED, client=api_service_admin_client)
+    log_fixture("Check the service instance is running")
+    kafka.ensure_running()
+    return kafka
+
+
+@pytest.fixture(scope="class")
+def hdfs_instance(session_context, api_service_admin_client):
+    log_fixture("create_hdfs_instance")
+    hdfs = ServiceInstance.create_with_name(context=session_context, offering_label=ServiceLabels.HDFS,
+                                            plan_name=ServicePlan.ENCRYPTED_DIR, client=api_service_admin_client)
+    log_fixture("Check the service instance is running")
+    hdfs.ensure_running()
+    return hdfs
+
+
+@pytest.fixture(scope="class")
+def kerberos_instance(session_context, api_service_admin_client):
+    log_fixture("create_kerberos_instance")
+    kerberos = ServiceInstance.create_with_name(context=session_context, offering_label=ServiceLabels.KERBEROS,
+                                     plan_name=ServicePlan.SHARED, client=api_service_admin_client)
+    log_fixture("Check the service instance is running")
+    kerberos.ensure_running()
+    return kerberos
+
+
 @pytest.fixture(scope="module")
 def app_bound_mongodb(module_context, mongodb_instance, api_service_admin_client):
     log_fixture("mongodb_app: download libraries")
@@ -353,6 +383,58 @@ def app_bound_psql(module_context, psql_instance, api_service_admin_client):
     log_fixture("psq_app: Check the application is responding")
     db_app.ensure_responding()
     return db_app
+
+
+@pytest.fixture(scope="class")
+def ws2kafka_app(class_context, kafka_instance, api_service_admin_client):
+    log_fixture("ws2kafka: download libraries")
+    ingestion_repo = AppSources.get_repository(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=TapGitHub.intel_data)
+    ws2kafka_path = os.path.join(ingestion_repo.path, TapGitHub.ws2kafka)
+    build_path = os.path.join(ws2kafka_path, "deploy")
+    ingestion_repo.run_build_sh(cwd=build_path, command="./pack.sh")
+    app_path = os.path.join(build_path, "ws2kafka.tar.gz")
+
+    log_fixture("ws2kafka: update manifest")
+    p_a = PrepApp(build_path)
+    manifest_params = {"bindings": [kafka_instance.name]}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("ws2kafka: push application")
+    app = Application.push(class_context, app_path=app_path,
+                           name=p_a.app_name, manifest_path=manifest_path,
+                           client=api_service_admin_client)
+
+    log_fixture("ws2kafka: Check the application is running")
+    app.ensure_running()
+    return app
+
+
+@pytest.fixture(scope="class")
+def kafka2hdfs_app(class_context, kafka_instance, hdfs_instance, kerberos_instance, api_service_admin_client):
+    log_fixture("kafka2hdfs: download libraries")
+    ingestion_repo = AppSources.get_repository(repo_name=TapGitHub.ws_kafka_hdfs, repo_owner=TapGitHub.intel_data)
+    kafka2hdfs_path = os.path.join(ingestion_repo.path, TapGitHub.kafka2hdfs)
+
+    log_fixture("Package kafka2hdfs app")
+    ingestion_repo.compile_gradle(working_directory=kafka2hdfs_path)
+
+    build_path = os.path.join(kafka2hdfs_path, "deploy")
+    ingestion_repo.run_build_sh(cwd=build_path, command="./pack.sh")
+    app_path = os.path.join(build_path, "kafka2hdfs.tar")
+
+    log_fixture("kafka2hdfs: update manifest")
+    p_a = PrepApp(build_path)
+    manifest_params = {"bindings": [kafka_instance.name, hdfs_instance.name, kerberos_instance.name]}
+    manifest_path = p_a.update_manifest(params=manifest_params)
+
+    log_fixture("kafka2hdfs: push application")
+    app = Application.push(class_context, app_path=app_path,
+                           name=p_a.app_name, manifest_path=manifest_path,
+                           client=api_service_admin_client)
+
+    log_fixture("kafka2hdfs: Check the application is running")
+    app.ensure_running()
+    return app
 
 
 @pytest.fixture(scope="class")

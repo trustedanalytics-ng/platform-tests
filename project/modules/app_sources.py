@@ -118,8 +118,12 @@ class AppSources(object):
             logger.info("Switch to branch {}".format(branch_name))
             repo.git.checkout(commit_id, B=branch_name)
 
-    def run_build_sh(self):
-        run("./build.sh", cwd=self.path)
+    def run_build_sh(self, cwd=None, command=None):
+        if command is None:
+            command = "./build.sh"
+        if cwd is None:
+            cwd = self.path
+        run(command, cwd)
 
 
 def github_get_file_content(repository, file_path, owner, ref=None, github_auth=None):
