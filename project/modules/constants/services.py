@@ -71,7 +71,7 @@ class ServicePlan(object):
     CLUSTERED = "clustered"
     CLUSTERED_PERSISTENT = "clustered persistent"
     CREATE_USER_DIRECTORY = "create-user-directory"
-    ENCRYPTED = "encrypted"
+    ENCRYPTED = "encrypted-dir"
     ENCRYPTED_DIR = "encrypted-dir"
     FREE = "free"
     GET_USER_DIRECTORY = "get-user-directory"

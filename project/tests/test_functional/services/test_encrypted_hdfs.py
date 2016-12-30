@@ -15,8 +15,6 @@
 #
 
 import pytest
-import re
-
 from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan
 from modules.hdfs import Hdfs
 from modules.markers import priority, incremental
@@ -27,44 +25,113 @@ logged_components = (TAP.hdfs_broker,)
 pytestmark = [pytest.mark.components(TAP.hdfs_broker)]
 
 
-@pytest.mark.skip(reason="DPNG-11946 [api-tests] Adjust test_encrypted_hdfs to new TAP")
+@pytest.mark.skip(reason="DPNG-13206 - Authentication issue for KMS service")
 @incremental
 @priority.medium
 class TestEncryptedHdfs:
 
-    FILE_CONTENT = "simple content"
-    FILE_NAME = "test_file"
+    def test_0_hdfs_encrypted(self, class_context):
+        """
+        <b>Description:</b>
+        Verify if is it possible to create instance of HDFS in plan Encrypted.
 
-    @classmethod
-    @pytest.fixture(scope="class")
-    def hdfs_instance(cls, class_context, request, test_org, test_space):
-        step("Create Hdfs encrypted instance.")
-        instance = ServiceInstance.api_create_with_plan_name(
-            context=class_context,
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
-            service_label=ServiceLabels.HDFS,
-            service_plan_name=ServicePlan.ENCRYPTED
-        )
-        return instance
+        Test create HDFS instance with plan Encrypted and check that instance running.
 
-    @classmethod
-    @pytest.fixture(scope="class")
-    def hdfs_client(cls):
-        return Hdfs()
+        <b>Input data:</b>
+            HDFS instance
 
-    def test_0_get_zone_path(self, hdfs_instance, hdfs_client):
-        step("List hdfs crypt zones.")
-        output = hdfs_client.list_zones()
-        match = re.search(r"\S*{}\S*".format(hdfs_instance.guid), output, re.MULTILINE)
-        assert match is not None, "No encryption zone for hdfs instance"
-        self.__class__.hdfs_path = match.group(0)
+        <b>Expected results:</b>
+            HDFS instance with plan Encrypted is created and running.
 
-    def test_1_put_file(self, hdfs_client):
+        <b>Steps:</b>
+            1. Create HDFS instance with plan Encrypted
+            2. Check that instance is running
+        """
+        step("Create HDFS instance in plan Plain-Dir")
+        self.__class__.instance_hdfs = ServiceInstance.create_with_name(class_context, offering_label=ServiceLabels.HDFS,
+                                                                       plan_name=ServicePlan.ENCRYPTED)
+        step("Ensure instance is in RUNNING state")
+        self.instance_hdfs.ensure_running()
+
+    def test_1_list_zones(self, test_org):
+        """
+         <b>Description:</b>
+            List all encryption zones and verify if instance is present on list.
+
+        <b>Input data:</b>
+            HDFS instance
+
+        <b>Expected results:</b>
+            HDFS instance is on encryption zones list.
+
+        <b>Steps:</b>
+            1. List encryption zones in HDFS
+            2. Verify if instance is on list
+        """
+        org = test_org
+        self.__class__.hdfs = Hdfs(org=org)
+        zones = self.hdfs.list_zones()
+        assert self.instance_hdfs.id in str(zones)
+
+    def test_2_put_file(self, test_org):
+        """
+         <b>Description:</b>
+            Verify if is it possible to put file into HDFS directory.
+
+        <b>Input data:</b>
+            HDFS instance
+            Sample file
+
+        <b>Expected results:</b>
+            It is possible to put file into HDFS directory
+
+        <b>Steps:</b>
+            1. Put file into HDFS directory
+        """
         step("Put file in hdfs")
-        hdfs_client.put("{}/".format(self.hdfs_path), self.FILE_CONTENT)
+        self.__class__.file = self.hdfs.create_sample_file()
+        self.hdfs.put(file_path=self.file['name'], service_instance_id=self.instance_hdfs.id)
+        paths = self.hdfs.ls(service_instance_id=self.instance_hdfs.id)
+        assert self.file['name'] in str(paths)
 
-    def test_2_read_file(self, hdfs_client):
+    def test_3_read_file(self):
+        """
+        <b>Description:</b>
+            Verify if file in HDFS directory is able to read.
+
+        <b>Input data:</b>
+            HDFS instance
+            Sample file
+
+        <b>Expected resuls:</b>
+            It's able to read file in HDFS directory.
+
+        <b>Steps:</b>
+            1. Read file from HDFS directory
+        """
         step("Read file from hdfs")
-        output = hdfs_client.cat("{}/{}".format(self.hdfs_path, self.FILE_NAME))
-        assert self.FILE_CONTENT == output
+        cat = self.hdfs.cat(service_instance_id=self.instance_hdfs.id, file_name=self.file['name'])
+        assert self.file['content'] in str(cat)
+
+    def test_4_delete_hdfs_service_instance(self):
+        """
+        <b>Description:</b>
+            Delete HDFS instance and check if it is deleted.
+
+        <b>Input data:</b>
+            HDFS instance
+
+        <b>Expected results:</b>
+           HDFS instance is deleted.
+
+        <b>Steps:</b>
+            1. Delete HDFS instance
+            2. Verify if HDFS instance is deleted
+        """
+        step("Stop HDFS instance")
+        self.instance_hdfs.stop()
+        self.instance_hdfs.ensure_stopped()
+        step("Delete HDFS instance")
+        self.instance_hdfs.delete()
+        step("Ensure HDFS instance deleted properly")
+        self.instance_hdfs.ensure_deleted()
