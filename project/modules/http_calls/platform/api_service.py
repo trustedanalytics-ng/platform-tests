@@ -256,7 +256,7 @@ def create_service(*, client: HttpClient, name: str=None, plan_id: str, offering
         "metadata": metadata,
         "type": "SERVICE"
     }
-    if client.url.rstrip('/').endswith(('/rest', '/api/v1', '/api/v2')):
+    if client.url.rstrip('/').endswith(('/api/v1', '/api/v2')):
         body["classId"] = offering_id
     else:
         body["offeringId"] = offering_id
