@@ -255,6 +255,25 @@ class TestAppBase:
         # Fixture finalization
         shutil.rmtree(sample_app_target_directory_with_symlinks, ignore_errors=True)
 
+    @pytest.fixture(scope="class")
+    def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
+        step("Update the manifest")
+        p_a = PrepApp(sample_app_target_directory)
+        manifest_params = {"type" : self.APP_TYPE}
+        manifest_path = p_a.update_manifest(params=manifest_params)
+
+        step("Push application")
+        application = CliApplication.push(class_context, tap_cli=tap_cli, app_type=self.APP_TYPE,
+                                          app_path=sample_app_target_directory,
+                                          name=p_a.app_name, instances=p_a.instances)
+        step("Ensure app is on the app list")
+        application.ensure_on_app_list()
+        step("Ensure app is running")
+        application.ensure_app_state(state=TapEntityState.RUNNING)
+        step("Ensure app is ready")
+        application.ensure_app_is_ready()
+        return application
+
 class TestBadApplication(TestAppBase):
     def test_no_manifest(self, class_context, sample_app_target_directory, tap_cli):
         """Try to push an application, but don't provide the manifest"""
@@ -276,24 +295,6 @@ class TestBadApplication(TestAppBase):
 @pytest.mark.usefixtures("cli_login")
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestPythonCliApp(TestAppBase):
-    @pytest.fixture(scope="class")
-    def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
-        step("Update the manifest")
-        p_a = PrepApp(sample_app_target_directory)
-        manifest_params = {"type" : self.APP_TYPE}
-        manifest_path = p_a.update_manifest(params=manifest_params)
-
-        step("Push application")
-        application = CliApplication.push(class_context, tap_cli=tap_cli, app_type=self.APP_TYPE,
-                                          app_path=sample_app_target_directory,
-                                          name=p_a.app_name, instances=p_a.instances)
-        step("Ensure app is on the app list")
-        application.ensure_on_app_list()
-        step("Ensure app is running")
-        application.ensure_app_state(state=TapEntityState.RUNNING)
-        step("Ensure app is ready")
-        application.ensure_app_is_ready()
-        return application
 
     @priority.high
     def test_push_and_delete_sample_app(self, context, sample_app_target_directory, tap_cli):
@@ -471,31 +472,3 @@ class TestPythonCliApp(TestAppBase):
         """
         step("Check logs")
         assert sample_cli_app.name in sample_cli_app.logs()
-
-
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestGoCliApp(TestPythonCliApp):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-go-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_go_app_url
-    APP_TYPE = TapApplicationType.GO
-    EXPECTED_FILE_LIST = ["main", "run.sh"]
-    APP_URL_MESSAGE = "OK"
-
-
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestJavaCliApp(TestPythonCliApp):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-java-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_java_app_url
-    APP_TYPE = TapApplicationType.JAVA
-    EXPECTED_FILE_LIST = ["tapng-java-sample-app-0.1.0.jar", "run.sh"]
-    APP_URL_MESSAGE = "OK"
-
-
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-class TestNodeJsCliApp(TestPythonCliApp):
-    SAMPLE_APP_TAR_NAME = "tapng-sample-nodejs-app.tar.gz"
-    SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
-    APP_TYPE = TapApplicationType.NODEJS
-    EXPECTED_FILE_LIST = ["server.js", "run.sh", "public", "views", "app", "node_modules", "manifest.yml",
-                          "package.json", "README.md"]
-    APP_URL_MESSAGE = "This is a Cloud Foundry sample application."

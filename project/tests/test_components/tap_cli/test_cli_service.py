@@ -17,7 +17,7 @@
 import pytest
 
 from modules.constants import TapMessage, TapComponent as TAP, TapEntityState, ServiceLabels
-from modules.markers import long, priority
+from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliService, ServiceOffering
 from tests.fixtures.assertions import assert_raises_command_execution_exception
@@ -34,11 +34,11 @@ RELIABLE_OFFERINGS = [
     ServiceLabels.MYSQL,
 ]
 
-
 @pytest.mark.usefixtures("cli_login")
 class TestCliService:
     INVALID_SERVICE_PLAN = "nosuchplan"
     INVALID_SERVICE_NAME = "logstashxyz"
+    KAFKA_AND_HDFS_OFFERINGS = [o for o in offerings_as_parameters if o[0] == "kafka" or o[0] == "hdfs"]
     short = False
 
     @classmethod
@@ -58,44 +58,14 @@ class TestCliService:
                                  plan_name=offering.service_plans[0].name, tap_cli=tap_cli)
 
     @priority.high
-    @pytest.mark.components(TAP.api_service, TAP.cli)
-    def test_create_and_delete_instance(self, context, offering, tap_cli):
-        """
-        <b>Description:</b>
-        Create service instance, check if it's shown in service instances list and remove it.
-
-        <b>Input data:</b>
-        1. Service offering used to create instance
-
-        <b>Expected results:</b>
-        Test passes when instance is created, displayed in service instances list and then successfully deleted.
-
-        <b>Steps:</b>
-        1. Create service instance.
-        2. Verify that service instance is shown on service instances list.
-        3. Delete instance.
-        4. Verify that service instance is not shown on service instances list.
-        """
-        step("Create service instance")
-        instance = CliService.create(context=context, offering_name=offering.label,
-                                     plan_name=offering.service_plans[0].name, tap_cli=tap_cli)
-        step("Check that the service is visible on service list")
-        instance.ensure_on_service_list()
-        step("Stop service instance")
-        instance.stop()
-        instance.ensure_service_state(TapEntityState.STOPPED)
-        step("Delete the instance and check it's no longer on the list")
-        instance.delete()
-        instance.ensure_not_on_service_list()
-
-    @long
-    @priority.low
     @pytest.mark.components(TAP.cli)
-    @pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
-    def test_create_and_delete_instance_all(self, context, service_label, plan_name, tap_cli):
+    @pytest.mark.parametrize("service_label,plan_name", KAFKA_AND_HDFS_OFFERINGS)
+    def test_create_and_delete_instance_of_kafka_and_hdfs(self, context, service_label, plan_name, tap_cli):
         """
         <b>Description:</b>
-        Create service instance, check if it's shown in service instances list and remove it.
+        Service offerings can be divided into two groups - some of them have 'componentType' property set to value
+        'instance' (e.g. kafka) and others have that value set to 'broker' (e.g. hdfs). Create service instance of both
+        type, check if it's shown in service instances list and remove it.
 
         <b>Input data:</b>
         1. Service offering name
