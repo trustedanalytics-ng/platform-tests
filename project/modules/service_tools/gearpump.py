@@ -15,15 +15,16 @@
 #
 
 import json
+
 from retry import retry
 
 import config
 from modules.constants import ServiceLabels
-from modules.tap_object_model import Application, ServiceInstance
 from modules.http_client.client_auth.http_method import HttpMethod
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
-from modules.yarn import Yarn
+from modules.ssh_lib.jump_client import JumpClient
+from modules.tap_object_model import ServiceInstance
 from .gearpump_application import GearpumpApplication
 
 
@@ -40,11 +41,12 @@ class Gearpump(object):
         )
         self.yarn_app_id = None
         self.client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
+        self.ssh_client = None
 
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
         """Set gearpump instance credentials."""
-        response = self.instance.get_credentials()
+        response = self.instance.get_credentials(self.instance.id, self.client)
         credentials = response[0].get("envs")
         self.instance.login = credentials["username"]
         self.instance.password = credentials["password"]
@@ -93,12 +95,35 @@ class Gearpump(object):
         return gearpump_ui_app
 
     def get_yarn_app_status(self):
-        # This functionality changed in new TAP
-        # if self.yarn_app_id is None:
-        #     gearpump_key = ServiceKey.api_create(self.instance.guid)
-        #     self.yarn_app_id = gearpump_key.credentials["yarnApplicationId"]
-        #     gearpump_key.api_delete()
-        # yarn = Yarn()
-        # result = yarn.get_application_details(self.yarn_app_id)
-        # return result["State"]
-        pass
+        """
+        Get yarn_app status.
+        """
+        if self.ssh_client is None:
+            self.set_ssh_client()
+        self.yarn_endpoint = "https://{}.instance.cluster.local:8090/ws/v1/cluster/apps/"
+        if self.yarn_app_id is None:
+            self.get_yarn_id()
+        if config.kerberos:
+            self.yarn_endpoint = self.yarn_endpoint.format("hadoop-master-0")
+        else:
+            self.yarn_endpoint = self.yarn_endpoint.format("hadoop-master-1")
+        url = self.yarn_endpoint + self.yarn_app_id
+        command = ["curl --insecure", url]
+        response = self.ssh_client.execute_ssh_command(command)
+        string = next(i for i in response if 'state' in i)
+        start_json = string.find('{')
+        json_string = string[start_json:]
+        json_obj = json.loads(json_string)
+        return str(json_obj["app"]["state"])
+
+    def get_yarn_id(self):
+        """
+        Get yarn_id from service instance.
+        """
+        response = self.instance.get_credentials(self.instance.id, self.client)
+        credentials = response[0].get("envs")
+        self.yarn_app_id = credentials["yarnApplicationId"]
+
+    def set_ssh_client(self):
+        self.ssh_client = JumpClient(remote_host=config.jumpbox_hostname, remote_username=config.ng_jump_user,
+                                     remote_key_path=config.jumpbox_key_path)

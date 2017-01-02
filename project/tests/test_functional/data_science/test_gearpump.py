@@ -16,8 +16,8 @@
 
 import pytest
 
-from modules.file_utils import download_file
 from modules.constants import ServicePlan, TapComponent as TAP, Urls
+from modules.file_utils import download_file
 from modules.markers import incremental
 from modules.service_tools.gearpump import Gearpump
 from modules.tap_logger import step
@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.service_catalog)]
 
 
 @incremental
+@pytest.mark.usefixtures("open_tunnel")
 class TestGearpumpConsole:
 
     COMPLEXDAG_APP_NAME = "dag"
@@ -49,8 +50,6 @@ class TestGearpumpConsole:
         self.gearpump.go_to_dashboard()
         request.addfinalizer(self.gearpump.go_to_console)
 
-    @pytest.mark.bugs("DPNG-12899 'Cannot parse ApiServiceInstance list: key PLAN_ID not found!' ")
-    @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
     def test_0_create_gearpump_instance(self, class_context, test_org):
         """
         <b>Description:</b>
@@ -137,7 +136,7 @@ class TestGearpumpConsole:
         step("Check that application is stopped")
         assert not self.dag_app.is_started
 
-    @pytest.mark.bugs("DPNG-8548 'POC Using Yarn REST API in platform-tests' ")
+    @pytest.mark.bugs("DPNG-13932 '[gui-tests] Failed to delete Apache Gearpump instance' ")
     def test_4_delete_gearpump_instance(self):
         """
         <b>Description:</b>
