@@ -191,6 +191,27 @@ def sample_java_app(class_context):
     app.ensure_responding()
     return app
 
+@pytest.fixture(scope="class")
+def compiled_sample_go_app():
+    log_fixture("compiled_sample_go_app: download libraries")
+    test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_GO_APP)
+    test_app_sources.run_build_sh()
+    return test_app_sources.path
+
+@pytest.fixture(scope="class")
+def sample_go_app(class_context):
+    log_fixture("sample_go_app: Compile go app")
+    if not os.path.exists(ApplicationPath.SAMPLE_GO_APP_TAR):
+        compiled_sample_go_app()
+
+    app = push_app_from_tar(class_context, ApplicationPath.SAMPLE_GO_APP)
+
+    log_fixture("sample_go_app: Check the application is running")
+    app.ensure_running()
+    log_fixture("sample_go_app: Check the application is responding")
+    app.ensure_responding()
+    return app
+
 
 @pytest.fixture(scope="class")
 def space_shuttle_application(class_context):

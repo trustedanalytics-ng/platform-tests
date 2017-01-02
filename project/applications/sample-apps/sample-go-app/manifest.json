@@ -1,0 +1,5 @@
+{
+    "type": "GO",
+    "name": "sample-go-app",
+    "instances": 1
+}

@@ -38,7 +38,7 @@ logger.setLevel(logging.DEBUG)
 
 def setup():
     logger.info('Building sample apps')
-    for app_dir in [ApplicationPath.SAMPLE_JAVA_APP, ApplicationPath.SAMPLE_PYTHON_APP]:
+    for app_dir in [ApplicationPath.SAMPLE_JAVA_APP, ApplicationPath.SAMPLE_PYTHON_APP, ApplicationPath.SAMPLE_GO_APP]:
         run(['./build.sh'], cwd=app_dir)
 
 

@@ -1,0 +1,31 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "YkJAqF0YuAL52s33dYXgrLVSlWQ=",
+			"path": "github.com/gocraft/web",
+			"revision": "12b4630b4fee3e485b334c4d544bd9dd68fb3d4f",
+			"revisionTime": "2016-05-03T19:16:34Z"
+		},
+		{
+			"checksumSHA1": "BoXdUBWB8UnSlFlbnuTQaPqfCGk=",
+			"path": "github.com/op/go-logging",
+			"revision": "970db520ece77730c7e4724c61121037378659d9",
+			"revisionTime": "2016-03-15T20:05:05Z"
+		},
+		{
+			"checksumSHA1": "GQgItWYphUP10cZTCH1GQB1oTR4=",
+			"path": "github.com/trustedanalytics/tapng-go-common/http",
+			"revision": "329f02b7729c04cfd9fdad9ca8acc7f0513f19e4",
+			"revisionTime": "2016-07-20T09:43:34Z"
+		},
+		{
+			"checksumSHA1": "Ka/efssR1AekoBuWWQuilDydAvM=",
+			"path": "github.com/trustedanalytics/tapng-go-common/logger",
+			"revision": "329f02b7729c04cfd9fdad9ca8acc7f0513f19e4",
+			"revisionTime": "2016-07-20T09:43:34Z"
+		}
+	],
+	"rootPath": "github.com/trustedanalytics/platform-tests/project/applications/sample-apps/sample-go-app"
+}

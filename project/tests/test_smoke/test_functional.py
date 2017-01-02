@@ -33,7 +33,6 @@ from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tap_component_config import offerings_as_parameters
 from tests.fixtures.assertions import assert_dict_values_set
 
-
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
                      TAP.hbase_broker, TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
@@ -69,7 +68,7 @@ def test_login():
     assert orgs_list is not None
 
 
-@pytest.fixture(params=['sample_python_app', 'sample_java_app'])
+@pytest.fixture(params=['sample_python_app', 'sample_java_app', 'sample_go_app'])
 def sample_app(request):
     return request.getfuncargvalue(request.param)
 
