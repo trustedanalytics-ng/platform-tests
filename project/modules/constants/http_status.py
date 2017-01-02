@@ -208,6 +208,7 @@ class TemplateRepositoryHttpStatus(HttpStatus):
     MSG_UUID_CANNOT_BE_EMPTY = "uuid can't be empty!"
     MSG_CANT_FIND_TEMPLATE = "can't find template by id: {}"
     MSG_REMOVE_TEMPLATE_FORBIDDEN = "removing template {} is forbidden"
+    MSG_TEMPLATE_EXISTS = "Template with Id: {} already exists!"
 
 
 class CatalogHttpStatus(HttpStatus):

@@ -113,7 +113,6 @@ class TestTemplateRepository:
         template = Template.get(template_id=sample_template.id)
         assert template == sample_template
 
-    @pytest.mark.bugs("DPNG-13917 No meaningful error message for http status 409 in template-repository")
     @priority.low
     def test_cannot_create_template_with_existing_id(self, context, sample_template):
         """
@@ -132,10 +131,10 @@ class TestTemplateRepository:
         3. Verify that HTTP response status code is 409 with proper message.
         """
         step("Attempt to create a template with existing id causes an error")
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
+        expected_msg = TemplateRepositoryHttpStatus.MSG_TEMPLATE_EXISTS.format(sample_template.id)
+        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, expected_msg,
                                      Template.create, context, template_id=sample_template.id)
 
-    @pytest.mark.bugs("DPNG-13917 No meaningful error message for http status 409 in template-repository")
     @priority.low
     def test_cannot_create_template_with_generic_app_body(self, context, generic_application_template_id, other_params):
         """
@@ -157,11 +156,11 @@ class TestTemplateRepository:
         step("Attempt to create a template with generic application template body causes an error")
         template = Template.get_parsed(template_id=generic_application_template_id, instance_id=self.INSTANCE_ID,
                                        optional_params=other_params)
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
+        expected_msg = TemplateRepositoryHttpStatus.MSG_TEMPLATE_EXISTS.format(template.id)
+        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, expected_msg,
                                      Template.create, context, template_id=template.id,
                                      body=template.components)
 
-    @pytest.mark.bugs("DPNG-13917 No meaningful error message for http status 409 in template-repository")
     @priority.low
     def test_cannot_create_template_with_generic_svc_body(self, context, generic_service_template_id, other_params):
         """
@@ -183,7 +182,8 @@ class TestTemplateRepository:
         step("Attempt to create a template with generic service template body causes an error")
         template = Template.get_parsed(template_id=generic_service_template_id, instance_id=self.INSTANCE_ID,
                                        optional_params=other_params)
-        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, "",
+        expected_msg = TemplateRepositoryHttpStatus.MSG_TEMPLATE_EXISTS.format(template.id)
+        assert_raises_http_exception(HttpStatus.CODE_CONFLICT, expected_msg,
                                      Template.create, context, template_id=template.id,
                                      body=template.components)
 
