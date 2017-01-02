@@ -83,7 +83,7 @@ class HttpSession(object):
         response = self._session.send(request, timeout=timeout)
         log_http_response(response)
 
-        if raise_exception and not response.ok and "session_expired" not in response.text:
+        if raise_exception and not response.ok and "session_expired" != response.text.strip():
             raise UnexpectedResponseError(response.status_code, response.text)
 
         if raw_response is True:

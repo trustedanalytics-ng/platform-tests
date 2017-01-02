@@ -64,7 +64,7 @@ class HttpClient(object):
             raise_exception=raise_exception
         )
 
-        if "session_expired" in format(response):
+        if "session_expired" == format(response).strip():
             self._auth.authenticate()
             return self._auth.session.request(
                 method=method,
