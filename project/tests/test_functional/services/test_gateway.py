@@ -25,6 +25,7 @@ from modules.markers import incremental, priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
 from modules.websocket_client import WebsocketClient
+from modules import test_names
 from tests.fixtures import assertions
 
 logged_components = (TAP.gateway, TAP.service_catalog)
@@ -41,6 +42,7 @@ class TestGateway:
         step("Create gateway instance")
         gateway_instance = ServiceInstance.create_with_name(
             class_context,
+            name=test_names.generate_test_object_name(separator="", short=True),
             offering_label=ServiceLabels.GATEWAY,
             plan_name=ServicePlan.SINGLE,
             client=test_org_user_client
@@ -50,14 +52,16 @@ class TestGateway:
         self.__class__.gateway_instance = gateway_instance
         self.__class__.gateway_app = validator.application
 
-    @pytest.mark.skip("DPNG-11499 Expose no-broker specific service")
-    def test_1_send_message_to_gateway_app_instance(self):
+    def test_1_send_message_to_gateway_instance(self, test_org_user_client):
+        step("Expose service instance url")
+        urls = ServiceInstance.expose_urls(service_id=self.gateway_instance.id, client=test_org_user_client)
+        ServiceInstance.ensure_responding(url=urls[0])
         step("Retrieve oauth token")
         http_client = HttpClientFactory.get(ServiceConfigurationProvider.get())
         token = http_client._auth._token_header
-        step("Check communication with gateway app")
+        step("Check communication with gateway instance")
         header = {"Authorization": "{}".format(token)}
-        ws_url = "{}://{}/ws".format(WebsocketClient.WS, self.gateway_app.urls[0])
+        ws_url = "{}/ws".format(urls[0].replace("http", WebsocketClient.WS))
         try:
             ws = WebsocketClient(ws_url, headers=header)
             ws.send("test")
