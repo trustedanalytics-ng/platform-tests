@@ -195,9 +195,9 @@ class TestServiceInstance:
         """
         Test ensure_created method with success
         """
-        self.mock_api_service.get_services.side_effect = [self.get_service_list_with_state(self.REQUESTED),
-                                                          self.get_service_list_with_state(self.STARTING),
-                                                          self.get_service_list_with_state(self.RUNNING)]
+        self.mock_api_service.get_service.side_effect = [self.get_service_with_state(self.REQUESTED),
+                                                         self.get_service_with_state(self.STARTING),
+                                                         self.get_service_with_state(self.RUNNING)]
         service_instance_requested.ensure_running()
         assert service_instance_requested.state == self.RUNNING
 
@@ -208,9 +208,9 @@ class TestServiceInstance:
         """
         Test ensure_created method with failure
         """
-        self.mock_api_service.get_services.side_effect = [self.get_service_list_with_state(self.REQUESTED),
-                                                          self.get_service_list_with_state(self.STARTING),
-                                                          self.get_service_list_with_state(self.FAILURE)]
+        self.mock_api_service.get_service.side_effect = [self.get_service_with_state(self.REQUESTED),
+                                                         self.get_service_with_state(self.STARTING),
+                                                         self.get_service_with_state(self.FAILURE)]
         with pytest.raises(ServiceInstanceCreationFailed):
             service_instance_requested.ensure_running()
         assert service_instance_requested.state == self.FAILURE
@@ -222,8 +222,8 @@ class TestServiceInstance:
         """
         Test service instance cleanup
         """
-        self.mock_api_service.get_services.side_effect = [self.get_service_list_with_state(self.RUNNING),
-                                                          self.get_service_list_with_state(self.STOPPED)]
+        self.mock_api_service.get_service.side_effect = [self.get_service_with_state(self.RUNNING),
+                                                         self.get_service_with_state(self.STOPPED)]
         service_instance_requested.cleanup()
         self.mock_api_service.delete_service.assert_called_with(client=service_instance_requested._client,
                                                                 service_id=service_instance_requested.id)

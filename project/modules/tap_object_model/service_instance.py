@@ -183,8 +183,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
                    offering_label=response.get("serviceName", None), url=url, client=client)
 
     def _refresh(self, client: HttpClient=None):
-        instances = self.get_list(client=self._get_client(client))
-        this_instance = next((i for i in instances if i.id == self.id), None)
+        this_instance = self.get(service_id=self.id, client=self._get_client(client))
         assert this_instance is not None, "Instance {} not found on the list".format(self.name)
         self.state = this_instance.state
 
