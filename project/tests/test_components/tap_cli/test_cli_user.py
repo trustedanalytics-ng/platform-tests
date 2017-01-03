@@ -27,7 +27,6 @@ from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_r
 logged_components = (TAP.user_management,)
 
 
-@pytest.mark.bugs("DPNG-10189 Make smtp secret configurable during deployment")
 class TestCliInvitationsShort:
     SHORT = True
 
@@ -42,7 +41,6 @@ class TestCliInvitationsShort:
     def user(self, context):
         return onboard(context=context, check_email=False)
 
-    @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
     @priority.high
     @pytest.mark.components(TAP.cli)
     def test_invite_user(self, context, tap_cli):
@@ -71,6 +69,7 @@ class TestCliInvitationsShort:
 
     @priority.medium
     @pytest.mark.components(TAP.cli)
+    @pytest.mark.bugs("DPNG-13597 [api-tests] Sent invitation is not on pending list")
     def test_sent_invitation_is_on_pending_list(self, tap_cli, invitation):
         """
         <b>Description:</b>
@@ -90,9 +89,9 @@ class TestCliInvitationsShort:
         invitation = next((i for i in pending_invitations if i == invitation), None)
         assert invitation is not None, "Sent invitation not found on pending invitations list"
 
-    @pytest.mark.bugs("DPNG-11762 [TAP_NG] 504 Gateway Time-out when adding new user")
     @priority.high
     @pytest.mark.components(TAP.cli, TAP.user_management)
+    @pytest.mark.bugs("DPNG-13587 500 is returned when trying to delete user")
     def test_delete_user(self, tap_cli, user):
         """
         <b>Description:</b>
@@ -115,6 +114,7 @@ class TestCliInvitationsShort:
 
     @priority.medium
     @pytest.mark.components(TAP.cli)
+    @pytest.mark.bugs("DPNG-13593 [api-tests] Could not delete user invitation")
     def test_delete_invitation(self, tap_cli, invitation):
         """
         <b>Description:</b>
