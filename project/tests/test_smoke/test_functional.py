@@ -26,8 +26,9 @@ from modules.http_client.configuration_provider.application import ApplicationCo
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Transfer, User, TestSuite, ServiceInstance, Metrics, Organization
+from modules.tap_object_model import DataSet, Transfer, User, TestRun, ServiceInstance, Metrics, Organization
 from modules.tap_object_model.flows import onboarding
+from modules.tap_object_model.platform_tests import TestSuite
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tap_component_config import offerings_as_parameters
 from tests.fixtures.assertions import assert_dict_values_set
@@ -330,43 +331,27 @@ def test_push_db_app_and_check_response(sample_db_app):
     assert response.status_code == 200
 
 
-@pytest.mark.skip(reason="DPNG-11944 [api-tests] adjust test_platform_tests to new TAP")
 @pytest.mark.components(TAP.platform_tests)
-def test_start_tests_or_get_suite_in_progress():
+def test_get_platform_tests_suites():
     """
     <b>Description:</b>
-    Checks if platform tests functionality runs on the platform.
+    Checks if platform tests suites can be retrieved.
 
     <b>Input data:</b>
-    1. Username.
-    2. User password.
+    no input data
 
     <b>Expected results:</b>
-    Test passes when platform tests can be started and tests are in progress state.
+    At least one test suite is retrieved with at least one test.
 
     <b>Steps:</b>
-    1. Create new test instance.
-    2. Verify tests suite is in progress.
-    3. Verify test results are not None
+    1. Get test suites.
+    2. Verify there is at least one test suite.
+    3. Verify there is at least one test in first test suite.
     """
-    step("Start tests")
-    try:
-        new_test = TestSuite.api_create()
-        step("New test suite has been started")
-        suite_id = new_test.suite_id
-        assert new_test.state == TestSuite.IN_PROGRESS, "New suite state is {}".format(new_test.state)
-    except UnexpectedResponseError as e:
-        step("Another suite is already in progress")
-        assert e.status == PlatformTestsHttpStatus.CODE_TOO_MANY_REQUESTS
-        assert PlatformTestsHttpStatus.MSG_RUNNER_BUSY in e.error_message
-        step("Get list of test suites and retrieve suite in progress")
-        tests = TestSuite.api_get_list()
-        test_in_progress = next((t for t in tests if t.state == TestSuite.IN_PROGRESS), None)
-        assert test_in_progress is not None, "Cannot create suite, although no other suite is in progress"
-        suite_id = test_in_progress.suite_id
-    step("Get suite details")
-    created_test_results = TestSuite.api_get_test_suite_results(suite_id)
-    assert created_test_results is not None
+    step("Get list of test suites")
+    suites = TestSuite.api_get_test_suites()
+    assert len(suites) > 0, "No test suites."
+    assert len(suites[0].tests) > 0, "No test in first test suite."
 
 
 @priority.high

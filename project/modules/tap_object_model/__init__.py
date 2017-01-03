@@ -44,7 +44,7 @@ from .metrics import Metrics
 from .template import Template
 from .model_artifact import ModelArtifact
 from .organization import Organization
-from .platform_tests import TestSuite
+from .platform_tests import TestRun
 from .platform_snapshot import PlatformSnapshot
 from .binding import Binding
 from .scoring_engine_model import ScoringEngineModel

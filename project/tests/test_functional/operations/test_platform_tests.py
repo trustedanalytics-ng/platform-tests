@@ -20,7 +20,7 @@ from modules.constants.http_status import PlatformTestsHttpStatus
 from modules.exceptions import UnexpectedResponseError
 from modules.markers import incremental, priority
 from modules.tap_logger import step
-from modules.tap_object_model import TestSuite
+from modules.tap_object_model import TestRun
 
 logged_components = (TAP.platform_tests,)
 pytestmark = [pytest.mark.components(TAP.platform_tests)]
@@ -30,54 +30,54 @@ pytestmark = [pytest.mark.components(TAP.platform_tests)]
 @priority.high
 class TestSelfTests:
 
-    def test_1_start_self_tests_or_get_suite_in_progress(self):
+    def test_1_start_self_tests_or_get_one_in_progress(self):
         """
         <b>Description:</b>
-        Tries to create new test suite if no test suite is running.
-        If some test suits are running its status is checked.
+        Tries to create new test run if no test run is running.
+        If some test runs are running its status is checked.
 
         <b>Input data:</b>
         no input data
 
         <b>Expected results:</b>
-        New test suite is created, it's status is running.
+        New test run is created, it's status is running.
 
         <b>Steps:</b>
-        1. Create new test suite.
+        1. Create new test run.
         2. Verify that its status is running.
-        3. If other suite is in progress inform user, and check does tests running in suite exist.
+        3. If other run is in progress inform user, and check does tests running in tests runs exist.
         """
         step("Start tests")
         try:
-            new_test = TestSuite.api_create()
+            new_test = TestRun.api_create()
             step("New test suite has been started")
-            self.__class__.suite_id = new_test.suite_id
-            assert new_test.state == TestSuite.IN_PROGRESS, "New suite state is {}".format(new_test.state)
+            self.__class__.run_id = new_test.run_id
+            assert new_test.state == TestRun.IN_PROGRESS, "New test run state is {}".format(new_test.state)
         except UnexpectedResponseError as e:
-            step("Another suite is already in progress")
+            step("Another run is already in progress")
             assert e.status == PlatformTestsHttpStatus.CODE_TOO_MANY_REQUESTS
             assert PlatformTestsHttpStatus.MSG_RUNNER_BUSY in e.error_message
-            step("Get list of test suites and retrieve suite in progress")
-            tests = TestSuite.api_get_list()
-            test_in_progress = next((t for t in tests if t.state == TestSuite.IN_PROGRESS), None)
-            assert test_in_progress is not None, "Cannot create suite, although no other suite is in progress"
-            self.__class__.suite_id = test_in_progress.suite_id
+            step("Get list of test runs and retrieve run in progress")
+            tests = TestRun.api_get_test_runs()
+            test_in_progress = next((t for t in tests if t.state == TestRun.IN_PROGRESS), None)
+            assert test_in_progress is not None, "Cannot create test run, although no other run is in progress"
+            self.__class__.run_id = test_in_progress.run_id
 
-    def test_2_get_suite_details(self):
+    def test_2_get_test_run_details(self):
         """
         <b>Description:</b>
-        Gets test suite details.
+        Gets test run details.
 
         <b>Input data:</b>
         no input data
 
         <b>Expected results:</b>
-        Verifies that results created by test suite are not None.
+        Verifies that results created by test run are not None.
 
         <b>Steps:</b>
-        1. Get results of test suite.
+        1. Get results of test run.
         2. Verify that results are not None.
         """
-        step("Get suite details")
-        created_test_results = TestSuite.api_get_test_suite_results(self.suite_id)
+        step("Get test run details")
+        created_test_results = TestRun.api_get_test_run(self.run_id)
         assert created_test_results is not None

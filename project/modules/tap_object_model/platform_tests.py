@@ -20,13 +20,13 @@ import config
 from modules.http_calls.platform import platform_tests
 
 
-class TestSuite(object):
+class TestRun:
 
     IN_PROGRESS = "IN_PROGRESS"
 
-    def __init__(self, suite_id, state=None, start_date=None, end_date=None, tests_all=None, tests_finished=None,
+    def __init__(self, run_id, state=None, start_date=None, end_date=None, tests_all=None, tests_finished=None,
                  tests=None):
-        self.suite_id = suite_id
+        self.run_id = run_id
         self.state = state
         self.start_date = start_date
         self.end_date = end_date
@@ -35,29 +35,29 @@ class TestSuite(object):
         self.tests = tests
 
     @classmethod
-    def _from_api_response(cls, suite_info):
+    def _from_api_response(cls, run_info):
         return cls(
-            suite_id=suite_info["suiteId"],
-            state=suite_info.get("state"),
-            start_date=suite_info.get("startDate"),
-            end_date=suite_info.get("endDate"),
-            tests_all=suite_info.get("testsAll"),
-            tests_finished=suite_info.get("testsFinished"),
-            tests=suite_info.get("tests", [])
+            run_id=run_info["suiteId"],
+            state=run_info.get("state"),
+            start_date=run_info.get("startDate"),
+            end_date=run_info.get("endDate"),
+            tests_all=run_info.get("testsAll"),
+            tests_finished=run_info.get("testsFinished"),
+            tests=run_info.get("tests", [])
         )
 
     @classmethod
-    def api_get_list(cls, client=None):
-        response = platform_tests.api_get_test_suites(client=client)
-        test_suites = []
-        for suite_info in response:
-            test = cls._from_api_response(suite_info)
-            test_suites.append(test)
-        return test_suites
+    def api_get_test_runs(cls, client=None):
+        response = platform_tests.api_get_test_runs(client=client)
+        test_runs = []
+        for run_info in response:
+            test = cls._from_api_response(run_info)
+            test_runs.append(test)
+        return test_runs
 
     @classmethod
-    def api_get_test_suite_results(cls, suite_id, client=None):
-        response = platform_tests.api_get_test_suite_results(suite_id, client=client)
+    def api_get_test_run(cls, run_id, client=None):
+        response = platform_tests.api_get_test_run(run_id, client=client)
         return cls._from_api_response(response)
 
     @classmethod
@@ -66,10 +66,37 @@ class TestSuite(object):
             username = config.admin_username
         if password is None:
             password = config.admin_password
-        response = platform_tests.api_create_test_suite(username, password, client=client)
-        suite_id = response["suiteId"]
+        response = platform_tests.api_create_test_run(username, password, client=client)
+        run_id = response["suiteId"]
         time.sleep(3)
-        tests = cls.api_get_list()
-        new_suite = next((t for t in tests if t.suite_id == suite_id), None)
-        assert new_suite is not None, "No suite returned with id {}".format(suite_id)
-        return new_suite
+        tests = cls.api_get_test_runs()
+        new_run = next((t for t in tests if t.run_id == run_id), None)
+        assert new_run is not None, "No run returned with id {}".format(run_id)
+        return new_run
+
+
+class TestSuite:
+
+    def __init__(self, id, title=None, approx_run_time=None, tests=None):
+        self.id = id
+        self.title = title
+        self.approx_run_time = approx_run_time
+        self.tests = tests
+
+    @classmethod
+    def _from_api_response(cls, suite_info):
+        return cls(
+            id=suite_info["id"],
+            title=suite_info.get("title"),
+            approx_run_time=suite_info.get("approxRunTime"),
+            tests=suite_info.get("tests", [])
+        )
+
+    @classmethod
+    def api_get_test_suites(cls, client=None):
+        response = platform_tests.api_get_test_suites(client=client)
+        test_suites = []
+        for suite_info in response:
+            suite = cls._from_api_response(suite_info)
+            test_suites.append(suite)
+        return test_suites

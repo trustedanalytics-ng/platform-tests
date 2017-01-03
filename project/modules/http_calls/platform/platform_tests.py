@@ -20,7 +20,7 @@ from ...http_client.configuration_provider.console import ConsoleConfigurationPr
 from ...http_client.http_client_factory import HttpClientFactory
 
 
-def api_get_test_suites(client=None):
+def api_get_test_runs(client=None):
     """GET /platform_tests/tests"""
     client = client or HttpClientFactory.get(
         ConsoleConfigurationProvider.get(url=config.console_url_for_platform_tests_app)
@@ -28,23 +28,23 @@ def api_get_test_suites(client=None):
     return client.request(
         method=HttpMethod.GET,
         path="platform_tests/tests",
-        msg="PLATFORM: get list of test suites"
+        msg="PLATFORM: get list of test runs"
     )
 
 
-def api_get_test_suite_results(suite_id, client=None):
+def api_get_test_run(run_id, client=None):
     """GET /platform_tests/tests/{suite_id}/results"""
     client = client or HttpClientFactory.get(
         ConsoleConfigurationProvider.get(url=config.console_url_for_platform_tests_app)
     )
     return client.request(
         method=HttpMethod.GET,
-        path="platform_tests/tests/{}/results".format(suite_id),
-        msg="PLATFORM: get results of test suite"
+        path="platform_tests/tests/{}/results".format(run_id),
+        msg="PLATFORM: get test run"
     )
 
 
-def api_create_test_suite(username, password, client=None):
+def api_create_test_run(username, password, client=None):
     """POST /platform_tests/tests"""
     body = {
         "username": username,
@@ -57,5 +57,17 @@ def api_create_test_suite(username, password, client=None):
         method=HttpMethod.POST,
         path="platform_tests/tests",
         body=body,
-        msg="PLATFORM: create test suite"
+        msg="PLATFORM: create test run"
+    )
+
+
+def api_get_test_suites(client=None):
+    """GET /platform_tests/tests/suites"""
+    client = client or HttpClientFactory.get(
+        ConsoleConfigurationProvider.get(url=config.console_url_for_platform_tests_app)
+    )
+    return client.request(
+        method=HttpMethod.GET,
+        path="platform_tests/tests/suites",
+        msg="PLATFORM: get test suites"
     )
