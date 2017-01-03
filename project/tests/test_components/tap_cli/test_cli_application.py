@@ -60,7 +60,7 @@ class TestCliCommandsWithNonExistingApplication:
     NON_EXISTING_APP_NAME = "non_existing_app_name_{}".format(generate_test_object_name())
     CANNOT_FIND_MSG = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(NON_EXISTING_APP_NAME)
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
     def test_try_stop_non_existing_app(self, tap_cli, cli_login):
         """
@@ -82,7 +82,7 @@ class TestCliCommandsWithNonExistingApplication:
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.stop_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
     def test_try_start_non_existing_app(self, tap_cli, cli_login):
         """
@@ -104,6 +104,7 @@ class TestCliCommandsWithNonExistingApplication:
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.start_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
     def test_try_restart_non_existing_app(self, tap_cli, cli_login):
         """
@@ -125,7 +126,7 @@ class TestCliCommandsWithNonExistingApplication:
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.restart_app,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
     def test_try_scale_non_existing_app(self, tap_cli, cli_login):
         """
@@ -149,7 +150,7 @@ class TestCliCommandsWithNonExistingApplication:
                                                   application_name=self.NON_EXISTING_APP_NAME,
                                                   instances=scaled_instances)
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
     def test_try_check_logs_for_non_existing_app(self, tap_cli, cli_login):
         """
@@ -171,8 +172,8 @@ class TestCliCommandsWithNonExistingApplication:
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_logs,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
-    @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     def test_try_delete_non_existing_app(self, tap_cli, cli_login):
         """
         <b>Description:</b>
@@ -293,7 +294,6 @@ class TestBadApplication(TestAppBase):
                                                   instances=p_a.instances)
 
 @pytest.mark.usefixtures("cli_login")
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestPythonCliApp(TestAppBase):
 
     @priority.high
@@ -341,7 +341,6 @@ class TestPythonCliApp(TestAppBase):
         step("Ensure app is not on the app list")
         application.ensure_not_on_app_list()
 
-    @pytest.mark.bugs("DPNG-12158 Tap client fails when pushing directory containing symbolic links")
     def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
         """
         <b>Description:</b>
@@ -456,6 +455,7 @@ class TestPythonCliApp(TestAppBase):
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-13515 Missing app name in logs")
     def test_check_app_logs(self, sample_cli_app):
         """
         <b>Description:</b>
