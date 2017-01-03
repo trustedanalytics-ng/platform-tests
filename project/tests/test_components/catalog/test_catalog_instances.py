@@ -37,19 +37,38 @@ class TestCatalogInstances:
     WRONG_PREV_CLASS_ID = "prev-test-class-id"
     INCORRECT_INSTANCE_NAME = "instance!#"
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope="class")
     def catalog_service_instance(self, class_context, catalog_service):
         log_fixture("Create service instance in catalog")
         return CatalogServiceInstance.create(class_context, service_id=catalog_service.id,
                                              plan_id=catalog_service.plans[0].id)
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope="class")
     def catalog_instance(self, catalog_service_instance):
         log_fixture("Get service instance from the list of all instances")
         instances = CatalogInstance.get_all()
         instance = next(i for i in instances if i.id == catalog_service_instance.id)
         assert instance is not None, "Service instance was not found on the list of all instances"
         return instance
+
+    @priority.high
+    def test_create_and_delete_instance(self, context, catalog_service):
+        step("Create service instance in catalog")
+        catalog_instance = CatalogServiceInstance.create(context, service_id=catalog_service.id,
+                                                         plan_id=catalog_service.plans[0].id)
+        step("Check that the service instance is on the list of all instances")
+        instances = CatalogInstance.get_all()
+        assert catalog_instance in instances
+        step("Delete instance")
+        catalog_instance.delete()
+        step("Check that the instance was deleted")
+        instances = CatalogInstance.get_all()
+        assert catalog_instance not in instances
+
+        # TODO this error message should be different
+        step("Check that getting the deleted instance returns an error")
+        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
+                                     CatalogInstance.get, instance_id=catalog_instance.id)
 
     @priority.medium
     def test_cannot_update_instance_class_id(self, catalog_instance):
@@ -74,19 +93,6 @@ class TestCatalogInstances:
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_CLASS_ID_CANNOT_BE_CHANGED,
                                      catalog_instance.update, field_name="classId", value=self.SAMPLE_CLASS_ID)
-
-    @priority.high
-    def test_delete_instance(self, catalog_instance):
-        step("Delete instance")
-        catalog_instance.delete()
-        step("Check that the instance was deleted")
-        instances = CatalogInstance.get_all()
-        assert catalog_instance not in instances
-
-        # TODO this error message should be different
-        step("Check that getting the deleted instance returns an error")
-        assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     CatalogInstance.get, instance_id=catalog_instance.id)
 
     @priority.low
     def test_cannot_get_not_existing_instance(self):

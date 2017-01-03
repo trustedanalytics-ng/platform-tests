@@ -75,6 +75,9 @@ class CatalogInstanceSuperClass(object):
     def update(self, *, field_name, value):
         return NotImplemented
 
+    def delete(self):
+        return NotImplemented
+
     def stop(self):
         self.update(field_name="state", value=TapEntityState.STOP_REQ)
         self.ensure_in_state(expected_state=TapEntityState.STOPPED)
@@ -85,7 +88,7 @@ class CatalogInstanceSuperClass(object):
     def cleanup(self):
         if self.state == TapEntityState.RUNNING:
             self.stop()
-        self.destroy()
+        self.delete()
 
     @retry(AssertionError, tries=60, delay=5)
     def ensure_in_state(self, *, expected_state):

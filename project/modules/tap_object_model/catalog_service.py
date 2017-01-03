@@ -88,8 +88,6 @@ class CatalogService(object):
                                    username=username)
 
     def delete(self):
-        for plan in self.plans:
-            ServicePlan.delete_plan(service_id=self.id, plan_id=plan.id)
         catalog_api.delete_service(service_id=self.id)
 
     def cleanup(self):
