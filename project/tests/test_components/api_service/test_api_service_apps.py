@@ -21,7 +21,7 @@ from modules.exceptions import UnexpectedResponseError
 from modules.http_calls.platform import api_service, catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
-from modules.tap_object_model import Application
+from modules.tap_object_model import Application, CatalogApplicationInstance
 from modules.tap_object_model.prep_app import PrepApp
 from tests.fixtures import assertions
 
@@ -29,6 +29,7 @@ from tests.fixtures import assertions
 logged_components = (TAP.api_service, TAP.catalog)
 
 
+@pytest.mark.usefixtures("open_tunnel")
 @pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestApiServiceApplication:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
@@ -326,15 +327,15 @@ class TestApiServiceApplication:
                                        client=api_service_admin_client)
         application.ensure_running()
 
+        step("Check that the application has only one instance")
+        instances = CatalogApplicationInstance.get_list_for_application(application_id=application.id)
+        assert len(instances) == 1
         updated_state = TapEntityState.FAILURE
         step("Update app state to {} using catalog api".format(updated_state))
-        catalog_api.update_instance(instance_id=application.id, field_name="state", value=updated_state)
+        catalog_api.update_instance(instance_id=instances[0].id, field_name="state", value=updated_state)
         step("Check that the app state was updated")
         app = Application.get(app_inst_id=application.id, client=api_service_admin_client)
         assert app.state == updated_state, "Application is not in the expected state. App state: {}".format(app.state)
-        step("Stop application")
-        app.stop()
-        app.ensure_stopped()
         step("Check that the application can be deleted")
         application.delete()
         step("Check that application has been removed")
