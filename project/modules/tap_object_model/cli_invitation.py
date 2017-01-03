@@ -40,12 +40,8 @@ class CliInvitation(CliObjectSuperclass):
     @classmethod
     def get_list(cls, tap_cli, short_cmd=False):
         output = tap_cli.invitations(short=short_cmd)
-        pending_invitations = []
-        for line in output.split("\n"):
-            match = re.search("^([a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+)$", line)
-            if match:
-                pending_invitations.append(cls(tap_cli=tap_cli, username=match.group(0)))
-        return pending_invitations
+        pending_invitations = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', output)
+        return [cls(tap_cli=tap_cli, username=invitation) for invitation in pending_invitations]
 
     def resend(self):
         self.tap_cli.reinvite(self.username)
