@@ -32,6 +32,7 @@ from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from tap_component_config import offerings_as_parameters
 from tests.fixtures.assertions import assert_dict_values_set
 
+
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
                      TAP.hbase_broker, TAP.hdfs_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
@@ -67,21 +68,14 @@ def test_login():
     assert orgs_list is not None
 
 
-@pytest.fixture(scope="function")
-def sample_app(sample_python_app, sample_java_app):
-    return {
-        "sample_python_app": sample_python_app,
-        "sample_java_app": sample_java_app,
-    }
+@pytest.fixture(params=['sample_python_app', 'sample_java_app'])
+def sample_app(request):
+    return request.getfuncargvalue(request.param)
 
 
-@pytest.fixture(scope="module")
-def sample_db_app(app_bound_mongodb, app_bound_mysql, app_bound_psql):
-    return {
-        "app_bound_mysql": app_bound_mysql,
-        "app_bound_mongodb": app_bound_mongodb,
-        "app_bound_psql": app_bound_psql,
-    }
+@pytest.fixture(params=['app_bound_mysql', 'app_bound_mongodb', 'app_bound_psql'])
+def sample_db_app(request):
+    return request.getfuncargvalue(request.param)
 
 
 @pytest.mark.components(TAP.metrics_grafana)
@@ -285,8 +279,7 @@ def test_create_and_delete_marketplace_service_instances(context, service_label,
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-@pytest.mark.parametrize("sample_app_key", ("sample_python_app", "sample_java_app"))
-def test_push_sample_app_and_check_response(sample_app, sample_app_key):
+def test_push_sample_app_and_check_response(sample_app):
     """
     <b>Description:</b>
     Checks if sample python and java applications pushed to the platform work.
@@ -304,7 +297,6 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
     2. Send GET request with the client.
     3. Verify response is not None and response status code equals 200.
     """
-    sample_app = sample_app[sample_app_key]
     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_app.urls[0]))
     step("Check response for HTTP GET to the endpoint")
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
@@ -313,8 +305,7 @@ def test_push_sample_app_and_check_response(sample_app, sample_app_key):
 
 
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-@pytest.mark.parametrize("sample_db_app_key", (["app_bound_mysql", "app_bound_mongodb", "app_bound_psql"]))
-def test_push_db_app_check_response(sample_db_app, sample_db_app_key):
+def test_push_db_app_and_check_response(sample_db_app):
     """
     <b>Description:</b>
     Checks if application pushed to the platform with postgres or mysql database service bound work.
@@ -333,7 +324,6 @@ def test_push_db_app_check_response(sample_db_app, sample_db_app_key):
     2. Send GET request with the client.
     3. Verify response is not None and response status code equals 200.
     """
-    sample_db_app = sample_db_app[sample_db_app_key]
     client = HttpClientFactory.get(ApplicationConfigurationProvider.get(sample_db_app.urls[0]))
     response = client.request(method=HttpMethod.GET, path="", timeout=10, raw_response=True)
     assert response is not None
