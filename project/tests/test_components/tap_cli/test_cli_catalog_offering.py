@@ -39,87 +39,125 @@ class TestCliCatalogOffering:
     def test_create_and_delete_offering(self, context, tap_cli):
         """
         <b>Description:</b>
-        Create offering, check it's show in catalog and remove it.
+        Create offering, check it's shown on offering list and remove it.
 
         <b>Input data:</b>
         -
 
         <b>Expected results:</b>
-        Test passes when offering is created, displayed in catalog and then successfully deleted.
+        Test passes when offering is created, displayed on offering list and then successfully deleted.
 
         <b>Steps:</b>
         1. Create offering.
-        2. Verify that offering is shown in catalog.
+        2. Verify that offering is shown on offering list.
         3. Delete offering.
-        4. Verify that offering is not shown in catalog.
+        4. Verify that offering is not shown on offering list.
         """
-        step("Create offering and check it's in catalog")
+        step("Create offering and check it's on offering list")
         offering = CliOffering.create(context=context, tap_cli=tap_cli)
-        offering.ensure_in_catalog()
-        step("Delete offering and check it's no longer in catalog")
+        offering.ensure_on_offering_list()
+        step("Delete offering and check it's no longer on offering list")
         offering.delete()
-        offering.ensure_not_in_catalog()
+        offering.ensure_not_on_offering_list()
 
-    @priority.low
-    def test_cannot_create_offering_without_parameters(self, tap_cli):
+    @priority.medium
+    def test_get_offering(self, context, tap_cli):
         """
         <b>Description:</b>
-        Check that can't create offering without parameters.
+        Create offering, check it can be printed individually and remove it.
 
         <b>Input data:</b>
-        1. Command name: create-offering
+        1. Command name: offering info
 
         <b>Expected results:</b>
-        Attempt to create offering without parameters will return proper message.
+        Test passes when offering is created, displayed separately and then successfully deleted.
+        After deletion it shall be not printable again.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command create-offering.
-        2. Verify that attempt to create offering without parameters will return expected message.
+        1. Create offering.
+        2. Verify that offering can be displyed separately.
+        3. Cleanup
         """
-        assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_OFFERING,
-                                                  tap_cli.create_offering, [], self.short)
+        step("Create offering and check it's on offering list")
+        offering = CliOffering.create(context=context, tap_cli=tap_cli)
+        offering.ensure_offering_info_succeed()
+        step("Delete offering and check it's no longer on offering list")
+        offering.delete()
+
+    @priority.low
+    def test_cannot_get_offering_when_doesnt_exist(self, context, tap_cli):
+        """
+        <b>Description:</b>
+        Check that offering details can't be printed when it doesn't exist.
+
+        <b>Input data:</b>
+        1. Command name: offering info
+
+        <b>Expected results:</b>
+        Test passes when offering is not printable.
+
+        <b>Steps:</b>
+        Verify that unexisting offering cannot be displyed (proper message shown)
+        """
+        assert_raises_command_execution_exception(1, TapMessage.NO_SUCH_OFFERING,
+                                                  tap_cli.print_offering, "unexisting")
+
+    @priority.low
+    def test_cli_attempt_to_create_offering_with_default_params(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check that CLI tries to create offering from manifest.json if path not provided
+
+        <b>Input data:</b>
+        1. Command name: offering create
+
+        <b>Expected results:</b>
+        Attempt to create offering without parameters will take manifest.json into account.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command offering create.
+        2. Verify that attempt to create offering without parameters will try to use manifest.json file.
+        """
+        assert_raises_command_execution_exception(1, TapMessage.MANIFEST_JSON_NO_SUCH_FILE,
+                                                  tap_cli.create_offering, "")
 
     @priority.low
     def test_cannot_create_offering_without_json(self, tap_cli):
         """
         <b>Description:</b>
-        Check that can't create offering without json.
+        Check that can't create offering without providing json for manifest flag.
 
         <b>Input data:</b>
-        1. Command name: create-offering
+        1. Command name: offering create
 
         <b>Expected results:</b>
         Attempt to create offering without json will return proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command create-offering.
+        1. Run TAP CLI with command offering create.
         2. Verify that attempt to create offering without json will return expected message.
         """
         invalid_json = generate_test_object_name(separator="-")
         assert_raises_command_execution_exception(1, TapMessage.NO_SUCH_FILE_OR_DIRECTORY.format(invalid_json),
-                                                  tap_cli.create_offering, [invalid_json], self.short)
+                                                  tap_cli.create_offering, invalid_json)
 
     @priority.low
-    def test_create_offering_with_already_used_name(self, context, offering, tap_cli):
+    def test_cannot_create_offering_with_already_used_name(self, context, offering, tap_cli):
         """
         <b>Description:</b>
         Check that can't create offering with already used name.
 
         <b>Input data:</b>
-        1. Command name: create-offering
+        1. Command name: offering create
         2. Existing offering
 
         <b>Expected results:</b>
         Attempt to create offering with already used name will return proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command create-offering.
+        1. Run TAP CLI with command offering create.
         2. Verify that attempt to create offering with already used name will return expected message.
         """
         assert_raises_command_execution_exception(1, TapMessage.SERVICE_ALREADY_EXISTS.format(offering.name),
                                                   CliOffering.create, context=context, tap_cli=tap_cli,
                                                   name=offering.name, plans=offering.plans)
-
-
-class TestCliCatalogOfferingShortCommand(TestCliCatalogOffering):
-    short = True

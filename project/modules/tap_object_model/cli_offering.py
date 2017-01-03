@@ -28,6 +28,7 @@ from ._service_plan import ServicePlan
 class CliOffering(CliObjectSuperclass):
     EXPECTED_CREATE_OFFERING_SUCCESS = 'OK'
     _COMPARABLE_ATTRIBUTES = ["name", "plans"]
+    OFFERING_DESC = "Test offering"
 
     def __init__(self, name, plans, tap_cli):
         super().__init__(tap_cli=tap_cli, name=name)
@@ -62,25 +63,29 @@ class CliOffering(CliObjectSuperclass):
         offering_template = cls._create_offering_template(
             template_body=template_body,
             service_name=name,
-            description="Test offering",
+            description=cls.OFFERING_DESC,
             bindable=True,
             tags=["test"],
             plans=[sp.to_dict() for sp in plans])
 
         file_path = save_text_file(file_name=name, data=json.dumps(offering_template))
-        create_output = tap_cli.create_offering([file_path])
+        create_output = tap_cli.create_offering(file_path)
         assert cls.EXPECTED_CREATE_OFFERING_SUCCESS in create_output, "Create offering failed: {}".format(create_output)
         new_offering = cls(name=name, plans=plans, tap_cli=tap_cli)
         context.test_objects.append(new_offering)
         return new_offering
 
     @retry(AssertionError, tries=12, delay=5)
-    def ensure_in_catalog(self):
-        assert self.name in self.tap_cli.catalog(), "Offering '{}' is not in the offerings catalog".format(self.name)
+    def ensure_offering_info_succeed(self):
+        assert self.OFFERING_DESC in self.tap_cli.print_offering(self.name), "Info for offering '{}' could not be printed".format(self.name)
 
     @retry(AssertionError, tries=12, delay=5)
-    def ensure_not_in_catalog(self):
-        assert self.name not in self.tap_cli.catalog(), "Offering '{}' is in the offerings catalog".format(self.name)
+    def ensure_on_offering_list(self):
+        assert self.name in self.tap_cli.list_offerings(), "Offering '{}' is not in the offerings list".format(self.name)
+
+    @retry(AssertionError, tries=12, delay=5)
+    def ensure_not_on_offering_list(self):
+        assert self.name not in self.tap_cli.list_offerings(), "Offering '{}' is in the offerings list".format(self.name)
 
     def delete(self):
-        self.tap_cli.delete_offering([self.name])
+        self.tap_cli.delete_offering(self.name)

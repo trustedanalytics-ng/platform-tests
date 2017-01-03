@@ -90,9 +90,7 @@ class TestCliBasicFlow:
         assert tap_cli.HELP[0] in output
         assert tap_cli.VERSION[0] in output
         assert tap_cli.LOGIN in output
-        assert tap_cli.CREATE_OFFERING[0] in output
-        assert tap_cli.DELETE_OFFERING[0] in output
-        assert tap_cli.CATALOG in output
+        assert tap_cli.LIST_OFFERINGS[0] in output
         assert tap_cli.CREATE_SERVICE[0] in output
         assert tap_cli.DELETE_SERVICE[0] in output
         assert tap_cli.SERVICES[0] in output

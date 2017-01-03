@@ -114,19 +114,19 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_create_offering(self):
-        assert ["create-offering"] == self.tap_cli.create_offering([])
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_create_offering(self):
-        assert ["co"] == self.tap_cli.create_offering([], short=True)
+        assert ["offering", "create"] == self.tap_cli.create_offering("")
 
     @patch.object(TapCli, "_run_command", _run_command_empty_response)
     def test_create_offering_without_params(self):
         self.assertRaises(TypeError, self.tap_cli.create_offering)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_catalog(self):
-        assert ['catalog'] == self.tap_cli.catalog()
+    def test_offering_info(self):
+        assert ["offering", "info", "--name", "sample"] == self.tap_cli.print_offering("sample")
+
+    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
+    def test_offering_list(self):
+        assert ["offering", "list"] == self.tap_cli.list_offerings()
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_create_service(self):

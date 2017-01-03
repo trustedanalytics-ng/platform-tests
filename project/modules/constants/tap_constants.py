@@ -47,7 +47,8 @@ class TapMessage:
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
     INSTANCE_IS_BOUND_TO_OTHER_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
     NO_SUCH_FILE_OR_DIRECTORY = "open {}: no such file or directory"
-    NOT_ENOUGH_ARGS_CREATE_OFFERING = "not enough args: create-offering <path to json with service definition>"
+    MANIFEST_JSON_NO_SUCH_FILE = "manifest.json: no such file or directory"
+    NO_SUCH_OFFERING = "Could not find offering with such name"
     NOT_ENOUGH_ARGS_CREATE_SERVICE = "not enough args: create-service <service_name> <plan_name> <custom_name>"
     NOT_ENOUGH_ARGS_DELETE_SERVICE = "not enough args: delete-service <service_custom_name>"
     NO_SUCH_HOST = "no such host"

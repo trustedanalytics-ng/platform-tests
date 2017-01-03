@@ -29,9 +29,10 @@ class TapCli:
     HELP = "help", "h"
     VERSION = "--version", "-v"
     LOGIN = "login"
-    CREATE_OFFERING = "create-offering", "co"
-    DELETE_OFFERING = "delete-offering", "do"
-    CATALOG = "catalog"
+    CREATE_OFFERING = ["offering", "create"]
+    DELETE_OFFERING = ["offering", "delete"]
+    LIST_OFFERINGS = ["offering", "list"]
+    GET_OFFERING = ["offering", "info"]
     CREATE_SERVICE = "create-service", "cs"
     DELETE_SERVICE = "delete-service", "ds"
     SERVICES = "services", "svcs"
@@ -60,6 +61,8 @@ class TapCli:
     API_PARAM = "--api"
     USERNAME_PARAM = "--username"
     PASSWORD_PARAM = "--password"
+    MANIFEST_PARAM = "--manifest"
+    NAME_PARAM = "--name"
 
     LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
 
@@ -98,14 +101,18 @@ class TapCli:
     def version(self, short=False):
         return self._run_command([self.VERSION[1] if short else self.VERSION[0]])
 
-    def create_offering(self, cmd: list, short=False):
-        return self._run_command([self.CREATE_OFFERING[1] if short else self.CREATE_OFFERING[0]] + cmd)
+    def create_offering(self, manifest_path: str):
+        return self._run_command(self.CREATE_OFFERING +
+                                 ([self.MANIFEST_PARAM, manifest_path] if manifest_path else []))
 
-    def delete_offering(self, cmd: list, short=False):
-        return self._run_command([self.DELETE_OFFERING[1] if short else self.DELETE_OFFERING[0]] + cmd)
+    def delete_offering(self, offering_name: str):
+        return self._run_command(self.DELETE_OFFERING + [self.NAME_PARAM, offering_name])
 
-    def catalog(self):
-        return self._run_command([self.CATALOG])
+    def list_offerings(self):
+        return self._run_command(self.LIST_OFFERINGS)
+
+    def print_offering(self, offering_name: str):
+        return self._run_command(self.GET_OFFERING + [self.NAME_PARAM, offering_name])
 
     def create_service(self, cmd: list, short=False):
         return self._run_command([self.CREATE_SERVICE[1] if short else self.CREATE_SERVICE[0]] + cmd)
