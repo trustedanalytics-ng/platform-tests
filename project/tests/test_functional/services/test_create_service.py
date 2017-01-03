@@ -14,9 +14,7 @@
 # limitations under the License.
 #
 
-import os
 import pytest
-import tarfile
 
 from modules.constants import ServicePlan, ServiceCatalogHttpStatus as HttpStatus, TapComponent as TAP, Urls
 from modules.markers import priority
@@ -32,16 +30,6 @@ pytestmark = [pytest.mark.components(TAP.service_catalog)]
 class TestCreateService:
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_TYPE = "JAVA"
-
-    @pytest.fixture(scope="class")
-    def app_jar(self, sample_app_path):
-        step("Extract application archive")
-        sample_app_source_dir = os.path.join(os.path.dirname(sample_app_path),
-                                             "sample_{}_app_source".format(self.APP_TYPE))
-        with tarfile.open(sample_app_path) as tar:
-            tar.extractall(path=sample_app_source_dir)
-            sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
-        return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if ".jar" in name))
 
     @pytest.fixture(scope="function")
     def offering_json(self):

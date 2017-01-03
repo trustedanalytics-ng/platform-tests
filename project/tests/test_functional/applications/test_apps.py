@@ -17,19 +17,20 @@
 import pytest
 
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, TapApplicationType, TapComponent as TAP
+from modules.constants import ApplicationPath, TapApplicationType, TapComponent as TAP, Urls
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
 from modules.tap_object_model.prep_app import PrepApp
 from tests.fixtures import assertions
 
-
 logged_components = (TAP.service_catalog, TAP.user_management)
 pytestmark = [pytest.mark.components(TAP.service_catalog)]
 
 
 class TestTapApp:
+    SAMPLE_APP_URL = Urls.tapng_java_app_url
+    APP_TYPE = "JAVA"
 
     @pytest.fixture(scope="function")
     def instance(self, context, sample_service):
@@ -40,8 +41,14 @@ class TestTapApp:
         instance.ensure_running()
         return instance
 
-    @pytest.mark.bugs("DPNG-12584 'Cannot parse ApiServiceInstance list: key PLAN_ID not found!' "
-                      "after trying to check Marketplace->Services and details of applications.")
+    @pytest.fixture(scope="function")
+    def offering_json(self):
+        return ServiceOffering.create_offering_json()
+
+    @pytest.fixture(scope="class")
+    def manifest_json(self):
+        return ServiceOffering.create_manifest_json(self.APP_TYPE)
+
     @pytest.mark.parametrize("role", ["admin", "user"])
     def test_user_can_do_app_flow(self, test_user_clients, role, context):
         """
@@ -102,10 +109,10 @@ class TestTapApp:
         app.delete()
         assertions.assert_not_in_by_id_with_retry(app.id, Application.get_list)
 
-    @pytest.mark.skip(reason="DPNG-11414 Create offering from binary - not supported yet")
     @priority.medium
     @pytest.mark.sample_apps_test
-    def test_app_register_as_offering(self, context, test_org):
+    @pytest.mark.parametrize("role", ["admin", "user"])
+    def test_app_register_as_offering(self, context, app_jar, offering_json, manifest_json, test_user_clients, role):
         """
         <b>Description:</b>
         Checks if an offering can be created from an application.
@@ -121,58 +128,13 @@ class TestTapApp:
         1. Create offering.
         2. Verify is on the offerings list.
         """
-        register_offering = ServiceOffering.create_from_binary(context, org_guid=test_org.guid)
+        client = test_user_clients[role]
+        step("Register in marketplace")
+        register_offering = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
+                                                               offering_path=offering_json, client=client)
         register_offering.ensure_ready()
         assertions.assert_in_with_retry(register_offering, ServiceOffering.get_list)
 
-    @pytest.mark.skip(reason="DPNG-12190 cascade flag is not supported yet")
-    @priority.medium
-    def test_cascade_app_delete(self, context, instance, admin_client):
-        """
-        <b>Description:</b>
-        Checks if cascade removal of an application removes bound service instance too.
-
-        <b>Input data:</b>
-        1. Sample service instance.
-        2. Sample java application.
-        3. Admin client
-
-        <b>Expected results:</b>
-        The application and the service instance are deleted.
-
-        <b>Steps:</b>
-        1. Push an application with bound service instance.
-        2. Verify the application is running.
-        3. Delete the application with cascade flag.
-        4. Verify the application is deleted.
-        5. Verify the service instance is deleted.
-        """
-        step("Compile the app")
-        test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_JAVA_APP)
-        test_app_sources.compile_mvn()
-
-        step("Package the app")
-        p_a = PrepApp(ApplicationPath.SAMPLE_JAVA_APP)
-        gzipped_app_path = p_a.package_app(context)
-
-        step("Update manifest")
-        manifest_params = {"type" : TapApplicationType.JAVA,
-                           "bindings" : instance.id}
-        manifest_path = p_a.update_manifest(params=manifest_params)
-
-        step("Push app to tap")
-        app = Application.push(context, app_path=gzipped_app_path,
-                               name=p_a.app_name, manifest_path=manifest_path,
-                               client=admin_client)
-        step("Check the application is running")
-        app.ensure_running()
-
-        app.api_delete(cascade=True)
-        assertions.assert_not_in_by_id_with_retry(app.id, Application.get_list)
-        assertions.assert_not_in_by_id_with_retry(instance.id, ServiceInstance.get_list)
-
-    @pytest.mark.bugs("DPNG-12584 'Cannot parse ApiServiceInstance list: key PLAN_ID not found!' "
-                      "after trying to check Marketplace->Services and details of applications.")
     @priority.medium
     @pytest.mark.sample_apps_test
     def test_delete_app(self, sample_java_app):

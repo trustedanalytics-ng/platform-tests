@@ -17,6 +17,7 @@
 import os
 import re
 import stat
+import tarfile
 from distutils.version import LooseVersion
 
 import pytest
@@ -26,6 +27,7 @@ from modules import file_utils
 from modules.ssh_lib import JumpClient, JumpTunnel
 from modules.tap_cli import TapCli
 from modules.tap_logger import log_fixture
+from modules.tap_object_model import ServiceOffering
 
 
 @pytest.fixture(scope="session")
@@ -87,3 +89,15 @@ def sample_app_path(request):
     sample_app_path = file_utils.download_file(sample_app_url, sample_app_tar_name)
     request.addfinalizer(lambda: file_utils.remove_if_exists(sample_app_path))
     return sample_app_path
+
+
+@pytest.fixture(scope="class")
+def app_jar(request, sample_app_path):
+    # NOTE: test class needs to have application type specified as APP_TYPE class variable
+    app_type = getattr(request.cls, "APP_TYPE")
+    sample_app_source_dir = os.path.join(os.path.dirname(sample_app_path),
+                                         "sample_{}_app_source".format(app_type))
+    with tarfile.open(sample_app_path) as tar:
+        tar.extractall(path=sample_app_source_dir)
+        sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
+    return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if ".jar" in name))
