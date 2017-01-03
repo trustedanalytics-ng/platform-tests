@@ -90,7 +90,7 @@ class TestK8sComponents:
                                          msg="get healthz")
         assert response.status_code == HttpStatus.CODE_OK
 
-    def test_api_service_check_availability(self):
+    def test_api_service_check_availability(self, api_service_admin_client):
         """
         <b>Description:</b>
         Checks if api service is available.
@@ -106,11 +106,10 @@ class TestK8sComponents:
         2. Verify that response status is OK.
         """
         step("Check api get endpoint for {}".format(TAP.api_service))
-        api_client = HttpClientFactory.get(ServiceConfigurationProvider.get())
-        response = api_client.request(HttpMethod.GET,
-                                      path=api_service[TAP.api_service]["get_endpoint"],
-                                      raw_response=True, raise_exception=True,
-                                      msg="get")
+        response = api_service_admin_client.request(HttpMethod.GET,
+                                                    path=api_service[TAP.api_service]["get_endpoint"],
+                                                    raw_response=True, raise_exception=True,
+                                                    msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
