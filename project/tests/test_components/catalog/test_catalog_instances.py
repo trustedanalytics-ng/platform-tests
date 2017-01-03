@@ -133,8 +133,6 @@ class TestCatalogInstances:
                                      prev_value=self.WRONG_PREV_CLASS_ID)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: services, catalog: applications)")
     def test_cannot_update_instance_without_field(self, catalog_instance):
         step("Check that it's not possible to update instance without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
@@ -142,8 +140,6 @@ class TestCatalogInstances:
                                      catalog_instance.update, field_name=None, value=self.NEW_CLASS_ID)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: services, catalog: applications)")
     def test_cannot_update_instance_without_value(self, catalog_instance):
         step("Check that it's not possible to update instance without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")

@@ -72,7 +72,6 @@ class TestServiceExpose:
         credentials = ServiceInstance.get_credentials(service.id, api_service_admin_client)
         assert urls[0] not in unexpose, str(credentials)
 
-    @pytest.mark.bugs("DPNG-13253 - Code 500 when exposing twice the same service")
     def test_expose_urls_twice(self, api_service_admin_client, offering_from_python_app):
         """ Verify if try to expose exposed service results conflict.
 

@@ -129,7 +129,6 @@ class TestContainerBroker:
         tunnel = open_tunnel
         out = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + ["kubectl", "get", "secret"])
 
-    @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog)
     def test_create_and_destroy_service_instance(self, context, offering_a):
         """
@@ -167,7 +166,6 @@ class TestContainerBroker:
         step("KUBERNETES: Check that the pod does not exist")
         self._assert_pod_count_with_retry(instance_id=instance.id, expected_pod_count=0)
 
-    @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog, TAP.container_broker)
     def test_bind_and_unbind_instances(self, offering_a, catalog_instance_a, catalog_instance_b):
         """
@@ -234,7 +232,6 @@ class TestContainerBroker:
         response = container_broker_instance.get_logs()
         assert isinstance(response, dict)
 
-    @pytest.mark.bugs("DPNG-12413 When binding instances, dst instance does not have src instance envs in its pod")
     @pytest.mark.components(TAP.catalog, TAP.container_broker)
     def test_get_instance_envs_in_container_broker(self, catalog_instance_a):
         """

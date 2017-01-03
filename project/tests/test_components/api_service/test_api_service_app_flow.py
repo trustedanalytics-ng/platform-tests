@@ -45,7 +45,6 @@ class ApiServiceApplicationFlow:
         application.ensure_running()
         return application
 
-    @pytest.mark.bugs("DPNG-11421 All cli commands have repeated http:// underneath and return ERROR")
     @priority.high
     def test_push_and_delete_application(self, context, sample_app_path, api_service_admin_client):
         """
@@ -118,6 +117,7 @@ class ApiServiceApplicationFlow:
         step("Check application is ready")
         sample_application.ensure_running()
 
+
     @priority.high
     def test_restart_application(self, sample_application):
         """
@@ -188,26 +188,21 @@ class ApiServiceApplicationFlow:
         assert app_info.running_instances == replicas_number
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
-@pytest.mark.bugs("DPNG-11677 Not possible to push PYTHON2.7 or PYTHON3.4 apps")
 class TestPythonApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     APP_TYPE = TapApplicationType.PYTHON27
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestNodeJsApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_nodejs_app_url
     APP_TYPE = TapApplicationType.NODEJS
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestGoApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_go_app_url
     APP_TYPE = TapApplicationType.GO
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestJavaApplicationFlow(ApiServiceApplicationFlow):
     SAMPLE_APP_URL = Urls.tapng_java_app_url
     APP_TYPE = TapApplicationType.JAVA

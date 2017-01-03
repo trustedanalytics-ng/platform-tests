@@ -78,7 +78,6 @@ class TestCatalogTemplates:
         assert catalog_template == template
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13025 Wrong status code after send PATCH with wrong prev_value (catalog: templates)")
     def test_cannot_update_catalog_template_with_wrong_prev_state_value(self, catalog_template):
         step("Update the template with incorrect prev_value of state")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(TapEntityState.UNAVAILABLE,
@@ -88,7 +87,6 @@ class TestCatalogTemplates:
                                      prev_value=TapEntityState.UNAVAILABLE)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13031 Wrong status code after send PATCH with non-existent state (catalog: templates)")
     def test_cannot_update_catalog_template_state_to_non_existent_state(self, catalog_template):
         step("Update the template state to nonexistent state")
         wrong_state = "WRONG_STATE"
@@ -97,8 +95,6 @@ class TestCatalogTemplates:
                                      field_name="state", value=wrong_state)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13033 Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: templates)")
     def test_cannot_update_template_without_field_name(self, catalog_template):
         step("Check that it's not possible to update template without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
@@ -106,8 +102,6 @@ class TestCatalogTemplates:
                                      template_id=catalog_template.id, field_name=None, value=TapEntityState.IN_PROGRESS)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13033 Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: templates)")
     def test_cannot_update_template_without_value(self, catalog_template):
         step("Check that it's not possible to update template without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")

@@ -105,7 +105,6 @@ class TestCatalogServices:
                                      CatalogService.get, service_id=self.INVALID_ID)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services)")
     def test_cannot_update_service_with_wrong_prev_description_value(self, catalog_service):
         step("Check that is't not possible to update service with incorrect prev_value of description")
         wrong_prev_description = "prev-test-description"
@@ -116,7 +115,6 @@ class TestCatalogServices:
                                      prev_value=wrong_prev_description)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services)")
     def test_cannot_update_service_with_wrong_prev_state_value(self, catalog_service):
         step("Check that is't not possible to update service with incorrect prev_value of state")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(TapEntityState.OFFLINE,
@@ -126,7 +124,6 @@ class TestCatalogServices:
                                      prev_value=TapEntityState.OFFLINE)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13299: Wrong status code after send PATCH with non-existent state (catalog: services)")
     def test_cannot_update_service_state_to_non_existent_state(self, catalog_service):
         step("Update the service state to non-existent state")
         wrong_state = "WRONG_STATE"
@@ -135,8 +132,6 @@ class TestCatalogServices:
                                      catalog_service.update, field_name="state", value=wrong_state)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: services)")
     def test_cannot_update_service_without_field(self, catalog_service):
         step("Check that it's not possible to update service without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
@@ -144,8 +139,6 @@ class TestCatalogServices:
                                      service_id=catalog_service.id, field_name=None, value=TapEntityState.READY)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: services)")
     def test_cannot_update_service_without_value(self, catalog_service):
         step("Check that it's not possible to update service without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")

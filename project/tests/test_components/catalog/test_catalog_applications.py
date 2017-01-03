@@ -106,8 +106,6 @@ class TestCatalogApplications:
                                      image_id=catalog_image.id, name=self.INCORRECT_APP_NAME)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services, "
-                      "catalog: applications)")
     def test_cannot_update_application_with_wrong_prev_description_value(self, sample_app_image):
         step("Check that is't not possible to update application with incorrect prev_value of description")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(self.WRONG_PREV_DESCRIPTION,
@@ -117,8 +115,6 @@ class TestCatalogApplications:
                                      prev_value=self.WRONG_PREV_DESCRIPTION)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13298: Wrong status code after send PATCH with wrong prev_value (catalog: services, "
-                      "catalog: applications)")
     def test_cannot_update_application_with_wrong_prev_replication_value(self, sample_app_image):
         step("Check that is't not possible to update application with incorrect prev_value of replication")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED_NO_QUOTES.format(self.WRONG_PREV_REPLICA_VALUE,
@@ -128,7 +124,6 @@ class TestCatalogApplications:
                                      prev_value=self.WRONG_PREV_REPLICA_VALUE)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13416: Wrong status code and error messages for catalog requests.")
     def test_cannot_update_application_replication_to_non_int_number_of_replicas(self, sample_app_image):
         step("Update the template state to nonexistent state")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_INCORRECT_TYPE,
@@ -136,8 +131,6 @@ class TestCatalogApplications:
                                      value=self.NON_INT_REPLICA_NUMBER)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: services, catalog: applications)")
     def test_cannot_update_application_without_field(self, sample_app_image):
         step("Check that it's not possible to update application without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
@@ -146,8 +139,6 @@ class TestCatalogApplications:
                                      value=2)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13300: Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: services, catalog: applications)")
     def test_cannot_update_application_without_value(self, sample_app_image):
         step("Check that it's not possible to update application without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")

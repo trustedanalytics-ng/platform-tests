@@ -395,6 +395,7 @@ class TestServiceInstantiationOther:
                                                 plan_id=plan_id, offering_id=etcd_offering.id, params=None)
 
     @priority.medium
+    @pytest.mark.bugs("DPNG-14049 Adjust expected response message for test_cannot_create_service_instance_with_invalid_plan_id")
     def test_cannot_create_service_instance_with_invalid_plan_id(self, etcd_offering, api_service_admin_client):
         """
         <b>Description:</b>

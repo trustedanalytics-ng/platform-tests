@@ -31,7 +31,6 @@ pytestmark = [pytest.mark.components(TAP.cli, TAP.monitor)]
 
 
 @pytest.mark.usefixtures("cli_login")
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestMonitorApplication:
     SAMPLE_APP_URL = Urls.tapng_python_app_url
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"

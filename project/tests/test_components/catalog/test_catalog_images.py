@@ -102,7 +102,6 @@ class TestCatalogImages:
         assert test_image == image
 
     @priority.medium
-    @pytest.mark.bugs("DPNG-13198 Wrong status code after creating image with existing image id (catalog: images)")
     def test_cannot_create_image_with_existing_image_id(self, context, sample_catalog_image):
         step("Check that it's not possible to create image with existing image id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_CONFLICT, CatalogHttpStatus.MSG_KEY_EXISTS,
@@ -116,7 +115,6 @@ class TestCatalogImages:
                                      CatalogImage.get, image_id=self.INVALID_ID)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13199 Wrong status code after send PATCH with wrong prev_value (catalog: images)")
     def test_cannot_update_image_with_wrong_prev_type_value(self, sample_catalog_image):
         step("Check that is't not possible to update image with incorrect prev_value of type")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(TapApplicationType.NODEJS,
@@ -126,7 +124,6 @@ class TestCatalogImages:
                                      prev_value=TapApplicationType.NODEJS)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13199 Wrong status code after send PATCH with wrong prev_value (catalog: images)")
     def test_cannot_update_image_with_wrong_prev_state_value(self, sample_catalog_image):
         step("Check that is't not possible to update image with incorrect prev_value of state")
         expected_message = CatalogHttpStatus.MSG_COMPARE_FAILED.format(TapEntityState.READY,
@@ -136,7 +133,6 @@ class TestCatalogImages:
                                      prev_value=TapEntityState.READY)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13207 Wrong status code after send PATCH with field id (catalog: images)")
     def test_cannot_update_image_id(self, sample_catalog_image):
         step("Check that is't not possible to update image field id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
@@ -144,7 +140,6 @@ class TestCatalogImages:
                                      image_id=sample_catalog_image.id, field_name="id", value=self.INVALID_ID)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13201 Wrong status code after send PATCH with non-existent state (catalog: images)")
     def test_cannot_update_image_state_to_non_existent_state(self, sample_catalog_image):
         step("Update the image state to nonexistent state")
         wrong_state = "WRONG_STATE"
@@ -153,8 +148,6 @@ class TestCatalogImages:
                                      field_name="state", value=wrong_state)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13202 Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: images)")
     def test_cannot_update_image_without_field(self, sample_catalog_image):
         step("Check that it's not possible to update image without field")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("field")
@@ -162,8 +155,6 @@ class TestCatalogImages:
                                      image_id=sample_catalog_image.id, field_name=None, value=TapEntityState.PENDING)
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13202 Wrong status code and error message after send PATCH without: field, value. "
-                      "(catalog: images)")
     def test_cannot_update_image_without_value(self, sample_catalog_image):
         step("Check that it's not possible to update image without value")
         expected_message = CatalogHttpStatus.MSG_FIELD_IS_EMPTY.format("value")

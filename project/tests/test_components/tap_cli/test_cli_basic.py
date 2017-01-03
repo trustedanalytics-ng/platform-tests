@@ -116,7 +116,6 @@ class TestCliBasicFlow:
         assert tap_cli.DELETE_USER[0] in output
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
-    @pytest.mark.bugs("DPNG-10167 [TAP-NG] CLI - help improvements required")
     @priority.low
     def test_version(self, tap_cli, cli_login):
         """
