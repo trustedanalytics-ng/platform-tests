@@ -33,7 +33,7 @@ from tests.fixtures.data_repo import DataFileKeys
 pytestmark = [pytest.mark.components(TAP.cli)]
 
 
-class TestCheckAppPushHelp:
+class TestCheckAppPushHelp: #TODO what about other application commands helps?
 
     @priority.medium
     def test_check_app_push_help(self, tap_cli):
@@ -52,7 +52,7 @@ class TestCheckAppPushHelp:
         2. Verify response contains proper output.
         """
         step("Check output from tap cli push help")
-        output = tap_cli.push_help()
+        output = tap_cli.app_push_help()
         assert "NAME" in output
         assert "USAGE" in output
 
@@ -80,7 +80,7 @@ class TestCliCommandsWithNonExistingApplication:
         2. Verify that attempt to stop non existing application return expected error message.
         """
         step("Try to stop app with non existing name")
-        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.stop_app,
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_stop,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
@@ -102,7 +102,7 @@ class TestCliCommandsWithNonExistingApplication:
         2. Verify that attempt to start non existing application return expected error message.
         """
         step("Try to start app with non existing name")
-        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.start_app,
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_start,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
@@ -124,7 +124,7 @@ class TestCliCommandsWithNonExistingApplication:
         2. Verify that attempt to restart non existing application return expected error message.
         """
         step("Try to restart app with non existing name")
-        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.restart_app,
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_restart,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
@@ -147,7 +147,7 @@ class TestCliCommandsWithNonExistingApplication:
         """
         scaled_instances = '3'
         step("Try to scale app with non existing name")
-        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.scale_app,
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_scale,
                                                   application_name=self.NON_EXISTING_APP_NAME,
                                                   instances=scaled_instances)
 
@@ -192,8 +192,8 @@ class TestCliCommandsWithNonExistingApplication:
         2. Verify that attempt to delete non existing application return expected message.
         """
         step("Try to delete with non existing app name")
-        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG,
-                                                  tap_cli.delete_app, application_name=self.NON_EXISTING_APP_NAME)
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_delete,
+                                                  application_name=self.NON_EXISTING_APP_NAME)
 
 
 class TestAppBase:
@@ -472,3 +472,5 @@ class TestPythonCliApp(TestAppBase):
         """
         step("Check logs")
         assert sample_cli_app.name in sample_cli_app.logs()
+
+#TODO test_application_help

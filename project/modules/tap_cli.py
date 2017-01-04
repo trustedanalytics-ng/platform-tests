@@ -43,16 +43,16 @@ class TapCli:
     SERVICE_START = ["service", "start"]
     SERVICE_STOP = ["service", "stop"]
     SERVICE_CREDENTIALS = ["service", "credentials", "show"]
-    LOGS = "logs", "log"
-    PUSH = "push"
-    APP = "application"
-    APPS = "applications"
-    START = "start"
-    STOP = "stop"
-    RESTART = "restart"
-    SCALE = "scale"
-    DELETE = "delete"
-    PUSH_HELP = [PUSH, "--help"]
+
+    APPLICATION_INFO = ["application", "info"]
+    APPLICATION_LIST = ["application", "list"]
+    APPLICATION_PUSH = ["application", "push"]
+    APPLICATION_DELETE = ["application", "delete"]
+    APPLICATION_START = ["application", "start"]
+    APPLICATION_STOP = ["application", "stop"]
+    APPLICATION_RESTART = ["application", "restart"]
+    APPLICATION_SCALE = ["application", "scale"]
+    APPLICATION_LOGS_SHOW = ["application", "logs", "show"]
     BINDINGS = "bindings"
     BIND = "bind-instance", "bind"
     UNBIND = "unbind-instance", "unbind"
@@ -65,6 +65,7 @@ class TapCli:
     DELETE_INVITATION = ["user", "invitation", "delete"]
     DELETE_USER = ["user", "delete"]
 
+    HELP_FLAG = "--help"
     API_PARAM = "--api"
     USERNAME_PARAM = "--username"
     PASSWORD_PARAM = "--password"
@@ -72,6 +73,8 @@ class TapCli:
     NAME_PARAM = "--name"
     MANIFEST_PARAM = "--manifest"
     YES_PARAM = "--yes"
+    REPLICAS_PARAM = "--replicas"
+    ARCHIVE_PATCH_PARAM = "--archive-path"
 
     LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
 
@@ -142,14 +145,14 @@ class TapCli:
         return self._run_command(self.SERVICES)
 
     def service_log(self, service_name):
-        return self._run_command(self.SERVICE_LOGS + ["--name", service_name],
+        return self._run_command(self.SERVICE_LOGS + [self.NAME_PARAM, service_name],
                                  filter_logs=False)
 
     def service_credentials(self, cmd):
         return self._run_command(self.SERVICE_CREDENTIALS + cmd)
 
     def service_stop(self, service_name):
-        return self._run_command(self.SERVICE_STOP + [ "--name", service_name], filter_logs=False)
+        return self._run_command(self.SERVICE_STOP + [self.NAME_PARAM, service_name], filter_logs=False)
 
     def bindings(self, instance_name):
         output = self._run_command([self.BINDINGS, instance_name])
@@ -163,7 +166,7 @@ class TapCli:
         return self._run_command([self.UNBIND[1] if short else self.UNBIND[0]] + cmd)
 
     def get_service(self, service_name):
-        output = self._run_command(self.SERVICE_INFO + ["--name", service_name])
+        output = self._run_command(self.SERVICE_INFO + [self.NAME_PARAM, service_name])
         # TODO: Fix ".replace('}OK', '}')" (workaround for JSON diversity)
         output_lines = [line.strip().replace('}OK', '}') for line in output.split("\n")]
         try:
@@ -175,7 +178,20 @@ class TapCli:
         assert output_json["name"] == service_name
         return output_json
 
-    def push(self, *, app_path):
+
+    def app_list(self):
+        ascii_table = self._run_command(self.APPLICATION_LIST)
+        return self.parse_ascii_table(ascii_table)
+
+    def app_info(self, application_name):
+        output = self._run_command(self.APPLICATION_INFO + [self.NAME_PARAM, application_name])
+        app_json = output[output.find("{"):output.rfind("}")+1]
+        app = json.loads(app_json)
+        assert isinstance(app, dict)
+        assert app['name'] == application_name
+        return app
+
+    def app_push(self, *, app_path):
         """Push an application.
         If the path is a file, it is assumed it is an archived application, otherwise,
         that the path is a directory containing the application files.
@@ -187,32 +203,23 @@ class TapCli:
             Command output
         """
         if os.path.isfile(app_path):
-            cmd = [self.PUSH, os.path.basename(app_path)]
+            cmd = self.APPLICATION_PUSH + [self.ARCHIVE_PATCH_PARAM, os.path.basename(app_path)]
             cwd = os.path.dirname(app_path)
         else:
-            cmd = [self.PUSH]
+            cmd = self.APPLICATION_PUSH
             cwd = app_path
         return self._run_command(cmd, cwd=cwd)
 
-    def apps(self):
-        ascii_table = self._run_command([self.APPS])
-        return self.parse_ascii_table(ascii_table)
+    def app_delete(self, application_name):
+        return self._run_command(self.APPLICATION_DELETE + [self.NAME_PARAM, application_name, self.YES_PARAM])
 
-    def app(self, application_name):
-        output = self._run_command([self.APP, application_name])
-        app_json = output[output.find("{"):output.rfind("}")+1]
-        app = json.loads(app_json)
-        assert isinstance(app, dict)
-        assert app['name'] == application_name
-        return app
+    def app_start(self, application_name):
+        return self._run_command(self.APPLICATION_START + [self.NAME_PARAM, application_name])
 
-    def start_app(self, application_name):
-        return self._run_command([self.START, application_name])
+    def app_stop(self, application_name):
+        return self._run_command(self.APPLICATION_STOP + [self.NAME_PARAM, application_name])
 
-    def stop_app(self, application_name):
-        return self._run_command([self.STOP, application_name])
-
-    def restart_app(self, application_name: str):
+    def app_restart(self, application_name: str):
         """Restarts the application
 
         Args:
@@ -224,19 +231,16 @@ class TapCli:
         Raises:
             CommandExecutionException
         """
-        return self._run_command([self.RESTART, application_name])
+        return self._run_command(self.APPLICATION_RESTART + [self.NAME_PARAM, application_name])
 
-    def scale_app(self, application_name, instances):
-        return self._run_command([self.SCALE, application_name, instances])
+    def app_scale(self, application_name, instances):
+        return self._run_command(self.APPLICATION_SCALE + [self.NAME_PARAM, application_name, self.REPLICAS_PARAM, instances])
 
     def app_logs(self, application_name):
-        return self._run_command([self.LOGS[1], application_name])
+        return self._run_command(self.APPLICATION_LOGS_SHOW + [self.NAME_PARAM, application_name])
 
-    def delete_app(self, application_name):
-        return self._run_command([self.DELETE, application_name])
-
-    def push_help(self):
-        return self._run_command(self.PUSH_HELP)
+    def app_push_help(self):
+        return self._run_command(self.APPLICATION_PUSH + [self.HELP_FLAG])
 
     def invite(self, username):
         return self._run_command(self.INVITE + [self.EMAIL_PARAM, username])

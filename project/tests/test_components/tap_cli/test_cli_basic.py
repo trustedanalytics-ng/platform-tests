@@ -95,13 +95,7 @@ class TestCliBasicFlow:
         assert tap_cli.DELETE_SERVICE[0] in output
         assert tap_cli.SERVICE in output
         assert tap_cli.LOGS[0] in output
-        assert tap_cli.PUSH in output
-        assert tap_cli.APP[0] in output
-        assert tap_cli.APPS[0] in output
-        assert tap_cli.START in output
-        assert tap_cli.STOP in output
-        assert tap_cli.SCALE in output
-        assert tap_cli.DELETE in output
+        assert tap_cli.APPLICATION[0] in output
         assert tap_cli.BINDINGS in output
         assert tap_cli.BIND[0] in output
         assert tap_cli.UNBIND[0] in output

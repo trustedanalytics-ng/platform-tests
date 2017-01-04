@@ -44,7 +44,7 @@ class CliApplication(CliObjectSuperclass):
         new_app = cls(app_type=app_type, target_directory=app_path,
                       tap_cli=tap_cli, name=name, instances=instances)
         context.test_objects.append(new_app)
-        push_output = tap_cli.push(app_path=app_path)
+        push_output = tap_cli.app_push(app_path=app_path)
         missing_headers = []
         for header in cls.EXPECTED_PUSH_HEADERS:
             if header not in push_output:
@@ -53,12 +53,12 @@ class CliApplication(CliObjectSuperclass):
         return new_app
 
     def start(self):
-        start_output = self.tap_cli.start_app(application_name=self.name)
+        start_output = self.tap_cli.app_start(application_name=self.name)
         assert self.EXPECTED_SUCCESS_RESPONSE in start_output
         return start_output
 
     def stop(self):
-        stop_output = self.tap_cli.stop_app(application_name=self.name)
+        stop_output = self.tap_cli.app_stop(application_name=self.name)
         assert self.EXPECTED_SUCCESS_RESPONSE in stop_output
         return stop_output
 
@@ -71,12 +71,12 @@ class CliApplication(CliObjectSuperclass):
         Raises:
             CommandExecutionException
         """
-        output = self.tap_cli.restart_app(application_name=self.name)
+        output = self.tap_cli.app_restart(application_name=self.name)
         assert self.EXPECTED_SUCCESS_RESPONSE in output
         return output
 
     def scale(self, scale_app_instances):
-        scale_output = self.tap_cli.scale_app(application_name=self.name, instances=scale_app_instances)
+        scale_output = self.tap_cli.app_scale(application_name=self.name, instances=scale_app_instances)
         assert self.EXPECTED_SUCCESS_RESPONSE in scale_output
         return scale_output
 
@@ -84,25 +84,25 @@ class CliApplication(CliObjectSuperclass):
         return self.tap_cli.app_logs(application_name=self.name)
 
     def delete(self):
-        delete = self.tap_cli.delete_app(application_name=self.name)
+        delete = self.tap_cli.app_delete(application_name=self.name)
         assert self.EXPECTED_DELETE_BODY in delete
         self.ensure_not_on_app_list()
         return delete
 
     def get_details(self):
-        return self.tap_cli.app(application_name=self.name)
+        return self.tap_cli.app_info(application_name=self.name)
 
     def get_running_instances(self):
         return self.get_details()["running_instances"]
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_on_app_list(self):
-        app = next((app for app in self.tap_cli.apps() if app[self.FIELD_NAME] == self.name), None)
+        app = next((app for app in self.tap_cli.app_list() if app[self.FIELD_NAME] == self.name), None)
         assert app is not None, "App '{}' is not on the list of apps".format(self.name)
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_not_on_app_list(self):
-        app = next((app for app in self.tap_cli.apps() if app[self.FIELD_NAME] == self.name), None)
+        app = next((app for app in self.tap_cli.app_list() if app[self.FIELD_NAME] == self.name), None)
         assert app is None, "App '{}' is on the list of apps".format(self.name)
 
     @retry(AssertionError, tries=12, delay=5)
