@@ -55,7 +55,6 @@ class TestNonAdminOperationsMetrics:
                                                 path=self.PLATFORM_SUMMARY_PATH)
 
 
-@pytest.mark.bugs("DPNG-11096 Service Metrics - Catalog instrumentation")
 @pytest.mark.usefixtures("open_tunnel")
 class TestOperationsMetrics:
     """
@@ -88,6 +87,7 @@ class TestOperationsMetrics:
         return operations_metrics_value, ref_metrics_value
 
     @pytest.mark.parametrize("metrics_attribute", ("apps", "services", "service_instances", "orgs", "users_platform"))
+    @pytest.mark.bugs("DPNG-14031 Number of User accounts in Dashboard changes to actual amount but after a while")
     def test_operations_metrics(self, metrics_attribute):
         """
         <b>Description:</b>
