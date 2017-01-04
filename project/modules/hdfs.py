@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 
 
 class Hdfs(object):
-    _SSH = ["ssh", "-tt"]
+    _SSH = ["ssh", "-tt", "-o StrictHostKeyChecking=no"]
     _SUDO = ["sudo", "-u", "hdfs"]
     _HADOOP_CMD = ["dfs", "-ls"]
     _HADOOP_CMD_PERMISSION = ["dfs", "-getfacl"]
