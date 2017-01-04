@@ -39,7 +39,6 @@ class TestCliService:
     INVALID_SERVICE_PLAN = "nosuchplan"
     INVALID_SERVICE_NAME = "logstashxyz"
     KAFKA_AND_HDFS_OFFERINGS = [o for o in offerings_as_parameters if o[0] == "kafka" or o[0] == "hdfs"]
-    short = False
 
     @classmethod
     @pytest.fixture(scope="class")
@@ -123,7 +122,7 @@ class TestCliService:
         Check that attempt to retrieve logs of non existent service will return proper information.
 
         <b>Input data:</b>
-        1. Command name: logs
+        1. Command name: service logs show
 
         <b>Expected results:</b>
         Attempt to retrieve logs of non existent service will return proper message.
@@ -134,8 +133,7 @@ class TestCliService:
         """
         step("Check error when getting logs for non-existing service")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(self.INVALID_SERVICE_NAME)
-        assert_raises_command_execution_exception(1, expected_msg, tap_cli.service_log, self.INVALID_SERVICE_NAME,
-                                                  self.short)
+        assert_raises_command_execution_exception(1, expected_msg, tap_cli.service_log, self.INVALID_SERVICE_NAME)
 
     @priority.low
     @pytest.mark.components(TAP.cli)
@@ -145,7 +143,7 @@ class TestCliService:
         Check that attempt to delete non existent service will return error.
 
         <b>Input data:</b>
-        1. Command name: delete-service
+        1. Command name: service delete
 
         <b>Expected results:</b>
         Attempt to delete non existent service will return proper message.
@@ -157,7 +155,7 @@ class TestCliService:
         step("Check error when deleting non-existing service")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(self.INVALID_SERVICE_NAME)
         assert_raises_command_execution_exception(1, expected_msg, tap_cli.delete_service,
-                                                  [self.INVALID_SERVICE_NAME], self.short)
+                                                  ["--name", self.INVALID_SERVICE_NAME])
 
     @priority.low
     @pytest.mark.components(TAP.api_service, TAP.cli)
@@ -167,7 +165,7 @@ class TestCliService:
         Check that attempt to create service instance with invalid plan will return proper information.
 
         <b>Input data:</b>
-        1. Command name: create-service
+        1. Command name: service create
         2. Service offering
 
         <b>Expected results:</b>
@@ -180,7 +178,8 @@ class TestCliService:
         step("Check error message when creating instance with invalid plan")
         expected_msg = TapMessage.CANNOT_FIND_PLAN_FOR_SERVICE.format(self.INVALID_SERVICE_PLAN, offering.label)
         assert_raises_command_execution_exception(1, expected_msg, tap_cli.create_service,
-                                                  [offering.label, self.INVALID_SERVICE_PLAN, 'test1'], self.short)
+                                                  ["--offering", offering.label, "--plan", self.INVALID_SERVICE_PLAN,
+                                                   "--name", 'test1'])
 
     @priority.low
     @pytest.mark.components(TAP.api_service, TAP.cli)
@@ -190,7 +189,7 @@ class TestCliService:
         Check that attempt to create service instance without name will return proper information.
 
         <b>Input data:</b>
-        1. Command name: create-service
+        1. Command name: service create
         2. Service offering
 
         <b>Expected results:</b>
@@ -201,9 +200,10 @@ class TestCliService:
         1. Verify that attempt to create service without name return expected message.
         """
         step("Check error message when creating instance without instance name")
-        assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_SERVICE,
+        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
                                                   tap_cli.create_service,
-                                                  [offering.label, offering.service_plans[0].name], self.short)
+                                                  ["--offering", offering.label,
+                                                   "--plan", offering.service_plans[0].name])
 
     @priority.low
     @pytest.mark.components(TAP.api_service, TAP.cli)
@@ -213,7 +213,7 @@ class TestCliService:
         Check that attempt to create service instance without plan will return proper information.
 
         <b>Input data:</b>
-        1. Command name: create-service
+        1. Command name: service create
         2. Service offering
 
         <b>Expected results:</b>
@@ -224,8 +224,9 @@ class TestCliService:
         2. Verify that attempt to create service without plan return expected message.
         """
         step("Check error message when creating instance without plan name")
-        assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_SERVICE,
-                                                  tap_cli.create_service, [offering.label, "test"], self.short)
+        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+                                                  tap_cli.create_service, ["--offering", offering.label,
+                                                                           "--name", "test"])
 
     @priority.low
     @pytest.mark.components(TAP.api_service, TAP.cli)
@@ -235,7 +236,7 @@ class TestCliService:
         Check that attempt to create service instance without offering name will proper information.
 
         <b>Input data:</b>
-        1. Command name: create-service
+        1. Command name: service create
         2. Service offering
 
         <b>Expected results:</b>
@@ -246,9 +247,9 @@ class TestCliService:
         2. Verify that attempt to create service without offering name return expected message.
         """
         step("Check error message when creating instance without offering name")
-        assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_CREATE_SERVICE,
-                                                  tap_cli.create_service, [offering.service_plans[0].name, "test"],
-                                                  self.short)
+        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+                                                  tap_cli.create_service, ["--plan", offering.service_plans[0].name,
+                                                                           "--name", "test"])
 
     @priority.low
     @pytest.mark.components(TAP.cli)
@@ -258,7 +259,7 @@ class TestCliService:
         Check that attempt to create service instance of non existing offering will return proper information.
 
         <b>Input data:</b>
-        1. Command name: create-service
+        1. Command name: service create
         2. Non existing offering name
 
         <b>Expected results:</b>
@@ -270,8 +271,8 @@ class TestCliService:
         """
         step("Check error message when creating instance for non existing offering")
         assert_raises_command_execution_exception(1, TapMessage.CANNOT_FIND_SERVICE.format(self.INVALID_SERVICE_NAME),
-                                                  tap_cli.create_service, [self.INVALID_SERVICE_NAME, 'free', 'test1'],
-                                                  self.short)
+                                                  tap_cli.create_service, ["--offering", self.INVALID_SERVICE_NAME,
+                                                                           "--plan", 'free', "--name", 'test1'])
 
     @priority.low
     @pytest.mark.components(TAP.cli)
@@ -281,7 +282,7 @@ class TestCliService:
         Check that attempt to delete service without providing all required arguments will return proper information.
 
         <b>Input data:</b>
-        1. Command name: delete-service
+        1. Command name: service delete
 
         <b>Expected results:</b>
         Attempt to delete service without providing all required arguments will return proper message.
@@ -291,9 +292,49 @@ class TestCliService:
         2. Verify that attempt to delete service without providing all required arguments return expected message.
         """
         step("Check error message when deleting instance without instance name")
-        assert_raises_command_execution_exception(1, TapMessage.NOT_ENOUGH_ARGS_DELETE_SERVICE,
-                                                  tap_cli.delete_service, [], self.short)
+        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+                                                  tap_cli.delete_service, [])
 
+    @priority.low
+    @pytest.mark.components(TAP.cli)
+    def test_cannot_get_service_credentials_without_name(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check that attempt to get service credentials service without providing service name will return proper information.
 
-class TestCliServiceShortCommand(TestCliService):
-    short = True
+        <b>Input data:</b>
+        1. Command name: service credentials show
+
+        <b>Expected results:</b>
+        Attempt to get service credentials service without providing service name will return proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command service credentials show.
+        2. Verify that attempt to get service credentials service without providing service name will return proper message.
+        """
+        step("Check error message when getting service credentialswithout instance name")
+        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+                                                  tap_cli.service_credentials, [])
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_get_service_credentials(self, tap_cli, service, offering):
+        """
+        <b>Description:</b>
+        Check that service credentials are shown.
+
+        <b>Input data:</b>
+        1. Service instance name
+
+        <b>Expected results:</b>
+        Service credentials are shown.
+
+        <b>Steps:</b>
+        1. Retrieve service credentials
+        2. Verify that offering name is present
+        3. Verify that plan id is present
+        """
+        step("Check that logs are shown for a service instance")
+        credentials_output = tap_cli.service_credentials(["--name", service.name])
+        assert service.offering_name in credentials_output
+        assert offering.service_plans[0].id in credentials_output

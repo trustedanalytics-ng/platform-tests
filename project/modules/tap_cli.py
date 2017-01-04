@@ -33,11 +33,15 @@ class TapCli:
     DELETE_OFFERING = ["offering", "delete"]
     LIST_OFFERINGS = ["offering", "list"]
     GET_OFFERING = ["offering", "info"]
-    CREATE_SERVICE = "create-service", "cs"
-    DELETE_SERVICE = "delete-service", "ds"
-    SERVICES = "services", "svcs"
-    SERVICE = "service", "s"
-    SERVICE_STOP = "service-stop"
+    CREATE_SERVICE = ["service", "create"]
+    DELETE_SERVICE = ["service", "delete"]
+    SERVICE = "service"
+    SERVICES = ["service", "list"]
+    SERVICE_INFO = ["service", "info"]
+    SERVICE_LOGS = ["service", "logs", "show"]
+    SERVICE_START = ["service", "start"]
+    SERVICE_STOP = ["service", "stop"]
+    SERVICE_CREDENTIALS = ["service", "credentials", "show"]
     LOGS = "logs", "log"
     PUSH = "push"
     APP = "application"
@@ -114,21 +118,24 @@ class TapCli:
     def print_offering(self, offering_name: str):
         return self._run_command(self.GET_OFFERING + [self.NAME_PARAM, offering_name])
 
-    def create_service(self, cmd: list, short=False):
-        return self._run_command([self.CREATE_SERVICE[1] if short else self.CREATE_SERVICE[0]] + cmd)
+    def create_service(self, cmd: list):
+        return self._run_command(self.CREATE_SERVICE + cmd)
 
-    def delete_service(self, cmd: list, short=False):
-        return self._run_command([self.DELETE_SERVICE[1] if short else self.DELETE_SERVICE[0]] + cmd)
+    def delete_service(self, cmd: list):
+        return self._run_command(self.DELETE_SERVICE + cmd)
 
-    def services_list(self, short=False):
-        return self._run_command([self.SERVICES[1] if short else self.SERVICES[0]])
+    def services_list(self):
+        return self._run_command(self.SERVICES)
 
-    def service_log(self, service_name, short=False):
-        return self._run_command([self.LOGS[1] if short else self.LOGS[0], service_name],
+    def service_log(self, service_name):
+        return self._run_command(self.SERVICE_LOGS + ["--name", service_name],
                                  filter_logs=False)
 
+    def service_credentials(self, cmd):
+        return self._run_command(self.SERVICE_CREDENTIALS + cmd)
+
     def service_stop(self, service_name):
-        return self._run_command([self.SERVICE_STOP, service_name], filter_logs=False)
+        return self._run_command(self.SERVICE_STOP + [ "--name", service_name], filter_logs=False)
 
     def bindings(self, instance_name):
         output = self._run_command([self.BINDINGS, instance_name])
@@ -141,8 +148,8 @@ class TapCli:
     def unbind_service(self, cmd: list, short=False):
         return self._run_command([self.UNBIND[1] if short else self.UNBIND[0]] + cmd)
 
-    def get_service(self, service_name, short=False):
-        output = self._run_command([self.SERVICE[1] if short else self.SERVICE[0], service_name])
+    def get_service(self, service_name):
+        output = self._run_command(self.SERVICE_INFO + ["--name", service_name])
         # TODO: Fix ".replace('}OK', '}')" (workaround for JSON diversity)
         output_lines = [line.strip().replace('}OK', '}') for line in output.split("\n")]
         try:

@@ -55,8 +55,8 @@ class CliService(CliObjectSuperclass):
     @classmethod
     def create(cls, context, tap_cli, offering_name, plan_name, name=None):
         if name is None:
-            name = test_names.generate_test_object_name(separator="-")
-        tap_cli.create_service([offering_name, plan_name, name])
+            name = test_names.generate_test_object_name(separator="-", short=True)
+        tap_cli.create_service(["--offering", offering_name, "--plan", plan_name, "--name", name])
         context.test_objects.append(cls(offering_name=offering_name, plan_name=plan_name, name=name, tap_cli=tap_cli))
         cli_service = cls.get(name, tap_cli)
         cli_service.ensure_service_state(TapEntityState.RUNNING)
@@ -85,7 +85,7 @@ class CliService(CliObjectSuperclass):
         return self.tap_cli.service_log(self.name)
 
     def delete(self):
-        return self.tap_cli.delete_service([self.name])
+        return self.tap_cli.delete_service(["--name", self.name])
 
     def stop(self):
         self.tap_cli.service_stop(self.name)

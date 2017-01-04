@@ -35,11 +35,7 @@ class TestTapCli(unittest.TestCase):
         return '{\n"name":"test1",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
 
     def _run_command_get_service_command(self, cmd: list):
-        assert ['service', 'test1'] == cmd
-        return '{\n"name":"test1",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
-
-    def _run_command_get_service_short_command(self, cmd: list):
-        assert ['s', 'test1'] == cmd
+        assert ['service', 'info', '--name', 'test1'] == cmd
         return '{\n"name":"test1",\n"state":"RUNNING",\n"serviceName":"etcd",\n"planName":"free"\n}\n'
 
     def _run_command_get_wrong_service_name(self, cmd: list):
@@ -76,11 +72,6 @@ class TestTapCli(unittest.TestCase):
     @patch.object(TapCli, "_run_command", _run_command_get_service_command)
     def test_get_service_command(self):
         service = self.tap_cli.get_service("test1")
-        assert service["name"] == "test1"
-
-    @patch.object(TapCli, "_run_command", _run_command_get_service_short_command)
-    def test_get_service_short_command(self):
-        service = self.tap_cli.get_service("test1", short=True)
         assert service["name"] == "test1"
 
     @patch.object(TapCli, "_run_command", _run_command_get_wrong_service_name)
@@ -130,7 +121,7 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_create_service(self):
-        assert ["create-service"] == self.tap_cli.create_service([])
+        assert ["service", "create"] == self.tap_cli.create_service([])
 
     @patch.object(TapCli, "_run_command", _run_command_empty_response)
     def test_create_service_without_params(self):
@@ -138,11 +129,7 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_delete_service(self):
-        assert ["delete-service"] == self.tap_cli.delete_service([])
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_delete_service_short_command(self):
-        assert ["ds"] == self.tap_cli.delete_service([], short=True)
+        assert ["service", "delete"] == self.tap_cli.delete_service([])
 
     @patch.object(TapCli, "_run_command", _run_command_empty_response)
     def test_delete_service_without_params(self):
@@ -150,19 +137,11 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_services_list(self):
-        assert ["services"] == self.tap_cli.services_list()
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_services_list_short_command(self):
-        assert ["svcs"] == self.tap_cli.services_list(short=True)
+        assert ["service", "list"] == self.tap_cli.services_list()
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_service_log(self):
-        assert ["logs", "test1"] == self.tap_cli.service_log("test1")
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_service_log_short_command(self):
-        assert ["log", "test1"] == self.tap_cli.service_log("test1", short=True)
+        assert ["service", "logs", "show", "--name", "test1"] == self.tap_cli.service_log("test1")
 
     test_user = "test_user"
 
