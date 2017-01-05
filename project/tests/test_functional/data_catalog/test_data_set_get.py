@@ -25,7 +25,6 @@ logged_components = (TAP.data_catalog, TAP.das, TAP.downloader, TAP.metadata_par
 pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.downloader, TAP.metadata_parser)]
 
 
-@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestGetDataSets(object):
 
     data_sample = ["COL_0", "COL_1", "COL_2", "COL_3", "COL_4", "COL_5", "COL_6", "COL_7"]

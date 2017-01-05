@@ -28,7 +28,6 @@ logged_components = (TAP.data_catalog, TAP.das, TAP.downloader, TAP.metadata_par
 pytestmark = [pytest.mark.components(TAP.data_catalog, TAP.das, TAP.downloader, TAP.metadata_parser)]
 
 
-@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestUpdateDeleteDataSet:
     TEST_FILE_URL = Urls.test_transfer_link
 
