@@ -245,7 +245,6 @@ class TestWs2kafka2gearpump2hbase:
         step("Check that submitted application is started")
         assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 
-    @pytest.mark.bugs("DPNG-7938 'HBase is security enabled' error - kerberos env")
     def test_5_check_messages_flow(self):
         """
         <b>Description:</b>
