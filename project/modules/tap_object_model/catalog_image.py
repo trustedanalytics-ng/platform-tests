@@ -30,7 +30,9 @@ class CatalogImage(TapObjectSuperclass):
         self.blob_type = blob_type
 
     def __repr__(self):
-        return "{} (type={}, id={})".format(self.__class__.__name__, self.type, self.id)
+        return "{} (type={}, id={}, state={}, blob_type={})".format(self.__class__.__name__,
+                                                                    self.type, self.id,
+                                                                    self.state, self.blob_type)
 
     @classmethod
     def _from_response(cls, response):
