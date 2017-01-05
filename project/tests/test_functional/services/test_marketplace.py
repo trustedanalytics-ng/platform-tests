@@ -64,9 +64,13 @@ class TestMarketplaceServices:
 
     @long
     @priority.high
-    @pytest.mark.bugs("DPNG-12295 Status code 401 for tests after Session expiration")
-    @pytest.mark.bugs("DPNG-12487 [api-tests] Service instances created in api-tests require unique names")
     @pytest.mark.bugs("DPNG-12485 It is possible to create invalid services with no plan")
+    @pytest.mark.bugs("DPNG-13784 [PROBLEM SOLVING] Problems with memory and not ability to work on env")
+    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
+    @pytest.mark.bugs("DPNG-12481 Cannot create instance of h2o")
+    @pytest.mark.bugs("DPNG-13433 Adjust Jupyter offering to TAP Offerings doc")
+    @pytest.mark.bugs("DPNG-14021 Zookeeper instance creation fails")
+    @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0") 
     @pytest.mark.parametrize("role", ["user"])
     def test_create_and_delete_service_instance(self, context, non_parametrized_marketplace_services,
                                                 test_user_clients, role):
