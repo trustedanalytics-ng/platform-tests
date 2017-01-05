@@ -72,7 +72,6 @@ class TestPythonCliApp(TestAppBase):
         step("Ensure app is not on the app list")
         application.ensure_not_on_app_list()
 
-    @pytest.mark.bugs("DPNG-12158 Tap client fails when pushing directory containing symbolic links")
     def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
         """
         <b>Description:</b>
@@ -186,6 +185,7 @@ class TestPythonCliApp(TestAppBase):
         step("Check there are/is {} instance(s)".format(scaled_instances))
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
+    @pytest.mark.bugs("DPNG-13515 Missing app name in logs")
     @priority.medium
     def test_check_app_logs(self, sample_cli_app):
         """
@@ -205,7 +205,6 @@ class TestPythonCliApp(TestAppBase):
         assert sample_cli_app.name in sample_cli_app.logs()
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestGoCliApp(TestPythonCliApp):
     SAMPLE_APP_NAME = DataFileKeys.TAPNG_GO_APP
     APP_TYPE = TapApplicationType.GO
@@ -213,7 +212,6 @@ class TestGoCliApp(TestPythonCliApp):
     APP_URL_MESSAGE = "OK"
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestJavaCliApp(TestPythonCliApp):
     SAMPLE_APP_NAME = DataFileKeys.TAPNG_JAVA_APP
     APP_TYPE = TapApplicationType.JAVA
@@ -221,7 +219,6 @@ class TestJavaCliApp(TestPythonCliApp):
     APP_URL_MESSAGE = "OK"
 
 
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestNodeJsCliApp(TestPythonCliApp):
     SAMPLE_APP_NAME = DataFileKeys.TAPNG_NODEJS_APP
     APP_TYPE = TapApplicationType.NODEJS
