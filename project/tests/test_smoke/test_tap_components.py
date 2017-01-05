@@ -112,6 +112,7 @@ class TestK8sComponents:
                                                     msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
+    @pytest.mark.skip("DPNG-14046 [api-test] Fix smoke test test_3rd_party_component_check_availability(image-repository)")
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
     def test_3rd_party_component_check_availability(self, service, service_params):
         """
