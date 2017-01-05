@@ -31,7 +31,6 @@ from tests.fixtures.assertions import assert_raises_http_exception
 logged_components = (TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)
 
 
-@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransfer:
     pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.metadata_parser)]
 
@@ -120,6 +119,7 @@ class TestSubmitTransfer:
         assert retrieved_transfer.category == new_category, "Created transfer has different category"
 
     @priority.low
+    @pytest.mark.bugs("DPNG-14772 [api-tests] Change error codes and messages expected in test)")
     def test_cannot_create_transfer_when_providing_invalid_org_guid(self, context):
         """
         <b>Description:</b>
@@ -192,7 +192,6 @@ class TestSubmitTransfer:
         assert "token" not in response, "token field was returned in response"
 
 
-@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
     pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)]
 
@@ -380,7 +379,6 @@ class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
         DataSet.api_get_matching_to_transfer(org_guid=test_org.guid, transfer_title=transfer.title)
 
 
-@pytest.mark.bugs("DPNG-10412 [TAP-NG] Integration of Data Catalog components into NG")
 class GetTransfers:
     pytestmark = [pytest.mark.components(TAP.das)]
 
