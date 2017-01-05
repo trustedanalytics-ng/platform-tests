@@ -42,6 +42,7 @@ class TestGearpumpConsole:
         self.gearpump.go_to_dashboard()
         request.addfinalizer(self.gearpump.go_to_console)
 
+    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
     def test_0_create_gearpump_instance(self, class_context, test_org):
         """
         <b>Description:</b>
