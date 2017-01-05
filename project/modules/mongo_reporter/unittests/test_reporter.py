@@ -17,9 +17,7 @@
 import copy
 import os
 import socket
-from datetime import datetime
 from unittest import mock
-from unittest.mock import call
 
 import pytest
 from bson import ObjectId
@@ -29,6 +27,7 @@ from modules.mongo_reporter._client import MockDbClient
 from modules.mongo_reporter.base_reporter import BaseReporter
 from modules.mongo_reporter.performance_reporter import PerformanceReporter
 from modules.mongo_reporter.reporter import MongoReporter
+from tests.fixtures.assertions import assert_date_close_enough_to_now
 
 MOCK_BUMPVERSION_PATH = os.path.join("modules", "mongo_reporter", "unittests", "fixtures", "mock_bumpversion")
 assert os.path.isfile(MOCK_BUMPVERSION_PATH)
@@ -148,7 +147,7 @@ class TestPerformanceReporter(object):
         assert run_document["hatch_rate"] == MockConfig.hatch_rate
         assert run_document["infrastructure_type"] == MockConfig.tap_infrastructure_type
         assert run_document["number_of_users"] == MockConfig.num_clients
-        _assert_date_close_enough_to_now(run_document["start_date"])
+        assert_date_close_enough_to_now(run_document["start_date"])
         assert run_document["started by"] == socket.gethostname()
         assert run_document["status"] == BaseReporter._RESULT_UNKNOWN
 
@@ -160,7 +159,7 @@ class TestPerformanceReporter(object):
         reporter.on_run_end(self.MockStats)
         document_after = reporter._mongo_run_document
         _assert_all_keys_equal_except(document_before, document_after, "end_date", "finished", "status")
-        _assert_date_close_enough_to_now(document_after["start_date"])
+        assert_date_close_enough_to_now(document_after["start_date"])
         assert document_after["status"] is BaseReporter._RESULT_PASS
         assert document_after["finished"] is True
 
@@ -209,13 +208,13 @@ class TestReporter(object):
         assert run_document["teamcity_build_id"] == MockTeamcityConfiguration.GETINT_VALUE
         assert run_document["teamcity_server_url"] == MockTeamcityConfiguration.GET_VALUE
         # other dynamic values
-        _assert_date_close_enough_to_now(run_document["start_date"])
+        assert_date_close_enough_to_now(run_document["start_date"])
         assert run_document["started_by"] == socket.gethostname()
         assert run_document["test_version"] == TEST_VERSION
         assert run_document["parameters"]["environment_variables"] == os.environ
         assert run_document["tap_build_number"] is None
         # non-dynamic values
-        _assert_date_close_enough_to_now(run_document["start_date"])
+        assert_date_close_enough_to_now(run_document["start_date"])
         assert run_document["end_date"] is None
         assert run_document["finished"] is False
         assert run_document["log"] == ""
@@ -256,7 +255,7 @@ class TestReporter(object):
         _assert_all_keys_equal_except(document_before, document_after, "environment_availability", "end_date",
                                            "finished")
         assert document_after["environment_availability"] is False
-        _assert_date_close_enough_to_now(document_after["end_date"])
+        assert_date_close_enough_to_now(document_after["end_date"])
         assert document_after["finished"] is True
 
     def test_on_run_end(self):
@@ -267,7 +266,7 @@ class TestReporter(object):
         reporter.on_run_end()
         document_after = reporter._mongo_run_document
         _assert_all_keys_equal_except(document_before, document_after, "end_date", "total_test_count", "finished")
-        _assert_date_close_enough_to_now(document_after["start_date"])
+        assert_date_close_enough_to_now(document_after["start_date"])
         assert document_after["total_test_count"] == TEST_COUNT
         assert document_after["finished"] is True
 
@@ -409,10 +408,6 @@ class TestReporter(object):
     def test_collection_name_is_not_none(self):
         reporter = MongoReporter()
         assert reporter._TEST_RUN_COLLECTION_NAME is not None
-
-
-def _assert_date_close_enough_to_now(date, epsilon=0.1):
-    assert abs(date - datetime.now()).total_seconds() < epsilon
 
 
 def _assert_all_keys_equal_except(document_a: dict, document_b: dict, *args):

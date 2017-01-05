@@ -15,6 +15,8 @@
 #
 
 import math
+from datetime import datetime
+
 import pytest
 from retry import retry
 from modules.exceptions import UnexpectedResponseError, CommandExecutionException
@@ -159,3 +161,11 @@ def assert_dict_values_set(dictionary, expected_keys_list):
         if key in expected_keys_list and math.isnan(dictionary[key]):
             values_not_set.append(key)
     assert len(values_not_set) == 0, "Missing value(s): {}".format(values_not_set)
+
+
+def assert_date_close_enough_to_now(date, epsilon=0.1):
+    assert abs(date - datetime.now()).total_seconds() < epsilon
+
+
+def assert_values_approximately_equal(v1, v2, epsilon=0.1):
+    assert abs(v1 - v2) < epsilon

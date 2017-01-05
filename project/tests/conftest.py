@@ -33,7 +33,8 @@ pytest_plugins = ["tests.fixtures.context",
                   "tests.fixtures.fixtures",
                   "tests.fixtures.fixtures_core_components",
                   "tests.fixtures.remote_logging",
-                  "tests.fixtures.fixtures_ng"]
+                  "tests.fixtures.fixtures_ng",
+                  "modules.mongo_reporter.request_reporter"]
 
 
 logger = get_logger(__name__)

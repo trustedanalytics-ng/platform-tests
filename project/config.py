@@ -198,6 +198,7 @@ locust_port = os.environ.get("PT_LOCUST_PORT", "8089")
 locust_address = "http://localhost:{}".format(locust_port)
 stress_run_id = os.environ.get("PT_STRESS_RUN_ID", None)
 log_metrics_interval = get_int("PT_LOG_METRICS_INTERVAL", 0)
+log_requests = get_bool("PT_LOG_REQUESTS", False)
 
 
 def ng_k8s_service_credentials() -> tuple:

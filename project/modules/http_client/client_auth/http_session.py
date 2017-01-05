@@ -19,6 +19,7 @@ import json
 from requests import Session, Request
 
 import config
+from modules.mongo_reporter.request_reporter import log_request
 from modules.tap_logger import log_http_request, log_http_response
 from modules.exceptions import UnexpectedResponseError
 from .http_method import HttpMethod
@@ -80,7 +81,7 @@ class HttpSession(object):
     def _request_perform(self, request: Request, raw_response: bool,
                          timeout: int, raise_exception: bool):
         """Perform request and return response."""
-        response = self._session.send(request, timeout=timeout)
+        response = self._send_request_and_get_raw_response(request, timeout=timeout)
         log_http_response(response)
 
         if raise_exception and not response.ok and "session_expired" != response.text.strip():
@@ -94,3 +95,6 @@ class HttpSession(object):
         except ValueError:
             return response.text
 
+    @log_request
+    def _send_request_and_get_raw_response(self, request: Request, timeout: int):
+        return self._session.send(request, timeout=timeout)
