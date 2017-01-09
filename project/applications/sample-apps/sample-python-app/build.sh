@@ -24,7 +24,7 @@ if [ -d $VENDOR ]; then
 fi
 mkdir $VENDOR
 
-python2 -m pip install --download $VENDOR -r requirements.txt
+python -m pip install --download $VENDOR -r requirements.txt
 
 rm -f $TAR_NAME
 tar -zcvf $TAR_NAME *

@@ -43,7 +43,7 @@ def generate_test_object_name(email=False, short=False, prefix=None, separator="
     guid = "" if short else str(uuid.uuid4()).replace("-", "")
     separator = "" if short else separator
     if prefix is None:
-        prefix = socket.gethostname().split(".", 1)[0].replace("-", separator).lower()
+        prefix = socket.gethostname().split(".", 1)[0].replace("-", separator).lower()[:15]
     if email:
         email_format = config.test_user_email.replace('@', '+{}@')
         name = separator.join([prefix, date, time, milliseconds])
