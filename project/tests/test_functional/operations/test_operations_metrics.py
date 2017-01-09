@@ -47,8 +47,8 @@ class TestNonAdminOperationsMetrics:
         2. Verify that the user cannot reach summary operations page.
         """
         step("Create non-admin user")
-        self.test_user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid)
-        client = self.test_user.login(rest_prefix="")
+        test_user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid)
+        client = test_user.login(rest_prefix="")
         step("Checking if non-admin user cannot request admin-only data")
         assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
                                                 client.request, method=HttpMethod.GET, url=console_url,
@@ -64,13 +64,13 @@ class TestOperationsMetrics:
     MAX_CHECK = 3
     MARGIN_ERROR = 10  # because grafana use moving-average for last 1-2m
 
-    def _get_metrics(self):
+    def _get_metrics(self, org_guid):
         """Return metrics from operations platform dashboard and reference metrics"""
         platform = Metrics.from_grafana(metrics_level="platform")
-        reference_data = Metrics.from_reference()
+        reference_data = Metrics.from_reference(org_guid)
         return platform, reference_data
 
-    def values_to_compare(self, checked_metrics_attribute):
+    def values_to_compare(self, checked_metrics_attribute, org_guid):
         """
         this function is created to help with test instability when running in parallel
         with other tests. It asserts if values are correct, if not it gathers new data.
@@ -79,7 +79,7 @@ class TestOperationsMetrics:
         :return:
         """
         for _ in range(self.MAX_CHECK):
-            operations_metrics, ref_metrics = self._get_metrics()
+            operations_metrics, ref_metrics = self._get_metrics(org_guid)
             operations_metrics_value = getattr(operations_metrics, checked_metrics_attribute)
             ref_metrics_value = getattr(ref_metrics, checked_metrics_attribute)
             if operations_metrics_value == ref_metrics_value:
@@ -88,7 +88,7 @@ class TestOperationsMetrics:
 
     @pytest.mark.parametrize("metrics_attribute", ("apps", "services", "service_instances", "orgs", "users_platform"))
     @pytest.mark.bugs("DPNG-14031 Number of User accounts in Dashboard changes to actual amount but after a while")
-    def test_operations_metrics(self, metrics_attribute):
+    def test_operations_metrics(self, metrics_attribute, test_org):
         """
         <b>Description:</b>
         Checks if metrics for "apps", "services", "service_instances", "orgs", "users_platform" show correct values on
@@ -106,12 +106,12 @@ class TestOperationsMetrics:
         2. Verify that reference values equal platform metrics.
         """
         step("Testing if reference values equals platform data. Data to check: {}".format(metrics_attribute))
-        operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute)
+        operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute, test_org.guid)
         assert operation_metrics == ref_metrics, "Grafana metrics {} are not equal to references metrics {}" \
                                                  "".format(operation_metrics, ref_metrics)
 
     @pytest.mark.parametrize("metrics_attribute", ("memory_usage_platform", "cpu_usage_platform"))
-    def test_operations_metrics_cpu_and_memory(self, metrics_attribute):
+    def test_operations_metrics_cpu_and_memory(self, metrics_attribute, test_org):
         """
         <b>Description:</b>
         Checks if metrics for "memory_usage_platform", "cpu_usage_platform" show correct values on Platform Dashboard
@@ -129,6 +129,6 @@ class TestOperationsMetrics:
         2. Verify that reference values equal platform metrics with error margin.
         """
         step("Testing if reference values equals platform data. Data to check: {}".format(metrics_attribute))
-        operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute)
+        operation_metrics, ref_metrics = self.values_to_compare(metrics_attribute, test_org.guid)
         assert abs(operation_metrics - ref_metrics) < self.MARGIN_ERROR, \
             "Grafana metrics {} are not equals to references metrics {}".format(operation_metrics, ref_metrics)

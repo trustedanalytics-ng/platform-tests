@@ -57,15 +57,17 @@ class Metrics(object):
         return self.__class__.__name__
 
     @classmethod
-    def from_reference(cls):
+    def from_reference(cls, org_guid):
         from modules.tap_object_model import Application, User, Organization, ServiceOffering, ServiceInstance
         metrics = []
+        app_down_states = [TapEntityState.FAILURE, TapEntityState.STOPPED]
 
         apps = Application.get_list()
         apps_count = len(apps)
         apps_running_count = len([app for app in apps if app.state == TapEntityState.RUNNING])
-        apps_down_count = len([ app for app in apps if app.state == TapEntityState.FAILURE])
-        user_count = len(User.get_all_users())
+        apps_down_count = len([app for app in apps
+                               if app.state in app_down_states])
+        user_count = len(User.get_all_users(org_guid))
         orgs_count = len(Organization.get_list())
         services_count = len(ServiceOffering.get_list())
         services_inst = len(ServiceInstance.get_list())

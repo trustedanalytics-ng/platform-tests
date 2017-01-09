@@ -42,7 +42,7 @@ class TestCliInvitations:
 
     @priority.high
     @pytest.mark.components(TAP.cli)
-    def test_invite_user(self, context, tap_cli):
+    def test_invite_user(self, context, tap_cli, test_org):
         """
         <b>Description:</b>
         Invite and register new user.
@@ -61,7 +61,9 @@ class TestCliInvitations:
         step("Send invitation")
         invitation = CliInvitation.send(context, tap_cli=tap_cli)
         step("User accepts invitation and registers")
-        user = CliUser.register(context, tap_cli=tap_cli, username=invitation.name)
+        user = CliUser.register(context, tap_cli=tap_cli,
+                                username=invitation.name,
+                                org_guid=test_org.guid)
         step("Check that user is on the list of users")
         users = CliUser.get_list(tap_cli=tap_cli)
         assert user in users
@@ -91,7 +93,7 @@ class TestCliInvitations:
     @priority.high
     @pytest.mark.components(TAP.cli, TAP.user_management)
     @pytest.mark.bugs("DPNG-13587 500 is returned when trying to delete user")
-    def test_delete_user(self, tap_cli, user):
+    def test_delete_user(self, tap_cli, test_org, user):
         """
         <b>Description:</b>
         Delete user.
@@ -107,9 +109,9 @@ class TestCliInvitations:
         2. Delete user.
         3. Check that user is no longer present in users list.
         """
-        assert_in_with_retry(user, User.get_all_users)
+        assert_in_with_retry(user, User.get_all_users, org_guid=test_org.guid)
         tap_cli.delete_user(user.username)
-        assert_not_in_with_retry(user, User.get_all_users)
+        assert_not_in_with_retry(user, User.get_all_users, org_guid=test_org.guid)
 
     @priority.medium
     @pytest.mark.components(TAP.cli)

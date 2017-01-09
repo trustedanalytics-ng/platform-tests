@@ -38,9 +38,9 @@ class TestMetrics(object):
     MARGIN_ERROR = 10  # because grafana use moving-average for last 1-2m
 
     @pytest.fixture(scope="class")
-    def org_metrics(self):
+    def org_metrics(self, test_org):
         log_fixture("Retrieve metrics for the organization")
-        reference_metrics = Metrics.from_reference()
+        reference_metrics = Metrics.from_reference(test_org.guid)
         org_metrics = Metrics.from_grafana()
         return reference_metrics, org_metrics
 

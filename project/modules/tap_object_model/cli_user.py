@@ -30,9 +30,10 @@ class CliUser(CliObjectSuperclass):
         super().__init__(tap_cli=tap_cli, name=username)
 
     @classmethod
-    def register(cls, context, *, tap_cli, username):
+    def register(cls, context, *, org_guid, tap_cli, username):
         code = gmail_api.get_invitation_code_for_user(username)
-        onboarding.register(context=context, code=code, username=username)
+        onboarding.register(context=context, code=code,
+                            username=username, org_guid=org_guid)
         cli_user = cls(tap_cli=tap_cli, username=username)
         context.test_objects.append(cli_user)
         return cli_user
