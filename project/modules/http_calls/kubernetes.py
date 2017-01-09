@@ -40,20 +40,20 @@ def k8s_get_nodes():
     )
 
 
-def k8s_get_services():
+def k8s_get_services(*, namespace=DEFAULT_NAMESPACE):
     """GET /namespaces/{namespace}/services"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/services".format(DEFAULT_NAMESPACE),
+        path="namespaces/{}/services".format(namespace),
         msg="KUBERNETES: get services"
     )
 
 
-def k8s_get_service(service_name):
+def k8s_get_service(service_name, *, namespace=DEFAULT_NAMESPACE):
     """GET /namespaces/{namespace}/services/{name}"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/services/{}".format(DEFAULT_NAMESPACE, service_name),
+        path="namespaces/{}/services/{}".format(namespace, service_name),
         msg="KUBERNETES: get service {}".format(service_name)
     )
 

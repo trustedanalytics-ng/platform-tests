@@ -20,10 +20,12 @@ import config
 
 from modules.constants import HttpStatus, ServiceLabels, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
+from modules.http_calls import kubernetes
 from modules.http_client import HttpClientFactory, HttpMethod
+from modules.http_client.configuration_provider.kubernetes import KubernetesConfigurationProvider
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider, \
-    ProxiedConfigurationProvider, ServiceConfigurationProvider
+    ProxiedConfigurationProvider, ServiceConfigurationProvider, K8sSecureServiceConfigurationProvider
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_service import K8sService
@@ -59,10 +61,6 @@ class TestK8sComponents:
 
     def get_client(self, service_name, endpoint=None):
         configuration = K8sServiceConfigurationProvider.get(service_name, api_endpoint=endpoint)
-        return HttpClientFactory.get(configuration)
-
-    def get_proxied_client(self, url):
-        configuration = ProxiedConfigurationProvider.get("http://{}".format(url))
         return HttpClientFactory.get(configuration)
 
     @pytest.mark.parametrize("service,service_params", k8s_core_service_params, ids=k8s_core_service_ids)
@@ -114,7 +112,6 @@ class TestK8sComponents:
                                                     msg="get")
         assert response.status_code == HttpStatus.CODE_OK
 
-    @pytest.mark.skip("DPNG-14046 [api-test] Fix smoke test test_3rd_party_component_check_availability(image-repository)")
     @pytest.mark.parametrize("service,service_params", third_party_service_params, ids=third_party_service_ids)
     def test_3rd_party_component_check_availability(self, service, service_params):
         """
@@ -134,8 +131,12 @@ class TestK8sComponents:
         if service_params["get_endpoint"] is None or service_params["api_version"] is None:
             pytest.skip("Service {} does not have get endpoint or api version configured".format(service))
         step("Check 3rd party component get api endpoint for {}".format(service))
-        health_client = self.get_proxied_client("{}/{}".format(service_params["url"],
-                                                               service_params["api_version"]))
+        service_url = service_params.get("url")
+        if not service_url:
+            service_url = K8sSecureServiceConfigurationProvider.get_service_url(
+                service_name=service_params["kubernetes_service_name"],
+                namespace=service_params["kubernetes_namespace"])
+        health_client = HttpClientFactory.get(K8sSecureServiceConfigurationProvider.get(service_url=service_url, api_version="v2"))
         response = health_client.request(HttpMethod.GET,
                                          path=service_params["get_endpoint"],
                                          raw_response=True,

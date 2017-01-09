@@ -47,11 +47,13 @@ for item in TAP_core_services:
 
 third_party_services = {
     TAP.image_repository: {
-        "url": "127.0.0.1:30000",
+        "url": None,
+        "kubernetes_service_name": "docker-registry",
+        "kubernetes_namespace": "kube-system",
         "api_version": "v2",
         "api_version_alias": None,
         "health_endpoint": None,
-        "get_endpoint": "_catalog"
+        "get_endpoint": "_catalog",
     },
 
     TAP.message_queue: {

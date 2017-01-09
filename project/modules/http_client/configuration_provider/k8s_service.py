@@ -14,12 +14,14 @@
 # limitations under the License.
 #
 
+import os.path
 import config
 
 from .. import HttpClientFactory, HttpMethod
 from .. import HttpClientConfiguration, HttpClientType
 from .kubernetes import KubernetesConfigurationProvider
 
+DEFAULT_NAMESPACE = "default"
 
 class ProxiedConfigurationProvider(object):
     _socks_proxy = "socks5://localhost:{}".format(config.ng_socks_proxy_port)
@@ -71,6 +73,52 @@ class K8sServiceConfigurationProvider(ProxiedConfigurationProvider):
             username=credentials[0],
             password=credentials[1]
         )
+
+class K8sSecureServiceConfigurationProvider(KubernetesConfigurationProvider):
+    """ Client configuration provider for services that require kubernetes certificates
+    """
+    _service_namespaces = {}
+
+    @classmethod
+    def _update_service_namespace_info(cls, namespace):
+        client = HttpClientFactory.get(KubernetesConfigurationProvider.get())
+        response = client.request(
+            method=HttpMethod.GET,
+            path="namespaces/{}/services".format(namespace),
+            msg="KUBERNETES: get services in namespace {}".format(namespace))
+        services = {}
+        for item in response["items"]:
+            service_name = item["metadata"]["name"]
+            service_host = item["spec"]["clusterIP"]
+            service_port = item["spec"]["ports"][0]["port"]
+            services[service_name] = "{}:{}".format(service_host, service_port)
+        cls._service_namespaces[namespace] = services
+
+    @classmethod
+    def get_service_url(cls, service_name, namespace=DEFAULT_NAMESPACE):
+        if service_name not in cls._service_namespaces:
+            cls._update_service_namespace_info(namespace)
+        assert service_name in cls._service_namespaces[namespace],\
+                "No service {} in kubernetes namespace {}".format(service_name, namespace)
+        service_url = "https://{}".format(cls._service_namespaces[namespace][service_name])
+        return service_url
+
+    @classmethod
+    def get(cls, service_url, rest_prefix="", api_version="v1"):
+        """Specify either service_name, or service_addr_port"""
+        if cls._kube_dir_path is None:
+            cls._kube_dir_path = cls._download_config_directory()
+            kube_config_path = os.path.join(cls._kube_dir_path, cls._KUBE_CONFIG_FILE_NAME)
+            cls._certificate = cls._get_certificates(cls._kube_dir_path, kube_config_path)
+        if api_version is not None:
+            cls._api_version = api_version
+        client_configuration = HttpClientConfiguration(
+            client_type=HttpClientType.NO_AUTH,
+            url="{}/{}/{}".format(service_url, rest_prefix, cls._api_version),
+            proxies={"http": cls._SOCKS_PROXY, "https": cls._SOCKS_PROXY},
+            cert=cls._certificate
+        )
+        return client_configuration
 
 
 class ServiceConfigurationProvider:
