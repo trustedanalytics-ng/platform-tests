@@ -43,7 +43,7 @@ class TapCli:
     SERVICE_START = ["service", "start"]
     SERVICE_STOP = ["service", "stop"]
     SERVICE_CREDENTIALS = ["service", "credentials", "show"]
-
+    APPLICATION = "application"
     APPLICATION_INFO = ["application", "info"]
     APPLICATION_LIST = ["application", "list"]
     APPLICATION_PUSH = ["application", "push"]
@@ -53,9 +53,10 @@ class TapCli:
     APPLICATION_RESTART = ["application", "restart"]
     APPLICATION_SCALE = ["application", "scale"]
     APPLICATION_LOGS_SHOW = ["application", "logs", "show"]
-    BINDINGS = "bindings"
-    BIND = "bind-instance", "bind"
-    UNBIND = "unbind-instance", "unbind"
+    BINDING = "binding"
+    BINDING_CREATE =  ["binding","create"]
+    BINDING_DELETE =  ["binding","delete"]
+    BINDING_LIST = ["binding","list"]
     INVITE = ["user", "invitation", "send"]
     HELP_INVITATION = ["user", "invitation", "help"]
     REINVITE = ["user", "invitation", "resend"]
@@ -78,6 +79,9 @@ class TapCli:
     YES_PARAM = "--yes"
     REPLICAS_PARAM = "--replicas"
     ARCHIVE_PATCH_PARAM = "--archive-path"
+    SRC_NAME_PARAM = "--src-name"
+    DST_NAME_PARAM = "--dst-name"
+    IS_DST_PARAM = "--is-dst"
 
     LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
 
@@ -122,6 +126,12 @@ class TapCli:
     def invitation_help(self):
         return self._run_command(self.HELP_INVITATION)
 
+    def service_binding_help(self):
+        return self._run_command([self.SERVICE, self.BINDING, self.HELP[0]])
+
+    def application_binding_help(self):
+        return self._run_command([self.APPLICATION, self.BINDING, self.HELP[0]])
+
     def version(self, short=False):
         return self._run_command([self.VERSION[1] if short else self.VERSION[0]])
 
@@ -157,16 +167,16 @@ class TapCli:
     def service_stop(self, service_name):
         return self._run_command(self.SERVICE_STOP + [self.NAME_PARAM, service_name], filter_logs=False)
 
-    def bindings(self, instance_name):
-        output = self._run_command([self.BINDINGS, instance_name])
+    def bindings(self, instance_type, instance_name, direction):
+        output = self._run_command([instance_type] + self.BINDING_LIST + [self.NAME_PARAM, instance_name, direction])
         bindings = self.parse_ascii_table(output)
         return bindings
 
-    def bind_service(self, cmd: list, short=False):
-        return self._run_command([self.BIND[1] if short else self.BIND[0]] + cmd)
+    def bind(self, instance_type,  cmd: list):
+        return self._run_command([instance_type] + self.BINDING_CREATE + cmd)
 
-    def unbind_service(self, cmd: list, short=False):
-        return self._run_command([self.UNBIND[1] if short else self.UNBIND[0]] + cmd)
+    def unbind(self, instance_type, cmd: list):
+        return self._run_command([instance_type] + self.BINDING_DELETE + cmd)
 
     def get_service(self, service_name):
         output = self._run_command(self.SERVICE_INFO + [self.NAME_PARAM, service_name])

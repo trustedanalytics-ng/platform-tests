@@ -34,7 +34,6 @@ def offering(session_context, tap_cli):
 
 @pytest.mark.usefixtures("cli_login")
 class TestCliBinding:
-    SHORT = False
 
     @pytest.fixture(scope="class")
     def service_instance_1(self, class_context, tap_cli, offering):
@@ -64,8 +63,8 @@ class TestCliBinding:
     def cleanup_bindings(self, service_instance_1, service_instance_2, request):
         def fin():
             try:
-                service_instance_2.unbind(service_instance_1)
-                service_instance_1.unbind(service_instance_2)
+                service_instance_2.unbind_from_dst(service_instance_1)
+                service_instance_1.unbind_from_dst(service_instance_2)
             except:
                 pass
         request.addfinalizer(fin)
@@ -91,14 +90,14 @@ class TestCliBinding:
         4. Check that second service is not shown on first service binding list
         """
         step("Bind one service instance to another")
-        service_instance_2.bind(service_instance_1)
+        service_instance_2.bind_to_dst(service_instance_1)
         step("Check that the services are bound")
-        bound_names = service_instance_1.get_binding_names()
+        bound_names = service_instance_1.get_binding_names_as_dst()
         assert service_instance_2.name in bound_names
         step("Unbind service instance")
-        service_instance_2.unbind(service_instance_1)
+        service_instance_2.unbind_from_dst(service_instance_1)
         step("Check that the services are not bound")
-        bound_names = service_instance_1.get_binding_names()
+        bound_names = service_instance_1.get_binding_names_as_dst()
         assert service_instance_2.name not in bound_names
 
     @priority.low
@@ -120,7 +119,7 @@ class TestCliBinding:
         """
         step("Check that attempt to bind invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
-        assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.bind, service_instance_1)
+        assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.bind_to_dst, service_instance_1)
 
     @priority.low
     def test_cannot_bind_service_to_invalid_service(self, service_instance_1, nonexistent_service):
@@ -141,7 +140,7 @@ class TestCliBinding:
         """
         step("Check that attempt to bind to invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
-        assert_raises_command_execution_exception(1, expected_msg, service_instance_1.bind, nonexistent_service)
+        assert_raises_command_execution_exception(1, expected_msg, service_instance_1.bind_to_dst, nonexistent_service)
 
     @priority.low
     def test_cannot_unbind_invalid_service(self, service_instance_1, nonexistent_service):
@@ -162,7 +161,7 @@ class TestCliBinding:
         """
         step("Check that attempt to unbind invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
-        assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.unbind, service_instance_1)
+        assert_raises_command_execution_exception(1, expected_msg, nonexistent_service.unbind_from_dst, service_instance_1)
 
     @priority.low
     def test_cannot_unbind_service_from_invalid_service(self, service_instance_1, nonexistent_service):
@@ -183,7 +182,7 @@ class TestCliBinding:
         """
         step("Check that attempt to unbind from invalid service instance will return error")
         expected_msg = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(nonexistent_service.name)
-        assert_raises_command_execution_exception(1, expected_msg, service_instance_1.unbind, nonexistent_service)
+        assert_raises_command_execution_exception(1, expected_msg, service_instance_1.unbind_from_dst, nonexistent_service)
 
     @priority.low
     @pytest.mark.usefixtures("cleanup_bindings")
@@ -207,8 +206,8 @@ class TestCliBinding:
         5. Check that second service is shown on first service binding list
         """
         step("Bind service instances")
-        service_instance_2.bind(service_instance_1)
-        assert service_instance_2.name in service_instance_1.get_binding_names()
+        service_instance_2.bind_to_dst(service_instance_1)
+        assert service_instance_2.name in service_instance_1.get_binding_names_as_dst()
         step("Check that an attempt to delete bound service instance fails with an error")
         expected_msg = TapMessage.INSTANCE_IS_BOUND_TO_OTHER_INSTANCE.format(service_instance_2.name,
                                                                              service_instance_1.name,
@@ -217,9 +216,5 @@ class TestCliBinding:
         step("Check that the service still exists")
         service_instance_2.ensure_on_service_list()
         step("Check that the services are still bound")
-        assert service_instance_2.name in service_instance_1.get_binding_names()
-
-
-class TestCliBindingShortCommand(TestCliBinding):
-    SHORT = True
+        assert service_instance_2.name in service_instance_1.get_binding_names_as_dst()
 

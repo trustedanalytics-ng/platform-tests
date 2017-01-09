@@ -20,6 +20,7 @@ from modules.exceptions import ServiceInstanceCreationFailed
 from modules import test_names
 from modules.constants import TapEntityState
 from ._cli_object_superclass import CliObjectSuperclass
+from modules.tap_cli import TapCli
 
 
 class CliService(CliObjectSuperclass):
@@ -40,6 +41,7 @@ class CliService(CliObjectSuperclass):
         self.state = state
         self.offering_name = offering_name
         self.plan_name = plan_name
+        self.type = TapCli.SERVICE
 
     @classmethod
     def get(cls, name, tap_cli):
@@ -62,23 +64,32 @@ class CliService(CliObjectSuperclass):
         cli_service.ensure_service_state(TapEntityState.RUNNING)
         return cli_service
 
-    def bind(self, bound_service):
+    def bind_to_dst(self, bound_service):
+        return self.bind(bound_service, TapCli.DST_NAME_PARAM)
+
+    def unbind_from_dst(self, bound_service):
+        return self.unbind(bound_service, TapCli.DST_NAME_PARAM)
+
+    def bind(self, bound_service, direction):
         bound_service = bound_service.name if isinstance(bound_service, CliService) else bound_service
-        output = self.tap_cli.bind_service([self.name, bound_service])
+        output = self.tap_cli.bind(self.type, [TapCli.NAME_PARAM, self.name, direction, bound_service])
         assert self.MESSAGE_SUCCESS in output
         return output
 
-    def unbind(self, bound_service):
+    def unbind(self, bound_service, direction):
         bound_service = bound_service.name if isinstance(bound_service, CliService) else bound_service
-        output = self.tap_cli.unbind_service([self.name, bound_service])
+        output = self.tap_cli.unbind(self.type, [TapCli.NAME_PARAM, self.name, direction, bound_service])
         assert self.MESSAGE_SUCCESS in output
         return output
 
-    def get_bindings(self):
-        return self.tap_cli.bindings(self.name)
+    def get_bindings(self, direction):
+        return self.tap_cli.bindings(self.type, self.name, direction)
 
-    def get_binding_names(self):
-        bindings = self.get_bindings()
+    def get_binding_names_as_dst(self):
+        return self.get_binding_names(TapCli.IS_DST_PARAM)
+
+    def get_binding_names(self, direction):
+        bindings = self.get_bindings(direction)
         return [entry['BINDING NAME'] for entry in bindings]
 
     def logs(self):
