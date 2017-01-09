@@ -123,7 +123,8 @@ def test_onboarding(context, test_org):
     3. Verify that the user is present on the platform.
     """
     step("Onboard new user")
-    test_user = onboarding.onboard(context=context, check_email=False)
+    test_user = onboarding.onboard(context=context, org_guid=test_org.guid,
+                                   check_email=False)
     step("Check that user is created")
     users = User.get_all_users(test_org.guid)
     assert test_user in users
