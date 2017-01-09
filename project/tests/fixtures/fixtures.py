@@ -34,6 +34,7 @@ from modules.tap_object_model import Application, Organization, ServiceOffering,
     ScoringEngineModel, ModelArtifact
 from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
+from modules.test_names import generate_test_object_name
 from tap_component_config import api_service
 
 
