@@ -32,6 +32,7 @@ label = ServiceLabels.HDFS
 @priority.medium
 class TestHdfsPlainDir(object):
 
+    @pytest.mark.bugs("DPNG-14831 Cannot create Hdfs instance (service has inappropriate state - OFFLINE")
     def test_0_hdfs_plain_dir(self, class_context):
         """
         <b>Description:</b>
