@@ -39,7 +39,7 @@ class CliInvitation(CliObjectSuperclass):
 
     @classmethod
     def get_list(cls, tap_cli, short_cmd=False):
-        output = tap_cli.invitations(short=short_cmd)
+        output = tap_cli.invitations()
         pending_invitations = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', output)
         return [cls(tap_cli=tap_cli, username=invitation) for invitation in pending_invitations]
 
@@ -47,4 +47,4 @@ class CliInvitation(CliObjectSuperclass):
         self.tap_cli.reinvite(self.username)
 
     def delete(self, short_cmd=False):
-        self.tap_cli.delete_invitation(self.name, short=short_cmd)
+        self.tap_cli.delete_invitation(self.name)

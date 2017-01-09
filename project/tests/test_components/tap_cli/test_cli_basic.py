@@ -105,12 +105,23 @@ class TestCliBasicFlow:
         assert tap_cli.BINDINGS in output
         assert tap_cli.BIND[0] in output
         assert tap_cli.UNBIND[0] in output
-        assert tap_cli.INVITE in output
-        assert tap_cli.REINVITE in output
-        assert tap_cli.USERS in output
-        assert tap_cli.INVITATIONS[0] in output
-        assert tap_cli.DELETE_INVITATION[0] in output
-        assert tap_cli.DELETE_USER[0] in output
+        assert tap_cli.USERS[0] in output
+
+        output = tap_cli.user_help()
+        assert tap_cli.USERS[1] in output
+        assert tap_cli.DELETE_USER[1] in output
+        assert tap_cli.INVITATIONS[1] in output
+
+        output = tap_cli.invitation_help()
+        assert tap_cli.INVITATIONS[2] in output
+        assert tap_cli.DELETE_INVITATION[2] in output
+        assert tap_cli.INVITE[2] in output
+        assert tap_cli.REINVITE[2] in output
+
+        output = tap_cli.offering_help()
+        assert tap_cli.CREATE_OFFERING[1] in output
+        assert tap_cli.LIST_OFFERINGS[1] in output
+        assert tap_cli.DELETE_OFFERING[1] in output
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
     @priority.low

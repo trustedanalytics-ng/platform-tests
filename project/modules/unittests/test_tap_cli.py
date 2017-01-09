@@ -129,7 +129,7 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_delete_service(self):
-        assert ["service", "delete"] == self.tap_cli.delete_service([])
+        assert ["service", "delete", "--yes"] == self.tap_cli.delete_service([])
 
     @patch.object(TapCli, "_run_command", _run_command_empty_response)
     def test_delete_service_without_params(self):
@@ -147,39 +147,28 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_invite(self):
-        assert ["invite", self.test_user] == self.tap_cli.invite(self.test_user)
+        assert ["user", "invitation", "send", "--email", self.test_user] == self.tap_cli.invite(self.test_user)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_reinvite(self):
-        assert ["reinvite", self.test_user] == self.tap_cli.reinvite(self.test_user)
+        assert ["user", "invitation", "resend", "--email", self.test_user] == self.tap_cli.reinvite(self.test_user)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_users(self):
-        assert ["users"] == self.tap_cli.users()
+        assert ["user", "list"] == self.tap_cli.users()
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_invitations(self):
-        assert ["invitations"] == self.tap_cli.invitations()
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_invitations_short_command(self):
-        assert ["invs"] == self.tap_cli.invitations(short=True)
+        assert ["user", "invitation", "list"] == self.tap_cli.invitations()
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_delete_invitations(self):
-        assert ["delete-invitation", self.test_user] == self.tap_cli.delete_invitation(self.test_user)
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_delete_invitations_short_command(self):
-        assert ["di", self.test_user] == self.tap_cli.delete_invitation(self.test_user, short=True)
+        assert ["user", "invitation", "delete", "--email", self.test_user, "--yes"] \
+               == self.tap_cli.delete_invitation(self.test_user)
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_delete_user(self):
-        assert ["delete-user", self.test_user] == self.tap_cli.delete_user(self.test_user)
-
-    @patch.object(TapCli, "_run_command", _run_command_return_cmd)
-    def test_delete_user_short_command(self):
-        assert ["du", self.test_user] == self.tap_cli.delete_user(self.test_user, short=True)
+        assert ["user", "delete", "--name", self.test_user, "--yes"] == self.tap_cli.delete_user(self.test_user)
 
     def test_parse_ascii_table(self):
         ascii_table = """

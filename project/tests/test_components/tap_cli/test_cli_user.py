@@ -27,8 +27,7 @@ from tests.fixtures.assertions import assert_in_with_retry, assert_not_in_with_r
 logged_components = (TAP.user_management,)
 
 
-class TestCliInvitationsShort:
-    SHORT = True
+class TestCliInvitations:
 
     @pytest.fixture(scope="class")
     def invitation(self, class_context, tap_cli, cli_login):
@@ -85,7 +84,7 @@ class TestCliInvitationsShort:
         1. Retrieve active invitations.
         2. Check that invitation is present in retrieved invitations list.
         """
-        pending_invitations = CliInvitation.get_list(tap_cli, short_cmd=self.SHORT)
+        pending_invitations = CliInvitation.get_list(tap_cli)
         invitation = next((i for i in pending_invitations if i == invitation), None)
         assert invitation is not None, "Sent invitation not found on pending invitations list"
 
@@ -109,7 +108,7 @@ class TestCliInvitationsShort:
         3. Check that user is no longer present in users list.
         """
         assert_in_with_retry(user, User.get_all_users)
-        tap_cli.delete_user(user.username, short=self.SHORT)
+        tap_cli.delete_user(user.username)
         assert_not_in_with_retry(user, User.get_all_users)
 
     @priority.medium
@@ -130,9 +129,5 @@ class TestCliInvitationsShort:
         1. Delete invitation.
         2. Check that invitation is no longer present in invitations list.
         """
-        invitation.delete(short_cmd=self.SHORT)
+        invitation.delete()
         assert_not_in_with_retry(invitation, CliInvitation.get_list, tap_cli)
-
-
-class TestCliInvitationsLong(TestCliInvitationsShort):
-    SHORT = False

@@ -43,5 +43,5 @@ class CliUser(CliObjectSuperclass):
         user_list = re.findall(r'[\w\.-@+]{3,}', output)
         return [cls(tap_cli=tap_cli, username=user) for user in user_list]
 
-    def delete(self, short_cmd=False):
-        self.tap_cli.delete_user(self.name, short=short_cmd)
+    def delete(self):
+        self.tap_cli.delete_user(self.name)

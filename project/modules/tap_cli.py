@@ -33,6 +33,7 @@ class TapCli:
     DELETE_OFFERING = ["offering", "delete"]
     LIST_OFFERINGS = ["offering", "list"]
     GET_OFFERING = ["offering", "info"]
+    HELP_OFFERING = ["offering", "help"]
     CREATE_SERVICE = ["service", "create"]
     DELETE_SERVICE = ["service", "delete"]
     SERVICE = "service"
@@ -55,18 +56,22 @@ class TapCli:
     BINDINGS = "bindings"
     BIND = "bind-instance", "bind"
     UNBIND = "unbind-instance", "unbind"
-    INVITE = "invite"
-    REINVITE = "reinvite"
-    USERS = "users"
-    INVITATIONS = "invitations", "invs"
-    DELETE_INVITATION = "delete-invitation", "di"
-    DELETE_USER = "delete-user", "du"
+    INVITE = ["user", "invitation", "send"]
+    HELP_INVITATION = ["user", "invitation", "help"]
+    REINVITE = ["user", "invitation", "resend"]
+    USERS = ["user", "list"]
+    HELP_USER = ["user", "help"]
+    INVITATIONS = ["user", "invitation", "list"]
+    DELETE_INVITATION = ["user", "invitation", "delete"]
+    DELETE_USER = ["user", "delete"]
 
     API_PARAM = "--api"
     USERNAME_PARAM = "--username"
     PASSWORD_PARAM = "--password"
-    MANIFEST_PARAM = "--manifest"
+    EMAIL_PARAM = "--email"
     NAME_PARAM = "--name"
+    MANIFEST_PARAM = "--manifest"
+    YES_PARAM = "--yes"
 
     LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
 
@@ -102,6 +107,15 @@ class TapCli:
     def help(self, short=False):
         return self._run_command([self.HELP[1] if short else self.HELP[0]])
 
+    def offering_help(self):
+        return self._run_command(self.HELP_OFFERING)
+
+    def user_help(self):
+        return self._run_command(self.HELP_USER)
+
+    def invitation_help(self):
+        return self._run_command(self.HELP_INVITATION)
+
     def version(self, short=False):
         return self._run_command([self.VERSION[1] if short else self.VERSION[0]])
 
@@ -110,7 +124,7 @@ class TapCli:
                                  ([self.MANIFEST_PARAM, manifest_path] if manifest_path else []))
 
     def delete_offering(self, offering_name: str):
-        return self._run_command(self.DELETE_OFFERING + [self.NAME_PARAM, offering_name])
+        return self._run_command(self.DELETE_OFFERING + [self.NAME_PARAM, offering_name, self.YES_PARAM])
 
     def list_offerings(self):
         return self._run_command(self.LIST_OFFERINGS)
@@ -122,7 +136,7 @@ class TapCli:
         return self._run_command(self.CREATE_SERVICE + cmd)
 
     def delete_service(self, cmd: list):
-        return self._run_command(self.DELETE_SERVICE + cmd)
+        return self._run_command(self.DELETE_SERVICE + cmd + [self.YES_PARAM])
 
     def services_list(self):
         return self._run_command(self.SERVICES)
@@ -225,22 +239,22 @@ class TapCli:
         return self._run_command(self.PUSH_HELP)
 
     def invite(self, username):
-        return self._run_command([self.INVITE, username])
+        return self._run_command(self.INVITE + [self.EMAIL_PARAM, username])
 
     def reinvite(self, username):
-        return self._run_command([self.REINVITE, username])
+        return self._run_command(self.REINVITE + [self.EMAIL_PARAM, username])
 
     def users(self):
-        return self._run_command([self.USERS])
+        return self._run_command(self.USERS)
 
-    def invitations(self, short=False):
-        return self._run_command([self.INVITATIONS[1] if short else self.INVITATIONS[0]])
+    def invitations(self):
+        return self._run_command(self.INVITATIONS)
 
-    def delete_invitation(self, username, short=False):
-        return self._run_command([self.DELETE_INVITATION[1] if short else self.DELETE_INVITATION[0], username])
+    def delete_invitation(self, username):
+        return self._run_command(self.DELETE_INVITATION + [self.EMAIL_PARAM, username, self.YES_PARAM])
 
-    def delete_user(self, username, short=False):
-        return self._run_command([self.DELETE_USER[1] if short else self.DELETE_USER[0], username])
+    def delete_user(self, username):
+        return self._run_command(self.DELETE_USER + [self.NAME_PARAM, username, self.YES_PARAM])
 
     def parse_ascii_table(self, ascii_table):
         cut_pos = []
