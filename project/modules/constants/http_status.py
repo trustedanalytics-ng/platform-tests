@@ -166,9 +166,9 @@ class ServiceCatalogHttpStatus(HttpStatus):
     """Services http status messages"""
 
     MSG_SERVICE_NAME_TAKEN = "Provided name {} is already in use by other instance."
-    MSG_BOUND_INSTANCE = "Please delete the service_bindings, service_keys, and routes associations for your service_instances."
-    MSG_APP_NOT_FOUND = "The app could not be found: {}"
-    MSG_SERVICE_INST_NOT_FOUND = "The service instance could not be found: {}"
+    MSG_BOUND_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
+    MSG_APP_NOT_FOUND = "cannot fetch instance of application with id {}"
+    MSG_CANNOT_BOUND_INSTANCE = "Cannot bind instance {} to {}"
     MSG_SERVICE_BINDING_NOT_FOUND = "The service binding could not be found: {}"
     MSG_NOT_AUTHORIZED = "You are not authorized"
     MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE = "User not authorize to delete this service"

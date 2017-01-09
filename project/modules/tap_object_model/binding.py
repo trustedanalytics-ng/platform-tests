@@ -15,8 +15,7 @@
 #
 
 from modules.constants import TapMessage
-from modules.http_client import HttpClient, HttpClientFactory
-from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
+from modules.http_client import HttpClient
 import modules.http_calls.platform.api_service as api
 from ._api_model_superclass import ApiModelSuperclass
 from ._tap_object_superclass import TapObjectSuperclass
@@ -30,24 +29,6 @@ class Binding(ApiModelSuperclass, TapObjectSuperclass):
         self.app_id = app_id
         self.service_instance_id = service_instance_id
 
-    def __repr__(self):
-        return "{} (app_id={}, service_instance_id={})".format(self.__class__.__name__,
-                                                               self.app_id, self.service_instance_id)
-
-    @classmethod
-    def _from_response(cls, response: dict, app_id: str, client: HttpClient):
-        entity = response["entity"]
-        binding = cls(app_id=app_id, service_instance_id=entity["service_instance_guid"], client=client)
-        return binding
-
-    @classmethod
-    def _list_from_response(cls, response: list, app_id: str, client: HttpClient):
-        # Overloaded
-        items = []
-        for item in response:
-            items.append(cls._from_response(item, app_id, client))
-        return items
-
     @classmethod
     def get_list(cls, *, app_id: str, client: HttpClient=None) -> list:
         if client is None:
@@ -56,7 +37,7 @@ class Binding(ApiModelSuperclass, TapObjectSuperclass):
         if response is None:
             bindings = []
         else:
-            bindings = cls._list_from_response(response, app_id, client)
+            bindings = cls._list_from_response(response, client)
         return bindings
 
     @classmethod
@@ -71,11 +52,22 @@ class Binding(ApiModelSuperclass, TapObjectSuperclass):
     def create(cls, context, *, app_id: str, service_instance_id: str, client: HttpClient=None):
         if client is None:
             client = cls._get_default_client()
-        response = api.bind_app(client=client, app_id=app_id, instance_id=service_instance_id)
+        response = api.bind_app(client=client, app_id=app_id, service_instance_id=service_instance_id)
         assert response["message"] == TapMessage.SUCCESS
         binding = cls._find_on_list(app_id=app_id, service_instance_id=service_instance_id, client=client)
         context.test_objects.append(binding)
         return binding
 
     def delete(self, client: HttpClient=None):
-        api.unbind_app(app_id=self.app_id, instance_id=self.service_instance_id, client=self._get_client(client))
+        api.unbind_app(app_id=self.app_id, service_instance_id=self.service_instance_id,
+                       client=self._get_client(client))
+
+    def __repr__(self):
+        return "{} (app_id={}, service_instance_id={})".format(self.__class__.__name__,
+                                                               self.app_id, self.service_instance_id)
+
+    @classmethod
+    def _from_response(cls, response: dict, client: HttpClient):
+        entity = response["entity"]
+        binding = cls(app_id=entity["app_guid"], service_instance_id=entity["service_instance_guid"], client=client)
+        return binding

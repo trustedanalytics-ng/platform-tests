@@ -227,23 +227,21 @@ def get_app_bindings(*, client: HttpClient, app_id: str):
     return response["resources"]
 
 
-def bind_app(*, client: HttpClient, app_id, instance_id: str):
+def bind_app(*, client: HttpClient, app_id, service_instance_id: str):
     """ POST applications/{app_id}/bindings """
     body = {
-        'service_id': instance_id
+        'service_id': service_instance_id
     }
     return client.request(method=HttpMethod.POST,
                           path="applications/{}/bindings".format(app_id),
                           body=body, msg="Bind app and service")
 
 
-def unbind_app(*, client: HttpClient, app_id: str, instance_id: str):
-    """ DELETE /applications/{app_id}/bindings """
-    body = {
-        'service_id': instance_id
-    }
-    return client.request(method=HttpMethod.DELETE, path="applications/{}/bindings".format(app_id),
-                          body=body, msg="Unbind app from service")
+def unbind_app(*, client: HttpClient, app_id: str, service_instance_id: str):
+    """ DELETE /applications/{app_id}/bindings/services/{service_instance_id} """
+    return client.request(method=HttpMethod.DELETE,
+                          path="applications/{}/bindings/services/{}".format(app_id, service_instance_id),
+                          msg="Unbind app from service")
 
 
 # --------------------------------------- services --------------------------------------- #

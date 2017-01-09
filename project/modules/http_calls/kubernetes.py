@@ -106,3 +106,13 @@ def k8s_scale_pod(pod_name, number_of_replicas, rest_prefix="apis", api_version=
         path="namespaces/{}/deployments/{}/scale".format(DEFAULT_NAMESPACE, pod_name),
         msg="POD {} scaled to {} replicas".format(pod_name, number_of_replicas)
     )
+
+
+def k8s_get_ingresses(rest_prefix="apis", api_version="extensions/v1beta1"):
+    """PUT /apis/extensions/v1beta1/namespaces/{namespace}/ingresses"""
+    client = HttpClientFactory.get(KubernetesConfigurationProvider.get(rest_prefix, api_version))
+    return client.request(
+        method=HttpMethod.GET,
+        path="namespaces/{}/ingresses".format(DEFAULT_NAMESPACE, ),
+        msg="KUBERNETES: get ingresses"
+    )

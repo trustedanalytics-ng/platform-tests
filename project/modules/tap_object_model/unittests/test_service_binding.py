@@ -18,20 +18,20 @@ from unittest import mock
 
 from modules.tap_object_model import Binding
 
-APP_GUID = "e7b9e322-5c25-4a12-41e8-e2b69133b4ab"
-SERVICE_INSTANCE_GUID = "15a0dd59-87bd-4018-7563-bc69448238fb"
+APP_ID = "e7b9e322-5c25-4a12-41e8-e2b69133b4ab"
+SERVICE_INSTANCE_ID = "15a0dd59-87bd-4018-7563-bc69448238fb"
 SERVICE_INSTANCE_NAME = "bindtest"
 
 GET_RESPONSE = {
     'entity': {
-        'app_guid': APP_GUID,
-        'service_instance_guid': SERVICE_INSTANCE_GUID
+        'app_guid': APP_ID,
+        'service_instance_guid': SERVICE_INSTANCE_ID
     }
 }
 
 
 class TestServiceBinding:
     def test_binding_from_response(self):
-        binding = Binding._from_response(GET_RESPONSE, app_id=APP_GUID, client=mock.Mock())
-        assert binding.app_id == APP_GUID
-        assert binding.service_instance_id == SERVICE_INSTANCE_GUID
+        binding = Binding._from_response(GET_RESPONSE, client=mock.Mock())
+        assert binding.app_id == APP_ID
+        assert binding.service_instance_id == SERVICE_INSTANCE_ID
