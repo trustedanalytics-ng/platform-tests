@@ -167,7 +167,7 @@ class ApiServiceApplicationFlow:
     def test_scale_application(self, sample_application, api_service_admin_client):
         """
         <b>Description:</b>
-        Scales the application and verifies that it was scaled
+        Scales the application and verifies that it was scaled and it is running after that operation
 
         <b>Input data:</b>
         - Sample application
@@ -179,14 +179,17 @@ class ApiServiceApplicationFlow:
         <b>Steps:</b>
         - Download and push sample application
         - scale application and verifies that application was scaled by checking
-          the replication amount
+          the replication amount.
+        - check is state of app after scale is RUNNING
         """
         step("Scale application")
         replicas_number = 3
-        response = sample_application.scale(replicas=replicas_number, client=api_service_admin_client)
+        sample_application.scale(replicas=replicas_number, client=api_service_admin_client)
         step("Check number of application instances")
         app_info = Application.get(sample_application.id, client=api_service_admin_client)
         assert app_info.running_instances == replicas_number
+        step("Check application is running after scaling")
+        app_info.ensure_running()
 
 
 class TestPythonApplicationFlow(ApiServiceApplicationFlow):
