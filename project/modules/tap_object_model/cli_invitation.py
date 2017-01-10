@@ -26,6 +26,7 @@ class CliInvitation(CliObjectSuperclass):
     def __init__(self, *, tap_cli, username, code=None):
         super().__init__(tap_cli=tap_cli, name=username)
         self.code = code
+        self.username = username
 
     @classmethod
     def send(cls, context, *, tap_cli, username=None):

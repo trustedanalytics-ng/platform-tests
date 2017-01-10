@@ -64,6 +64,7 @@ class TapCli:
     INVITATIONS = ["user", "invitation", "list"]
     DELETE_INVITATION = ["user", "invitation", "delete"]
     DELETE_USER = ["user", "delete"]
+    PASSWORD_CHANGE = ["user", "passwd"]
 
     HELP_FLAG = "--help"
     API_PARAM = "--api"
@@ -72,6 +73,8 @@ class TapCli:
     EMAIL_PARAM = "--email"
     NAME_PARAM = "--name"
     MANIFEST_PARAM = "--manifest"
+    CURRENT_PASSWD = "--current"
+    NEW_PASSWD = "--new"
     YES_PARAM = "--yes"
     REPLICAS_PARAM = "--replicas"
     ARCHIVE_PATCH_PARAM = "--archive-path"
@@ -178,7 +181,6 @@ class TapCli:
         assert output_json["name"] == service_name
         return output_json
 
-
     def app_list(self):
         ascii_table = self._run_command(self.APPLICATION_LIST)
         return self.parse_ascii_table(ascii_table)
@@ -260,7 +262,12 @@ class TapCli:
     def delete_user(self, username):
         return self._run_command(self.DELETE_USER + [self.NAME_PARAM, username, self.YES_PARAM])
 
-    def parse_ascii_table(self, ascii_table):
+    def change_password(self, current, new):
+        params = [self.CURRENT_PASSWD, current, self.NEW_PASSWD, new]
+        return self._run_command(self.PASSWORD_CHANGE + params)
+
+    @staticmethod
+    def parse_ascii_table(ascii_table):
         cut_pos = []
         ranges = []
 
