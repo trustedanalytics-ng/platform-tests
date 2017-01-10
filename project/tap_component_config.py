@@ -63,32 +63,197 @@ third_party_services = {
 }
 
 offerings = {
-    ServiceLabels.COUCH_DB: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.ELASTICSEARCH17: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.GATEWAY: [Plan.SINGLE],
-    ServiceLabels.GEARPUMP: [Plan.SMALL, Plan.MEDIUM],
-    ServiceLabels.HBASE: [Plan.ORG_SHARED],
-    ServiceLabels.HDFS: [Plan.PLAIN_DIR, Plan.ENCRYPTED_DIR],
-    ServiceLabels.HIVE: [Plan.STANDARD],
-    ServiceLabels.H2O: [Plan.SINGLE],
-    ServiceLabels.INFLUX_DB_110: [Plan.SINGLE_SMALL],
-    ServiceLabels.JUPYTER: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.KAFKA: [Plan.SHARED],
-    ServiceLabels.KERBEROS: [Plan.SHARED],
-    ServiceLabels.MONGO_DB_30: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.MOSQUITTO: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.MYSQL: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.NEO4J: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.ORIENT_DB: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.PSQL: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.RABBIT_MQ: [Plan.SINGLE_SMALL, Plan.SINGLE_MEDIUM],
-    ServiceLabels.REDIS: [Plan.SINGLE_SMALL],
-    ServiceLabels.SCORING_ENGINE: [Plan.SIMPLE],
-    ServiceLabels.SCORING_PIPELINES: [Plan.SIMPLE],
-    ServiceLabels.ZOOKEEPER: [Plan.STANDARD],
+    ServiceLabels.COUCH_DB: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "1Gi",
+            "storage": "5.0G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "4Gi",
+            "storage": "50G"
+        }
+    },
+    ServiceLabels.ELASTICSEARCH17: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "2Gi",
+            "storage": "20G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "12Gi",
+            "storage": "200G"
+        }
+    },
+    ServiceLabels.GATEWAY: {
+        Plan.SINGLE: {
+            "nodes": 1,
+            "memory": "128Mi",
+            "storage": None
+        }
+    },
+    ServiceLabels.GEARPUMP: {
+        Plan.SMALL: {
+            "workers": 1,
+            "worker-memory": "512Mi",
+            "memory": "2Gi"
+        }, Plan.MEDIUM: {
+            "workers": 3,
+            "worker-memory": "512Mi",
+            "memory": "2Gi"
+        }
+    },
+    ServiceLabels.HBASE: {
+        Plan.ORG_SHARED: None
+    },
+    ServiceLabels.HDFS: {
+        Plan.PLAIN_DIR: None, 
+        Plan.ENCRYPTED_DIR: None
+    },
+    ServiceLabels.HIVE: {
+        Plan.STANDARD: None
+    },
+    ServiceLabels.H2O: {
+        Plan.SINGLE: {
+            "nodes": 1,
+            "memory": "512Mi",
+            "storage": None
+        }
+    },
+    ServiceLabels.INFLUX_DB_110: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "2Gi",
+            "storage": "10G"
+        }
+    },
+    ServiceLabels.JUPYTER: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "2Gi",
+            "storage": "1.0G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "8Gi",
+            "storage": "1.0G"
+        }
+    },
+    ServiceLabels.KAFKA: {
+        Plan.SHARED: None
+    },
+    ServiceLabels.KERBEROS: {
+        Plan.SHARED: None
+    },
+    ServiceLabels.MONGO_DB_30: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "1Gi",
+            "storage": "10G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "8Gi",
+            "storage": "100G"
+        }
+    },
+    ServiceLabels.MOSQUITTO: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "512Mi",
+            "storage": "5.0G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "4Gi",
+            "storage": "20G"
+        }
+    },
+    ServiceLabels.MYSQL: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "1Gi",
+            "storage": "10G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "6Gi",
+            "storage": "100G"
+        }
+    },
+    ServiceLabels.NEO4J: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "2Gi",
+            "storage": "10G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "6Gi",
+            "storage": "100G"
+        }
+    },
+    ServiceLabels.ORIENT_DB: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "2Gi",
+            "storage": "20G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "6Gi",
+            "storage": "100G"
+        }
+    },
+    ServiceLabels.PSQL: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "1Gi",
+            "storage": "10G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "6Gi",
+            "storage": "100G"
+        }
+    },
+    ServiceLabels.RABBIT_MQ: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "512Mi",
+            "storage": "2.0G"
+        }, 
+        Plan.SINGLE_MEDIUM: {
+            "nodes": 1,
+            "memory": "2Gi",
+            "storage": "10G"
+        }
+    },
+    ServiceLabels.REDIS: {
+        Plan.SINGLE_SMALL: {
+            "nodes": 1,
+            "memory": "512Mi",
+            "storage": "5.0G"
+        }
+    },
+    ServiceLabels.SCORING_ENGINE: {
+        Plan.SIMPLE: None
+    },
+    ServiceLabels.SCORING_PIPELINES: {
+        Plan.SINGLE: {
+            "nodes": 1,
+            "memory": "500M",
+            "storage": None
+        }
+    },
+    ServiceLabels.ZOOKEEPER: {
+        Plan.STANDARD: None
+    },
 }
 
 
 offerings_as_parameters = []
 for key, val in offerings.items():
-    offerings_as_parameters += list(itertools.product([key], val))
+    offerings_as_parameters += list(itertools.product([key], val.keys()))

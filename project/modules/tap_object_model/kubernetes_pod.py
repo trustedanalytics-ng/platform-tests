@@ -27,11 +27,12 @@ from tap_component_config import TAP_core_services
 class KubernetesPod(object):
     RUNNING = "Running"
 
-    def __init__(self, name, state, instance_id_label=None, containers=None):
+    def __init__(self, name, state, nodes, instance_id_label=None, containers=None):
         self.name = name
         self.state = state
         self.instance_id_label = instance_id_label
         self.containers = containers
+        self.nodes = nodes
 
     def __repr__(self):
         return "{} (name={})".format(self.__class__.__name__, self.name)
@@ -47,7 +48,8 @@ class KubernetesPod(object):
 
     @classmethod
     def _from_response(cls, response):
-        return cls(name=response["metadata"]["name"], state=response["status"]["phase"],
+        node_list = [response["spec"]["nodeName"]]  # Currently each pod is run on one node
+        return cls(name=response["metadata"]["name"], state=response["status"]["phase"], nodes=node_list,
                    instance_id_label=response["metadata"].get("labels", {}).get("instance_id"),
                    containers=response["spec"].get("containers"))
 

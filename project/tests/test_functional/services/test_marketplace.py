@@ -22,7 +22,8 @@ from modules.exceptions import UnexpectedResponseError
 from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance
+from modules.tap_object_model import KubernetesPod, ServiceInstance
+from tap_component_config import offerings, offerings_as_parameters
 from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry, \
     assert_unordered_list_equal
 
@@ -36,7 +37,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, T
 
 
 class TestMarketplaceServices:
-    SERVICES_TESTED_SEPARATELY = [ServiceLabels.HDFS, ServiceLabels.SEAHORSE]
+    SERVICES_TESTED_SEPARATELY = [ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.SEAHORSE]
 
     def _create_jupyter_instance_and_login(self, context, param_key, param_value):
         param = {param_key: param_value}
@@ -62,8 +63,62 @@ class TestMarketplaceServices:
         instance.ensure_running()
         return instance
 
+    def parse_storage_output(self, output):
+        parsed_output = {}
+        if "Warning" in output[0]:
+            output = output[1:]
+        headers = output[0].split(maxsplit=5)
+        for line in output[1:-1]:
+            parsed_output.update({line.split()[0]: {headers[i]: line.split()[i] for i in range(1, len(headers))}})
+        return parsed_output
+
+    def _get_instance_pod(self, instance):
+        step("Find pod for instance '{}'".format(instance.name))
+        pod_list = KubernetesPod.get_list()
+        instance_pod = next((pod for pod in pod_list if pod.instance_id_label == instance.id), None)
+        return instance_pod
+
+    def _validate_memory(self, instance_pod, expected_resources):
+        step("Check memory limit.")
+        memory = instance_pod.containers[0]["resources"]["limits"]["memory"]
+        assert memory == expected_resources["memory"]
+
+    def _validate_compute_nodes(self, instance_pod, expected_resources):
+        step("Check compute nodes number")
+        if "nodes" in expected_resources.keys():
+            assert len(instance_pod.nodes) == expected_resources["nodes"]
+
+    def compare_storage(self, storage, expected_storage):
+        storage_float = float(storage[:-1])
+        expected_storage_float = float(expected_storage[:-1])
+        assert expected_storage_float - storage_float < 2
+
+    def _validate_storage(self, instance_pod, tunnel, offering_name, expected_resources):
+        command = ["kubectl", "exec", instance_pod.name, "df", "--", "-h"]
+        output = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + command)
+        parsed_output = self.parse_storage_output(output)
+        entry = next((v for k, v in parsed_output.items() if "/rbd" in k), None)
+        if expected_resources["storage"]:
+            assert entry, "Storage was not allocated for {}".format(offering_name)
+            self.compare_storage(entry["Size"], expected_resources["storage"])
+        else:
+            assert entry is expected_resources["storage"], \
+                "Storage for offering {} was allocated, but it shouldn't.".format(offering_name)
+
+    def validate_resources(self, instance, offering_label, plan_name, tunnel):
+        expected_resources = offerings[offering_label][plan_name]
+        if expected_resources:
+            instance_pod = self._get_instance_pod(instance)
+            assert instance_pod is not None, "Pod for instance '{}' was not found".format(instance.name)
+            self._validate_memory(instance_pod, expected_resources)
+            self._validate_compute_nodes(instance_pod, expected_resources)
+            self._validate_storage(instance_pod, tunnel, offering_label, expected_resources)
+        else:
+            step("Plan {} of offering {} does not have expected resource information".format(plan_name, offering_label))
+
     @long
     @priority.high
+    @pytest.mark.usefixtures("open_tunnel")
     @pytest.mark.bugs("DPNG-12485 It is possible to create invalid services with no plan")
     @pytest.mark.bugs("DPNG-13784 [PROBLEM SOLVING] Problems with memory and not ability to work on env")
     @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
@@ -72,8 +127,9 @@ class TestMarketplaceServices:
     @pytest.mark.bugs("DPNG-14021 Zookeeper instance creation fails")
     @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0") 
     @pytest.mark.parametrize("role", ["user"])
-    def test_create_and_delete_service_instance(self, context, non_parametrized_marketplace_services,
-                                                test_user_clients, role):
+    @pytest.mark.parametrize("offering_name, plan_name", offerings_as_parameters)
+    def test_create_and_delete_service_instance(self, context, test_user_clients, role, offering_name, plan_name,
+                                                open_tunnel):
         """
         <b>Description:</b>
         Check service instance creation and deletion.
@@ -92,15 +148,17 @@ class TestMarketplaceServices:
         5. Delete service instance.
         """
         client = test_user_clients[role]
-        offering, plan = non_parametrized_marketplace_services
-        self._skip_if_service_excluded(offering)
+        self._skip_if_service_excluded(offering_name)
 
         step("Create an instance")
-        instance = ServiceInstance.create(context, offering_id=offering.id,  plan_id=plan.id, client=client)
+        instance = ServiceInstance.create_with_name(context, offering_label=offering_name, plan_name=plan_name,
+                                                    client=client)
         step("Ensure that instance is running")
         instance.ensure_running()
         step("Check that service instance is present")
         assert_in_with_retry(instance, ServiceInstance.get_list, name=instance.name)
+        step("Validate resources")
+        self.validate_resources(instance, offering_name, plan_name, open_tunnel)
         step("Stop service instance")
         instance.stop()
         instance.ensure_stopped()
@@ -108,9 +166,9 @@ class TestMarketplaceServices:
         instance.delete()
         instance.ensure_deleted()
 
-    def _skip_if_service_excluded(self, offering):
-        if offering.label in self.SERVICES_TESTED_SEPARATELY:
-            pytest.skip(msg="Offering {} is tested separately".format(offering.label))
+    def _skip_if_service_excluded(self, offering_name):
+        if offering_name in self.SERVICES_TESTED_SEPARATELY:
+            pytest.skip(msg="Offering {} is tested separately".format(offering_name))
 
     @pytest.mark.skip(reason="DPNG-10885 credentials endpoint is not implemented yet")
     @priority.low
