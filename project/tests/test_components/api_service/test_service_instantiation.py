@@ -372,6 +372,7 @@ class TestServiceInstantiationOther:
                                                 ApiServiceHttpStatus.MSG_KEY_NOT_FOUND, api.delete_service,
                                                 client=api_service_admin_client, service_id=self.INVALID_ID)
 
+    @pytest.mark.bugs("DPNG-14861 [api-test] Adjust response msg in test_cannot_create_service_instance_without_name")
     @priority.medium
     def test_cannot_create_service_instance_without_name(self, etcd_offering, api_service_admin_client):
         """
