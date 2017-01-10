@@ -136,7 +136,9 @@ class TestK8sComponents:
             service_url = K8sSecureServiceConfigurationProvider.get_service_url(
                 service_name=service_params["kubernetes_service_name"],
                 namespace=service_params["kubernetes_namespace"])
-        health_client = HttpClientFactory.get(K8sSecureServiceConfigurationProvider.get(service_url=service_url, api_version="v2"))
+        client_config = K8sSecureServiceConfigurationProvider.get(service_url=service_url,
+                                                                  api_version=service_params["api_version"])
+        health_client = HttpClientFactory.get(client_config)
         response = health_client.request(HttpMethod.GET,
                                          path=service_params["get_endpoint"],
                                          raw_response=True,

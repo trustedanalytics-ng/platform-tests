@@ -17,13 +17,18 @@
 from tap_component_config import third_party_services
 from modules.constants import TapComponent as TAP
 from modules.http_client import HttpClientFactory, HttpMethod
-from modules.http_client.configuration_provider.k8s_service import ProxiedConfigurationProvider
+from modules.http_client.configuration_provider.k8s_service import K8sSecureServiceConfigurationProvider
 
 
 def _get_client():
     image_repository_config = third_party_services[TAP.image_repository]
-    configuration = ProxiedConfigurationProvider.get("http://{}/{}".format(image_repository_config["url"],
-                                                                           image_repository_config["api_version"]))
+    service_url = image_repository_config.get("url")
+    if not service_url:
+        service_url = K8sSecureServiceConfigurationProvider.get_service_url(
+                service_name=image_repository_config["kubernetes_service_name"],
+                namespace=image_repository_config["kubernetes_namespace"])
+    configuration = K8sSecureServiceConfigurationProvider.get(service_url=service_url,
+                                                              api_version=image_repository_config["api_version"])
     return HttpClientFactory.get(configuration)
 
 
