@@ -372,7 +372,6 @@ class TestServiceInstantiationOther:
                                                 ApiServiceHttpStatus.MSG_KEY_NOT_FOUND, api.delete_service,
                                                 client=api_service_admin_client, service_id=self.INVALID_ID)
 
-    @pytest.mark.bugs("DPNG-14861 [api-test] Adjust response msg in test_cannot_create_service_instance_without_name")
     @priority.medium
     def test_cannot_create_service_instance_without_name(self, etcd_offering, api_service_admin_client):
         """
@@ -391,7 +390,7 @@ class TestServiceInstantiationOther:
         plan_id = etcd_offering.service_plans[0].id
         step("Send create service instance request without 'name' field")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                ApiServiceHttpStatus.MSG_FIELD_INCORRECT_VALUE.format("Name"),
+                                                ApiServiceHttpStatus.MSG_FIELD_ZERO_VALUE.format("Name"),
                                                 api.create_service, client=api_service_admin_client, name=None,
                                                 plan_id=plan_id, offering_id=etcd_offering.id, params=None)
 
