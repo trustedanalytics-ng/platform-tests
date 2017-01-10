@@ -30,7 +30,6 @@ logged_components = (TAP.api_service, TAP.catalog)
 
 
 @pytest.mark.usefixtures("open_tunnel")
-@pytest.mark.bugs("DPNG-11701 After some time it's not possible to push application")
 class TestApiServiceApplication:
     EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
 
@@ -125,6 +124,7 @@ class TestApiServiceApplication:
                                                 api_service.restart_application, app_id=incorrect_id,
                                                 client=api_service_admin_client)
 
+    @pytest.mark.bugs("DPNG-14865 Adjust response msg in test_cannot_scale_application_with_negative_instances_number")
     @priority.low
     @pytest.mark.components(TAP.api_service)
     def test_cannot_scale_application_with_incorrect_instances_number(self, sample_app, api_service_admin_client):
