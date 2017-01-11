@@ -59,6 +59,7 @@ class TestModelAdd:
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, ScoringEngineModel.create,
                                      context, org_guid=Guid.CORE_ORG_GUID, **metadata)
 
+    @pytest.mark.bugs("DPNG-14909[api-tests] It's possible to add a model to org with incorrect guid")
     @priority.low
     def test_cannot_add_model_to_org_with_incorrect_guid(self, context):
         incorrect_org = Guid.INVALID_GUID
