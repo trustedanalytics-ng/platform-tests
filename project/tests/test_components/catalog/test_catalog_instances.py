@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -31,7 +31,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogInstances:
 
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
     SAMPLE_CLASS_ID = "test-class"
     NEW_CLASS_ID = "new-class-id"
     WRONG_PREV_CLASS_ID = "prev-test-class-id"
@@ -120,7 +119,7 @@ class TestCatalogInstances:
         Checks if there is no possibility of getting instance using not-existing instance id.
 
         <b>Input data:</b>
-        1. id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when instance is not found on the list of instances and status code: 404 with message: '100: Key
@@ -131,7 +130,7 @@ class TestCatalogInstances:
         """
         step("Check that getting instance with incorrect id causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     CatalogInstance.get, instance_id=self.INVALID_ID)
+                                     CatalogInstance.get, instance_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_update_instance_name(self, catalog_instance):
@@ -251,7 +250,7 @@ class TestCatalogInstances:
         Checks if there is no possibility of updating instance giving not-existing instance id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when instance is not updated and status code 404 with error message: '100: Key not found' is
@@ -262,7 +261,7 @@ class TestCatalogInstances:
         """
         step("Check that it's not possible to update not-existing instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.update_instance, instance_id=self.INVALID_ID, field_name="classId",
+                                     catalog_api.update_instance, instance_id=Guid.NON_EXISTING_GUID, field_name="classId",
                                      value=self.NEW_CLASS_ID)
 
     @priority.low
@@ -272,7 +271,7 @@ class TestCatalogInstances:
         Checks if there is no possibility of deleting instance giving not-existing instance id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when instance is not deleted and status code 404 with error message: '100: Key not found' is
@@ -283,4 +282,4 @@ class TestCatalogInstances:
         """
         step("Check that it's not possible to delete not-existing instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.delete_instance, instance_id=self.INVALID_ID)
+                                     catalog_api.delete_instance, instance_id=Guid.NON_EXISTING_GUID)

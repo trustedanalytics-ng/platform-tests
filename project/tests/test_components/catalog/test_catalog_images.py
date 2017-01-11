@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapEntityState, TapApplicationType, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapEntityState, TapApplicationType, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -31,8 +31,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogImages:
-
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
 
     @pytest.fixture(scope="class")
     def sample_catalog_image(self, class_context):
@@ -210,7 +208,7 @@ class TestCatalogImages:
         Checks if there is no possibility of getting image using invalid image id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when image is not found on the list of images and status code: 404 with message: '100: Key not
@@ -221,7 +219,7 @@ class TestCatalogImages:
         """
         step("Check that it's not possible to get image with non-existent image_id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     CatalogImage.get, image_id=self.INVALID_ID)
+                                     CatalogImage.get, image_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_update_image_with_wrong_prev_type_value(self, sample_catalog_image):
@@ -283,7 +281,7 @@ class TestCatalogImages:
 
         <b>Input data:</b>
         1. sample catalog image
-        2. id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        2. id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when image is not updated and status code 400 with error message: 'ID and Name fields can not be
@@ -295,7 +293,7 @@ class TestCatalogImages:
         step("Check that is't not possible to update image field id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
                                      CatalogHttpStatus.MSG_INSTANCE_UNCHANGED_FIELDS, catalog_api.update_image,
-                                     image_id=sample_catalog_image.id, field_name="id", value=self.INVALID_ID)
+                                     image_id=sample_catalog_image.id, field_name="id", value=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_update_image_state_to_non_existent_state(self, sample_catalog_image):
@@ -369,7 +367,7 @@ class TestCatalogImages:
         Checks if there is no possibility of updating image giving invalid image id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
         2. image state: 'PENDING'
 
         <b>Expected results:</b>
@@ -380,7 +378,7 @@ class TestCatalogImages:
         """
         step("Check that it's not possible to update non-existent image")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.update_image, image_id=self.INVALID_ID, field_name="state",
+                                     catalog_api.update_image, image_id=Guid.NON_EXISTING_GUID, field_name="state",
                                      value=TapEntityState.PENDING)
 
     @priority.low
@@ -390,7 +388,7 @@ class TestCatalogImages:
         Checks if there is no possibility of deleting not-existing image.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of deleting image and status code 404 with error message:
@@ -401,4 +399,4 @@ class TestCatalogImages:
         """
         step("Check that it's not possible to delete non-existent image")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.delete_image, image_id=self.INVALID_ID)
+                                     catalog_api.delete_image, image_id=Guid.NON_EXISTING_GUID)

@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapEntityState, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapEntityState, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step
@@ -30,8 +30,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogTemplates:
-
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
 
     @priority.high
     def test_create_and_delete_catalog_template(self, context):
@@ -78,7 +76,7 @@ class TestCatalogTemplates:
         Checks if there is no possibility of creating template giving template id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of creating template and status code 400 with error message: 'Id field
@@ -90,7 +88,7 @@ class TestCatalogTemplates:
         step("Check that it's not possible to create template with template_id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, CatalogHttpStatus.MSG_ID_HAS_TO_BE_EMPTY,
                                      CatalogTemplate.create, context, state=TapEntityState.IN_PROGRESS,
-                                     template_id=self.INVALID_ID)
+                                     template_id=Guid.NON_EXISTING_GUID)
 
     @priority.medium
     def test_cannot_get_template_with_wrong_template_id(self):
@@ -99,7 +97,7 @@ class TestCatalogTemplates:
         Checks if there is no possibility of getting template using wrong template id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when template is not returned and status code 404 with error message: '100: Key not found' is
@@ -110,7 +108,7 @@ class TestCatalogTemplates:
         """
         step("Check that it's not possible to get template with wrong template_id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     CatalogTemplate.get, template_id=self.INVALID_ID)
+                                     CatalogTemplate.get, template_id=Guid.NON_EXISTING_GUID)
 
     @priority.high
     def test_update_catalog_template(self, context):
@@ -236,7 +234,7 @@ class TestCatalogTemplates:
         Checks if there is no possibility of updating template giving not existing template id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
         2. template state: 'IN PROGRESS'
 
         <b>Expected results:</b>
@@ -248,7 +246,7 @@ class TestCatalogTemplates:
         """
         step("Check that it's not possible to update non-existent template")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.update_template, template_id=self.INVALID_ID, field_name="state",
+                                     catalog_api.update_template, template_id=Guid.NON_EXISTING_GUID, field_name="state",
                                      value=TapEntityState.IN_PROGRESS)
 
     @priority.low
@@ -258,7 +256,7 @@ class TestCatalogTemplates:
         Checks if there is no possibility of deleting not existing template.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of deleting template and status code 404 with error message: '100:
@@ -269,4 +267,4 @@ class TestCatalogTemplates:
         """
         step("Check that it's not possible to delete non-existent template")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.delete_template, template_id=self.INVALID_ID)
+                                     catalog_api.delete_template, template_id=Guid.NON_EXISTING_GUID)

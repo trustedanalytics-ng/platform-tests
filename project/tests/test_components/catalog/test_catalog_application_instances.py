@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapEntityState, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapEntityState, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -31,7 +31,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogApplicationInstances:
 
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
     SAMPLE_CLASS_ID = "test-class"
     NEW_CLASS_ID = "new-class-id"
     WRONG_PREV_CLASS_ID = "prev-test-class-id"
@@ -214,9 +213,9 @@ class TestCatalogApplicationInstances:
         1. Create instance of not-existing application.
         """
         step("Check that it's not possible to create instance of not-existing application")
-        expected_message = CatalogHttpStatus.MSG_APPLICATION_DOES_NOT_EXIST.format(self.INVALID_ID)
+        expected_message = CatalogHttpStatus.MSG_APPLICATION_DOES_NOT_EXIST.format(Guid.NON_EXISTING_GUID)
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, expected_message,
-                                     CatalogApplicationInstance.create, context, application_id=self.INVALID_ID)
+                                     CatalogApplicationInstance.create, context, application_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_create_application_instance_with_invalid_name(self, context, catalog_application):
@@ -250,7 +249,7 @@ class TestCatalogApplicationInstances:
         Checks if there is no possibility of getting application instance using invalid application id.
 
         <b>Input data:</b>
-        1. invalid id: '90982774-09198298'
+        1. invalid id: '0123456789-9876543210'
 
         <b>Expected results:</b>
         Test passes when application instance is not found on the list of application instances and status code: 404 with message: '100: Key not found' is returned.
@@ -258,11 +257,10 @@ class TestCatalogApplicationInstances:
         <b>Steps:</b>
         1. Get application instance with incorrect application id.
         """
-        invalid_id = "90982774-09198298"
         step("List instances with invalid application id")
         # TODO this error message should be different
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.get_application_instances, application_id=invalid_id)
+                                     catalog_api.get_application_instances, application_id=Guid.INVALID_GUID)
 
     @priority.low
     def test_cannot_create_instance_with_empty_body(self, catalog_application):
@@ -298,7 +296,7 @@ class TestCatalogApplicationInstances:
         1. sample catalog template
         2. sample catalog image
         3. sample catalog application
-        4. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        4. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when application instance is not found on the list of application instances and status code: 404
@@ -310,7 +308,7 @@ class TestCatalogApplicationInstances:
         step("Check that getting not-existing application instance causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogApplicationInstance.get, application_id=catalog_application.id,
-                                     instance_id=self.INVALID_ID)
+                                     instance_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_update_application_instance_with_wrong_prev_class_id_value(self, catalog_application_instance):
@@ -410,7 +408,7 @@ class TestCatalogApplicationInstances:
         3. sample catalog application
         4. sample catalog application instance
         5. new classId value
-        6. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        6. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when application instance is not updated and status code 404 with error message: '100: Key not
@@ -422,7 +420,7 @@ class TestCatalogApplicationInstances:
         step("Check that it's not possible to update not-existing application instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.update_application_instance,
-                                     application_id=catalog_application_instance.class_id, instance_id=self.INVALID_ID,
+                                     application_id=catalog_application_instance.class_id, instance_id=Guid.NON_EXISTING_GUID,
                                      field_name="classId", value=self.NEW_CLASS_ID)
 
     @priority.low
@@ -435,7 +433,7 @@ class TestCatalogApplicationInstances:
         1. sample catalog template
         2. sample catalog image
         3. sample catalog application
-        4. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        4. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of deleting application instance and status code 404 with error
@@ -447,4 +445,4 @@ class TestCatalogApplicationInstances:
         step("Check that it's not possible to delete not-existing application instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.delete_application_instance, application_id=catalog_application.id,
-                                     instance_id=self.INVALID_ID)
+                                     instance_id=Guid.NON_EXISTING_GUID)

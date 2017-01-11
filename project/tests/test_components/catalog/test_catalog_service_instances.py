@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -31,7 +31,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogServiceInstances:
 
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
     SAMPLE_CLASS_ID = "test-class"
     NEW_CLASS_ID = "new-class-id"
     WRONG_PREV_CLASS_ID = "prev-test-class-id"
@@ -219,19 +218,19 @@ class TestCatalogServiceInstances:
         Checks if there is no possibility of creating instance of not-existing service.
 
         <b>Input data:</b>
-        1. not-existing service id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'.
+        1. not-existing service id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'.
 
         <b>Expected results:</b>
         Test passes when service instance is not created and status code 404 with error message: 'service with id:
-        xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx does not exists!' is returned.
+        FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF does not exists!' is returned.
 
         <b>Steps:</b>
         1. Create instance of not-existing service.
         """
         step("Check that it's not possible to create instance of not-existing service")
-        expected_message = CatalogHttpStatus.MSG_SERVICE_DOES_NOT_EXIST.format(self.INVALID_ID)
+        expected_message = CatalogHttpStatus.MSG_SERVICE_DOES_NOT_EXIST.format(Guid.NON_EXISTING_GUID)
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, expected_message,
-                                     CatalogServiceInstance.create, context, service_id=self.INVALID_ID)
+                                     CatalogServiceInstance.create, context, service_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_get_instance_of_not_existing_service(self, catalog_service_instance):
@@ -243,7 +242,7 @@ class TestCatalogServiceInstances:
         1. sample catalog template
         2. sample catalog service
         3. sample catalog service instance
-        4. not-existing service id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        4. not-existing service id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when service instance is not found on the list of service instances and status code: 404 with
@@ -254,7 +253,7 @@ class TestCatalogServiceInstances:
         """
         step("Check that getting instance with incorrect service id causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     CatalogServiceInstance.get, service_id=self.INVALID_ID,
+                                     CatalogServiceInstance.get, service_id=Guid.NON_EXISTING_GUID,
                                      instance_id=catalog_service_instance.id)
 
     @priority.low
@@ -312,7 +311,7 @@ class TestCatalogServiceInstances:
         <b>Input data:</b>
         1. sample catalog template
         2. sample catalog service
-        3. not-existing service instance id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        3. not-existing service instance id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when service instance is not found on the list of service instances and status code: 404 with
@@ -324,7 +323,7 @@ class TestCatalogServiceInstances:
         step("Check that getting not-existing service instance causes an error")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      CatalogServiceInstance.get, service_id=catalog_service.id,
-                                     instance_id=self.INVALID_ID)
+                                     instance_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_update_service_instance_with_wrong_prev_class_id_value(self, catalog_service_instance):
@@ -410,7 +409,7 @@ class TestCatalogServiceInstances:
         2. sample catalog service
         3. sample catalog service instance
         4. new classId value
-        5. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        5. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when service instance is not updated and status code 404 with error message: '100: Key not found'
@@ -422,7 +421,7 @@ class TestCatalogServiceInstances:
         step("Check that it's not possible to update not-existing service instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.update_service_instance, service_id=catalog_service_instance.class_id,
-                                     instance_id=self.INVALID_ID, field_name="classId", value=self.NEW_CLASS_ID)
+                                     instance_id=Guid.NON_EXISTING_GUID, field_name="classId", value=self.NEW_CLASS_ID)
 
     @priority.low
     def test_cannot_delete_not_existing_service_instance(self, catalog_service):
@@ -433,7 +432,7 @@ class TestCatalogServiceInstances:
         <b>Input data:</b>
         1. sample catalog template
         2. sample catalog service
-        3. id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        3. id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of deleting service instance and status code 404 with error message:
@@ -445,4 +444,4 @@ class TestCatalogServiceInstances:
         step("Check that it's not possible to delete not-existing service instance")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
                                      catalog_api.delete_service_instance, service_id=catalog_service.id,
-                                     instance_id=self.INVALID_ID)
+                                     instance_id=Guid.NON_EXISTING_GUID)

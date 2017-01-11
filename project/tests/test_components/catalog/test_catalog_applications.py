@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -31,7 +31,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogApplications:
 
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
     SAMPLE_APPLICATION_DESCRIPTION = "test-description"
     SAMPLE_APPLICATION_REPLICATION = 1
     WRONG_PREV_REPLICA_VALUE = 3
@@ -323,7 +322,7 @@ class TestCatalogApplications:
         Checks if there is no possibility of updating application giving invalid application id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when application is not updated and status code 404 with error message: '100: Key not found' is
@@ -334,7 +333,7 @@ class TestCatalogApplications:
         """
         step("Check that it's not possible to update non-existing application")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.update_application, application_id=self.INVALID_ID,
+                                     catalog_api.update_application, application_id=Guid.NON_EXISTING_GUID,
                                      field_name="replication", value=2)
 
     @priority.low
@@ -344,7 +343,7 @@ class TestCatalogApplications:
         Checks if there is no possibility of deleting not-existing application.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of deleting application and status code 404 with error message: '
@@ -355,7 +354,7 @@ class TestCatalogApplications:
         """
         step("Check that it's not possible to delete non-existing application")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.delete_application, application_id=self.INVALID_ID)
+                                     catalog_api.delete_application, application_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_get_application_with_invalid_id(self):
@@ -364,7 +363,7 @@ class TestCatalogApplications:
         Checks if there is no possibility of getting application using invalid application id.
 
         <b>Input data:</b>
-        1. invalid id: '90982774-09198298'
+        1. invalid id: '0123456789-9876543210'
 
         <b>Expected results:</b>
         Test passes when application is not found on the list of application and status code: 404 with message: '100:
@@ -374,7 +373,6 @@ class TestCatalogApplications:
         1. Get application with incorrect application id.
         """
         step("Check application with invalid application id")
-        invalid_id = "90982774-09198298"
         # TODO this error message should be different
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.get_application, application_id=invalid_id)
+                                     catalog_api.get_application, application_id=Guid.INVALID_GUID)

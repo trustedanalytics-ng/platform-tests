@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import ApiServiceHttpStatus, ServiceLabels, ServicePlan, TapComponent as TAP
+from modules.constants import ApiServiceHttpStatus, Guid, ServiceLabels, ServicePlan, TapComponent as TAP
 import modules.http_calls.platform.api_service as api
 from modules.markers import incremental, priority
 from modules.tap_logger import step
@@ -233,8 +233,6 @@ class TestServiceInstantiation:
 
 class TestServiceInstantiationOther:
 
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
-
     @classmethod
     @pytest.fixture(scope="class")
     def etcd_offering(cls, api_service_admin_client):
@@ -247,7 +245,7 @@ class TestServiceInstantiationOther:
     @pytest.fixture(scope="class")
     def invalid_instance(cls, api_service_admin_client):
         """Creates a servicve instance with invalid id"""
-        return ServiceInstance(service_id=TestServiceInstantiationOther.INVALID_ID,
+        return ServiceInstance(service_id=Guid.INVALID_GUID,
                                name=None, offering_id=None, plan_id=None,
                                bindings=None, state=None, offering_label=None,
                                client=api_service_admin_client)
@@ -269,8 +267,8 @@ class TestServiceInstantiationOther:
         """
         step("Try retrieve service instance by providing invalid id")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
-                                                ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(self.INVALID_ID),
-                                                ServiceInstance.get, service_id=self.INVALID_ID,
+                                                ApiServiceHttpStatus.MSG_CANNOT_FETCH_INSTANCE.format(Guid.INVALID_GUID),
+                                                ServiceInstance.get, service_id=Guid.INVALID_GUID,
                                                 client=api_service_admin_client)
 
     @priority.medium
@@ -350,7 +348,7 @@ class TestServiceInstantiationOther:
         """
         step("Try to retrieve service instance logs with invalid id")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, "{}", api.get_service_logs,
-                                                client=api_service_admin_client, service_id=self.INVALID_ID)
+                                                client=api_service_admin_client, service_id=Guid.INVALID_GUID)
 
     @priority.medium
     def test_cannot_remove_not_existing_service_instance(self, api_service_admin_client):
@@ -370,7 +368,7 @@ class TestServiceInstantiationOther:
         step("Try delete not existing service instance")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
                                                 ApiServiceHttpStatus.MSG_KEY_NOT_FOUND, api.delete_service,
-                                                client=api_service_admin_client, service_id=self.INVALID_ID)
+                                                client=api_service_admin_client, service_id=Guid.NON_EXISTING_GUID)
 
     @priority.medium
     def test_cannot_create_service_instance_without_name(self, etcd_offering, api_service_admin_client):
@@ -413,9 +411,9 @@ class TestServiceInstantiationOther:
         valid_name = generate_test_object_name(separator="")
         step("Send create service instance request with invalid plan_id")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                ApiServiceHttpStatus.MSG_PLAN_CANNOT_BE_FOUND.format(self.INVALID_ID),
+                                                ApiServiceHttpStatus.MSG_PLAN_CANNOT_BE_FOUND.format(Guid.INVALID_GUID),
                                                 api.create_service, client=api_service_admin_client, name=valid_name,
-                                                plan_id=self.INVALID_ID, offering_id=etcd_offering.id, params=None)
+                                                plan_id=Guid.INVALID_GUID, offering_id=etcd_offering.id, params=None)
 
     @priority.medium
     def test_cannot_create_service_instance_with_not_allowed_characters_in_name(self, class_context,

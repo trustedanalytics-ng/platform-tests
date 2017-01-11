@@ -16,7 +16,7 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, TapEntityState, TapComponent as TAP
+from modules.constants import CatalogHttpStatus, Guid, TapEntityState, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
@@ -30,7 +30,6 @@ pytestmark = [pytest.mark.components(TAP.catalog)]
 @pytest.mark.usefixtures("open_tunnel")
 class TestCatalogServices:
 
-    INVALID_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
     SAMPLE_SERVICE_DESCRIPTION = "test-description"
 
     @pytest.fixture(scope="function")
@@ -182,7 +181,7 @@ class TestCatalogServices:
         Checks if there is no possibility of getting service using not existing service id.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when service is not found on the list of services and status code: 404 with message: '100: Key not
@@ -193,7 +192,7 @@ class TestCatalogServices:
         """
         step("Check that it's not possible to get service with non-existent service_id")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     CatalogService.get, service_id=self.INVALID_ID)
+                                     CatalogService.get, service_id=Guid.NON_EXISTING_GUID)
 
     @priority.low
     def test_cannot_update_service_with_wrong_prev_description_value(self, catalog_service):
@@ -325,7 +324,7 @@ class TestCatalogServices:
         Checks if there is no possibility of updating not existing service.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
         2. service state: 'READY'
 
         <b>Expected results:</b>
@@ -337,7 +336,7 @@ class TestCatalogServices:
         """
         step("Check that it's not possible to update non-existent service")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.update_service, service_id=self.INVALID_ID, field_name="state",
+                                     catalog_api.update_service, service_id=Guid.NON_EXISTING_GUID, field_name="state",
                                      value=TapEntityState.READY)
 
     @priority.low
@@ -347,7 +346,7 @@ class TestCatalogServices:
         Checks if there is no possibility of deleting not existing service.
 
         <b>Input data:</b>
-        1. invalid id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx'
+        1. invalid id: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'
 
         <b>Expected results:</b>
         Test passes when there is no possibility of deleting service and status code 404 with error message: '100: Key
@@ -358,4 +357,4 @@ class TestCatalogServices:
         """
         step("Check that it's not possible to delete non-existent service")
         assert_raises_http_exception(CatalogHttpStatus.CODE_NOT_FOUND, CatalogHttpStatus.MSG_KEY_NOT_FOUND,
-                                     catalog_api.delete_service, service_id=self.INVALID_ID)
+                                     catalog_api.delete_service, service_id=Guid.NON_EXISTING_GUID)
