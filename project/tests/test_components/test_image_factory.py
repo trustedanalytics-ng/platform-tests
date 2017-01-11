@@ -48,8 +48,7 @@ class TestImageFactory:
         catalog_image = CatalogImage.create(context, image_type=self.APP_TYPE, state=self.INITIAL_IMAGE_STATE,
                                             blob_type=self.BLOB_TYPE)
 
-        log_fixture("CATALOG: Wait for the image to be in state {}".format(TapEntityState.RUNNING))
-        catalog_image.ensure_in_state(TapEntityState.READY)
+        catalog_image.ensure_in_state(TapEntityState.REQUESTED)
 
         log_fixture("CATALOG: Check that the image is on the image list")
         catalog_images = CatalogImage.get_list()
@@ -59,12 +58,13 @@ class TestImageFactory:
     @pytest.fixture(scope="function")
     def blob_store_artifact(self, context, catalog_image, test_data_urls):
         log_fixture("BLOB-STORE: Create an artifact for application")
-        created_blob = Blob.create(context, blob_id=catalog_image.id,
-                                   file_path="@{}".format(test_data_urls.nodejs_app.filepath))
+        created_blob = Blob.create_from_file(context, blob_id=catalog_image.id,
+                                             file_path=test_data_urls.nodejs_app.filepath)
 
         log_fixture("BLOB-STORE Check that the blob exists")
         blob = Blob.get(blob_id=catalog_image.id)
         assert blob == created_blob
+        return catalog_image
 
     @retry(AssertionError, tries=5, delay=2)
     def assert_blob_deleted(self, blob_id):
@@ -74,8 +74,8 @@ class TestImageFactory:
 
     @priority.high
     @pytest.mark.components(TAP.blob_store, TAP.catalog, TAP.image_factory, TAP.image_repository)
-    @pytest.mark.bugs("DPNG-12932 State of the NODEJS image does not reach state READY")
-    def test_create_image_in_image_factory(self, context, catalog_image):
+    @pytest.mark.bugs("DPNG-14913 NodeJS image id does not appear in image-repository")
+    def test_create_image_in_image_factory(self, context, blob_store_artifact):
         """
         <b>Description:</b>
         Create image with image factory
@@ -92,6 +92,7 @@ class TestImageFactory:
         - Verify it's ready
         - Remove the image and verify it was removed
         """
+        catalog_image = blob_store_artifact
         step("IMAGE-FACTORY: Create an image")
         Image.create(context, image_id=catalog_image.id)
 
@@ -106,7 +107,6 @@ class TestImageFactory:
 
     @pytest.mark.components(TAP.catalog, TAP.image_factory)
     @pytest.mark.parametrize("body", ["invalid body", ""])
-    @pytest.mark.bugs("DPNG-12932 State of the NODEJS image does not reach state READY")
     def test_create_image_factory_with_wrong_body(self, class_context, body, catalog_image):
         """
         <b>Description:</b>
