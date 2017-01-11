@@ -67,6 +67,7 @@ class TestDeleteOrganizationUser:
         assert_user_in_org_and_role(user_to_delete, test_org.guid, user_to_delete.org_role[test_org.guid])
 
     @priority.low
+    @pytest.mark.skip(reason="DPNG-14825 there must be at least 2 admins at all times")
     def test_admin_cannot_delete_last_admin(self, context, test_org):
         step("Find all admins")
         org_users = User.get_all_users(test_org.guid)
