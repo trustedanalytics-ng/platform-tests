@@ -259,8 +259,7 @@ class ContainerBrokerHttpStatus(HttpStatus):
                          "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)* (e.g. 'example.com')"
     MSG_INGRESS_ALREADY_EXISTS = "ingresses.extensions \\\"{}\\\" already exists"
     MSG_INGRESS_NOT_FOUND = "ingresses.extensions \\\"{}\\\" not found"
-    MSG_INGRESS_KEY_NOT_FOUND = "\\\"getting key \\\\\\\"/default/Instances/{}\\\\\\\" error: " \
-                                "100: Key not found (/default/Instances/{})"
+    MSG_INGRESS_KEY_NOT_FOUND = "service instance {} is not found"
     
 
 class ModelCatalogHttpStatus(HttpStatus):

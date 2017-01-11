@@ -450,7 +450,6 @@ class TestContainerBroker:
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
                                                 nats_instance.unexpose_service_instance)
 
-    @pytest.mark.bugs("DPNG-14867 [api-tests] Adjust expected response msg in test test_unexpose_service_with_invalid_service_id")
     def test_unexpose_service_with_invalid_service_id(self):
         """
         <b>Description:</b>
@@ -468,8 +467,7 @@ class TestContainerBroker:
         - Verify that HTTP response status code is 404 with proper message.
         """
         step("Try to unexpose service instance with invalid service id")
-        expected_msg = ContainerBrokerHttpStatus.MSG_INGRESS_KEY_NOT_FOUND.format(self.INVALID_PARAM,
-                                                                                  self.INVALID_PARAM)
+        expected_msg = ContainerBrokerHttpStatus.MSG_INGRESS_KEY_NOT_FOUND.format(self.INVALID_PARAM)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
                                                 ContainerBrokerInstance.unexpose_service_with_instance_id,
                                                 instance_id=self.INVALID_PARAM)
