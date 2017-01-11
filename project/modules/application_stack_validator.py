@@ -73,7 +73,7 @@ class ApplicationStackValidator(object):
     def _validate_instance_has_been_removed(self):
         """Validate that service instance has been properly removed."""
         step("Check that service instance was deleted from services list")
-        service_list = ServiceInstance.api_get_list(self.__service.space_guid)
+        service_list = ServiceInstance.get_list()
         assert self.__service.name not in [i.name for i in service_list], "Service found on services list"
 
     def _validate_application_has_been_removed(self):

@@ -20,36 +20,32 @@ from modules.application_stack_validator import ApplicationStackValidator
 from modules.constants import ServiceLabels, TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import ServiceInstance, ServiceOffering
+from modules.tap_object_model import ServiceInstance
 
 logged_components = (TAP.service_catalog, TAP.service_exposer)
 pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
 
 
-@pytest.mark.skip(reason="DPNG-10954 adjust test_service_instances to TAP NG")
 class TestDataScienceInstances(object):
-
-    @classmethod
-    @pytest.fixture(scope="class", autouse=True)
-    def marketplace_services(cls, test_org, test_space):
-        step("Get marketplace services")
-        cls.marketplace = ServiceOffering.get_list()
 
     @priority.high
     @pytest.mark.parametrize("service_label", [ServiceLabels.JUPYTER])
-    def test_create_and_delete_service_instances(self, context, test_org, test_space, service_label):
-        service_type = next((s for s in self.marketplace if s.label == service_label), None)
+    def test_create_and_delete_service_instances(self, context, service_label, marketplace_offerings):
+        service_type = next((s for s in marketplace_offerings if s.label == service_label), None)
         assert service_type is not None, "{} service is not available in Marketplace".format(service_label)
         plan = next(iter(service_type.service_plans))
         step("Create service instance")
-        instance = ServiceInstance.api_create(
+        instance = ServiceInstance.create_with_name(
             context=context,
-            org_guid=test_org.guid,
-            space_guid=test_space.guid,
-            service_label=service_type.label,
-            service_plan_guid=plan["guid"]
+            offering_label=service_type.label,
+            plan_name=plan.name
         )
+        instance.ensure_running()
         validator = ApplicationStackValidator(instance)
         validator.validate(validate_application=False)
-        instance.api_delete()
-        validator.validate_removed()
+        step("Stop service instance")
+        instance.stop()
+        instance.ensure_stopped()
+        step("Delete service instance")
+        instance.delete()
+        instance.ensure_deleted()
