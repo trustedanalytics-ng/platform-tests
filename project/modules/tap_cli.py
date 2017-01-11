@@ -118,11 +118,11 @@ class TapCli:
         output = "\n".join(output)
         return output
 
-    def login(self, login_domain=config.api_url, tap_auth=None):
+    def login(self, external_protocol=config.external_protocol, login_domain=config.api_url, tap_auth=None):
         if tap_auth is None:
             tap_auth = [config.admin_username, config.admin_password]
         output = self._run_command([self.LOGIN,
-                                    self.API_PARAM, "{}://{}".format(config.external_protocol, login_domain),
+                                    self.API_PARAM, "{}://{}".format(external_protocol, login_domain),
                                     self.USERNAME_PARAM, tap_auth[0],
                                     self.PASSWORD_PARAM, tap_auth[1],
                                     self.SKIP_SSL_VALIDATION])
