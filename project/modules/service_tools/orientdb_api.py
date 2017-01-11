@@ -106,3 +106,6 @@ class OrientDbApi(object):
     def record_delete(self, record_id):
         """Delete record."""
         return self._app.api_request(method="DELETE", path="{}/{}".format(self.PATH_TO_RECORDS, record_id))
+
+    def get_credentials(self):
+        return self._app.api_request(method="GET", path="rest/credentials")

@@ -116,8 +116,14 @@ class AppCheckResource(flask_restful.Resource):
     def get(self):
         return "OrientDb api example"
 
+class CredentialsResource(flask_restful.Resource):
+    """Endpoint to get root password to database"""
+
+    def get(self):
+        return db_connector._config.db_password
 
 api.add_resource(AppCheckResource, "/")
+api.add_resource(CredentialsResource, "/rest/credentials")
 api.add_resource(DatabasesResource, "/rest/databases")
 api.add_resource(DatabaseResource, "/rest/databases/<database_name>")
 api.add_resource(ClassesResource, "/rest/databases/<database_name>/classes")

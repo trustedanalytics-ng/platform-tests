@@ -14,15 +14,14 @@
 # limitations under the License.
 #
 
-from modules.constants import ServiceLabels
 from modules.http_calls import orientdb_dashboard
 
 
 class OrientDbDashboardApi(object):
     """OrientDB Dashboard application API."""
     def __init__(self, orientdb_dashboard_app, orientdb_api_app):
-        self.url = "http://{}".format(orientdb_dashboard_app.urls[0])
-        self.password = orientdb_api_app.get_credentials(service_name=ServiceLabels.ORIENT_DB)["password"]
+        self.url = orientdb_dashboard_app.url
+        self.password = orientdb_api_app.get_credentials()
 
     def get_database_names(self):
         """Return databases."""
