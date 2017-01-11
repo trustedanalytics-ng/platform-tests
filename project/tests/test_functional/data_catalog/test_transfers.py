@@ -123,7 +123,6 @@ class TestSubmitTransfer:
         assert retrieved_transfer.category == new_category, "Created transfer has different category"
 
     @priority.low
-    @pytest.mark.bugs("DPNG-14772 [api-tests] Change error codes and messages expected in test)")
     def test_cannot_create_transfer_when_providing_invalid_org_guid(self, context):
         """
         <b>Description:</b>
@@ -142,7 +141,7 @@ class TestSubmitTransfer:
         """
         org_guid = "invalid_guid"
         step("Try create a transfer by providing invalid org guid")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, self.MSG_ON_INVALID_ORG_GUID, self._create_transfer,
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, self.MSG_ON_INVALID_ORG_GUID, self._create_transfer,
                                      context, org_guid=org_guid, category=self.DEFAULT_CATEGORY)
 
     @priority.low
@@ -199,7 +198,7 @@ class TestSubmitTransfer:
 class TestSubmitTransferFromLocalFile(TestSubmitTransfer):
     pytestmark = [pytest.mark.components(TAP.das, TAP.downloader, TAP.uploader, TAP.metadata_parser)]
 
-    MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_BAD_REQUEST
+    MSG_ON_INVALID_ORG_GUID = HttpStatus.MSG_NOT_VALID_UUID
 
     def _create_transfer(self, context, org_guid, column_count=10, row_count=10,
                          category=TestSubmitTransfer.DEFAULT_CATEGORY, size=None, file_name=None):

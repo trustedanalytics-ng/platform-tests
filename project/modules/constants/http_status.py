@@ -158,7 +158,7 @@ class UserManagementHttpStatus(HttpStatus):
 class DataCatalogHttpStatus(HttpStatus):
     """Data catalog http status messages"""
 
-    MSG_NOT_VALID_UUID = "not a valid UUID"
+    MSG_NOT_VALID_UUID = "You do not have access to requested organization"
     MSG_INVALID_REQUEST = "Invalid request"
 
 
