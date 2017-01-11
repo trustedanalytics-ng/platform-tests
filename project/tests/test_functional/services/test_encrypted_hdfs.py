@@ -25,7 +25,6 @@ logged_components = (TAP.hdfs_broker,)
 pytestmark = [pytest.mark.components(TAP.hdfs_broker)]
 
 
-@pytest.mark.skip(reason="DPNG-13206 - Authentication issue for KMS service")
 @incremental
 @priority.medium
 class TestEncryptedHdfs:
@@ -113,6 +112,7 @@ class TestEncryptedHdfs:
         cat = self.hdfs.cat(service_instance_id=self.instance_hdfs.id, file_name=self.file['name'])
         assert self.file['content'] in str(cat)
 
+    @pytest.mark.skip(reason="DPNG-14805 - Cannot remove instance hdfs in plain-dir")
     def test_4_delete_hdfs_service_instance(self):
         """
         <b>Description:</b>
