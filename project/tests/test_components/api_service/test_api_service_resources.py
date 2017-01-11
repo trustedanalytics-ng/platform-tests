@@ -22,7 +22,7 @@ from modules.tap_logger import step
 
 
 @priority.high
-class TestApiServiceResources:
+class ApiServiceResources:
 
     @pytest.mark.parametrize("resource", ["linux32", "linux64", "windows32", "macosx64"])
     def test_api_resource_cli_returns_tap_cli_binary(self, api_service_admin_client, resource):
