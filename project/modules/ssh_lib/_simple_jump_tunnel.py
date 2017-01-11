@@ -52,7 +52,7 @@ class SimpleJumpTunnel(object):
         self._logger.debug("Close local ssh tunnel")
         self._tunnel.kill()
 
-    @retry(ConnectionRefusedError, tries=20, delay=5)
+    @retry((ConnectionRefusedError, TimeoutError), tries=20, delay=5)
     def _check_tunnel_established(self):
         sock = socket.create_connection((self._LOCALHOST, self._local_port))
         sock.close()
