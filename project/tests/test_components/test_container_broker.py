@@ -272,7 +272,7 @@ class TestContainerBroker:
         - Verify platform returned error
         """
         non_existing_instance = ContainerBrokerInstance(instance_id=Guid.NON_EXISTING_GUID)
-        expected_msg = ContainerBrokerHttpStatus.MSG_DEPLOYMENTS_NOT_FOUND.format(non_existing_instance.id)
+        expected_msg = ContainerBrokerHttpStatus.MSG_SERVICES_NOT_FOUND.format(non_existing_instance.id)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
                                                 non_existing_instance.get_logs)
 
@@ -295,7 +295,7 @@ class TestContainerBroker:
         - Verify platform returned error
         """
         non_existing_instance = ContainerBrokerInstance(instance_id=Guid.NON_EXISTING_GUID)
-        expected_msg = ContainerBrokerHttpStatus.MSG_DEPLOYMENTS_NOT_FOUND.format(non_existing_instance.id)
+        expected_msg = ContainerBrokerHttpStatus.MSG_SERVICES_NOT_FOUND.format(non_existing_instance.id)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
                                                 non_existing_instance.get_envs)
 
@@ -467,7 +467,8 @@ class TestContainerBroker:
         - Verify that HTTP response status code is 404 with proper message.
         """
         step("Try to unexpose service instance with invalid service id")
-        expected_msg = ContainerBrokerHttpStatus.MSG_INGRESS_KEY_NOT_FOUND.format(self.INVALID_PARAM)
+        expected_msg = ContainerBrokerHttpStatus.MSG_SERVICES_NOT_FOUND.format(self.INVALID_PARAM,
+                                                                               self.INVALID_PARAM)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,
                                                 ContainerBrokerInstance.unexpose_service_with_instance_id,
                                                 instance_id=self.INVALID_PARAM)
