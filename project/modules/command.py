@@ -21,6 +21,9 @@ from .constants.logger_type import LoggerType
 from .exceptions import CommandExecutionException
 from .tap_logger import get_logger
 
+
+MAX_CHARACTER_COUNT = 50000
+
 logger = get_logger(LoggerType.SHELL_COMMAND)
 
 
@@ -42,6 +45,10 @@ def run(command, cwd=None):
     return_code = process.poll()
 
     if return_code != 0:
-        raise CommandExecutionException(return_code, " ".join(out), " ".join(command))
+        exception_output = " ".join(out)
+        if len(exception_output) > MAX_CHARACTER_COUNT:
+            half = MAX_CHARACTER_COUNT // 2
+            exception_output = "{} [...] {}".format(exception_output[:half], exception_output[-half:])
+        raise CommandExecutionException(return_code, exception_output, " ".join(command))
 
     return out
