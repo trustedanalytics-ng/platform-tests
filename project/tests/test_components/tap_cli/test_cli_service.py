@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,15 @@
 #
 
 import pytest
+import random
+import string
 
 from modules.constants import TapMessage, TapComponent as TAP, TapEntityState, ServiceLabels
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliService, ServiceOffering
-from tests.fixtures.assertions import assert_raises_command_execution_exception
+from tests.fixtures.assertions import assert_raises_command_execution_exception, assert_not_in_with_retry, \
+    assert_in_with_retry
 from tap_component_config import offerings_as_parameters
 
 
@@ -33,6 +36,12 @@ RELIABLE_OFFERINGS = [
     ServiceLabels.MOSQUITTO,
     ServiceLabels.MYSQL,
 ]
+
+PARAM_ENV = [
+        (["ENV1=env1", "ENV2=env2"], ['"ENV1": "env1"', '"ENV2": "env2"']),
+        (["ENV=env"], ['"ENV": "env"']),
+]
+
 
 @pytest.mark.usefixtures("cli_login")
 class TestCliService:
@@ -56,10 +65,37 @@ class TestCliService:
         return CliService.create(context=class_context, offering_name=offering.label,
                                  plan_name=offering.service_plans[0].name, tap_cli=tap_cli)
 
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    @pytest.mark.bug("Cannot set multiple envs with --envs flag when creating service instance")
+    @pytest.mark.parametrize("env_list, expected", PARAM_ENV)
+    def test_create_service_instance_with_envs_param(self, context, offering,
+                                                     tap_cli, env_list, expected):
+        """
+        <b>Description:</b>
+        Create service with additional envs.
+
+        <b>Input data:</b>
+        1. environment variables to set
+
+        <b>Expected results:</b>
+        Created service with additional envs.
+
+        <b>Steps:</b>
+        1. Create service with additional envs
+        2. Check if additional envs returned in service credentials
+        """
+        step("Create service with additional envs")
+        svc = CliService.create(context=context, offering_name=offering.label,
+                                plan_name=offering.service_plans[0].name,
+                                tap_cli=tap_cli, envs=env_list)
+        credentials_output = tap_cli.service_credentials(["--name", svc.name])
+        assert all([result in credentials_output for result in expected])
+
     @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir and encrypted-dir")
     @priority.high
     @pytest.mark.components(TAP.cli)
-    @pytest.mark.parametrize("service_label,plan_name", KAFKA_AND_HDFS_OFFERINGS)
+    @pytest.mark.parametrize("service_label, plan_name", KAFKA_AND_HDFS_OFFERINGS)
     def test_create_and_delete_instance_of_kafka_and_hdfs(self, context, service_label, plan_name, tap_cli):
         """
         <b>Description:</b>
@@ -114,6 +150,99 @@ class TestCliService:
         logs_output = service.logs()
         header_line = logs_output.split("\n", 1)[0]
         assert "x{}".format(service.id[:8]) in header_line
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_stop_and_start_service_instance(self, service):
+        """
+        <b>Description:</b>
+        Check that service starts & stops properly.
+
+        <b>Input data:</b>
+        1. Service instance
+
+        <b>Expected results:</b>
+        Service state changes states to stopped and running when expected.
+
+        <b>Steps:</b>
+        1. Stop service.
+        2. Ensure service is stopped.
+        3. Start service.
+        4. Ensure service is running.
+        """
+        step("Stopping service ...")
+        service.stop()
+        step("Ensuring service is stopped ...")
+        service.ensure_service_state(TapEntityState.STOPPED)
+        step("Starting service ...")
+        service.start()
+        step("Ensuring service is stopped ...")
+        service.ensure_service_state(TapEntityState.RUNNING)
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_restart_service_instance(self, service):
+        """
+        <b>Description:</b>
+        Check that service restarts properly.
+
+        <b>Input data:</b>
+        1. Service instance
+
+        <b>Expected results:</b>
+        Service state is running.
+
+        <b>Steps:</b>
+        1. Restart service.
+        2. Ensure service is starting.
+        3. Ensure service is running.
+        """
+        step("Stopping service ...")
+        service.restart()
+        step("Ensuring service is running ...")
+        service.ensure_service_state(TapEntityState.RUNNING)
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_cannot_delete_service_instance_in_running_state(self, service):
+        """
+        <b>Description:</b>
+        Check that attempt to delete service in running state returns proper information.
+
+        <b>Input data:</b>
+        1. Service instance
+
+        <b>Expected results:</b>
+        Legitimate error message.
+
+        <b>Steps:</b>
+        1. Delete service.
+        """
+        step("Trying to delete a service")
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_DELETE_RUNNING_APP,
+                                                  service.delete)
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_cancel_to_delete_service_instance(self, tap_cli, service):
+        """
+        <b>Description:</b>
+        Check deleting service with interactive mode.
+
+        <b>Input data:</b>
+        1. Service instance
+
+        <b>Expected results:</b>
+        Canceled.
+
+        <b>Steps:</b>
+        1. Canceled.
+        """
+        step("Cancelling service delete...")
+        result = tap_cli.run_command_with_prompt(['service', 'delete', '--name', service.name],
+                                                 prompt_answers=['N'])
+        assert "Canceled" in result
+        assert_in_with_retry(service.name, tap_cli.service_list)
 
     @priority.low
     @pytest.mark.components(TAP.cli)
@@ -206,6 +335,35 @@ class TestCliService:
                                                   ["--offering", offering.label,
                                                    "--plan", offering.service_plans[0].name])
 
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_cannot_create_service_instance_with_invalid_name(self, offering, tap_cli):
+        """
+        <b>Description:</b>
+        Check that attempt to create service instance with invalid name will return proper information.
+
+        <b>Input data:</b>
+        1. Command name: service create
+        2. Service offering
+
+        <b>Expected results:</b>
+        Attempt to create service without name will return proper information.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command.
+        1. Verify that attempt to create service with invalid name returns expected message.
+        """
+        invalid_name = "INVALID_NAME"
+        expected_message = TapMessage.NAME_HAS_INCORRECT_VALUE.format(invalid_name)
+        step("Check error message when creating instance with invalid name")
+        assert_raises_command_execution_exception(1, expected_message,
+                                                  tap_cli.create_service,
+                                                  ["--name", invalid_name,
+                                                   "--offering", offering.label,
+                                                   "--plan", offering.service_plans[0].name])
+        assert_not_in_with_retry(invalid_name, tap_cli.service_list)
+
+
     @priority.low
     @pytest.mark.components(TAP.api_service, TAP.cli)
     def test_cannot_create_service_instance_without_plan(self, offering, tap_cli):
@@ -277,6 +435,54 @@ class TestCliService:
 
     @priority.low
     @pytest.mark.components(TAP.cli)
+    def test_get_service_instance_info(self, tap_cli, service):
+        """
+        <b>Description:</b>
+        Check get service info.
+
+        <b>Input data:</b>
+        1. Service
+
+        <b>Expected results:</b>
+        Attempt to get info about existing service returns info.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command service info --name service-name.
+        2. Verify that attempt to get existing service info returns proper info.
+        """
+        step("Check error message when getting non existing service info")
+        result = tap_cli.get_service(service.name)
+        assert (service.name, service.id) == (result["name"], result["id"])
+
+    @priority.low
+    @pytest.mark.components(TAP.cli)
+    def test_cannot_get_non_existing_service_instance_info(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check that attempt to get non existing service info returns legitimate response.
+
+        <b>Input data:</b>
+        1. Command name: service info
+        2. Service name
+
+        <b>Expected results:</b>
+        Attempt to get info about non existing service returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command service info --name non-existing-service-name.
+        2. Verify that attempt to get non existing service info returns legitimate response.
+        """
+        non_existing_name = ''.join(random.SystemRandom().
+                                    choice(string.ascii_uppercase + string.digits)
+                                    for _ in range(20))
+        expected_message = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(non_existing_name)
+        step("Check error message when getting non existing service info")
+        assert_raises_command_execution_exception(1, expected_message,
+                                                  tap_cli.get_service,
+                                                  service_name=non_existing_name)
+
+    @priority.low
+    @pytest.mark.components(TAP.cli)
     def test_cannot_delete_service_without_providing_all_required_arguments(self, tap_cli):
         """
         <b>Description:</b>
@@ -339,3 +545,25 @@ class TestCliService:
         credentials_output = tap_cli.service_credentials(["--name", service.name])
         assert '-'.split(service.id)[0] in credentials_output
         assert offering.service_plans[0].id in credentials_output
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_get_service_list(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check that service services list.
+
+        <b>Input data:</b>
+        -
+
+        <b>Expected results:</b>
+        Shown services list .
+
+        <b>Steps:</b>
+        1. Retrieve services list
+        2. Verify that view headers are present
+        """
+        services = tap_cli.service_list()
+        headers = ['SERVICE', 'PLAN', 'STATE', 'NAME', 'CREATED BY',
+                   'UPDATED BY', 'UPDATE', 'MESSAGE']
+        assert all(header in services for header in headers)

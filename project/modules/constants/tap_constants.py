@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ class TapMessage:
     CANNOT_FIND_PLAN_FOR_SERVICE = "cannot find plan: '{}' for service: '{}'"
     CANNOT_FIND_SERVICE = "cannot find service: '{}'"
     CANNOT_REACH_API = "Cannot reach API. Not a TAP environment?"
+    CANNOT_DELETE_RUNNING_APP = "event DESTROY_REQ inappropriate in current state RUNNING"
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
     CANNOT_DELETE_OFFERING_WITH_INSTANCE = "There is an instance of service being deleted"
     INSTANCE_IS_BOUND_TO_OTHER_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
@@ -52,6 +53,7 @@ class TapMessage:
     MANIFEST_JSON_NO_SUCH_FILE = "manifest.json: no such file or directory"
     NO_SUCH_OFFERING = "Could not find offering with such name"
     NOT_ENOUGH_ARGS_SERVICE = "MISSING PARAMETER"
+    NAME_HAS_INCORRECT_VALUE = "Field: Name has incorrect value: {}"
     NO_SUCH_HOST = "no such host"
     OK = "OK"
     SERVICE_ALREADY_EXISTS = "service with name: {} already exists!"

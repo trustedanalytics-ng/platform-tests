@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,15 +34,19 @@ class TapCli:
     LIST_OFFERINGS = ["offering", "list"]
     GET_OFFERING = ["offering", "info"]
     HELP_OFFERING = ["offering", "help"]
-    CREATE_SERVICE = ["service", "create"]
-    DELETE_SERVICE = ["service", "delete"]
+
     SERVICE = "service"
-    SERVICES = ["service", "list"]
-    SERVICE_INFO = ["service", "info"]
-    SERVICE_LOGS = ["service", "logs", "show"]
-    SERVICE_START = ["service", "start"]
-    SERVICE_STOP = ["service", "stop"]
-    SERVICE_CREDENTIALS = ["service", "credentials", "show"]
+    SERVICE_CREATE = [SERVICE, "create"]
+    SERVICE_DELETE = [SERVICE, "delete"]
+    SERVICE_RESTART = [SERVICE, "restart"]
+    SERVICE_LIST = [SERVICE, "list"]
+    SERVICE_INFO = [SERVICE, "info"]
+    SERVICE_LOGS = [SERVICE, "logs", "show"]
+    SERVICE_START = [SERVICE, "start"]
+    SERVICE_STOP = [SERVICE, "stop"]
+    SERVICE_CREDENTIALS = [SERVICE, "credentials"]
+    SERVICE_CREDENTIALS_SHOW = SERVICE_CREDENTIALS + ["show"]
+
     APPLICATION = "application"
     APPLICATION_INFO = ["application", "info"]
     APPLICATION_LIST = ["application", "list"]
@@ -100,6 +104,17 @@ class TapCli:
         output = "\n".join(output)
         return output
 
+    def run_command_with_prompt(self, cmd: list, *, prompt_answers, cwd=None, filter_logs=True) -> str:
+        """Runs command in interactive mode.
+        Arg:prompt_answers list includes further answers to prompt.
+        """
+        cmd = [self.command] + cmd
+        output = command.run_interactive(cmd, prompt_answers, cwd=cwd)
+        if filter_logs:
+            output = [line for line in output if not TapCli.is_logline(line)]
+        output = "\n".join(output)
+        return output
+
     def login(self, login_domain=config.api_url, tap_auth=None):
         if tap_auth is None:
             tap_auth = [config.admin_username, config.admin_password]
@@ -149,26 +164,35 @@ class TapCli:
         return self._run_command(self.GET_OFFERING + [self.NAME_PARAM, offering_name])
 
     def create_service(self, cmd: list):
-        return self._run_command(self.CREATE_SERVICE + cmd)
+        return self._run_command(self.SERVICE_CREATE + cmd)
 
     def delete_service(self, cmd: list):
-        return self._run_command(self.DELETE_SERVICE + cmd + [self.YES_PARAM])
+        return self._run_command(self.SERVICE_DELETE + cmd + [self.YES_PARAM])
 
-    def services_list(self):
-        return self._run_command(self.SERVICES)
+    def service_list(self):
+        return self._run_command(self.SERVICE_LIST)
 
     def service_log(self, service_name):
         return self._run_command(self.SERVICE_LOGS + [self.NAME_PARAM, service_name],
                                  filter_logs=False)
 
     def service_credentials(self, cmd):
-        return self._run_command(self.SERVICE_CREDENTIALS + cmd)
+        return self._run_command(self.SERVICE_CREDENTIALS_SHOW + cmd)
+
+    def service_start(self, service_name):
+        return self._run_command(self.SERVICE_START + [self.NAME_PARAM, service_name], filter_logs=False)
 
     def service_stop(self, service_name):
         return self._run_command(self.SERVICE_STOP + [self.NAME_PARAM, service_name], filter_logs=False)
 
     def bindings(self, instance_type, instance_name, direction):
         output = self._run_command([instance_type] + self.BINDING_LIST + [self.NAME_PARAM, instance_name, direction])
+
+    def service_restart(self, service_name):
+        return self._run_command(self.SERVICE_RESTART + [self.NAME_PARAM, service_name], filter_logs=False)
+
+    def bindings(self, instance_name):
+        output = self._run_command([self.BINDINGS, instance_name])
         bindings = self.parse_ascii_table(output)
         return bindings
 
