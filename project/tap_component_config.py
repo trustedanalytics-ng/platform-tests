@@ -215,8 +215,8 @@ offerings = {
         }, 
         Plan.SINGLE_MEDIUM: {
             "nodes": 1,
-            "memory": "6Gi",
-            "storage": "100G"
+            "memory": "4Gi",
+            "storage": "50G"
         }
     },
     ServiceLabels.RABBIT_MQ: {
