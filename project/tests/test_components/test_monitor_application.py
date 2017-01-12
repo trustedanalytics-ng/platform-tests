@@ -13,50 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import os
-import shutil
-import tarfile
+import re
 
 import pytest
 
-from modules.constants import TapComponent as TAP, TapApplicationType
-from modules.file_utils import TMP_FILE_DIR
+from modules.constants import TapComponent as TAP
 from modules.tap_logger import step
-from modules.tap_object_model import CliApplication
-from modules.tap_object_model.prep_app import PrepApp
 from modules.http_calls.kubernetes import k8s_get_pods, k8s_logs
-from tests.fixtures.data_repo import DataFileKeys
 
-pytestmark = [pytest.mark.components(TAP.cli, TAP.monitor)]
-
+pytestmark = [pytest.mark.components(TAP.monitor)]
 
 @pytest.mark.usefixtures("open_tunnel")
-@pytest.mark.usefixtures("cli_login")
 class TestMonitorApplication:
-    SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
-    APP_TYPE = TapApplicationType.PYTHON27
-    EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
-    POD_APP_NAME = TAP.container_broker
-    LOG_TIME_SEC = 600
+    LOG_TIME_SEC = 300
 
-    @pytest.fixture(scope="class")
-    def sample_app_target_directory(self, test_data_urls):
-        return os.path.join(TMP_FILE_DIR, test_data_urls[DataFileKeys.TAPNG_PYTHON_APP].filename)
-
-    @pytest.fixture(scope="class")
-    def sample_app_tar_content(self, request, test_data_urls, sample_app_target_directory):
-        step("Extract application archive")
-
-        with tarfile.open(test_data_urls[DataFileKeys.TAPNG_PYTHON_APP].filepath) as tar:
-            tar.extractall(path=sample_app_target_directory)
-            file_list = [name.replace("./", "", 1) for name in tar.getnames()]
-
-        request.addfinalizer(lambda: shutil.rmtree(sample_app_target_directory))
-
-        return file_list
-
-    def test_app_deployment(self, context, sample_app_target_directory, tap_cli, sample_app_tar_content):
+    def test_app_deployment(self, sample_python_app):
         """
         <b>Description:</b>
         Check monitor during app deployment
@@ -73,24 +44,44 @@ class TestMonitorApplication:
         - Retrieve applicaiton logs
         - Verify presence of monitor logs
         """
-        step("Update the manifest")
-        p_a = PrepApp(sample_app_target_directory)
-        manifest_params = {"type" : self.APP_TYPE}
-        manifest_path = p_a.update_manifest(params=manifest_params)
+        pods = k8s_get_pods()
+        items = pods["items"]
+        for k in items:
+            try:
+                if k["metadata"]["labels"]["app"] != TAP.container_broker:
+                    continue
+            except KeyError:
+                continue
 
-        step("Push sample application: {}".format(self.SAMPLE_APP_TAR_NAME))
-        application = CliApplication.push(context, tap_cli=tap_cli, app_type=self.APP_TYPE,
-                                          app_path=sample_app_target_directory,
-                                          name=p_a.app_name, instances=p_a.instances)
+            container_broker_name = k["metadata"]["name"]
 
-        app_id = application.ensure_app_has_id()
-        step("Get K8s pods")
-        pods_list = k8s_get_pods()
-        step("Ensure app is on the list of apps")
-        pods_json = [i["metadata"] for i in pods_list["items"]]
-        container_broker_name = [i["name"] for i in pods_json if self.POD_APP_NAME in i["name"]]
         step("Collect logs for container-broker")
-        log = k8s_logs(container_broker_name[0], {"sinceSeconds": self.LOG_TIME_SEC,
-                                                  "container": "container-broker"})
+        log = k8s_logs(container_broker_name, {"sinceSeconds": self.LOG_TIME_SEC,
+                                               "container": "container-broker"})
         log_entries = log.split('\n')
-        assert (i for i in log_entries if "[MonitorInstanceDeployment]" in i and """InstanceId: {}""".format(app_id))
+        step("Look through the log entries to find id of application in monitor")
+        for k in log_entries:
+            if "{}".format(sample_python_app.id) not in k:
+                continue
+
+            m = re.search(r'instanceId=([-0-9a-zA-Z]*)', k)
+            if m is None:
+                continue
+            print(m.group(1))
+            monitor_app_id = m.group(1)
+            break
+
+        monitor_logs = [i for i in log_entries if "[MonitorInstanceDeployments]" in i and """Updating Instance state to: RUNNING. InstanceId: {}. Last message: Started container with docker id""".format(monitor_app_id)]
+        assert len(monitor_logs) != 0
+
+
+        step("Restart the application and retrieve the logs")
+        sample_python_app.restart()
+        sample_python_app.ensure_running()
+        step("Collect logs for container-broker")
+        log = k8s_logs(container_broker_name, {"sinceSeconds": self.LOG_TIME_SEC,
+                                               "container": "container-broker"})
+        log_entries = log.split('\n')
+
+        monitor_logs = [i for i in log_entries if "[MonitorInstanceDeployments]" in i and """Updating Instance state to: RUNNING. InstanceId: {}. Last message: Killing container with docker id""".format(monitor_app_id)]
+        assert len(monitor_logs) != 0
