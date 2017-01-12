@@ -74,11 +74,10 @@ class TestImageFactory:
 
     @priority.high
     @pytest.mark.components(TAP.blob_store, TAP.catalog, TAP.image_factory, TAP.image_repository)
-    @pytest.mark.bugs("DPNG-14913 NodeJS image id does not appear in image-repository")
     def test_create_image_in_image_factory(self, context, blob_store_artifact):
         """
         <b>Description:</b>
-        Create image with image factory
+        Create image in image factory
 
         <b>Input data:</b>
         Catalog image
@@ -93,8 +92,9 @@ class TestImageFactory:
         - Remove the image and verify it was removed
         """
         catalog_image = blob_store_artifact
-        step("IMAGE-FACTORY: Create an image")
-        Image.create(context, image_id=catalog_image.id)
+
+        step("CATALOG: Update image state on PENDING")
+        catalog_image.update(field_name="state", value=TapEntityState.PENDING)
 
         step("IMAGE-REPOSITORY: Wait until the image id appears in image-repository")
         assertions.assert_in_with_retry(catalog_image.id, ImageRepository.get_repository_ids)
