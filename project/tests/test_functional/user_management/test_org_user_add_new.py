@@ -72,6 +72,7 @@ class TestAddNewUserToOrganization:
         users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
+    @pytest.mark.bugs("DPNG-14948 It is possible to add user to not existing org or update user providing invalid org_guid")
     @priority.low
     def test_cannot_add_new_user_to_non_existing_org(self, context):
         org_guid = "this-org-guid-is-not-correct"

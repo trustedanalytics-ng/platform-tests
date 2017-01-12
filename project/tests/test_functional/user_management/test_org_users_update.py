@@ -106,6 +106,7 @@ class TestUpdateOrganizationUser:
         users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
+    @pytest.mark.bugs("DPNG-14948 It is possible to add user to not existing org or update user providing invalid org_guid")
     @priority.low
     def test_cannot_update_org_user_with_invalid_org_guid(self, updated_user):
         # TODO implement non-existing guid
