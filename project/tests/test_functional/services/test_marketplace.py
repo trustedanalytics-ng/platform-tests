@@ -229,6 +229,7 @@ class TestMarketplaceServices:
                                              plan_name=ServicePlan.SINGLE_SMALL, name=instance.name)
         assert e.value.status == HttpStatus.CODE_CONFLICT, "Created service instance with already taken name"
 
+    @pytest.mark.bugs("DPNG-14965 No meaningful error message for http status 400 in api-service create_service")
     @priority.low
     def test_cannot_create_instance_without_a_name(self, context):
         """
@@ -249,8 +250,9 @@ class TestMarketplaceServices:
         """
         expected_instance_list = ServiceInstance.get_list()
         step("Check that instance cannot be created with empty name")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, ApiServiceHttpStatus.MSG_BAD_REQUEST,
+        expected_msg = ApiServiceHttpStatus.MSG_FIELD_ZERO_VALUE.format("Name")
+        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, expected_msg,
                                      ServiceInstance.create_with_name, context=context,
-                                     offering_label=ServiceLabels.RABBIT_MQ, plan_name=ServicePlan.SINGLE_SMALL, name="")
+                                     offering_label=ServiceLabels.RABBIT_MQ, plan_name=ServicePlan.SINGLE_SMALL,
+                                     name="")
         assert_unordered_list_equal(expected_instance_list, ServiceInstance.get_list(), "New instance was created")
-

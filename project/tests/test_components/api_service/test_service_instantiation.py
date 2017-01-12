@@ -370,6 +370,7 @@ class TestServiceInstantiationOther:
                                                 ApiServiceHttpStatus.MSG_KEY_NOT_FOUND, api.delete_service,
                                                 client=api_service_admin_client, service_id=Guid.NON_EXISTING_GUID)
 
+    @pytest.mark.bugs("DPNG-14965 No meaningful error message for http status 400 in api-service create_service")
     @priority.medium
     def test_cannot_create_service_instance_without_name(self, etcd_offering, api_service_admin_client):
         """
