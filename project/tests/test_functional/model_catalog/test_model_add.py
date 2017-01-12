@@ -42,33 +42,24 @@ class TestModelAdd:
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_add_new_model_to_organization(self, context, test_user_clients, role):
+    def test_add_new_model_to_organization(self, context, test_user_clients, role, core_org):
         client = test_user_clients[role]
         step("Add model to organization using {}".format(role))
-        new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, client=client, **MODEL_METADATA)
+        new_model = ScoringEngineModel.create(context, org_guid=core_org, client=client, **MODEL_METADATA)
         step("Check that the model is on model list")
-        models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+        models = ScoringEngineModel.get_list(org_guid=core_org)
         assert new_model in models
 
-    @pytest.mark.bugs("DPNG-13599 Adding model with empty or spaces only name is possible")
     @priority.high
-    def test_cannot_add_new_model_to_organization_with_empty_name(self, context):
+    def test_cannot_add_new_model_to_organization_with_empty_name(self, context, core_org):
         step("Add model to organization")
         metadata = MODEL_METADATA.copy()
         metadata["name"] = "    "
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST, ScoringEngineModel.create,
-                                     context, org_guid=Guid.CORE_ORG_GUID, **metadata)
-
-    @pytest.mark.bugs("DPNG-14909[api-tests] It's possible to add a model to org with incorrect guid")
-    @priority.low
-    def test_cannot_add_model_to_org_with_incorrect_guid(self, context):
-        incorrect_org = Guid.INVALID_GUID
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     ScoringEngineModel.create, context, org_guid=incorrect_org,
-                                     **MODEL_METADATA)
+                                     context, org_guid=core_org, **metadata)
 
     @priority.medium
-    def test_cannot_add_model_with_auto_generated_metadata(self, context):
+    def test_cannot_add_model_with_auto_generated_metadata(self, context, core_org):
         step("Try to create model with auto-generated metadata")
         metadata_auto_generated = {
             "added_by": 'test-user',
@@ -78,35 +69,35 @@ class TestModelAdd:
         }
         metadata = MODEL_METADATA.copy()
         metadata.update(metadata_auto_generated)
-        test_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, **metadata)
+        test_model = ScoringEngineModel.create(context, org_guid=core_org, **metadata)
         step("Check that params for auto-generated metadata do not affect created model")
         incorrect_metadata = []
         for k, v in metadata_auto_generated.items():
             if getattr(test_model, k) == v:
                 incorrect_metadata.append("{}={}".format(k, v))
         assert len(incorrect_metadata) == 0, "Incorrect metadata: {}".format(", ".join(incorrect_metadata))
-        models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+        models = ScoringEngineModel.get_list(org_guid=core_org)
         assert test_model in models
 
     @priority.medium
     @pytest.mark.parametrize("missing_param", ("name", "creation_tool"))
-    def test_cannot_add_model_without_a_required_parameter(self, missing_param):
+    def test_cannot_add_model_without_a_required_parameter(self, missing_param, core_org):
         step("Check that adding a model without a required parameter ({}) causes an error".format(missing_param))
         metadata = MODEL_METADATA.copy()
         del metadata[missing_param]
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
-                                     model_catalog_api.insert_model, org_guid=Guid.CORE_ORG_GUID,
+                                     model_catalog_api.insert_model, org_guid=core_org,
                                      **metadata)
 
     @priority.low
-    def test_add_model_with_minimum_required_params(self, context):
+    def test_add_model_with_minimum_required_params(self, context, core_org):
         step("Add model to organization")
         metadata = {
             "name": MODEL_METADATA["name"],
             "creation_tool": MODEL_METADATA["creation_tool"]
         }
-        new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID, **metadata)
-        models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+        new_model = ScoringEngineModel.create(context, org_guid=core_org, **metadata)
+        models = ScoringEngineModel.get_list(org_guid=core_org)
         assert new_model in models
 
     @priority.high
@@ -168,7 +159,6 @@ class TestModelAdd:
         assert added_file_content == expected_content
 
     @priority.low
-    @pytest.mark.bugs("DPNG-13588 Internal server error when add artifact with invalid action")
     def test_cannot_add_artifact_with_invalid_action(self, sample_model):
         step("Try to add artifact with invalid action")
         artifact_metadata = self.ARTIFACT_METADATA.copy()

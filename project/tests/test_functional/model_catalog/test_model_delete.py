@@ -34,12 +34,12 @@ class TestModelDelete:
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_delete_model(self, sample_model, test_user_clients, role):
+    def test_delete_model(self, sample_model, test_user_clients, role, core_org):
         step("Delete model organization using {}".format(role))
         client = test_user_clients[role]
         sample_model.delete(client=client)
         step("Check that the deleted model is not on the list of models")
-        models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+        models = ScoringEngineModel.get_list(org_guid=core_org)
         assert sample_model not in models
 
     @priority.low

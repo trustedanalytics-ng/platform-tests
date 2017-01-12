@@ -28,12 +28,12 @@ class TestModelGet:
 
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_get_org_models(self, test_user_clients, role):
+    def test_get_org_models(self, test_user_clients, role, core_org):
         step("List models in an organization using {}".format(role))
         client = test_user_clients[role]
-        models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID, client=client)
+        models = ScoringEngineModel.get_list(org_guid=core_org, client=client)
         step("List or models in an organization using admin")
-        expected_models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+        expected_models = ScoringEngineModel.get_list(org_guid=core_org)
         step("Check that the two lists are the same")
         assert sorted(models) == sorted(expected_models)
 

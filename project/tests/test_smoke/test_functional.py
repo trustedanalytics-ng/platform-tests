@@ -355,7 +355,7 @@ def test_get_platform_tests_suites():
 
 
 @priority.high
-def test_add_new_model_to_organization(context):
+def test_add_new_model_to_organization(context, core_org):
     """
     <b>Description:</b>
     Checks if new model can be added to the platform.
@@ -372,8 +372,7 @@ def test_add_new_model_to_organization(context):
     3. Verify the model is on the list.
     """
     step("Add model to organization as admin")
-    new_model = ScoringEngineModel.create(context, org_guid=Guid.CORE_ORG_GUID,
-                                          **MODEL_METADATA)
+    new_model = ScoringEngineModel.create(context, org_guid=core_org, **MODEL_METADATA)
     step("Check that the model is on model list")
-    models = ScoringEngineModel.get_list(org_guid=Guid.CORE_ORG_GUID)
+    models = ScoringEngineModel.get_list(org_guid=core_org)
     assert new_model in models
