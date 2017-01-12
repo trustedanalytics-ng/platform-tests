@@ -91,14 +91,8 @@ class TestCliBasicFlow:
         assert tap_cli.VERSION[0] in output
         assert tap_cli.LOGIN in output
         assert tap_cli.LIST_OFFERINGS[0] in output
-        assert tap_cli.CREATE_SERVICE[0] in output
-        assert tap_cli.DELETE_SERVICE[0] in output
         assert tap_cli.SERVICE in output
-        assert tap_cli.LOGS[0] in output
-        assert tap_cli.APPLICATION[0] in output
-        assert tap_cli.BINDINGS in output
-        assert tap_cli.BIND[0] in output
-        assert tap_cli.UNBIND[0] in output
+        assert tap_cli.APPLICATION_INFO[0] in output
         assert tap_cli.USERS[0] in output
 
         output = tap_cli.user_help()
