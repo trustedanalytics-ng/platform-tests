@@ -28,8 +28,8 @@ logged_components = (TAP.api_service,)
 
 # At all times at least one of the following must be available, and all that are available must not fail.
 RELIABLE_OFFERINGS = [
-    ServiceLabels.GATEWAY,
-    ServiceLabels.JUPYTER,
+    # ServiceLabels.GATEWAY,
+    # ServiceLabels.JUPYTER,
     ServiceLabels.MOSQUITTO,
     ServiceLabels.MYSQL,
 ]
@@ -336,5 +336,5 @@ class TestCliService:
         """
         step("Check that logs are shown for a service instance")
         credentials_output = tap_cli.service_credentials(["--name", service.name])
-        assert service.offering_name in credentials_output
+        assert '-'.split(service.id)[0] in credentials_output
         assert offering.service_plans[0].id in credentials_output
