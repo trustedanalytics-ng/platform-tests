@@ -31,6 +31,7 @@ from tests.fixtures.data_repo import DataFileKeys
 pytestmark = [pytest.mark.components(TAP.cli, TAP.monitor)]
 
 
+@pytest.mark.usefixtures("open_tunnel")
 @pytest.mark.usefixtures("cli_login")
 class TestMonitorApplication:
     SAMPLE_APP_TAR_NAME = "tapng-sample-python-app.tar.gz"
@@ -55,10 +56,7 @@ class TestMonitorApplication:
 
         return file_list
 
-    @pytest.mark.bugs("DPNG-12123 FileNotFoundError: /.kube")
-    @pytest.mark.bugs("DPNG-12343 [api-tests] Tests which push app using cli fail immediately instead of waiting")
-    def test_app_deployment(self, context, sample_app_target_directory, tap_cli,
-                            sample_app_tar_content):
+    def test_app_deployment(self, context, sample_app_target_directory, tap_cli, sample_app_tar_content):
         """
         <b>Description:</b>
         Check monitor during app deployment

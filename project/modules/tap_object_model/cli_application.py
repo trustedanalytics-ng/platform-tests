@@ -130,7 +130,7 @@ class CliApplication(CliObjectSuperclass):
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_app_has_id(self):
-        app = self.tap_cli.app(self.name)
+        app = self.tap_cli.app_info(self.name)
         assert app is not None, "Application {} was not found".format(self.name)
         assert isinstance(app, dict)
         assert app[self.FIELD_ID] is not None
