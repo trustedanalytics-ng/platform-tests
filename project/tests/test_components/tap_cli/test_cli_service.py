@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import re
 
 import pytest
 import random
@@ -545,6 +546,42 @@ class TestCliService:
         credentials_output = tap_cli.service_credentials(["--name", service.name])
         assert '-'.split(service.id)[0] in credentials_output
         assert offering.service_plans[0].id in credentials_output
+
+    @priority.medium
+    @pytest.mark.components(TAP.cli)
+    def test_expose_and_unexpose_service(self, tap_cli, service):
+        """
+        <b>Description:</b>
+        Checks service exposing and unexposing.
+
+        <b>Input data:</b>
+        1. Service instance
+
+        <b>Expected results:</b>
+        After exposing service name is a part of one or more urls in credentials,
+        After unexposing urls should disappear.
+
+        <b>Steps:</b>
+        1. Expose service
+        2. Retrieve service credentials
+        3. Verify that service name in part of urls from credentials
+        4. Unexpose service
+        5. Retrieve service credentials
+        6. Verify that service name is not in urls from credentials
+        """
+        step("Service exposing ...")
+        tap_cli.service_expose(service.name)
+        step("Check if service url in credentials")
+        credentials_output = tap_cli.service_credentials(["--name", service.name])
+        urls = re.findall(r'(https?://\S+)', credentials_output)
+        assert any(service.name in url for url in urls)
+
+        step("Service unexposing ...")
+        tap_cli.service_unexpose(service.name)
+        step("Check if service url not in credentials")
+        credentials_output = tap_cli.service_credentials(["--name", service.name])
+        urls = re.findall(r'(https?://\S+)', credentials_output)
+        assert not any(service.name in url for url in urls)
 
     @priority.medium
     @pytest.mark.components(TAP.cli)

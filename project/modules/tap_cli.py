@@ -44,6 +44,8 @@ class TapCli:
     SERVICE_LOGS = [SERVICE, "logs", "show"]
     SERVICE_START = [SERVICE, "start"]
     SERVICE_STOP = [SERVICE, "stop"]
+    SERVICE_EXPOSE = [SERVICE, "expose"]
+    SERVICE_UNEXPOSE = [SERVICE, "unexpose"]
     SERVICE_CREDENTIALS = [SERVICE, "credentials"]
     SERVICE_CREDENTIALS_SHOW = SERVICE_CREDENTIALS + ["show"]
 
@@ -171,6 +173,12 @@ class TapCli:
 
     def service_list(self):
         return self._run_command(self.SERVICE_LIST)
+
+    def service_expose(self, service_name):
+        return self._run_command(self.SERVICE_EXPOSE + [self.NAME_PARAM, service_name])
+
+    def service_unexpose(self, service_name):
+        return self._run_command(self.SERVICE_UNEXPOSE + [self.NAME_PARAM, service_name])
 
     def service_log(self, service_name):
         return self._run_command(self.SERVICE_LOGS + [self.NAME_PARAM, service_name],
