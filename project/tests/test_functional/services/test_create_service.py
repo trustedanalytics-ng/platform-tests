@@ -63,10 +63,10 @@ class TestCreateService:
                                      ServiceOffering.create_from_binary, context, jar_path=app_jar,
                                      manifest_path=manifest_json, offering_path=offering_file)
 
+    @pytest.mark.bugs("DPNG-14981 [api-tests] Creating offering of the service should be only supported for admin users")
     @priority.high
     @pytest.mark.sample_apps_test
     @pytest.mark.parametrize("role", ["admin", "user"])
-    @pytest.mark.bugs("DPNG-13211 api-service responses don't relate to swagger definition")
     def test_create_and_delete_service_offering(self, context, app_jar, offering_json,
                                                 manifest_json, test_user_clients, role):
         """
@@ -151,9 +151,9 @@ class TestCreateService:
         step("Check that images are the same")
         assert example_image == bytes(service.image, "utf8")
 
+    @pytest.mark.bugs("DPNG-14982 Service tags are not supported")
     @priority.medium
     @pytest.mark.sample_apps_test
-    @pytest.mark.bugs("DPNG-12742 /v2/api/offerings in tap-api-service does not return Service name and Metadata")
     def test_create_service_with_tag(self, context, app_jar, manifest_json):
         """
         <b>Description:</b>
