@@ -39,6 +39,21 @@ class TestAddNewUserToOrganization:
     @priority.medium
     @pytest.mark.parametrize("test_case", ("add_admin", "add_user", "add_None"))
     def test_add_new_user_with_no_roles(self, context, test_org, test_case, add_user_test_cases):
+        """
+        <b>Description:</b>
+        Checks if user with admin, non-admin and no role can be added.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when user with admin, non-admin and no role was added.
+
+        <b>Steps:</b>
+        1. Create new user by adding to an organization with a role.
+        2. Check that the user was added with the role.
+        """
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
         role_sent = add_user_test_cases[test_case]["sent"]
         role_expected = add_user_test_cases[test_case]["expected"]
@@ -52,6 +67,21 @@ class TestAddNewUserToOrganization:
     def test_platform_admin_adds_new_user_in_org_where_they_are_not_added(self, context, admin_user, test_org,
                                                                           test_case, add_user_test_cases,
                                                                           remove_admin_from_test_org):
+        """
+        <b>Description:</b>
+        Checks if platform admin can add a user to the organization.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when non-admin cannot get user's list.
+
+        <b>Steps:</b>
+        1. Create new user by adding them to an organization with user role.
+        2. Check that the user was added with user role.
+        """
         # TODO change test case to use test_org_admin_client instead of default client - when DPNG-10987 is done
         role_sent = add_user_test_cases[test_case]["sent"]
         role_expected = add_user_test_cases[test_case]["expected"]
@@ -62,6 +92,20 @@ class TestAddNewUserToOrganization:
 
     @priority.low
     def test_cannot_add_user_with_non_email_username(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if user with non email username cannot be added.
+
+        <b>Input data:</b>
+        1. User name.
+
+        <b>Expected results:</b>
+        Test passes when attempt to add user with non email username fails and user is not on users list.
+
+        <b>Steps:</b>
+        1. Try to add user with invalid username to an organization.
+        2. Check that no new user was added to the organization.
+        """
         step("Try to add user with invalid username to an organization")
         username = "non-valid-username"
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
@@ -75,6 +119,20 @@ class TestAddNewUserToOrganization:
     @pytest.mark.bugs("DPNG-14948 It is possible to add user to not existing org or update user providing invalid org_guid")
     @priority.low
     def test_cannot_add_new_user_to_non_existing_org(self, context):
+        """
+        <b>Description:</b>
+        Checks if user cannot be added to not existing organization.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when attempt on adding user to not existing organization fails.
+
+        <b>Steps:</b>
+        1. Check that an error is raised when trying to add user using incorrect org guid.
+        """
         org_guid = "this-org-guid-is-not-correct"
         step("Check that an error is raised when trying to add user using incorrect org guid")
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
@@ -83,6 +141,21 @@ class TestAddNewUserToOrganization:
 
     @priority.medium
     def test_non_admin_cannot_add_new_user_to_org(self, context, test_org_user_client, test_org):
+        """
+        <b>Description:</b>
+        Checks if non-admin cannot add new user to organization.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when adding new user to organization by non-admin fails.
+
+        <b>Steps:</b>
+        1. Try to add user to an organization using non-admin user.
+        2. Check that no new user was added to the organization.
+        """
         step("Try to add user to an organization using non-admin user")
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,
@@ -94,6 +167,21 @@ class TestAddNewUserToOrganization:
 
     @priority.low
     def test_cannot_add_new_user_with_incorrect_role(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if user with incorrect role cannot be added.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when adding user with incorrect role fails and the user is not on users list.
+
+        <b>Steps:</b>
+        1. Check that error is raised when trying to add user using incorrect roles.
+        2. Check that no new user was added to the organization.
+        """
         step("Check that error is raised when trying to add user using incorrect roles")
         role = "i-don't-exist"
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
@@ -106,6 +194,21 @@ class TestAddNewUserToOrganization:
 
     @priority.medium
     def test_org_admin_adds_new_user(self, context, test_org, test_org_admin_client):
+        """
+        <b>Description:</b>
+        Checks if organization admin can add new user.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when organization admin successfully adds new user.
+
+        <b>Steps:</b>
+        1. Org admin adds a new user to an organization.
+        2. Check that the user was added correctly.
+        """
         step("Org admin adds a new user to an organization")
         expected_role = User.ORG_ROLE["user"]
         user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid, role=expected_role,

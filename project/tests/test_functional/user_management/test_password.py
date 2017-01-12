@@ -40,6 +40,28 @@ class TestPassword:
 
     @priority.high
     def test_reset_password(self):
+        """
+        <b>Description:</b>
+        Checks if password reset works.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when user fails to log into the platform with the old password.
+
+        <b>Steps:</b>
+        1. Login to the platform.
+        2. Logout from the platform.
+        3. Enter your email and press  'SEND RESET PASSWORD LINK'.
+        4. Try to login with old credentials. User should still be able to login after pressing RESET.
+        5. Logout and go to email message and press 'reset your password' link.
+        6. Enter new password twice and press 'CREATE NEW PASSWORD'.
+        7. Logout from the platform.
+        8. Try to login with old credentials.
+        9. Login to the platform with new credentials.
+        """
         step("Login to the platform")
         client = self.test_user.get_client()
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
@@ -72,6 +94,23 @@ class TestPassword:
 
     @priority.high
     def test_change_password(self):
+        """
+        <b>Description:</b>
+        Checks if change password functionality works.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when user fails to log into the platform with the old password.
+
+        <b>Steps:</b>
+        1. Login to the platform.
+        2. Change user password.
+        3. Logout and try to login with old credentials.
+        4. Login to the platform with new credentials.
+        """
         step("Login to the platform")
         client = self.test_user.get_client()
         self.test_user.login()

@@ -80,6 +80,22 @@ class TestOnboarding:
 
     @priority.high
     def test_simple_onboarding(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if onboarding functionality works.
+
+        <b>Input data:</b>
+        1. Email address.
+
+        <b>Expected results:</b>
+        Test passes when exactly one invitation was sent to the user; content, subject and sender of invitation are
+        correct and user was correctly added to the organization with appropriate role.
+
+        <b>Steps:</b>
+        1. Invite new user.
+        2. Register the new user.
+        3. Check that the user and their organization exist.
+        """
         step("Send an invite to a new user")
         invitation = Invitation.api_send(context)
         messages = gmail_api.wait_for_messages_to(recipient=invitation.username, messages_number=1)
@@ -95,6 +111,19 @@ class TestOnboarding:
 
     @priority.medium
     def test_cannot_invite_existing_user(self, context, test_org_user):
+        """
+        <b>Description:</b>
+        Checks if existing user cannot be invited.
+
+        <b>Input data:</b>
+        1. Email address.
+
+        <b>Expected results:</b>
+        Test passes when sending an invitation to existing user returns 409 Conflict HTTP status.
+
+        <b>Steps:</b>
+        1. Check that sending invitation to the same user causes an error.
+        """
         step("Check that sending invitation to the same user causes an error.")
         assert_raises_http_exception(HttpStatus.CODE_CONFLICT,
                                      HttpStatus.MSG_USER_ALREADY_EXISTS.format(test_org_user.username),
@@ -103,6 +132,22 @@ class TestOnboarding:
 
     @priority.high
     def test_non_admin_user_cannot_invite_another_user(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if non-admin user cannot invite other user.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when non-admin user receives access denied reply on adding other user attempt and the user doesn't
+        obtain an invitation.
+
+        <b>Steps:</b>
+        1. Create a test user.
+        2. Check an error is returned when non-admin tries to onboard another user.
+        """
         step("Create a test user")
         user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid,
                                                      role=User.ORG_ROLE["user"])
@@ -116,6 +161,20 @@ class TestOnboarding:
 
     @priority.medium
     def test_cannot_create_an_account_with_invalid_code(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if user account cannot be created with invalid registration code.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when 403 Forbidden HTTP status is returned on attempt of registering a user without valid code.
+
+        <b>Steps:</b>
+        1. An error is returned when user registers with invalid code.
+        """
         step("An error is returned when user registers with invalid code")
         username = generate_test_object_name(email=True)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_EMPTY,
@@ -127,6 +186,23 @@ class TestOnboarding:
     @priority.medium
     @pytest.mark.bugs("DPNG-13519 500 is returned on using the same activation code twice")
     def test_cannot_use_the_same_activation_code_twice(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if the same activation code cannot be used twice.
+
+        <b>Input data:</b>
+        1. Email address.
+        2. User password.
+
+        <b>Expected results:</b>
+        Test passes when 403 Forbidden HTTP status is returned on attempt of registering a user twice with the same
+        code.
+
+        <b>Steps:</b>
+        1. Invite a user.
+        2. The new user registers.
+        3. Check that error is returned when the user tries to use code twice.
+        """
         step("Invite a user")
         invitation = Invitation.api_send(context)
         step("The new user registers")
@@ -141,6 +217,19 @@ class TestOnboarding:
 
     @priority.low
     def test_invite_user_with_non_email_username(self, context):
+        """
+        <b>Description:</b>
+        Checks if invitation with invalid email address fails.
+
+        <b>Input data:</b>
+        1. Email address.
+
+        <b>Expected results:</b>
+        Test passes when 400 Bad request HTTP status is returned on attempt of sending invitation with invalid email.
+
+        <b>Steps:</b>
+        1. Check that passing invalid email results in error.
+        """
         step("Check that passing invalid email results in error")
         username = "non_mail_username"
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_EMAIL_ADDRESS_NOT_VALID,
@@ -148,6 +237,22 @@ class TestOnboarding:
 
     @priority.medium
     def test_user_cannot_register_without_password(self, context, test_org):
+        """
+        <b>Description:</b>
+        Checks if the user registration without password fails.
+
+        <b>Input data:</b>
+        1. Email address.
+
+        <b>Expected results:</b>
+        Test passes when 400 Bad request HTTP status is returned on attempt of user registration without password and
+        the user is not created.
+
+        <b>Steps:</b>
+        1. Invite a user.
+        2. Check that an error is returned when the user tries to register without a password.
+        3. Check that the user was not created.
+        """
         step("Invite a new user")
         invitation = Invitation.api_send(context)
         step("Check that an error is returned when the user tries to register without a password")
