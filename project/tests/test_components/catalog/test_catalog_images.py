@@ -16,11 +16,11 @@
 
 import pytest
 
-from modules.constants import CatalogHttpStatus, Guid, TapEntityState, TapApplicationType, TapComponent as TAP
 import modules.http_calls.platform.catalog as catalog_api
+from modules.constants import CatalogHttpStatus, Guid, TapEntityState, TapApplicationType, TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
-from modules.tap_object_model import CatalogImage
+from modules.tap_object_model import CatalogImage, Blob, Image
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
 
@@ -153,7 +153,7 @@ class TestCatalogImages:
         assert test_image == image
 
     @priority.high
-    def test_update_catalog_image_state(self, context):
+    def test_update_catalog_image_state(self, context, test_data_urls):
         """
         <b>Description:</b>
         Checks if value of image state can be updated.
@@ -171,14 +171,23 @@ class TestCatalogImages:
         3. Check that the image was updated.
         """
         step("Create catalog image with image state REQUESTED")
-        test_image = CatalogImage.create(context, image_type=TapApplicationType.JAVA, state=TapEntityState.REQUESTED)
+        test_image = CatalogImage.create(context, image_type=TapApplicationType.JAVA, state=TapEntityState.REQUESTED,
+                                         blob_type="TARGZ")
+
+        test_image.ensure_in_state(TapEntityState.REQUESTED)
+
+        Blob.create_from_file(context, blob_id=test_image.id, file_path=test_data_urls.nodejs_app.filepath)
+
+        Image.create(context, image_id=test_image.id)
+        image = CatalogImage.get(image_id=test_image.id)
+        image.ensure_in_state(TapEntityState.REQUESTED)
 
         step("Update image state on PENDING")
         test_image.update(field_name="state", value=TapEntityState.PENDING)
 
-        step("Check that the image was updated")
+        step("Check that the image state was changed to READY or BUILDING")
         image = CatalogImage.get(image_id=test_image.id)
-        assert test_image == image
+        assert image.state == TapEntityState.BUILDING or image.state == TapEntityState.READY
 
     @priority.medium
     def test_cannot_create_image_with_existing_image_id(self, context, sample_catalog_image):
