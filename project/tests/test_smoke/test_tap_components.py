@@ -33,9 +33,23 @@ from tap_component_config import TAP_core_services, third_party_services, api_se
 
 from tests.test_components.api_service.test_api_service_resources import ApiServiceResources
 
-not_tested_components = [TAP.das, TAP.data_catalog, TAP.dataset_publisher, TAP.downloader,
-                        TAP.h2o_scoring_engine_publisher, TAP.metadata_parser, TAP.metrics_grafana,
-                        TAP.metrics_prometheus, TAP.nginx_ingress, TAP.uploader]
+not_tested_components = [
+    TAP.auth_gateway,
+    TAP.das,
+    TAP.data_catalog,
+    TAP.dataset_publisher,
+    TAP.downloader,
+    TAP.h2o_model_provider,
+    TAP.h2o_scoring_engine_publisher,
+    TAP.metadata_parser,
+    TAP.metrics_grafana,
+    TAP.metrics_prometheus,
+    TAP.nginx_ingress,
+    TAP.platform_snapshot,
+    TAP.platform_tests,
+    TAP.uploader,
+    TAP.workflow_scheduler,
+]
 
 not_tested_offerings = [ServiceLabels.H2O, ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.HIVE,
                         ServiceLabels.JUPYTER, ServiceLabels.SCORING_ENGINE, ServiceLabels.SCORING_PIPELINES,

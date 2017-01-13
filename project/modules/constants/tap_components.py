@@ -73,6 +73,7 @@ class TapComponent:
     h2o_model_provider = "h2o-model-provider"
     image_factory = "image-factory"
     key_counter = "key-counter"
+    metrics_ceph_exporter = "metrics-ceph-exporter"
     metrics_collector_ambassador = "metrics-collector-ambassador"
     metrics_presenter = "metrics-presenter"
     metrics_prometheus = "metrics-prometheus"
@@ -91,11 +92,32 @@ class TapComponent:
 
     @classmethod
     def get_list_internal(cls):
-        return [cls.blob_store, cls.key_counter, cls.catalog, cls.container_broker, cls.das,
-                cls.data_catalog, cls.dataset_publisher, cls.h2o_scoring_engine_publisher,
-                cls.downloader, cls.uploader, cls.image_factory, cls.metadata_parser,
-                cls.metrics_grafana, cls.metrics_prometheus, cls.model_catalog, cls.nginx_ingress,
-                cls.template_repository, cls.user_management]
+        return [
+            cls.auth_gateway,
+            cls.blob_store,
+            cls.catalog,
+            cls.container_broker,
+            cls.das,
+            cls.data_catalog,
+            cls.dataset_publisher,
+            cls.downloader,
+            cls.h2o_model_provider,
+            cls.h2o_scoring_engine_publisher,
+            cls.image_factory,
+            cls.key_counter,
+            cls.metadata_parser,
+            cls.metrics_ceph_exporter,
+            cls.metrics_grafana,
+            cls.metrics_prometheus,
+            cls.model_catalog,
+            cls.nginx_ingress,
+            cls.platform_snapshot,
+            cls.platform_tests,
+            cls.template_repository,
+            cls.uploader,
+            cls.user_management,
+            cls.workflow_scheduler,
+        ]
 
     @classmethod
     def get_list_all(cls):
