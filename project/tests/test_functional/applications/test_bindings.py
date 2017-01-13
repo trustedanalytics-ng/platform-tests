@@ -46,7 +46,6 @@ class TestBindings:
                               service_instance_id=service_instance.id)
 
     @pytest.mark.bugs("DPNG-14052 App id in bindings response does not match app id in request")
-    @pytest.mark.bugs("DPNG-13175 Unbinding and binding services doesn't work on the platform")
     @priority.high
     def test_app_bind_unbind_service_instance(self, sample_python_app, service_instance):
         """
@@ -80,7 +79,6 @@ class TestBindings:
         assert test_binding not in bindings
 
     @pytest.mark.bugs("DPNG-14052 App id in bindings response does not match app id in request")
-    @pytest.mark.bugs("DPNG-13175 Unbinding and binding services doesn't work on the platform")
     @priority.high
     def test_cannot_delete_service_instance_bound_to_app(self, sample_python_app, service_instance, instance_binding):
         """
@@ -112,7 +110,6 @@ class TestBindings:
         assert instance_binding in bindings
 
     @pytest.mark.bugs("DPNG-14052 App id in bindings response does not match app id in request")
-    @pytest.mark.bugs("DPNG-13175 Unbinding and binding services doesn't work on the platform")
     @priority.medium
     def test_delete_app_with_bound_service(self, sample_python_app, service_instance, instance_binding):
         """

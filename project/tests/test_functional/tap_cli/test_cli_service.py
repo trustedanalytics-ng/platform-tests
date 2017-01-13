@@ -29,13 +29,14 @@ class TestCreatingServiceInstancesViaCli:
     @long
     @priority.low
     @pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
-    @pytest.mark.bugs("DPNG-14021 Zookeeper instance creation fails")
+    @pytest.mark.bugs("DPNG-14838 GearPump instance cannot be created")
+    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
+    @pytest.mark.bugs("DPNG-13444 Adjust Jupyter offering to TAP Offerings doc")
+    @pytest.mark.bugs("DPNG-13185 Hive, zookeeper instances fail to be deleted")
+    @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir")
     @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0")
     @pytest.mark.bugs("DPNG-12481 Cannot create instance of h2o")
-    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
-    @pytest.mark.bugs("DPNG-13433 Adjust Jupyter offering to TAP Offerings doc")
     @pytest.mark.bugs("DPNG-13290 Missing HBase offering")
-    @pytest.mark.bugs("DPNG-13784 [PROBLEM SOLVING] Problems with memory and not ability to work on env")
     def test_create_and_delete_instance_all(self, context, service_label, plan_name, tap_cli):
         """
         <b>Description:</b>
