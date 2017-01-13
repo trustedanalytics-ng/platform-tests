@@ -57,7 +57,7 @@ example_template_body = [{
                         "containers": [
                             {
                                 "name": "tapng-gateway",
-                                "image": "127.0.0.1:30000/tapng-gateway",
+                                "image": "$repository_uri/tapng-gateway",
                                 "ports": [
                                     {
                                         "containerPort": 8080,
@@ -354,7 +354,7 @@ etcd_template = {
                             "containers": [
                                 {
                                     "name": "k-etcd",
-                                    "image": "127.0.0.1:30000/coreos/etcd:v3.0.10",
+                                    "image": "$repository_uri/coreos/etcd:v3.0.10",
                                     "ports": [
                                         {
                                             "containerPort": 4001,
@@ -649,7 +649,7 @@ nats_template = {
                         "volumes": None,
                         "containers": [{
                             "name": "k-nats",
-                            "image": "127.0.0.1:30000/nats:0.8.1",
+                            "image": "$repository_uri/nats:0.8.1",
                             "ports": [{
                                 "containerPort": 4222,
                                 "protocol": "TCP"

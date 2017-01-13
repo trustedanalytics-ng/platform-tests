@@ -122,6 +122,26 @@ class TestCliCatalogOffering:
                                                   tap_cli.create_offering, "")
 
     @priority.low
+    def test_cannot_delete_offering_with_existing_instance(self, tap_cli, mysql_instance):
+        """
+        <b>Description:</b>
+        Check that CLI cannot delete offering that has instance created
+
+        <b>Input data:</b>
+        1. Command name: offering delete
+
+        <b>Expected results:</b>
+        Attempt to delete offering with existing instance is forbidden. Explanation displayed.
+
+        <b>Steps:</b>
+        1. Make sure mysql instance is on platform.
+        2. Try to delete mysql offering.
+        3. Verify that attempt to delete offering will end up with proper message shown.
+        """
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_DELETE_OFFERING_WITH_INSTANCE,
+                                                  tap_cli.delete_offering, mysql_instance.offering_label)
+
+    @priority.low
     def test_cannot_create_offering_without_json(self, tap_cli):
         """
         <b>Description:</b>
@@ -161,3 +181,4 @@ class TestCliCatalogOffering:
         assert_raises_command_execution_exception(1, TapMessage.SERVICE_ALREADY_EXISTS.format(offering.name),
                                                   CliOffering.create, context=context, tap_cli=tap_cli,
                                                   name=offering.name, plans=offering.plans)
+
