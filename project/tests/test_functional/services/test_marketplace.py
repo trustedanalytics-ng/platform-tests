@@ -23,7 +23,7 @@ from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
 from modules.tap_object_model import KubernetesPod, ServiceInstance
-from tap_component_config import offerings, offerings_as_parameters
+from tap_component_config import offerings, offerings_as_parameters, PlanKeys
 from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry, \
     assert_unordered_list_equal
 
@@ -80,13 +80,13 @@ class TestMarketplaceServices:
 
     def _validate_memory(self, instance_pod, expected_resources):
         step("Check memory limit.")
-        memory = instance_pod.containers[0]["resources"]["limits"]["memory"]
-        assert memory == expected_resources["memory"]
+        memory = instance_pod.containers[0]["resources"]["limits"][PlanKeys.MEMORY]
+        assert memory == expected_resources[PlanKeys.MEMORY]
 
     def _validate_compute_nodes(self, instance_pod, expected_resources):
         step("Check compute nodes number")
-        if "nodes" in expected_resources.keys():
-            assert len(instance_pod.nodes) == expected_resources["nodes"]
+        if PlanKeys.NODES in expected_resources.keys():
+            assert len(instance_pod.nodes) == expected_resources[PlanKeys.NODES]
 
     def compare_storage(self, storage, expected_storage):
         storage_float = float(storage[:-1])
@@ -98,16 +98,16 @@ class TestMarketplaceServices:
         output = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + command)
         parsed_output = self.parse_storage_output(output)
         entry = next((v for k, v in parsed_output.items() if "/rbd" in k), None)
-        if expected_resources["storage"]:
+        if expected_resources[PlanKeys.STORAGE]:
             assert entry, "Storage was not allocated for {}".format(offering_name)
-            self.compare_storage(entry["Size"], expected_resources["storage"])
+            self.compare_storage(entry["Size"], expected_resources[PlanKeys.STORAGE])
         else:
-            assert entry is expected_resources["storage"], \
+            assert entry is expected_resources[PlanKeys.STORAGE], \
                 "Storage for offering {} was allocated, but it shouldn't.".format(offering_name)
 
     def validate_resources(self, instance, offering_label, plan_name, tunnel):
         expected_resources = offerings[offering_label][plan_name]
-        if expected_resources:
+        if all(x in expected_resources.keys() for x in [PlanKeys.NODES, PlanKeys.MEMORY, PlanKeys.STORAGE]):
             instance_pod = self._get_instance_pod(instance)
             assert instance_pod is not None, "Pod for instance '{}' was not found".format(instance.name)
             self._validate_memory(instance_pod, expected_resources)

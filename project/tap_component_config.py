@@ -17,6 +17,15 @@ import itertools
 
 from modules.constants import ServiceLabels, ServicePlan as Plan, TapComponent as TAP
 
+
+class PlanKeys:
+    NODES = "nodes"
+    MEMORY = "memory"
+    STORAGE = "storage"
+    WORKERS = "workers"
+    WORKER_MEMORY = "worker-memory"
+    SMOKE_TESTS = "smoke_tests"
+
 default = {
     "api_version": "v1",
     "api_version_alias": "v1.0",
@@ -65,191 +74,234 @@ third_party_services = {
 offerings = {
     ServiceLabels.COUCH_DB: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "1Gi",
-            "storage": "5.0G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "1Gi",
+            PlanKeys.STORAGE: "5.0G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "4Gi",
-            "storage": "50G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "4Gi",
+            PlanKeys.STORAGE: "50G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.ELASTICSEARCH17: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "2Gi",
-            "storage": "20G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.STORAGE: "20G",
+            PlanKeys.SMOKE_TESTS: False,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "12Gi",
-            "storage": "200G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "12Gi",
+            PlanKeys.STORAGE: "200G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.GATEWAY: {
         Plan.SINGLE: {
-            "nodes": 1,
-            "memory": "128Mi",
-            "storage": None
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "128Mi",
+            PlanKeys.STORAGE: None,
+            PlanKeys.SMOKE_TESTS: True,
         }
     },
     ServiceLabels.GEARPUMP: {
         Plan.SMALL: {
-            "workers": 1,
-            "worker-memory": "512Mi",
-            "memory": "2Gi"
+            PlanKeys.WORKERS: 1,
+            PlanKeys.WORKER_MEMORY: "512Mi",
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.SMOKE_TESTS: False,
         }, Plan.MEDIUM: {
-            "workers": 3,
-            "worker-memory": "512Mi",
-            "memory": "2Gi"
+            PlanKeys.WORKERS: 3,
+            PlanKeys.WORKER_MEMORY: "512Mi",
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.HBASE: {
-        Plan.ORG_SHARED: None
+        Plan.ORG_SHARED: {
+            PlanKeys.SMOKE_TESTS: False,
+        }
     },
     ServiceLabels.HDFS: {
-        Plan.PLAIN_DIR: None, 
-        Plan.ENCRYPTED_DIR: None
+        Plan.PLAIN_DIR: {
+            PlanKeys.SMOKE_TESTS: False,
+        }, 
+        Plan.ENCRYPTED_DIR: {
+            PlanKeys.SMOKE_TESTS: False,
+        }
     },
     ServiceLabels.HIVE: {
-        Plan.STANDARD: None
+        Plan.STANDARD: {
+            PlanKeys.SMOKE_TESTS: False,
+        }
     },
     ServiceLabels.H2O: {
         Plan.SINGLE: {
-            "nodes": 1,
-            "memory": "512Mi",
-            "storage": None
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.STORAGE: None,
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.INFLUX_DB_110: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "2Gi",
-            "storage": "10G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.STORAGE: "10G",
+            PlanKeys.SMOKE_TESTS: True,
         }
     },
     ServiceLabels.JUPYTER: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "2Gi",
-            "storage": "1.0G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.STORAGE: "1.0G",
+            PlanKeys.SMOKE_TESTS: False,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "8Gi",
-            "storage": "1.0G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "8Gi",
+            PlanKeys.STORAGE: "1.0G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.KAFKA: {
-        Plan.SHARED: None
+        Plan.SHARED: {
+            PlanKeys.SMOKE_TESTS: True,
+        }
     },
     ServiceLabels.KERBEROS: {
-        Plan.SHARED: None
+        Plan.SHARED: {
+            PlanKeys.SMOKE_TESTS: True,
+        }
     },
     ServiceLabels.MONGO_DB_30: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "1Gi",
-            "storage": "10G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "1Gi",
+            PlanKeys.STORAGE: "10G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "8Gi",
-            "storage": "100G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "8Gi",
+            PlanKeys.STORAGE: "100G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.MOSQUITTO: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "512Mi",
-            "storage": "5.0G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.STORAGE: "5.0G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "4Gi",
-            "storage": "20G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "4Gi",
+            PlanKeys.STORAGE: "20G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.MYSQL: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "1Gi",
-            "storage": "10G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "1Gi",
+            PlanKeys.STORAGE: "10G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "6Gi",
-            "storage": "100G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "6Gi",
+            PlanKeys.STORAGE: "100G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.NEO4J: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "2Gi",
-            "storage": "10G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.STORAGE: "10G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "6Gi",
-            "storage": "100G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "6Gi",
+            PlanKeys.STORAGE: "100G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.ORIENT_DB: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "2Gi",
-            "storage": "20G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.STORAGE: "20G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "6Gi",
-            "storage": "100G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "6Gi",
+            PlanKeys.STORAGE: "100G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.PSQL: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "1Gi",
-            "storage": "10G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "1Gi",
+            PlanKeys.STORAGE: "10G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "4Gi",
-            "storage": "50G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "4Gi",
+            PlanKeys.STORAGE: "50G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.RABBIT_MQ: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "512Mi",
-            "storage": "2.0G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.STORAGE: "2.0G",
+            PlanKeys.SMOKE_TESTS: True,
         }, 
         Plan.SINGLE_MEDIUM: {
-            "nodes": 1,
-            "memory": "2Gi",
-            "storage": "10G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "2Gi",
+            PlanKeys.STORAGE: "10G",
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.REDIS: {
         Plan.SINGLE_SMALL: {
-            "nodes": 1,
-            "memory": "512Mi",
-            "storage": "5.0G"
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.STORAGE: "5.0G",
+            PlanKeys.SMOKE_TESTS: True,
         }
     },
     ServiceLabels.SCORING_ENGINE: {
-        Plan.SIMPLE: None
+        Plan.SIMPLE: {
+            PlanKeys.SMOKE_TESTS: False,
+        }
     },
     ServiceLabels.SCORING_PIPELINES: {
         Plan.SINGLE: {
-            "nodes": 1,
-            "memory": "500M",
-            "storage": None
+            PlanKeys.NODES: 1,
+            PlanKeys.MEMORY: "500M",
+            PlanKeys.STORAGE: None,
+            PlanKeys.SMOKE_TESTS: False,
         }
     },
     ServiceLabels.ZOOKEEPER: {
-        Plan.STANDARD: None
+        Plan.STANDARD: {
+            PlanKeys.SMOKE_TESTS: False,
+        }
     },
 }
 

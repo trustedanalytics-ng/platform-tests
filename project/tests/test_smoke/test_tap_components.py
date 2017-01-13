@@ -18,18 +18,17 @@ import pytest
 
 import config
 
-from modules.constants import HttpStatus, ServiceLabels, TapComponent as TAP
+from modules.constants import HttpStatus, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
-from modules.http_calls import kubernetes
 from modules.http_client import HttpClientFactory, HttpMethod
-from modules.http_client.configuration_provider.kubernetes import KubernetesConfigurationProvider
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider, \
-    ProxiedConfigurationProvider, ServiceConfigurationProvider, K8sSecureServiceConfigurationProvider
+    ServiceConfigurationProvider, K8sSecureServiceConfigurationProvider
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_service import K8sService
-from tap_component_config import TAP_core_services, third_party_services, api_service, offerings_as_parameters
+from tap_component_config import TAP_core_services, third_party_services, api_service, offerings_as_parameters, \
+    offerings, PlanKeys
 
 from tests.test_components.api_service.test_api_service_resources import ApiServiceResources
 
@@ -51,10 +50,8 @@ not_tested_components = [
     TAP.workflow_scheduler,
 ]
 
-not_tested_offerings = [ServiceLabels.H2O, ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.HIVE,
-                        ServiceLabels.JUPYTER, ServiceLabels.SCORING_ENGINE, ServiceLabels.SCORING_PIPELINES,
-                        ServiceLabels.ZOOKEEPER]
-filtered_offerings_as_parameters = list(filter(lambda x: x[0] not in not_tested_offerings, offerings_as_parameters))
+filtered_offerings_as_parameters = list(filter(lambda x: offerings[x[0]][x[1]][PlanKeys.SMOKE_TESTS],
+                                               offerings_as_parameters))
 
 
 @priority.high

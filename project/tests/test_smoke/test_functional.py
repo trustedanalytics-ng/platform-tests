@@ -16,21 +16,19 @@
 
 import pytest
 
-from modules.constants import Guid, ServiceLabels, TapComponent as TAP
-from modules.constants.http_status import PlatformTestsHttpStatus
+from modules.constants import TapComponent as TAP
 from modules.constants.model_metadata import MODEL_METADATA
-from modules.exceptions import UnexpectedResponseError
 from modules.file_utils import generate_csv_file
 from modules.http_client import HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Transfer, User, TestRun, ServiceInstance, Metrics, Organization
+from modules.tap_object_model import DataSet, Transfer, User, ServiceInstance, Metrics, Organization
 from modules.tap_object_model.flows import onboarding
 from modules.tap_object_model.platform_tests import TestSuite
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
-from tap_component_config import offerings_as_parameters
+from tap_component_config import offerings, offerings_as_parameters, PlanKeys
 from tests.fixtures.assertions import assert_dict_values_set
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloader, TAP.metadata_parser,
@@ -41,11 +39,8 @@ pytestmark = [priority.high]
 
 expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
                          "private_datasets", "public_datasets"]
-not_tested_offerings = [ServiceLabels.ELASTICSEARCH17, ServiceLabels.GEARPUMP, ServiceLabels.H2O, ServiceLabels.HBASE,
-                        ServiceLabels.HDFS, ServiceLabels.HIVE, ServiceLabels.INFLUX_DB_110, ServiceLabels.JUPYTER,
-                        ServiceLabels.ORIENT_DB, ServiceLabels.RABBIT_MQ, ServiceLabels.SCORING_ENGINE,
-                        ServiceLabels.SCORING_PIPELINES, ServiceLabels.ZOOKEEPER]
-filtered_offerings_as_parameters = list(filter(lambda x: x[0] not in not_tested_offerings, offerings_as_parameters))
+filtered_offerings_as_parameters = list(filter(lambda x: offerings[x[0]][x[1]][PlanKeys.SMOKE_TESTS],
+                                               offerings_as_parameters))
 
 
 def test_login():
