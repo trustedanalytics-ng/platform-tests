@@ -25,6 +25,8 @@ from tests.fixtures.data_repo import DataFileKeys
 from tests.test_components.tap_cli.test_cli_application import TestAppBase
 
 
+@pytest.mark.usefixtures("open_tunnel")
+@pytest.mark.usefixtures("cli_login")
 class TestPythonCliApp(TestAppBase):
 
     @priority.high
