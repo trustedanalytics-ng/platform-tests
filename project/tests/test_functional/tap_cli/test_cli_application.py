@@ -200,7 +200,7 @@ class TestPythonCliApp(TestAppBase):
         Test passes when logs of application are properly presented.
 
         <b>Steps:</b>
-        1. Check that application name is shown in application logs.
+        1. Check that application logs are shown.
         """
         step("Check logs")
         assert sample_cli_app.logs().strip()

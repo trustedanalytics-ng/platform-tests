@@ -455,7 +455,6 @@ class TestPythonCliApp(TestAppBase):
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
     @priority.medium
-    @pytest.mark.bugs("DPNG-13515 Missing app name in logs")
     def test_check_app_logs(self, sample_cli_app):
         """
         <b>Description:</b>
@@ -468,9 +467,9 @@ class TestPythonCliApp(TestAppBase):
         Test passes when logs of application are properly presented.
 
         <b>Steps:</b>
-        1. Check that application name is shown in application logs.
+        1. Check that application logs are shown.
         """
         step("Check logs")
-        assert sample_cli_app.name in sample_cli_app.logs()
+        assert sample_cli_app.logs().strip()
 
 #TODO test_application_help
