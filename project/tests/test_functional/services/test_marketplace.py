@@ -128,8 +128,8 @@ class TestMarketplaceServices:
     @pytest.mark.bugs("DPNG-13185 Hive, zookeeper instances fail to be deleted")
     @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir")
     @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0")
-    @pytest.mark.bugs("DPNG-12481 Cannot create instance of h2o")
     @pytest.mark.bugs("DPNG-13290 Missing HBase offering")
+    @pytest.mark.bugs("DPNG-15068 Test for h2o service should not expect instance on list of pods")
     @pytest.mark.parametrize("role", ["user"])
     @pytest.mark.parametrize("offering_name, plan_name", offerings_as_parameters)
     def test_create_and_delete_service_instance(self, context, test_user_clients, role, offering_name, plan_name,
