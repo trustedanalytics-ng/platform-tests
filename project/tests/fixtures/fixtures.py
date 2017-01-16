@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ from modules.file_utils import zip_file
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
+from modules.ssh_lib import JumpClient
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
     ScoringEngineModel, ModelArtifact
@@ -48,7 +49,7 @@ from .sample_apps import SampleApps
 @pytest.fixture(scope="session")
 def api_service_admin_client():
     api_version = api_service[TapComponent.api_service]["api_version"]
-    default_url = "http://{}/api/{}".format(config.api_url, api_version)
+    default_url = "{}://{}/api/{}".format(config.external_protocol, config.api_url, api_version)
     return HttpClientFactory.get(ServiceConfigurationProvider.get(url=default_url))
 
 
@@ -193,12 +194,14 @@ def sample_java_app(class_context):
     app.ensure_responding()
     return app
 
+
 @pytest.fixture(scope="class")
 def compiled_sample_go_app():
     log_fixture("compiled_sample_go_app: download libraries")
     test_app_sources = AppSources.from_local_path(sources_directory=ApplicationPath.SAMPLE_GO_APP)
     test_app_sources.run_build_sh()
     return test_app_sources.path
+
 
 @pytest.fixture(scope="class")
 def sample_go_app(class_context):

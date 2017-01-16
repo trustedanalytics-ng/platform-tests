@@ -88,6 +88,7 @@ class TapCli:
     SRC_NAME_PARAM = "--src-name"
     DST_NAME_PARAM = "--dst-name"
     IS_DST_PARAM = "--is-dst"
+    SKIP_SSL_VALIDATION = "--skip-ssl-validation"
 
     LOGLINE_PATTERN = '[-,.:0-9 ]{1,20}(CRITICAL|ERROR|WARNING|INFO|DEBUG|NOTSET)'
 
@@ -121,15 +122,17 @@ class TapCli:
         if tap_auth is None:
             tap_auth = [config.admin_username, config.admin_password]
         output = self._run_command([self.LOGIN,
-                                    self.API_PARAM, "http://{}".format(login_domain),
+                                    self.API_PARAM, "{}://{}".format(config.external_protocol, login_domain),
                                     self.USERNAME_PARAM, tap_auth[0],
-                                    self.PASSWORD_PARAM, tap_auth[1]])
+                                    self.PASSWORD_PARAM, tap_auth[1],
+                                    self.SKIP_SSL_VALIDATION])
         if TapMessage.AUTHENTICATION_SUCCEEDED not in output:
             raise TapCliException(output)
         return output
 
     def login_with_password_prompt(self):
-        cmd = [self.LOGIN, self.API_PARAM, "http://{}".format(config.api_url), self.USERNAME_PARAM, config.admin_username]
+        cmd = [self.LOGIN, self.API_PARAM, "{}://{}".format(config.external_protocol, config.api_url),
+               self.USERNAME_PARAM, config.admin_username, self.SKIP_SSL_VALIDATION]
         output = self.run_command_with_prompt(cmd, prompt_answers=[config.admin_password])
         return output
 

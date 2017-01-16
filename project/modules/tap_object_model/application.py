@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 import requests
 from retry import retry
 
+import config
 from modules.constants import TapEntityState
 from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.api_service as api
@@ -68,6 +69,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         self.running_instances = running_instances
         self.urls = tuple(urls)
         self._request_session = requests.session()
+        self._request_session.verify = config.ssl_validation
 
     def __repr__(self):
         return "{} (name={}, app_id={})".format(self.__class__.__name__,
@@ -259,7 +261,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             raise ValueError("Application is in FAILURE, aborting retrying")
         assert self.is_stopped is True, "App {} is not stopped. App state: {}".format(self.name, self.state)
 
-    def api_request(self, path: str, method: str="GET", scheme: str="http", hostname: str=None, data: dict=None,
+    def api_request(self, path: str, method: str="GET", scheme: str=config.external_protocol, hostname: str=None, data: dict=None,
                     params: dict=None, body: dict=None, raw: bool=False):
         """Send a request to application api
 

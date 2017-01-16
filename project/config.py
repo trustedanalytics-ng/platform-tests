@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -126,26 +126,29 @@ cdh_master_2_hostname = "cdh-master-2"
 cdh_master_username = "ec2-user"
 cdh_manager_port = 7180
 
+# External SSL configuration:
+external_protocol = os.environ.get("PT_EXTERNAL_PROTOCOL", "http")
+
 # TAP services and urls - specify if other than xxx.<tap_domain>
 # cf & uaa
 cf_api_version = os.environ.get("PT_CF_API_VERSION", "v2")
 cf_api_url = "api.{}".format(tap_domain)
-cf_api_url_full = os.environ.get("PT_CF_API_URL", "http://{}/{}".format(cf_api_url, cf_api_version))
+cf_api_url_full = os.environ.get("PT_CF_API_URL", "{}://{}/{}".format(external_protocol, cf_api_url, cf_api_version))
 cf_oauth_token_url = os.environ.get("PT_CF_OAUTH_TOKEN_URL", "https://login.{}/oauth/token".format(tap_domain))
-uaa_url = os.environ.get("PT_UAA_URL", "http://uaa.{}".format(tap_domain))
-uaa_oauth_token_url = os.environ.get("PT_UAA_OAUTH_TOKEN_URL", "http://uaa.{}/oauth/token".format(tap_domain))
-login_do_scheme = os.environ.get("PT_LOGIN_DO_SCHEME", "http")
-console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://uaa.{}".format(login_do_scheme, tap_domain))
-auth_gateway_url = os.environ.get("PT_AUTH_GATEWAY_URL", "http://auth-gateway.{}".format(tap_domain))
+
+uaa_url = os.environ.get("PT_UAA_URL", "{}://uaa.{}".format(external_protocol, tap_domain))
+uaa_oauth_token_url = os.environ.get("PT_UAA_OAUTH_TOKEN_URL", "{}://uaa.{}/oauth/token".format(external_protocol, tap_domain))
+console_login_url = os.environ.get("PT_CONSOLE_LOGIN_URL", "{}://uaa.{}".format(external_protocol, tap_domain))
+auth_gateway_url = os.environ.get("PT_AUTH_GATEWAY_URL", "{}://auth-gateway.{}".format(external_protocol, tap_domain))
 # TAP services
-console_url = os.environ.get("PT_CONSOLE_URL", "http://console.{}".format(tap_domain))
+console_url = os.environ.get("PT_CONSOLE_URL", "{}://console.{}".format(external_protocol, tap_domain))
 console_url_for_platform_tests_app = os.environ.get("PT_CONSOLE_URL_FOR_PLATFORM_TESTS_APP",
-                                                    "http://console.{}".format(tap_domain))
-arcadia_url = os.environ.get("PT_ARCADIA_URL", "http://arcadia.{}".format(tap_domain))
+                                                    "{}://console.{}".format(external_protocol, tap_domain))
+arcadia_url = os.environ.get("PT_ARCADIA_URL", "{}://arcadia.{}".format(external_protocol, tap_domain))
 hue_url = os.environ.get("PT_HUE_URL", "https://hue.{}".format(tap_domain))
-demiurge_url = os.environ.get("PT_DEMIURGE_URL", "http://demiurge.{}".format(tap_domain))
-kubernetes_broker_url = os.environ.get("PT_KUBERNETES_BROKER_URL", "http://kubernetes-broker.{}".format(tap_domain))
-grafana_url = os.environ.get("PT_GRAFANA_URL", "http://grafana.{}".format(tap_domain))
+demiurge_url = os.environ.get("PT_DEMIURGE_URL", "{}://demiurge.{}".format(external_protocol, tap_domain))
+kubernetes_broker_url = os.environ.get("PT_KUBERNETES_BROKER_URL", "{}://kubernetes-broker.{}".format(external_protocol, tap_domain))
+grafana_url = os.environ.get("PT_GRAFANA_URL", "{}://grafana.{}".format(external_protocol, tap_domain))
 
 # Test resources
 test_user_email = os.environ.get("PT_TEST_USER_EMAIL", "intel.data.tests@gmail.com")
@@ -168,8 +171,8 @@ log_username = os.environ.get("PT_LOG_USERNAME", False)
 
 api_version = os.environ.get("PT_API_VERSION", "v1")
 api_url = "api.{}".format(tap_domain)
-api_url_full = os.environ.get("PT_API_URL", "http://{}/api/{}".format(api_url, api_version))
-api_url_full_v2 = os.environ.get("PT_API_URL", "http://{}/api/v2".format(api_url))
+api_url_full = os.environ.get("PT_API_URL", "{}://{}/api/{}".format(external_protocol, api_url, api_version))
+api_url_full_v2 = os.environ.get("PT_API_URL", "{}://{}/api/v2".format(external_protocol, api_url))
 ng_disable_environment_check = get_bool("PT_DISABLE_ENVIRONMENT_CHECK", False)
 ng_jump_ip = os.environ.get("PT_NG_JUMP_IP", "jump.{}".format(tap_domain))  # required for running component tests on TAP NG
 ng_jump_key_path = os.environ.get("PT_NG_JUMP_KEY_PATH")  # if not passed, key will be retrieved from GitHub
@@ -184,7 +187,7 @@ ng_k8s_service_auth_username = os.environ.get("PT_K8S_SERVICE_AUTH_USERNAME", "a
 _ng_k8s_service_auth_password = os.environ.get("PT_K8S_SERVICE_AUTH_PASSWORD", "password")
 ng_image_repository_url = os.environ.get("PT_NG_IMAGE_REPOSITORY_URL", third_party_services[TAP.image_repository]["url"])
 ng_api_service_oauth_token_url = os.environ.get("PT_NG_AS_OAUTH_TOKEN_URL",
-                                                "http://{}.{}/{}".format("api", tap_domain,
+                                                "{}://{}.{}/{}".format(external_protocol, "api", tap_domain,
                                                                          "api/{}/login".format(ng_kubernetes_api_version)))
 check_tap_cli_version = get_bool("PT_CHECK_TAP_CLI_VERSION", True)
 
