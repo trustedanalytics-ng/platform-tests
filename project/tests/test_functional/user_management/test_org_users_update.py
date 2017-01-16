@@ -70,6 +70,7 @@ class TestUpdateOrganizationUser:
         assert_user_in_org_and_role(updated_user, test_org.guid, role_expected)
 
     @priority.low
+    @pytest.mark.skip(reason="DPNG-14825 there must be at least 2 admins at all times")
     def test_cannot_remove_admin_role_from_the_last_org_admin(self, test_org):
         step("Retrieve all admins and the platform admin")
         org_users = User.get_all_users(org_guid=test_org.guid)
