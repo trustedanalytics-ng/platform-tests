@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,13 +42,13 @@ class TestCheckAppPushHelp: #TODO what about other application commands helps?
         Check output from tap cli help push.
 
         <b>Input data:</b>
-        1. Command name: help push
+        1. Command name: application push --help
 
         <b>Expected results:</b>
         Test passes when TAP CLI help push command print proper output.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command help push.
+        1. Run TAP CLI with command: application push --help.
         2. Verify response contains proper output.
         """
         step("Check output from tap cli push help")
@@ -57,26 +57,28 @@ class TestCheckAppPushHelp: #TODO what about other application commands helps?
         assert "USAGE" in output
 
 
+@pytest.mark.usefixtures("cli_login")
 class TestCliCommandsWithNonExistingApplication:
     NON_EXISTING_APP_NAME = "non_existing_app_name_{}".format(generate_test_object_name())
+    CANNOT_FIND_APP = TapMessage.CANNOT_FIND_APPLICATION_WITH_NAME.format(NON_EXISTING_APP_NAME)
     CANNOT_FIND_MSG = TapMessage.CANNOT_FIND_INSTANCE_WITH_NAME.format(NON_EXISTING_APP_NAME)
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
-    def test_try_stop_non_existing_app(self, tap_cli, cli_login):
+    def test_try_stop_non_existing_app(self, tap_cli):
         """
         <b>Description:</b>
         Try to stop non existing application.
 
         <b>Input data:</b>
-        1. Command name: stop
+        1. Command name: application stop --name <non_existing_name>
         2. Name of non existing application
 
         <b>Expected results:</b>
         Test passes when attempt to stop non existing application returns proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command stop.
+        1. Run TAP CLI with command: application stop --name <non_existing_name>.
         2. Verify that attempt to stop non existing application return expected error message.
         """
         step("Try to stop app with non existing name")
@@ -85,20 +87,20 @@ class TestCliCommandsWithNonExistingApplication:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
-    def test_try_start_non_existing_app(self, tap_cli, cli_login):
+    def test_try_start_non_existing_app(self, tap_cli):
         """
         <b>Description:</b>
         Try to start non existing application.
 
         <b>Input data:</b>
-        1. Command name: start
+        1. Command name: application start --name <non_existing_name>
         2. Name of non existing application
 
         <b>Expected results:</b>
         Test passes when attempt to start non existing application returns proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command start.
+        1. Run TAP CLI with command: application start --name <non_existing_name>.
         2. Verify that attempt to start non existing application return expected error message.
         """
         step("Try to start app with non existing name")
@@ -107,20 +109,20 @@ class TestCliCommandsWithNonExistingApplication:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
-    def test_try_restart_non_existing_app(self, tap_cli, cli_login):
+    def test_try_restart_non_existing_app(self, tap_cli):
         """
         <b>Description:</b>
         Try to restart non existing application.
 
         <b>Input data:</b>
-        1. Command name: restart
+        1. Command name: application restart --name <non_existing_name>
         2. Name of non existing application
 
         <b>Expected results:</b>
         Test passes when attempt to restart non existing application returns proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command restart.
+        1. Run TAP CLI with command: application restart --name <non_existing_name>.
         2. Verify that attempt to restart non existing application return expected error message.
         """
         step("Try to restart app with non existing name")
@@ -129,20 +131,21 @@ class TestCliCommandsWithNonExistingApplication:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
-    def test_try_scale_non_existing_app(self, tap_cli, cli_login):
+    def test_try_scale_non_existing_app(self, tap_cli):
         """
         <b>Description:</b>
         Try to scale non existing application.
 
         <b>Input data:</b>
-        1. Command name: scale
+        1. Command scale: application scale --name <non_existing_name> --replicas <number_of_replicas>
         2. Name of non existing application
+        3. Number of replicas
 
         <b>Expected results:</b>
         Test passes when attempt to scale non existing application returns proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command scale.
+        1. Run TAP CLI with command: application scale --name <non_existing_name> --replicas <number_of_replicas>.
         2. Verify that attempt to scale non existing application return expected error message.
         """
         scaled_instances = '3'
@@ -153,45 +156,67 @@ class TestCliCommandsWithNonExistingApplication:
 
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
     @priority.low
-    def test_try_check_logs_for_non_existing_app(self, tap_cli, cli_login):
+    def test_try_get_details_info_non_existing_app(self, tap_cli):
+        """
+        <b>Description:</b>
+        Try to get details info about non existing application.
+
+        <b>Input data:</b>
+        1. Command name: application info --name <non_existing_name>
+        2. Name of non existing application
+
+        <b>Expected results:</b>
+        Test passes when attempt to get info about non existing application returns proper message.
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command: application info --name <non_existing_name>.
+        2. Verify that attempt to get details info about non existing application return expected error message.
+        """
+        step("Try to get details info about app with non existing name")
+        assert_raises_command_execution_exception(1, self.CANNOT_FIND_APP, tap_cli.app_info,
+                                                  application_name=self.NON_EXISTING_APP_NAME)
+
+    @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
+    @priority.low
+    def test_try_check_logs_for_non_existing_app(self, tap_cli):
         """
         <b>Description:</b>
         Try to retrieve logs of non existing application.
 
         <b>Input data:</b>
-        1. Command name: logs
+        1. Command name: application logs show --name <non_existing_name>
         2. Name of non existing application
 
         <b>Expected results:</b>
         Test passes when attempt to retrieve logs of non existing application returns proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command logs.
+        1. Run TAP CLI with command: application logs show --name <non_existing_name>.
         2. Verify that attempt to retrieve logs for non existing application return expected message.
         """
         step("Try to check logs for non existing app name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_logs,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
-    @priority.low
     @pytest.mark.bugs("DPNG-11419 [TAP-NG] API service doesn't accept SSL, cannot log in to tap with TAP CLI using api url without specified protocol")
-    def test_try_delete_non_existing_app(self, tap_cli, cli_login):
+    @priority.low
+    def test_try_delete_non_existing_app(self, tap_cli):
         """
         <b>Description:</b>
         Try to delete non existing application.
 
         <b>Input data:</b>
-        1. Command name: delete
+        1. Command name: application delete --name <non_existing_name>
         2. Name of non existing application
 
         <b>Expected results:</b>
         Test passes when attempt to delete non existing application returns proper message.
 
         <b>Steps:</b>
-        1. Run TAP CLI with command delete.
-        2. Verify that attempt to delete non existing application return expected message.
+        1. Run TAP CLI with command: application delete --name <non_existing_name>.
+        2. Verify that attempt to delete non existing application return expected error message.
         """
-        step("Try to delete with non existing app name")
+        step("Try to delete app with non existing name")
         assert_raises_command_execution_exception(1, self.CANNOT_FIND_MSG, tap_cli.app_delete,
                                                   application_name=self.NON_EXISTING_APP_NAME)
 
@@ -258,7 +283,7 @@ class TestAppBase:
     def sample_cli_app(self, class_context, sample_app_target_directory, tap_cli):
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory)
-        manifest_params = {"type" : self.APP_TYPE}
+        manifest_params = {"type": self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         step("Push application")
@@ -274,25 +299,6 @@ class TestAppBase:
         return application
 
 
-class TestBadApplication(TestAppBase):
-    def test_no_manifest(self, class_context, sample_app_target_directory, tap_cli):
-        """Try to push an application, but don't provide the manifest"""
-        p_a = PrepApp(sample_app_target_directory)
-        step("Create/update manifest")
-        manifest_params = {"type" : self.APP_TYPE}
-        manifest_path = p_a.update_manifest(params=manifest_params)
-        step("Remove the manifest")
-        os.remove(manifest_path)
-        step("Try to push the app without manifest")
-        assert_raises_command_execution_exception(1, TapMessage.CANNOT_FIND_MANIFEST,
-                                                  CliApplication.push,
-                                                  class_context, tap_cli=tap_cli,
-                                                  app_type=self.APP_TYPE,
-                                                  app_path=sample_app_target_directory,
-                                                  name=p_a.app_name,
-                                                  instances=p_a.instances)
-
-
 @pytest.mark.usefixtures("cli_login")
 class TestPythonCliApp(TestAppBase):
 
@@ -306,7 +312,8 @@ class TestPythonCliApp(TestAppBase):
         1. Sample application target directory
 
         <b>Expected results:</b>
-        Test passes when application is pushed, displayed in applications list and then successfully deleted.
+        Test passes when application is pushed, displayed in applications list,
+        contained proper key-value pairs in details info and then successfully deleted.
 
         <b>Steps:</b>
         1. Update application manifest.
@@ -314,8 +321,11 @@ class TestPythonCliApp(TestAppBase):
         3. Verify that application is present in applications list.
         4. Check that application is running.
         5. Check that application is ready.
-        6. Delete application.
-        7. Check that application is no longer presented in applications list.
+        6. Check if details info about pushed application is correct.
+        7. Stop application
+        8. Check that application is stopped.
+        9. Delete application.
+        10. Check that application is no longer presented in applications list.
         """
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory)
@@ -332,7 +342,8 @@ class TestPythonCliApp(TestAppBase):
         application.ensure_app_state(state=TapEntityState.RUNNING)
         step("Ensure app is ready")
         application.ensure_app_is_ready()
-
+        step("Ensure details info about application is correct")
+        application.ensure_info_about_app_was_correct(p_a.app_name, self.APP_TYPE)
         step("Stop application")
         application.stop()
         application.ensure_app_state(state=TapEntityState.STOPPED)
@@ -344,7 +355,8 @@ class TestPythonCliApp(TestAppBase):
     def test_push_and_delete_sample_app_with_symlinks(self, context, sample_app_target_directory_with_symlinks, tap_cli):
         """
         <b>Description:</b>
-        Push sample application, check it's show in applications list and remove it.
+        Push sample application, check it's show in applications list, verify it contains proper key-value pairs
+        in details info and remove it.
 
         <b>Input data:</b>
         1. Sample application with symlinks target directory
@@ -358,8 +370,11 @@ class TestPythonCliApp(TestAppBase):
         3. Verify that application is present in applications list.
         4. Check that application is running.
         5. Check that application is ready.
-        6. Delete application.
-        7. Check that application is no longer presented in applications list.
+        6. Check if details info about pushed application is correct.
+        7. Stop application
+        8. Check that application is stopped.
+        9. Delete application.
+        10. Check that application is no longer presented in applications list.
         """
         step("Update the manifest")
         p_a = PrepApp(sample_app_target_directory_with_symlinks)
@@ -376,7 +391,8 @@ class TestPythonCliApp(TestAppBase):
         application.ensure_app_state(state=TapEntityState.RUNNING)
         step("Ensure app is ready")
         application.ensure_app_is_ready()
-
+        step("Ensure details info about application is correct")
+        application.ensure_info_about_app_was_correct(p_a.app_name, self.APP_TYPE)
         step("Stop application")
         application.stop()
         application.ensure_app_state(state=TapEntityState.STOPPED)
@@ -412,7 +428,26 @@ class TestPythonCliApp(TestAppBase):
         step("Ensure app is running")
         sample_cli_app.ensure_app_state(state=TapEntityState.RUNNING)
 
+    @priority.high
     def test_restart_app(self, sample_cli_app):
+        """
+        <b>Description:</b>
+        Check that application is in RUNNING state after restart.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when application is restarted successfully.
+
+        <b>Steps:</b>
+        1. Push application.
+        2. Verify that application is present in applications list.
+        3. Check that application is running.
+        4. Check that application is ready.
+        5. Restart application.
+        6. Check that application is running.
+        """
         step("Restart app")
         sample_cli_app.restart()
         step("Ensure app is running")
@@ -455,6 +490,29 @@ class TestPythonCliApp(TestAppBase):
         assert sample_cli_app.get_running_instances() == int(scaled_instances)
 
     @priority.medium
+    def test_try_to_delete_app_in_running_state(self, sample_cli_app):
+        """
+        <b>Description:</b>
+        Push sample application and wait until it state is running. Then try to delete application in RUNNING state.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when trying to delete application in RUNNING state causes an error.
+
+        <b>Steps:</b>
+        1. Push application.
+        2. Verify that application is present in applications list.
+        3. Check that application is running.
+        4. Check that application is ready.
+        5. Try to delete application.
+        """
+        step("Try to delete application in running state")
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_DELETE_APPLICATION_IN_RUNNING_STATE,
+                                                  sample_cli_app.delete)
+
+    @priority.medium
     def test_check_app_logs(self, sample_cli_app):
         """
         <b>Description:</b>
@@ -472,4 +530,99 @@ class TestPythonCliApp(TestAppBase):
         step("Check logs")
         assert sample_cli_app.logs().strip()
 
+    @priority.medium
+    def test_try_to_push_same_application_twice(self, context, sample_cli_app, tap_cli):
+        """
+        <b>Description:</b>
+        Push sample application and wait until it state is running. Then try to push same application again.
+
+        <b>Input data:</b>
+        1. Sample application
+
+        <b>Expected results:</b>
+        Test passes when application is pushed and is in running state and trying to push same application again causes
+        an error.
+
+        <b>Steps:</b>
+        1. Push application.
+        2. Verify that application is present in applications list.
+        3. Check that application is running.
+        4. Check that application is ready.
+        5. Try to push same application again.
+        """
+        step("Try to push same application again")
+        assert_raises_command_execution_exception(1, TapMessage.APPLICATION_ALREADY_EXISTS,
+                                                  CliApplication.push,
+                                                  context, tap_cli=tap_cli,
+                                                  app_type=sample_cli_app.app_type,
+                                                  app_path=sample_cli_app.target_directory,
+                                                  name=sample_cli_app.name,
+                                                  instances=sample_cli_app.instances)
+
+
+@pytest.mark.usefixtures("cli_login")
+class TestBadApplication(TestAppBase):
+    INVALID_APP_NAME = 'invalid_name'
+
+    @priority.medium
+    def test_no_manifest(self, class_context, tap_cli, sample_app_target_directory):
+        """
+        <b>Description:</b>
+        Try to push an application, but don't provide the manifest.
+
+        <b>Input data:</b>
+        1. Sample application without manifest.json
+
+        <b>Expected results:</b>
+        Test passes when attempt to push application without providing manifest.json returns proper message.
+
+        <b>Steps:</b>
+        1. Prepare directory with sample application.
+        2. Remove manifest.json from prepared directory.
+        3. Try to push application.
+        """
+        app_name = "app-test-name"
+        step("prepare directory with sample application")
+        p_a = PrepApp(sample_app_target_directory)
+        step("remove manifest.json from prepared directory")
+        manifest_path = os.path.join(sample_app_target_directory, p_a.MANIFEST_NAME)
+        os.remove(manifest_path)
+        step("try to push application")
+        assert_raises_command_execution_exception(1, TapMessage.CANNOT_FIND_MANIFEST,
+                                                  CliApplication.push,
+                                                  class_context, tap_cli=tap_cli,
+                                                  app_type=self.APP_TYPE,
+                                                  app_path=p_a.app_path,
+                                                  name=app_name,
+                                                  instances=p_a.instances)
+
+    @priority.low
+    def test_try_push_app_with_invalid_manifest(self, class_context, tap_cli, sample_app_target_directory):
+        """
+        <b>Description:</b>
+        Try to push an application with invalid manifest.
+
+        <b>Input data:</b>
+        1. Sample application with invalid manifest.json
+
+        <b>Expected results:</b>
+        Test passes when attempt to push application with invalid app name in manifest.json returns proper message.
+
+        <b>Steps:</b>
+        1. Prepare directory with sample application.
+        2. Update manifest.json with invalid app name.
+        3. Try to push application with wrong manifest.json.
+        """
+        step("prepare directory with sample application")
+        p_a = PrepApp(sample_app_target_directory)
+        step("update manifest.json to contain improper app name")
+        manifest_params = {"name": self.INVALID_APP_NAME, "type": self.APP_TYPE}
+        p_a.update_manifest(params=manifest_params)
+        assert_raises_command_execution_exception(1, TapMessage.MANIFEST_JSON_INCORRECT_NAME_VALUE.format(self.INVALID_APP_NAME),
+                                                  CliApplication.push,
+                                                  class_context, tap_cli=tap_cli,
+                                                  app_type=self.APP_TYPE,
+                                                  app_path=p_a.app_path,
+                                                  name=p_a.app_name,
+                                                  instances=p_a.instances)
 #TODO test_application_help

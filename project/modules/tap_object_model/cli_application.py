@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -104,6 +104,11 @@ class CliApplication(CliObjectSuperclass):
 
     def get_running_instances(self):
         return self.get_details()["running_instances"]
+
+    def ensure_info_about_app_was_correct(self, name, image_type):
+        app = self.get_details()
+        assert app["name"] == name
+        assert app["imageType"] == image_type
 
     @retry(AssertionError, tries=12, delay=5)
     def ensure_on_app_list(self):

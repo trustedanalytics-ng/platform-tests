@@ -36,12 +36,15 @@ class TapEntityState:
 
 
 class TapMessage:
+    APPLICATION_ALREADY_EXISTS = "already exists"
     AUTHENTICATION_FAILED = "Authentication failed"
     AUTHENTICATION_SUCCEEDED = "Authentication succeeded"
     CHANGING_PASSWORD_FAILED = "Changing user password failed"
     CANNOT_BIND_UNBIND_INSTANCES_WITH_BOTH_DST_AND_SRC_FLAGS_SET = 'Cannot use more then one alternative flags' \
                                                                    ' (dst-name AND src-name) in the same time'
     CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
+    CANNOT_DELETE_APPLICATION_IN_RUNNING_STATE = "event DESTROY_REQ inappropriate in current state RUNNING"
+    CANNOT_FIND_APPLICATION_WITH_NAME = "Application {} not found"
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     CANNOT_FIND_MANIFEST = "error: manifest.json does not exist: create one with metadata about your application"
     CANNOT_FIND_PLAN_FOR_SERVICE = "cannot find plan: '{}' for service: '{}'"
@@ -54,6 +57,7 @@ class TapMessage:
     INSTANCE_IS_BOUND_TO_OTHER_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
     NO_SUCH_FILE_OR_DIRECTORY = "open {}: no such file or directory"
     MANIFEST_JSON_NO_SUCH_FILE = "manifest.json: no such file or directory"
+    MANIFEST_JSON_INCORRECT_NAME_VALUE = "field: Name has incorrect value: {}"
     NO_SUCH_OFFERING = "Could not find offering with such name"
     MISSING_PARAMETER = "MISSING PARAMETER"
     NAME_HAS_INCORRECT_VALUE = "Field: Name has incorrect value: {}"
