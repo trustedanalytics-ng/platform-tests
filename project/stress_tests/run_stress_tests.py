@@ -16,7 +16,6 @@
 import json
 import logging
 import os
-import shutil
 import signal
 import subprocess
 import sys
@@ -37,9 +36,10 @@ logger.setLevel(logging.DEBUG)
 
 
 def setup():
-    logger.info('Building sample apps')
-    for app_dir in [ApplicationPath.SAMPLE_JAVA_APP, ApplicationPath.SAMPLE_PYTHON_APP, ApplicationPath.SAMPLE_GO_APP]:
-        run(['./build.sh'], cwd=app_dir)
+    if "app_pushing" in config.locust_file:
+        logger.info('Building sample apps')
+        for app_dir in [ApplicationPath.SAMPLE_JAVA_APP, ApplicationPath.SAMPLE_PYTHON_APP, ApplicationPath.SAMPLE_GO_APP]:
+            run(['./build.sh'], cwd=app_dir)
 
 
 def teardown():
