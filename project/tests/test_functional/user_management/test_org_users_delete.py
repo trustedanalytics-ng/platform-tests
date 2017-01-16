@@ -65,22 +65,3 @@ class TestDeleteOrganizationUser:
                                      client=test_org_user_client)
         step("Check that the user was not deleted")
         assert_user_in_org_and_role(user_to_delete, test_org.guid, user_to_delete.org_role[test_org.guid])
-
-    @priority.low
-    @pytest.mark.skip(reason="DPNG-14825 there must be at least 2 admins at all times")
-    def test_admin_cannot_delete_last_admin(self, context, test_org):
-        step("Find all admins")
-        org_users = User.get_all_users(test_org.guid)
-        admins = [user for user in org_users if user.org_role[test_org.guid] == User.ORG_ROLE["admin"]]
-        platform_admin = next(a for a in admins if a.username == config.admin_username)
-
-        step("Check that it's not possible to remove last admin")
-        for admin in admins:
-            if admin != platform_admin:
-                admin.delete_from_organization(org_guid=test_org.guid)
-
-        assert_raises_http_exception(
-            HttpStatus.CODE_FORBIDDEN,
-            HttpStatus.MSG_CANNOT_PERFORM_REQ_ON_YOURSELF,
-            platform_admin.delete_from_organization, org_guid=test_org.guid
-        )
