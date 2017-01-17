@@ -14,22 +14,25 @@
 # limitations under the License.
 #
 
+import os
+import stat
 import pytest
+import uuid
 
 import config
 
 from modules.constants import HttpStatus, TapComponent as TAP
+from modules.http_calls.platform import api_service as rest_api_service
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.application import ApplicationConfigurationProvider
 from modules.http_client.configuration_provider.k8s_service import K8sServiceConfigurationProvider, \
     ServiceConfigurationProvider, K8sSecureServiceConfigurationProvider
 from modules.markers import priority
+from modules.tap_cli import TapCli
 from modules.tap_logger import step
 from modules.tap_object_model.k8s_service import K8sService
 from tap_component_config import TAP_core_services, third_party_services, api_service, offerings_as_parameters, \
     offerings, PlanKeys
-
-from tests.test_components.api_service.test_api_service_resources import ApiServiceResources
 
 not_tested_third_party_services = [TAP.message_queue]
 
@@ -272,10 +275,62 @@ class TestSmokeTrustedAnalyticsComponents:
         assert response.headers['x-platform'] == 'TAP'
         assert response.text == ''
 
+    @pytest.fixture(scope="function")
+    def tap_path(self):
+        # Make sure the file name is randomized to avoid conflicts with potential tests executed in parallel
+        return "/tmp/tap-" + str(uuid.uuid4())[0:8]
+
+    @pytest.fixture(scope="function")
+    def cleanup_tap_path(self, tap_path, request):
+        def fin():
+            try:
+                step('Clean up downloaded TAP CLI')
+                os.remove(tap_path)
+            except:
+                pass
+        request.addfinalizer(fin)
+
+    @pytest.mark.usefixtures("cleanup_tap_path")
     @pytest.mark.skip(reason="DPNG-14808 [api-tests] Some API tests take a very long time to execute")
     @pytest.mark.parametrize("resource", ["linux32"])
-    def test_api_resource_cli_returns_tap_cli_binary(self, api_service_admin_client, resource):
+    def test_api_resource_cli_returns_tap_cli_binary(self, api_service_admin_client, resource, tap_path):
+        """
+        <b>Description:</b>
+        Checks if api resource CLI endpoint returns TAP CLI binary, then tries to execute it.
+
+        <b>Input data:</b>
+
+        <b>Expected results:</b>
+        Test passes when api resource CLI endpoint contains HTTP response headers:
+        Content-Type, Content-Length, Content-Disposition
+        Also, the login command is executed as the last step and it must succeed.
+
+        <b>Steps:</b>
+        1. Create HTTP client.
+        2. Send GET request to component api endpoint.
+        3. Verify that HTTP response contains headers: Content-Type, Content-Length, Content-Disposition.
+        4. Verify that HTTP response content length equals to the one returned in Content-Length header.
+        5. Save downloaded file to /tmp directory and verify it with "login" command.
+        """
         step('Smoke test for CLI resources api')
-        test_api_resources = ApiServiceResources()
-        # Re-use existing test for API component, but run it only for one resource (not all)
-        test_api_resources.test_api_resource_cli_returns_tap_cli_binary(api_service_admin_client, resource)
+
+        step("Check get {} CLI resource".format(resource))
+        response = rest_api_service.get_cli_resource(client=api_service_admin_client, resource_id=resource)
+        step('Check if response contains "Content-Type" header')
+        assert response.headers['Content-Type'] == 'application/octet-stream'
+        step('Check if response contains "Content-Length" header')
+        content_length = int(response.headers['Content-Length'])
+        assert content_length > 0
+        step('Check if response contains "Content-Disposition" header')
+        assert "tap" in response.headers['Content-Disposition']
+        step('Check if response content length equals to the content length from header')
+        assert len(response.content) == content_length
+
+        step('Save TAP CLI to file: ' + tap_path)
+        with open(tap_path, "wb") as f:
+            f.write(response.content)
+        os.chmod(tap_path, os.stat(tap_path).st_mode | stat.S_IEXEC)
+
+        step('Invoke a sample command to verify that a valid CLI was downloaded')
+        tap_cli = TapCli(tap_path)
+        tap_cli.login()
