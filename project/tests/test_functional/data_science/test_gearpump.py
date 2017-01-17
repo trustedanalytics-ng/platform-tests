@@ -28,6 +28,7 @@ pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.service_catalog)]
 
 
 @incremental
+@pytest.mark.skip(reason="DPNG-15084 Cannot send request get, post using taptester client")
 @pytest.mark.usefixtures("open_tunnel")
 class TestGearpumpConsole:
 
