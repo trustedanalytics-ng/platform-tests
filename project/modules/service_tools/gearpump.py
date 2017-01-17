@@ -42,6 +42,7 @@ class Gearpump(object):
         self.yarn_app_id = None
         self.client = HttpClientFactory.get(ConsoleConfigurationProvider.get())
         self.ssh_client = None
+        self._gearpump_url = None
 
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
@@ -54,23 +55,20 @@ class Gearpump(object):
 
     def go_to_dashboard(self):
         """Simulate going to gearpump dashboard"""
-        self.client.url = "http://{}".format(self.instance.instance_url)
+        self._gearpump_url = "http://{}".format(self.instance.instance_url)
+
         try:
             self.client.request(
                 method=HttpMethod.GET,
+                url=self._gearpump_url,
                 path="login/oauth2/cloudfoundryuaa/authorize",
                 msg="Go to dashboard"
             )
         except:
-            self.go_to_console()
             raise
 
-    def go_to_console(self):
-        self.client.url = config.console_url
-
-    def submit_application_jar(self, jar_file, application_name, extra_params=None, instance_credentials=None,
-                               timeout=120) -> GearpumpApplication:
-        """Submit gearpump application. Response returns only: {"success":true/false}"""
+    def get_gearpump_application(self, jar_file, application_name, extra_params=None, instance_credentials=None,
+                                 timeout=120) -> GearpumpApplication:
         files = {'jar': open(jar_file, 'rb')}
         request_args = {}
         if extra_params:
@@ -80,6 +78,7 @@ class Gearpump(object):
         data = {"configstring": ("", "tap={}".format(json.dumps(request_args)))} if request_args else None
         response = self.client.request(
             method=HttpMethod.POST,
+            url=self._gearpump_url,
             path="api/v1.0/master/submitapp",
             files=files,
             data=data,
@@ -87,7 +86,7 @@ class Gearpump(object):
             timeout=timeout
         )
         if response["success"]:
-            return GearpumpApplication(application_name, self.client)
+            return GearpumpApplication(application_name, self.client, self._gearpump_url)
 
     def get_ui_app(self):
         apps = self.instance.get_list(name="gp-ui-{}".format(self.instance.id))

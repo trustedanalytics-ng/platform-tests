@@ -48,9 +48,8 @@ class TestWs2kafka2gearpump2hbase:
     hbase_reader = None
 
     @pytest.fixture(scope="function")
-    def go_to_dashboard(self, request):
+    def go_to_dashboard(self):
         self.gearpump.go_to_dashboard()
-        request.addfinalizer(self.gearpump.go_to_console)
 
     def _send_messages(self, ws2kafka_url, messages, topic_name):
         connection_string = "{}/{}".format(ws2kafka_url, topic_name)
@@ -156,9 +155,9 @@ class TestWs2kafka2gearpump2hbase:
         step("Submit application kafka2hbase to gearpump dashboard")
         extra_params = {"inputTopic": self.TOPIC_IN, "outputTopic": self.TOPIC_OUT, "tableName": self.db_and_table_name,
                         "columnFamily": self.HBASE_COLUMN_FAMILY, "hbaseUser": "cf"}
-        kafka2hbase_app = self.gearpump.submit_application_jar(test_data_urls.kafka2gearpump2hbase.filename,
-                                                               kafka2hdfs_app.name, extra_params,
-                                                               self.instances_credentials, timeout=180)
+        kafka2hbase_app = self.gearpump.get_gearpump_application(test_data_urls.kafka2gearpump2hbase.filename,
+                                                                 kafka2hdfs_app.name, extra_params,
+                                                                 self.instances_credentials, timeout=180)
         step("Check that submitted application is started")
         assert kafka2hbase_app.is_started, "kafka2hbase app is not started"
 

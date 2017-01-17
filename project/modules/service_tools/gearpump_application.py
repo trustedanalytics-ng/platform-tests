@@ -21,17 +21,19 @@ from ..http_client.client_auth.http_method import HttpMethod
 class GearpumpApplication(object):
     """Gearpump application instance."""
 
-    def __init__(self, name, client: HttpClient):
+    def __init__(self, name, client: HttpClient, gearpump_url):
         self.client = client
         self.app_name = name
         self.app_status = None
         self.app_id = None
+        self._gearpump_url = gearpump_url
         self.fill_application_details()
 
     def fill_application_details(self):
         """Set application id and status."""
         response = self.client.request(
             method=HttpMethod.GET,
+            url=self._gearpump_url,
             path="api/v1.0/master/applist",
             msg="Gearpump: get list of applications"
         )
@@ -44,6 +46,7 @@ class GearpumpApplication(object):
         """Kill application and refresh application details."""
         self.client.request(
             method=HttpMethod.DELETE,
+            url=self._gearpump_url,
             path="api/v1.0/appmaster/{}".format(self.app_id),
             msg="Gearpump: kill application {}".format(self.app_id)
         )

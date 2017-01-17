@@ -28,7 +28,6 @@ pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.service_catalog)]
 
 
 @incremental
-@pytest.mark.skip(reason="DPNG-15084 Cannot send request get, post using taptester client")
 @pytest.mark.usefixtures("open_tunnel")
 class TestGearpumpConsole:
 
@@ -39,9 +38,8 @@ class TestGearpumpConsole:
     dag_app = None
 
     @pytest.fixture(scope="function")
-    def go_to_dashboard(self, request):
+    def go_to_dashboard(self):
         self.gearpump.go_to_dashboard()
-        request.addfinalizer(self.gearpump.go_to_console)
 
     @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
     def test_0_create_gearpump_instance(self, class_context, test_org):
@@ -105,8 +103,8 @@ class TestGearpumpConsole:
         2. Check if submitted application is RUNNING.
         """
         step("Submit application complexdag to gearpump dashboard")
-        self.__class__.dag_app = self.gearpump.submit_application_jar(test_data_urls.complexdag_app.filepath,
-                                                                      self.COMPLEXDAG_APP_NAME)
+        self.__class__.dag_app = self.gearpump.get_gearpump_application(test_data_urls.complexdag_app.filepath,
+                                                                        self.COMPLEXDAG_APP_NAME)
         step("Check that submitted application is started")
         assert self.dag_app.is_started
 
