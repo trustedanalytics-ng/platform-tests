@@ -56,6 +56,7 @@ class TestCliService:
         return CliService.create(context=class_context, offering_name=offering.label,
                                  plan_name=offering.service_plans[0].name, tap_cli=tap_cli)
 
+    @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir and encrypted-dir")
     @priority.high
     @pytest.mark.components(TAP.cli)
     @pytest.mark.parametrize("service_label,plan_name", KAFKA_AND_HDFS_OFFERINGS)

@@ -32,7 +32,6 @@ label = ServiceLabels.HDFS
 @priority.medium
 class TestHdfsPlainDir(object):
 
-    @pytest.mark.bugs("DPNG-14831 Cannot create Hdfs instance (service has inappropriate state - OFFLINE")
     def test_0_hdfs_plain_dir(self, class_context):
         """
         <b>Description:</b>
@@ -93,7 +92,7 @@ class TestHdfsPlainDir(object):
         step("Check if hdfs directory has proper permissions")
         self.hdfs.check_plain_dir_permissions(service_instance_id=self.instance_hdfs.id)
 
-    @pytest.mark.skip("DPNG-13206 - Authentication issue for KMS service")
+    @pytest.mark.skip("DPNG-14805 Cannot remove instance hdfs in plain-dir and encrypted-dir")
     def test_3_delete_hdfs_service_instance(self):
         """
         <b>Description:</b>
