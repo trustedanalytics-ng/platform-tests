@@ -38,21 +38,15 @@ not_tested_third_party_services = [TAP.message_queue]
 
 not_tested_components = [
     TAP.auth_gateway,
-    TAP.das,
-    TAP.data_catalog,
     TAP.dataset_publisher,
-    TAP.downloader,
     TAP.h2o_model_provider,
     TAP.h2o_scoring_engine_publisher,
-    TAP.metadata_parser,
     TAP.metrics_grafana,
     TAP.metrics_prometheus,
     TAP.nginx_ingress,
-    TAP.platform_snapshot,
-    TAP.platform_tests,
-    TAP.uploader,
-    TAP.workflow_scheduler,
+    TAP.platform_tests
 ]
+
 
 filtered_offerings_as_parameters = list(filter(lambda x: offerings[x[0]][x[1]][PlanKeys.SMOKE_TESTS],
                                                offerings_as_parameters))

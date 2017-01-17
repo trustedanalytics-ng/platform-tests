@@ -46,7 +46,15 @@ TAP_core_services = {name: {} for name in TAP.get_list_internal()}
 TAP_core_services.update({
     TAP.catalog: {"get_endpoint": "images"},
     TAP.container_broker: {"get_endpoint": "secret/smtp"},
-    TAP.template_repository: {"get_endpoint": "templates"}
+    TAP.template_repository: {"get_endpoint": "templates"},
+    TAP.uploader: {"health_endpoint": "health"},
+    TAP.downloader: {"health_endpoint": "health"},
+    TAP.das: {"health_endpoint": "health"},
+    TAP.dataset_publisher: {"health_endpoint": "health"},
+    TAP.workflow_scheduler: {"health_endpoint": "health"},
+    TAP.platform_snapshot: {"health_endpoint": "health"},
+    TAP.data_catalog: {"health_endpoint": "health"},
+    TAP.metadata_parser: {"health_endpoint": "health"},
 })
 
 for item in TAP_core_services:
