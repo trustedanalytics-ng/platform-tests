@@ -55,18 +55,6 @@ class TestContainerBroker:
         catalog_instance.ensure_in_state(expected_state=TapEntityState.RUNNING)
         return catalog_instance
 
-    def _get_configmap(self, tunnel, configmap_name_suffix):
-        configmaps = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + ["kubectl", "get", "configmaps"])
-        configmaps = str(configmaps)
-        idx = configmaps.index(configmap_name_suffix)
-        return configmaps[idx - 14:idx + len(configmap_name_suffix)]
-
-    def _get_secret(self, tunnel, secret_name_suffix):
-        secrets = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + ["kubectl", "get", "secret"])
-        secrets = str(secrets)
-        idx = secrets.index(secret_name_suffix)
-        return secrets[idx - 14:idx + len(secret_name_suffix)]
-
     @retry.retry(AssertionError, tries=12, delay=2)
     def _send_request(self, url):
         configuration = HttpClientConfiguration(client_type=HttpClientType.BROKER, url=url)
@@ -524,6 +512,7 @@ class TestContainerBroker:
                                                 nats_instance.expose_service_instance, hostname=None, ports=None,
                                                 body=body)
 
+    @pytest.mark.bugs("DPNG-15110 Custom configmap and secret should be deleted after removing service instance")
     def test_get_custom_configmap_secret(self, open_tunnel, catalog_instance_nats):
         """
         <b>Description:</b>
@@ -545,8 +534,10 @@ class TestContainerBroker:
         - Verify if custom secret exists - HTTP response status code is 404 with proper message
         """
         step("Get custom configmap name")
+        short_instance_id = catalog_instance_nats.id.replace("-", "")[:13]
+        short_instance_id = "x{}".format(short_instance_id)
         configmap_name_suffix = "-nats-credentials"
-        configmap_name = self._get_configmap(open_tunnel, configmap_name_suffix)
+        configmap_name = "{}{}".format(short_instance_id, configmap_name_suffix)
         step("Get custom configmap details")
         response = ContainerBrokerInstance.get_configmap(configmap_name=configmap_name)
         assert configmap_name == response["metadata"]["name"]
@@ -554,7 +545,7 @@ class TestContainerBroker:
 
         step("Get custom secret name")
         secret_name_suffix = "-nats-credentials"
-        secret_name = self._get_secret(open_tunnel, secret_name_suffix)
+        secret_name = "{}{}".format(short_instance_id, secret_name_suffix)
         step("Get custom secret details")
         response = ContainerBrokerInstance.get_secret(secret_name=secret_name)
         assert secret_name == response["metadata"]["name"]
