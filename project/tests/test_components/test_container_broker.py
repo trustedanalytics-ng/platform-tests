@@ -166,6 +166,7 @@ class TestContainerBroker:
         step("KUBERNETES: Check that the pod does not exist")
         self._assert_pod_count_with_retry(instance_id=instance.id, expected_pod_count=0)
 
+    @pytest.mark.bugs("DPNG-15092 No pods found for instance after binding two service instances")
     @pytest.mark.components(TAP.catalog, TAP.container_broker)
     def test_bind_and_unbind_instances(self, offering_a, catalog_instance_a, catalog_instance_b):
         """
