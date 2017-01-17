@@ -17,17 +17,17 @@
 from modules.tap_logger import step
 from modules.http_calls.platform import api_service
 
-class TestApiServicePlatformInfo:
-    def test_get_platform_info(self, api_service_admin_client):
+class TestApiServicePlatformComponents:
+    def test_get_platform_components(self, api_service_admin_client):
         """
         <b>Description:</b>
-        Attempts retrieve platform info
+        Attempts retrieve platform components
 
         <b>Input data:</b>
         - Admin credentials
 
         <b>Expected results:</b>
-        - It's possible to retrieve platform info
+        - It's possible to retrieve platform components
         - The platform info has all the required fields
 
         <b>Steps:</b>
@@ -35,19 +35,10 @@ class TestApiServicePlatformInfo:
         - platform info is retrieved by api service
         - verify returned response has all needed fields
         """
-        step("Retrieve the platform info")
-        response = api_service.get_platform_info(client=api_service_admin_client)
-        assert "api_endpoint" in response
-        assert "cli_version" in response
-        assert "cli_url" in response
-        assert "platform_version" in response
-        assert "core_organization" in response
-        assert "external_tools" in response
-        assert "visualizations" in response["external_tools"]
-        for k in response["external_tools"]["visualizations"]:
-            assert "available" in k
-            assert "url" in k
+        step("Retrieve the platform components")
+        response = api_service.get_platform_components(client=api_service_admin_client)
+        for k in response:
+            assert "app_version" in k
+            assert "signature" in k
+            assert "imageVersion" in k
             assert "name" in k
-
-        assert "cdh_version" in response
-        assert "k8s_version" in response

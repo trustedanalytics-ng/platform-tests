@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -428,7 +428,7 @@ def get_metrics_organizations(*, client: HttpClient, org_id: str, time_from: str
 # --------------------------------------- platform info --------------------------------------- #
 
 def get_platform_info(*, client: HttpClient) -> dict:
-    """GET /platform/info
+    """GET /platform_info
 
     Attempts to retrieve the platform info
 
@@ -440,6 +440,21 @@ def get_platform_info(*, client: HttpClient) -> dict:
     """
     return client.request(method=HttpMethod.GET, path="platform_info",
                           msg="Get platform info")
+
+
+def get_platform_components(*, client: HttpClient) -> dict:
+    """GET /platform_components
+
+    Attempts to retrieve the platform components
+
+    Args:
+        client: HttpClient to use
+
+    Return:
+        Platform components as a dictionary
+    """
+    return client.request(method=HttpMethod.GET, path="platform_components",
+                          msg="Get platform components")
 
 # --------------------------------------- CLI resources --------------------------------------- #
 
