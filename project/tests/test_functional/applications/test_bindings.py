@@ -324,6 +324,7 @@ class TestBindingErrors:
                                                 Binding.create, context=context, app_id=Guid.INVALID_GUID,
                                                 service_instance_id=service_instance.id)
 
+    @pytest.mark.bugs("DPNG-15127 [api-tests] Fixture instance_binding fails with unrecoverable error")
     def test_cannot_delete_not_existing_binding(self):
         """
         <b>Description:</b>
@@ -343,6 +344,7 @@ class TestBindingErrors:
         assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_NOT_FOUND, expected_error_message,
                                                 test_binding.delete)
 
+    @pytest.mark.bugs("DPNG-15127 [api-tests] Fixture instance_binding fails with unrecoverable error")
     def test_cannot_delete_binding_using_incorrect_binding_id(self):
         """
         <b>Description:</b>
