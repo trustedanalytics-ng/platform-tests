@@ -63,12 +63,10 @@ class TestCreateService:
                                      ServiceOffering.create_from_binary, context, jar_path=app_jar,
                                      manifest_path=manifest_json, offering_path=offering_file)
 
-    @pytest.mark.bugs("DPNG-14981 [api-tests] Creating offering of the service should be only supported for admin users")
     @priority.high
     @pytest.mark.sample_apps_test
-    @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_create_and_delete_service_offering(self, context, app_jar, offering_json,
-                                                manifest_json, test_user_clients, role):
+    def test_create_and_delete_service_offering_admin(self, context, app_jar, offering_json,
+                                                      manifest_json, api_service_admin_client):
         """
         <b>Description:</b>
         Create service offering, create an instance of it, delete instance and delete offering.
@@ -77,7 +75,7 @@ class TestCreateService:
         1. application jar file
         2. manifest.json file
         3. offering.json file
-        4. user client
+        4. admin client
 
         <b>Expected results:</b>
         Test passes when:
@@ -93,10 +91,9 @@ class TestCreateService:
         4. Delete service instance.
         5. Delete service offering.
         """
-        client = test_user_clients[role]
         step("Register in marketplace")
         service = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
-                                                     offering_path=offering_json, client=client)
+                                                     offering_path=offering_json, client=api_service_admin_client)
         step("Check that service is in marketplace")
         assert_in_with_retry(service, ServiceOffering.get_list)
         step("Check that service is in state 'READY'")
@@ -114,9 +111,34 @@ class TestCreateService:
         instance.delete()
         instance.ensure_deleted()
         step("Delete service")
-        service.delete(client=client)
+        service.delete(client=api_service_admin_client)
         step("Check that service isn't in marketplace")
         assert_not_in_with_retry(service, ServiceOffering.get_list)
+
+    @priority.high
+    @pytest.mark.sample_apps_test
+    def test_user_cannot_create_service_offering(self, context, app_jar, offering_json,
+                                                 manifest_json, test_org_user_client):
+        """
+        <b>Description:</b>
+        Try to create service offering by regular user.
+
+        <b>Input data:</b>
+        1. jar application
+        2. manifest.json file
+        3. user client
+
+        <b>Expected results:</b>
+        Test passes when platform returns a 403 http status with meaningful message.
+
+        <b>Steps:</b>
+        1. Try to create service offering by regular user.
+        """
+        step("Register in marketplace")
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_FORBIDDEN,
+                                     ServiceOffering.create_from_binary, context, jar_path=app_jar,
+                                     manifest_path=manifest_json, offering_path=offering_json,
+                                     client=test_org_user_client)
 
     @priority.medium
     @pytest.mark.sample_apps_test

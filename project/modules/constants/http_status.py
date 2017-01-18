@@ -176,6 +176,7 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_SERVICE_EXISTS = "service with name: {} already exists!"
     MSG_SERVICE_DOES_NOT_EXIST = "100: Key not found"
     MSG_SERVICE_NAME_IS_EMPTY = "Service name should not be empty"
+    MSG_ACCESS_FORBIDDEN = "Access Forbidden"
 
 
 class KubernetesBrokerHttpStatus(HttpStatus):
