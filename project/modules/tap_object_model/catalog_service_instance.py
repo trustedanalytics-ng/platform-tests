@@ -63,6 +63,9 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
     def delete(self):
         catalog_api.delete_service_instance(service_id=self.class_id, instance_id=self.id)
 
+    def cleanup(self):
+        self.delete()
+
     @retry(AssertionError, tries=5, delay=2)
     def ensure_bound(self, src_instance_id):
         this_instance = self.get(service_id=self.class_id, instance_id=self.id)

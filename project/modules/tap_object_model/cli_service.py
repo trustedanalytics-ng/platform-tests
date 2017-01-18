@@ -114,6 +114,9 @@ class CliService(CliObjectSuperclass):
     def delete(self):
         return self.tap_cli.delete_service(["--name", self.name])
 
+    def cleanup(self):
+        self.delete()
+
     def start(self):
         return self.tap_cli.service_start(self.name)
 
