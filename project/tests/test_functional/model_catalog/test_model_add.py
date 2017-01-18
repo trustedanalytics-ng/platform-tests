@@ -43,6 +43,23 @@ class TestModelAdd:
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
     def test_add_new_model_to_organization(self, context, test_user_clients, role, core_org):
+        """
+        <b>Description:</b>
+        Add new model to model catalog.
+
+        <b>Input data:</b>
+        1. User
+        2. User role (user or admin)
+        3. Organization
+        4. Model
+
+        <b>Expected results:</b>
+        Test passes when created model exists on models list.
+
+        <b>Steps:</b>
+        1. Add model to organization.
+        2. Verify that created model is shown on models list.
+        """
         client = test_user_clients[role]
         step("Add model to organization using {}".format(role))
         new_model = ScoringEngineModel.create(context, org_guid=core_org, client=client, **MODEL_METADATA)
@@ -52,6 +69,21 @@ class TestModelAdd:
 
     @priority.high
     def test_cannot_add_new_model_to_organization_with_empty_name(self, context, core_org):
+        """
+        <b>Description:</b>
+        Try to add model with empty name.
+
+        <b>Input data:</b>
+        1. Organization
+        2. Model with empty name
+
+        <b>Expected results:</b>
+        Test passes when model catalog returns a 400 http status.
+
+        <b>Steps:</b>
+        1. Prepare metadata with name contains only spaces.
+        2. Try to add new model with prepared metadata.
+        """
         step("Add model to organization")
         metadata = MODEL_METADATA.copy()
         metadata["name"] = "    "
@@ -60,6 +92,22 @@ class TestModelAdd:
 
     @priority.medium
     def test_cannot_add_model_with_auto_generated_metadata(self, context, core_org):
+        """
+        <b>Description:</b>
+        Try to add model with auto generated metadata.
+
+        <b>Input data:</b>
+        1. Organization
+        2. Model with auto generated metadata
+
+        <b>Expected results:</b>
+        Test passes when added model has auto generated metadata - different than those entered during creation.
+
+        <b>Steps:</b>
+        1. Prepare metadata with auto generated values.
+        2. Try to add new model with prepared metadata.
+        3. Verify that added model contains expected metadata.
+        """
         step("Try to create model with auto-generated metadata")
         metadata_auto_generated = {
             "added_by": 'test-user',
@@ -82,6 +130,21 @@ class TestModelAdd:
     @priority.medium
     @pytest.mark.parametrize("missing_param", ("name", "creation_tool"))
     def test_cannot_add_model_without_a_required_parameter(self, missing_param, core_org):
+        """
+        <b>Description:</b>
+        Try to add model without required parameter.
+
+        <b>Input data:</b>
+        1. Model with missing parameter: name or creation tool.
+        2. Organization
+
+        <b>Expected results:</b>
+        Test passes when model catalog returns a 400 http status.
+
+        <b>Steps:</b>
+        1. Prepare metadata without required parameter.
+        2. Try to add new model with prepared metadata.
+        """
         step("Check that adding a model without a required parameter ({}) causes an error".format(missing_param))
         metadata = MODEL_METADATA.copy()
         del metadata[missing_param]
@@ -91,6 +154,22 @@ class TestModelAdd:
 
     @priority.low
     def test_add_model_with_minimum_required_params(self, context, core_org):
+        """
+        <b>Description:</b>
+        Add new model to model catalog without all params - only required.
+
+        <b>Input data:</b>
+        1. Organization
+        2. Model with minimum required parameters: creation tool and name
+
+        <b>Expected results:</b>
+        Test passes when model is added to model catalog successfully.
+
+        <b>Steps:</b>
+        1. Prepare metadata contains only name and creation tool values which are required.
+        2. Add model with prepared metadata to model catalog.
+        3. Verify that created model is shown on models list.
+        """
         step("Add model to organization")
         metadata = {
             "name": MODEL_METADATA["name"],
@@ -103,6 +182,22 @@ class TestModelAdd:
     @priority.high
     @pytest.mark.parametrize("role", ["admin", "user"])
     def test_add_new_artifact_to_model(self, sample_model, test_user_clients, role):
+        """
+        <b>Description:</b>
+        Add artifact file to the model.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+        2. User
+        3. User role (user or admin)
+
+        <b>Expected results:</b>
+        Test passes when artifact is added to the model successfully.
+
+        <b>Steps:</b>
+        1. Add artifact to the model.
+        2. Verify that added artifact is shown on model's artifacts list.
+        """
         client = test_user_clients[role]
         step("Add new artifact to model using {}".format(role))
         new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, client=client,
@@ -115,6 +210,24 @@ class TestModelAdd:
     @priority.low
     @pytest.mark.parametrize("artifact_actions_key", ("publish_jar_scoring_engine", "publish_tap_scoring_engine"))
     def test_add_new_artifact_to_model_different_actions(self, sample_model, artifact_actions_key, actions):
+        """
+        <b>Description:</b>
+        Add artifact file with action to the model.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+        2. Artifact action to verifying.
+        3. Available options of artifact action.
+
+
+        <b>Expected results:</b>
+        Test passes when artifact is added to the model with properly action.
+
+        <b>Steps:</b>
+        1. Prepare artifact metadata with tested action value.
+        2. Add artifact with prepared metadata to the model.
+        2. Verify that added artifact has expected actions in metadata.
+        """
         action = actions[artifact_actions_key]
         artifact_metadata = self.ARTIFACT_METADATA.copy()
         artifact_metadata["actions"] = action
@@ -125,6 +238,20 @@ class TestModelAdd:
 
     @priority.medium
     def test_cannot_add_new_artifact_without_artifact_file_field(self, sample_model):
+        """
+        <b>Description:</b>
+        Try to add artifact to the model without required filename parameter.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+
+        <b>Expected results:</b>
+        Test passes when model catalog returns a 400 http status.
+
+        <b>Steps:</b>
+        1. Prepare artifact metadata without filename parameter.
+        2. Try to add artifact with prepared metadata to the model.
+        """
         artifact_metadata = self.ARTIFACT_METADATA.copy()
         del artifact_metadata["filename"]
         assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_BAD_REQUEST,
@@ -132,6 +259,21 @@ class TestModelAdd:
 
     @priority.low
     def test_add_new_artifact_without_actions_filed(self, sample_model):
+        """
+        <b>Description:</b>
+        Add artifact file without action to the model.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+
+        <b>Expected results:</b>
+        Test passes when artifact is added to the model successfully and artifact's actions list is empty.
+
+        <b>Steps:</b>
+        1. Prepare artifact metadata without action parameter.
+        2. Add artifact with prepared metadata to the model.
+        3. Verify that added artifact has an empty list of actions in metadata.
+        """
         artifact_metadata = self.ARTIFACT_METADATA.copy()
         del artifact_metadata["actions"]
         step("Add new artifact to model")
@@ -142,6 +284,20 @@ class TestModelAdd:
 
     @priority.low
     def test_cannot_add_new_artifact_to_non_existing_model(self):
+        """
+        <b>Description:</b>
+        Try to add artifact to the non existing model.
+
+        <b>Input data:</b>
+        1. Non existing model guid
+
+        <b>Expected results:</b>
+        Test passes when model catalog returns a 404 http status.
+
+        <b>Steps:</b>
+        1. Prepare non existing guid of model.
+        2. Try to add artifact with prepared metadata to the model with non existing guid.
+        """
         non_existing_model = Guid.NON_EXISTING_GUID
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
                                      ModelArtifact.upload_artifact, model_id=non_existing_model,
@@ -150,6 +306,23 @@ class TestModelAdd:
     @priority.medium
     @pytest.mark.parametrize("role", ["admin", "user"])
     def test_artifact_file_has_been_properly_added(self, sample_model, test_user_clients, role):
+        """
+        <b>Description:</b>
+        Added artifact file has been added properly to the model.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+        2. User
+        3. User role (user or admin)
+
+        <b>Expected results:</b>
+        Test passes when added artifact is the same as inserted one.
+
+        <b>Steps:</b>
+        1. Add artifact to the model.
+        2. Get added artifact from model.
+        3. Verify that content of downloaded artifact is correct.
+        """
         client = test_user_clients[role]
         step("Add new artifact to model using {}".format(role))
         new_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, client=client, **self.ARTIFACT_METADATA)
@@ -160,6 +333,20 @@ class TestModelAdd:
 
     @priority.low
     def test_cannot_add_artifact_with_invalid_action(self, sample_model):
+        """
+        <b>Description:</b>
+        Try to add artifact with invalid action.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+
+        <b>Expected results:</b>
+        Test passes when model catalog returns a 400 http status.
+
+        <b>Steps:</b>
+        1. Prepare artifact metadata with invalid action.
+        2. Try to add artifact with prepared metadata to the model.
+        """
         step("Try to add artifact with invalid action")
         artifact_metadata = self.ARTIFACT_METADATA.copy()
         artifact_metadata["actions"] = ["invalid-action"]
@@ -169,6 +356,21 @@ class TestModelAdd:
 
     @priority.low
     def test_can_add_artifact_with_two_actions(self, sample_model):
+        """
+        <b>Description:</b>
+        Added artifact file with two actions to the model.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+
+        <b>Expected results:</b>
+        Test passes when added artifact has two actions.
+
+        <b>Steps:</b>
+         1. Prepare artifact metadata with two actions.
+         2. Add artifact with prepared metadata to the model.
+         3. Verify that added artifact has expected actions in metadata.
+        """
         step("Try to add artifact with two actions")
         artifact_metadata = self.ARTIFACT_METADATA.copy()
         artifact_metadata["actions"].append(ModelArtifact.ARTIFACT_ACTIONS["publish_tap_scoring_engine"])
@@ -177,6 +379,21 @@ class TestModelAdd:
 
     @priority.low
     def test_can_add_more_than_one_artifacts_to_model(self, sample_model):
+        """
+        <b>Description:</b>
+        Add two artifacts to the one model.
+
+        <b>Input data:</b>
+        1. Example model existing on models list in model catalog.
+
+        <b>Expected results:</b>
+        Test passes when first and second artifacts are added to the model successfully.
+
+        <b>Steps:</b>
+        1. Add first artifact to the model.
+        2. Add second artifact to the model.
+        3. Verify that both artifacts are shown on model's artifacts list.
+        """
         step("Add new artifact to model")
         uploaded_first_artifact = ModelArtifact.upload_artifact(model_id=sample_model.id, **self.ARTIFACT_METADATA)
         first_artifact = ModelArtifact.get_artifact(model_id=sample_model.id, artifact_id=uploaded_first_artifact.id)
