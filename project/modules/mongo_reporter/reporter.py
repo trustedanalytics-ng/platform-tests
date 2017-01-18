@@ -43,8 +43,6 @@ class MongoReporter(BaseReporter):
 
     def __init__(self, *args, **kwargs):
         stress_run_id = config.stress_run_id
-        if stress_run_id is not None:
-            stress_run_id = ObjectId(stress_run_id)
         self._total_test_counter = 0
         mongo_run_document = {
             "appstack_version": config.appstack_version,  # TODO is it still needed in TAP 0.8?

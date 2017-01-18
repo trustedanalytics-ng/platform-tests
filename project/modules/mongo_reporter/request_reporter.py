@@ -17,6 +17,7 @@
 import time
 from datetime import datetime
 
+import pytest
 from requests import PreparedRequest
 
 import config
@@ -48,7 +49,9 @@ class RequestReporter:
         logger.debug('New request logged: {}'.format(request))
         self.requests.append(request)
 
-    def send_to_db(self):
+    def send_to_db(self, test_name):
+        for request in self.requests:
+            request['test_name'] = test_name
         logger.info('Sending logged requests to db ({} requests)'.format(len(self.requests)))
         for request in self.requests:
             self._db_client.insert(collection_name=self.COLLECTION_NAME, document=request)
@@ -80,5 +83,8 @@ def log_request(func: callable):
     return wrapper
 
 
-def pytest_sessionfinish():
-    request_reporter.send_to_db()
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    test_name = item.nodeid.split('::')[-1]
+    request_reporter.send_to_db(test_name)

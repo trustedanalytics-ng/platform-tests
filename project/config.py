@@ -16,6 +16,8 @@
 
 import os
 
+from bson import ObjectId
+
 from modules.constants import TapComponent as TAP
 from tap_component_config import api_service, third_party_services
 
@@ -197,6 +199,8 @@ test_duration = get_int("PT_DURATION", 10) * 60
 locust_port = os.environ.get("PT_LOCUST_PORT", "8089")
 locust_address = "http://localhost:{}".format(locust_port)
 stress_run_id = os.environ.get("PT_STRESS_RUN_ID", None)
+if stress_run_id:
+    stress_run_id = ObjectId(stress_run_id)
 log_metrics_interval = get_int("PT_LOG_METRICS_INTERVAL", 0)
 log_requests = get_bool("PT_LOG_REQUESTS", False)
 unique_id = os.environ.get("PT_UNIQUE_ID", None)
