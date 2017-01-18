@@ -19,7 +19,7 @@ import pytest
 from modules.constants import TapMessage, TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import CliOffering
+from modules.tap_object_model import CliOffering, CliService
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
 
@@ -30,10 +30,14 @@ pytestmark = [pytest.mark.components(TAP.cli)]
 class TestCliCatalogOffering:
     short = False
 
-    @classmethod
     @pytest.fixture(scope="class")
-    def offering(cls, class_context, tap_cli):
+    def offering(self, class_context, tap_cli):
         return CliOffering.create(context=class_context, tap_cli=tap_cli)
+
+    @pytest.fixture(scope="class")
+    def service(self, class_context, sample_service, tap_cli):
+        return CliService.create(context=class_context, offering_name=sample_service.label,
+                                 plan_name=sample_service.service_plans[0].name, tap_cli=tap_cli)
 
     @priority.high
     def test_create_and_delete_offering(self, context, tap_cli):
@@ -122,7 +126,7 @@ class TestCliCatalogOffering:
                                                   tap_cli.create_offering, "")
 
     @priority.low
-    def test_cannot_delete_offering_with_existing_instance(self, tap_cli, mysql_instance):
+    def test_cannot_delete_offering_with_existing_instance(self, tap_cli, service):
         """
         <b>Description:</b>
         Check that CLI cannot delete offering that has instance created
@@ -139,7 +143,7 @@ class TestCliCatalogOffering:
         3. Verify that attempt to delete offering will end up with proper message shown.
         """
         assert_raises_command_execution_exception(1, TapMessage.CANNOT_DELETE_OFFERING_WITH_INSTANCE,
-                                                  tap_cli.delete_offering, mysql_instance.offering_label)
+                                                  tap_cli.delete_offering, service.offering_name)
 
     @priority.low
     def test_cannot_create_offering_without_json(self, tap_cli):

@@ -118,6 +118,7 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         response = api.get_offerings(client=client)
         return cls._list_from_response(response, client)
 
+    @retry(AssertionError, tries=10, delay=2)
     def delete(self, client=None):
         api.delete_offering(client=self._get_client(client), offering_id=self.id)
 
