@@ -253,7 +253,8 @@ class ContainerBrokerHttpStatus(HttpStatus):
     MSG_SERVICES_NOT_FOUND = "service instance {} is not found"
     MSG_CONFIGMAPS_NOT_FOUND = "configmaps \\\"{}\\\" not found"
     MSG_SECRET_NOT_FOUND = "secrets \\\"{}\\\" not found"
-    MSG_CANNOT_EXPOSE = "can not expose instance: {} port: {} does not exist in Service!"
+    MSG_CANNOT_EXPOSE = "can not expose instance: {}. Ports must match service ports. " \
+                        "Port: {} does not exist in Service!"
     MSG_EMPTY_HOSTNAME = "Ingress.extensions \\\"{}\\\" is invalid: spec.rules[0].host: Invalid value: " \
                          "\\\"{}\\\": must match the regex " \
                          "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)* (e.g. 'example.com')"

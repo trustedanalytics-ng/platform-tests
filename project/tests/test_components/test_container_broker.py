@@ -462,6 +462,7 @@ class TestContainerBroker:
                                                 ContainerBrokerInstance.unexpose_service_with_instance_id,
                                                 instance_id=self.INVALID_PARAM)
 
+    @pytest.mark.bugs("DPNG-15108 Invalid message format for exposing service in container-broker with invalid port")
     def test_expose_service_invalid_port(self, catalog_instance_nats):
         """
         <b>Description:</b>
@@ -477,12 +478,12 @@ class TestContainerBroker:
 
         <b>Steps:</b>
         - Try to expose service instance.
-        - Verify that HTTP response status code is 500 with proper message.
+        - Verify that HTTP response status code is 400 with proper message.
         """
         nats_instance = ContainerBrokerInstance(instance_id=catalog_instance_nats.id)
         step("Try to expose service instance with invalid port")
         expected_msg = ContainerBrokerHttpStatus.MSG_CANNOT_EXPOSE.format(catalog_instance_nats.id, self.INVALID_PORT)
-        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_INTERNAL_SERVER_ERROR, expected_msg,
+        assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_BAD_REQUEST, expected_msg,
                                                 nats_instance.expose_service_instance, hostname=self.HOSTNAME,
                                                 ports=[self.INVALID_PORT])
 
