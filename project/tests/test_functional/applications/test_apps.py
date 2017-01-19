@@ -108,6 +108,7 @@ class TestTapApp:
         app.delete()
         assertions.assert_not_in_by_id_with_retry(app.id, Application.get_list)
 
+    @pytest.mark.bugs("DPNG-15159 [api-tests] Creating offering from an application should be supported only for admin users")
     @priority.medium
     @pytest.mark.sample_apps_test
     @pytest.mark.parametrize("role", ["admin", "user"])
