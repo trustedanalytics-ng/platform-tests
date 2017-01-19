@@ -41,7 +41,6 @@ class TestGearpumpConsole:
     def go_to_dashboard(self):
         self.gearpump.go_to_dashboard()
 
-    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
     def test_0_create_gearpump_instance(self, class_context, test_org):
         """
         <b>Description:</b>
@@ -67,6 +66,7 @@ class TestGearpumpConsole:
         yarn_app_status = self.gearpump.get_yarn_app_status()
         assert yarn_app_status == YarnAppStatus.RUNNING
 
+    @pytest.mark.bugs("DPNG-15154 Gearpump dashboard url doesn't work")
     def test_1_check_gearpump_ui_app_created(self):
         """
         <b>Description:</b>
@@ -128,7 +128,7 @@ class TestGearpumpConsole:
         step("Check that application is stopped")
         assert not self.dag_app.is_started
 
-    @pytest.mark.bugs("DPNG-13932 '[gui-tests] Failed to delete Apache Gearpump instance' ")
+    @pytest.mark.bugs("DPNG-15071 Gearpump service removal issue")
     def test_4_delete_gearpump_instance(self):
         """
         <b>Description:</b>
