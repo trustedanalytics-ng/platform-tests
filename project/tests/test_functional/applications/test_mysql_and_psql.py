@@ -60,6 +60,7 @@ class TestMysqlAndPsql(object):
             expected_rows.append(self._create_expected_row(app, self.test_table_name, id, row_value))
         return expected_rows
 
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     def test_create_and_delete_table(self, db_type, db_type_key):
@@ -88,6 +89,7 @@ class TestMysqlAndPsql(object):
         table_list = Table.get_list(app)
         assert test_table not in table_list
 
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
     @priority.medium
     def test_get_table_columns_msql(self, db_type):
         """
@@ -138,6 +140,7 @@ class TestMysqlAndPsql(object):
         for column in expected_columns:
             assert column in columns
 
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     @pytest.mark.parametrize("row_values", row_value_list)
@@ -166,6 +169,7 @@ class TestMysqlAndPsql(object):
         row = Row.get(app, self.test_table_name, row_id=1)
         assert row == expected_row
 
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
     @priority.low
     @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     def test_post_multiple_rows(self, db_type, db_type_key):
@@ -190,6 +194,7 @@ class TestMysqlAndPsql(object):
         rows = Row.get_list(app, self.test_table_name)
         assert rows == expected_rows
 
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     def test_put_row(self, db_type, db_type_key):
@@ -217,6 +222,7 @@ class TestMysqlAndPsql(object):
         row = Row.get(app, self.test_table_name, row_id=expected_rows[1].id)
         assert expected_rows[1] == row
 
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
     @priority.medium
     @pytest.mark.parametrize("db_type_key", ("app_bound_mysql", "app_bound_psql"))
     def test_delete_row(self, db_type, db_type_key):
