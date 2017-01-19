@@ -26,14 +26,15 @@ from tap_component_config import offerings_as_parameters
 @pytest.mark.usefixtures("cli_login")
 class TestCreatingServiceInstancesViaCli:
 
+    @pytest.mark.bugs("DPNG-15071 Gearpump service removal issue")
+    @pytest.mark.bugs("DPNG-10429 [TAP-NG] Brokers - Elasticsearch")
+    @pytest.mark.bugs("DPNG-15149 [api-tests] Move all tests using hbase to platform-tests/project/test_TAP_09/")
+    @pytest.mark.bugs("DPNG-13433 Adjust Jupyter offering to TAP Offerings doc")
+    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
+    @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0")
     @long
     @priority.low
     @pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
-    @pytest.mark.bugs("DPNG-14838 GearPump instance cannot be created")
-    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
-    @pytest.mark.bugs("DPNG-13185 Hive, zookeeper instances fail to be deleted")
-    @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir and encrypted-dir")
-    @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0")
     def test_create_and_delete_instance_all(self, context, service_label, plan_name, tap_cli):
         """
         <b>Description:</b>
