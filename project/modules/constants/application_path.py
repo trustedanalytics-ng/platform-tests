@@ -31,6 +31,8 @@ class ApplicationPath(object):
     SAMPLE_JAVA_APP_TAR = os.path.join(SAMPLE_JAVA_APP, "app.tar.gz")
     SAMPLE_GO_APP = os.path.join(SAMPLE_APPS_PATH, "sample-go-app")
     SAMPLE_GO_APP_TAR = os.path.join(SAMPLE_GO_APP, "app.tar.gz")
+    SAMPLE_NODEJS_APP = os.path.join(SAMPLE_APPS_PATH, "sample-nodejs-app")
+    SAMPLE_NODEJS_APP_TAR = os.path.join(SAMPLE_NODEJS_APP, "app.tar.gz")
     DATA_REPO = os.path.join(BASE_PATH, "data-repo")
 
 

@@ -1,0 +1,5 @@
+{
+    "type": "NODEJS",
+    "name": "sample-nodejs-app",
+    "instances": 1
+}

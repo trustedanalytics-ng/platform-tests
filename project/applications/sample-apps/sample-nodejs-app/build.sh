@@ -1,3 +1,4 @@
+#!/bin/bash -e
 #
 # Copyright (c) 2016 Intel Corporation
 #
@@ -14,7 +15,9 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.703'
+TAR_NAME=app.tar.gz
 
+npm install
 
+rm -f $TAR_NAME
+tar -zcvf $TAR_NAME *
