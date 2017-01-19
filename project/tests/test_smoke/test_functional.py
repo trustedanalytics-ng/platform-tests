@@ -237,8 +237,8 @@ def test_add_and_delete_transfer_from_file(core_org, context):
     transfer_flow(transfer, core_org)
 
 
+@pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
 @long
-@pytest.mark.bugs("DPNG-11638 Creation of some service-instances from Marketplace end with failure")
 @pytest.mark.components(TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
                         TAP.zookeeper_wssb_broker)
@@ -300,6 +300,7 @@ def test_push_sample_app_and_check_response(sample_app):
     assert response.status_code == 200
 
 
+@pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
 @pytest.mark.bugs("DPNG-11419 [TAP-NG] Cannot log in to tap using tap cli")
 def test_push_db_app_and_check_response(sample_db_app):
     """
