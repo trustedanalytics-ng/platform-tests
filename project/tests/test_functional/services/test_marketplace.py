@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, T
 
 
 class TestMarketplaceServices:
-    SERVICES_TESTED_SEPARATELY = [ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.SEAHORSE]
+    SERVICES_TESTED_SEPARATELY = [ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.SEAHORSE, ServiceLabels.H2O]
 
     def _create_jupyter_instance_and_login(self, context, param_key, param_value):
         param = {param_key: param_value}

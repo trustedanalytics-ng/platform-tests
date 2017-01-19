@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.service_exposer)]
 class TestDataScienceInstances(object):
 
     @priority.high
-    @pytest.mark.parametrize("service_label", [ServiceLabels.JUPYTER])
+    @pytest.mark.parametrize("service_label", [ServiceLabels.JUPYTER, ServiceLabels.H2O])
     def test_create_and_delete_service_instances(self, context, service_label, marketplace_offerings):
         service_type = next((s for s in marketplace_offerings if s.label == service_label), None)
         assert service_type is not None, "{} service is not available in Marketplace".format(service_label)
@@ -49,3 +49,5 @@ class TestDataScienceInstances(object):
         step("Delete service instance")
         instance.delete()
         instance.ensure_deleted()
+
+
