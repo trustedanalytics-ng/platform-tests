@@ -53,6 +53,7 @@ class TestHue:
         step("Publish dataset in HUE")
         dataset.api_publish()
 
+    pytest.mark.bugs("DPNG-15157 502 Bad Gateway - on viewing dataset in hue")
     def test_1_check_database(self, test_org):
         """
         <b>Description:</b>
