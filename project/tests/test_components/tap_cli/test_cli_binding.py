@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.components(TAP.cli)]
 
 
 @pytest.fixture(scope="module")
-def offering(session_context, tap_cli):
+def offering(session_context, tap_cli, cli_login):
     return CliOffering.create(context=session_context, tap_cli=tap_cli)
 
 
