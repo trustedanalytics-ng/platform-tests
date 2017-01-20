@@ -227,21 +227,21 @@ def get_app_bindings(*, client: HttpClient, app_id: str):
     return response["resources"]
 
 
-def bind_app(*, client: HttpClient, app_id, service_instance_id: str):
+def bind_svc(*, client: HttpClient, app_id, service_instance_id: str):
     """ POST applications/{app_id}/bindings """
     body = {
         'service_id': service_instance_id
     }
     return client.request(method=HttpMethod.POST,
                           path="applications/{}/bindings".format(app_id),
-                          body=body, msg="Bind app and service")
+                          body=body, msg="Bind service and app")
 
 
-def unbind_app(*, client: HttpClient, app_id: str, service_instance_id: str):
+def unbind_svc(*, client: HttpClient, app_id: str, service_instance_id: str):
     """ DELETE /applications/{app_id}/bindings/services/{service_instance_id} """
     return client.request(method=HttpMethod.DELETE,
                           path="applications/{}/bindings/services/{}".format(app_id, service_instance_id),
-                          msg="Unbind app from service")
+                          msg="Unbind service from app")
 
 
 # --------------------------------------- services --------------------------------------- #
@@ -320,22 +320,31 @@ def get_service_bindings(*, client: HttpClient, service_id: str):
     return response["resources"]
 
 
-def bind_service(*, client: HttpClient, service_id: str, instance_id: str):
+def bind_service(*, client: HttpClient, service_id: str, application_id_to_bound=None, service_id_to_bound=None):
     """ POST /services/{service_id}/bindings """
-    body = {
-        "instance_id": instance_id
-    }
-    return client.request(method=HttpMethod.POST, path="services/{}/bindings".format(service_id), body=body,
-                          msg="Bind service and instance")
+    body = {}
+    if application_id_to_bound is not None:
+        body["application_id"] = application_id_to_bound
+    if service_id_to_bound is not None:
+        body["service_id"] = service_id_to_bound
+
+    response = client.request(method=HttpMethod.POST, path="services/{}/bindings".format(service_id), body=body,
+                              raw_response=True, msg="Bind service or application to service")
+    return response
 
 
-def unbind_service(*, client: HttpClient, service_id: str, instance_id: str):
-    """ POST /services/{service_id}/bindings """
-    body = {
-        "instance_id": instance_id
-    }
-    return client.request(method=HttpMethod.POST, path="services/{}/bindings".format(service_id), body=body,
-                          msg="Unbind service and instance")
+def unbind_app_from_service(*, client: HttpClient, service_id: str, application_id_to_unbound: str):
+    """ DELETE /services/{service_id}/bindings/applications/{application_id_to_unbound} """
+    return client.request(method=HttpMethod.DELETE,
+                          path="services/{}/bindings/applications/{}".format(service_id, application_id_to_unbound),
+                          msg="Unbind app from service")
+
+
+def unbind_svc_from_service(*, client: HttpClient, service_id: str, service_id_to_unbound: str):
+    """ DELETE /services/{service_id}/bindings/services/{service_id_to_unbound} """
+    return client.request(method=HttpMethod.DELETE,
+                          path="services/{}/bindings/services/{}".format(service_id, service_id_to_unbound),
+                          msg="Unbind service from service")
 
 
 # --------------------------------------- users --------------------------------------- #

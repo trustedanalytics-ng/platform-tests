@@ -205,6 +205,31 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
     def scale(self, *, replicas: int, client: HttpClient=None):
         return api.scale_application(app_id=self.id, replicas=replicas, client=self._get_client(client))
 
+    def bind(self, *, service_instance_id, client: HttpClient=None):
+        return api.bind_svc(client=self._get_client(client), app_id=self.id, service_instance_id=service_instance_id)
+
+    def unbind(self, *, service_instance_id, client: HttpClient=None):
+        return api.unbind_svc(client=self._get_client(client), app_id=self.id, service_instance_id=service_instance_id)
+
+    def get_bindings(self, client: HttpClient=None):
+        return api.get_app_bindings(client=self._get_client(client), app_id=self.id)
+
+    @retry(AssertionError, tries=10, delay=2)
+    def ensure_bound(self, service_instance_id, client: HttpClient=None):
+        bindings = self.get_bindings(client=client)
+        assert bindings is not None
+        ids = next((e["entity"]["service_instance_guid"] for e in bindings), None)
+        assert service_instance_id in ids
+
+    @retry(AssertionError, tries=10, delay=2)
+    def ensure_unbound(self, service_instance_id, client: HttpClient = None):
+        bindings = self.get_bindings(client=client)
+        if bindings is not None:
+            ids = next((e["entity"]["service_instance_guid"] for e in bindings), None)
+            assert service_instance_id not in ids
+        else:
+            assert bindings is None
+
     @retry(AssertionError, tries=15, delay=3)
     def ensure_responding(self, *, path=''):
         response = self.api_request(path=path)

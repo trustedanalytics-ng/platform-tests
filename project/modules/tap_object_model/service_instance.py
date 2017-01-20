@@ -101,6 +101,16 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
                                     client=client)
         return cls._list_from_response(response, client)
 
+    @property
+    def is_stopped(self) -> bool:
+        """Returns True if service is stopped."""
+        return self.state.upper() == TapEntityState.STOPPED
+
+    @property
+    def is_running(self) -> bool:
+        """Returns True if any of the service instances are running."""
+        return self.state == TapEntityState.RUNNING
+
     @retry(AssertionError, tries=60, delay=5)
     def ensure_running(self, client: HttpClient=None):
         self._refresh(client=client)
@@ -157,6 +167,33 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
             client: HttpClient to use
         """
         api.restart_service(srv_id=self.id, client=self._get_client(client))
+
+    def bind(self, application_id_to_bound: str=None, service_id_to_bound: str=None, client: HttpClient=None):
+        api.bind_service(client=self._get_client(client), service_id=self.id,
+                         application_id_to_bound=application_id_to_bound, service_id_to_bound=service_id_to_bound)
+
+    def unbind_app(self, *, application_id: str, client: HttpClient=None):
+        return api.unbind_app_from_service(client=self._get_client(client), service_id=self.id,
+                                           application_id_to_unbound=application_id)
+
+    def get_bindings(self, client: HttpClient=None):
+        return api.get_service_bindings(client=self._get_client(client), service_id=self.id)
+
+    @retry(AssertionError, tries=10, delay=2)
+    def ensure_unbound(self, application_id, client: HttpClient = None):
+        bindings = self.get_bindings(client=client)
+        if bindings is not None:
+            ids = next((e["entity"]["app_guid"] for e in bindings), None)
+            assert application_id not in ids
+        else:
+            assert bindings is None
+
+    @retry(AssertionError, tries=30, delay=2)
+    def ensure_bound(self, application_id, client: HttpClient = None):
+        bindings = self.get_bindings(client=client)
+        assert bindings is not None
+        ids = next((e["entity"]["app_guid"] for e in bindings), None)
+        assert application_id in ids
 
     def delete(self, client: HttpClient=None):
         api.delete_service(service_id=self.id, client=self._get_client(client))

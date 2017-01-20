@@ -16,13 +16,15 @@
 
 import pytest
 
-from modules.constants import ApiServiceHttpStatus, CatalogHttpStatus, TapApplicationType, TapEntityState, TapComponent as TAP
+from modules.constants import ApiServiceHttpStatus, CatalogHttpStatus, TapApplicationType, ServiceLabels, \
+    ServicePlan, TapEntityState, TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
 from modules.http_calls.platform import api_service, catalog as catalog_api
 from modules.markers import priority
 from modules.tap_logger import step, log_fixture
-from modules.tap_object_model import Application, CatalogApplicationInstance
+from modules.tap_object_model import Application, CatalogApplicationInstance, ServiceInstance
 from modules.tap_object_model.prep_app import PrepApp
+from modules.test_names import generate_test_object_name
 from tests.fixtures import assertions
 
 
@@ -32,6 +34,8 @@ logged_components = (TAP.api_service, TAP.catalog)
 @pytest.mark.usefixtures("open_tunnel")
 class TestApiServiceApplication:
     EXPECTED_MESSAGE_WHEN_APP_PUSHED_TWICE = "Bad response status: 409"
+    APPLICATION_INVALID_ID = generate_test_object_name(short=True)
+    SERVICE_INVALID_ID = generate_test_object_name(short=True)
 
     @pytest.fixture(scope="class")
     def sample_app(self, class_context, test_sample_apps, api_service_admin_client):
@@ -46,6 +50,15 @@ class TestApiServiceApplication:
                                        client=api_service_admin_client)
         application.ensure_running()
         return application
+
+    @pytest.fixture(scope="class")
+    def service_instance(self, class_context):
+        log_fixture("Create sample service instance")
+        instance = ServiceInstance.create_with_name(class_context, offering_label=ServiceLabels.RABBIT_MQ,
+                                                    plan_name=ServicePlan.SINGLE_SMALL)
+        step("Ensure that instance is running")
+        instance.ensure_running()
+        return instance
 
     @priority.low
     @pytest.mark.components(TAP.api_service)
@@ -340,3 +353,425 @@ class TestApiServiceApplication:
         step("Check that application has been removed")
         apps = Application.get_list(client=api_service_admin_client)
         assert application not in apps
+
+    @pytest.mark.bug("DPNG-15196 Error should be returned instead of response code 200 after binding application"
+                     "to service with empty id")
+    @priority.high
+    @pytest.mark.components(TAP.api_service)
+    def test_bind_invalid_ids(self, sample_java_app, service_instance, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to bind the application and service with invalid ids.
+
+        <b>Input data:</b>
+        - Sample application that was already pushed
+        - Sample service that was already pushed
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Binding application and service with invalid ids is not possible.
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Service is pushed
+        - Try to bind application to service with invalid application id
+        - Verify that HTTP response status code is 404 with proper message.
+        - Try to bind service to application with invalid service id
+        - Verify that HTTP response status code is 404 with proper message.
+        - Try to bind application and service to service with invalid application and service ids
+        - Verify that HTTP response status code is 404 with proper message.
+        - Try to bind application to service with empty application id
+        - Verify that HTTP response status code is 400 with proper message.
+        - Try to bind service to service with empty service id
+        - Verify that HTTP response status code is 400 with proper message.
+        """
+        assert sample_java_app.bindings is None
+        assert service_instance.bindings == []
+
+        step("Bind invalid application to service")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_APP_NOT_FOUND.
+                                                format(self.APPLICATION_INVALID_ID, self.APPLICATION_INVALID_ID),
+                                                service_instance.bind,
+                                                application_id_to_bound=self.APPLICATION_INVALID_ID,
+                                                client=api_service_admin_client)
+        step("Verify there are no bindings in service")
+        assert service_instance.bindings == []
+
+        step("Bind invalid service to application")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_SERVICE_NOT_FOUND,
+                                                sample_java_app.bind, service_instance_id=self.SERVICE_INVALID_ID,
+                                                client=api_service_admin_client)
+        step("Verify there are no bindings in application")
+        assert sample_java_app.bindings is None
+
+        step("Bind invalid application and service to service")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_ONLY_ONE_ID_EXPECTED.
+                                                format(self.APPLICATION_INVALID_ID, self.APPLICATION_INVALID_ID),
+                                                service_instance.bind,
+                                                application_id_to_bound=self.APPLICATION_INVALID_ID,
+                                                service_id_to_bound=self.SERVICE_INVALID_ID,
+                                                client=api_service_admin_client)
+        step("Verify there are no bindings in service")
+        assert service_instance.bindings == []
+
+        step("Bind application to service with empty id")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
+                                                ApiServiceHttpStatus.MSG_CANNOT_BOUND_INSTANCE.
+                                                format("", service_instance.id),
+                                                service_instance.bind,
+                                                application_id_to_bound="",
+                                                client=api_service_admin_client)
+        step("Verify there are no bindings in service")
+        assert service_instance.bindings == []
+
+        step("Bind service to service with empty id")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
+                                                ApiServiceHttpStatus.MSG_CANNOT_BOUND_INSTANCE.
+                                                format("", service_instance.id),
+                                                service_instance.bind,
+                                                service_id_to_bound="",
+                                                client=api_service_admin_client)
+        step("Verify there are no bindings in service")
+        assert service_instance.bindings == []
+
+    @priority.high
+    @pytest.mark.components(TAP.api_service)
+    def test_unbind_invalid_ids(self, sample_java_app, service_instance, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Tries to unbind the application and service with invalid ids.
+
+        <b>Input data:</b>
+        - Sample application that was already pushed
+        - Sample service that was already pushed
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Unbinding application and service with invalid ids is not possible.
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Service is pushed
+        - Try to unbind application from service with invalid application id
+        - Verify that HTTP response status code is 404 with proper message.
+        - Try to unbind service to application with invalid service id
+        - Verify that HTTP response status code is 404 with proper message.
+        """
+        assert sample_java_app.bindings is None
+        assert service_instance.bindings == []
+
+        step("Try to remove non-existent application binding from service")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_APP_NOT_FOUND.
+                                                format(self.APPLICATION_INVALID_ID, self.APPLICATION_INVALID_ID),
+                                                service_instance.unbind_app, application_id=self.APPLICATION_INVALID_ID,
+                                                client=api_service_admin_client)
+
+        step("Try to remove non-existent service binding from application")
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+                                                ApiServiceHttpStatus.MSG_SERVICE_NOT_FOUND,
+                                                sample_java_app.unbind, service_instance_id=self.SERVICE_INVALID_ID,
+                                                client=api_service_admin_client)
+
+    def app_ensure_bound(self, sample_java_app, service_instance, api_service_admin_client):
+        sample_java_app.ensure_bound(service_instance.id, client=api_service_admin_client)
+        step("Verify there is a single binding in application")
+        app_bindings = sample_java_app.get_bindings(client=api_service_admin_client)
+        assert len(app_bindings) == 1
+        assert app_bindings[0]["entity"]["service_instance_guid"] == service_instance.id
+        assert app_bindings[0]["entity"]["service_instance_name"] == service_instance.name
+        step("Verify there are no bindings in service")
+        assert service_instance.bindings == []
+
+    def svc_ensure_bound(self, sample_java_app, service_instance, api_service_admin_client):
+        service_instance.ensure_bound(sample_java_app.id, client=api_service_admin_client)
+        step("Verify there is a binding for service")
+        svc_bindings = service_instance.get_bindings(client=api_service_admin_client)
+        assert len(svc_bindings) == 1
+        step("Verify there is a single binding in application")
+        app_bindings = sample_java_app.get_bindings(client=api_service_admin_client)
+        assert len(app_bindings) == 1
+        assert app_bindings[0]["entity"]["service_instance_guid"] == service_instance.id
+        assert app_bindings[0]["entity"]["service_instance_name"] == service_instance.name
+
+    def check_bindings(self, sample_java_app, service_instance, api_service_admin_client):
+        step("Check whether bindings sections is available in application")
+        app = Application.get(sample_java_app.id, client=api_service_admin_client)
+        assert len(app.bindings) == 1
+        step("Check whether bindings section is available in service")
+        svc = ServiceInstance.get(service_id=service_instance.id, client=api_service_admin_client)
+        assert len(svc.bindings) == 1
+
+    def svc_ensure_unbound(self, sample_java_app, service_instance, api_service_admin_client):
+        service_instance.ensure_unbound(sample_java_app.id, client=api_service_admin_client)
+        svc_bindings = service_instance.get_bindings(client=api_service_admin_client)
+        assert svc_bindings is None
+
+    def app_ensure_unbound(self, sample_java_app, service_instance, api_service_admin_client):
+        sample_java_app.ensure_unbound(service_instance.id, client=api_service_admin_client)
+        app_bindings = sample_java_app.get_bindings(client=api_service_admin_client)
+        assert app_bindings is None
+
+    @priority.high
+    @pytest.mark.components(TAP.api_service)
+    def test_bind_unbind_application_to_service(self, sample_java_app, service_instance, api_service_admin_client):
+        """
+        <b>Description:</b>
+        Bind and unbind the application and service.
+
+        <b>Input data:</b>
+        - Sample application that was already pushed
+        - Sample service that was already pushed
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Binding and unbinding application and service is possible.
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Service is pushed
+        - Bind service to application
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify there is a single binding in application
+        - Verify there are no bindings in service
+
+        - Bind application to service
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify there is a binding for service
+        - Verify there is a single binding in application
+
+        - Try to remove application bindings from service instance
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify the service has no bindings
+
+        - Try to remove service bindings from application instance
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify the application has no bindings
+        """
+        if sample_java_app.is_stopped:
+            sample_java_app.start()
+            sample_java_app.ensure_running()
+        if service_instance.is_stopped:
+            service_instance.start()
+            service_instance.ensure_running()
+
+        step("Bind service to application")
+        sample_java_app.bind(service_instance_id=service_instance.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+
+        self.app_ensure_bound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Bind application to service")
+        service_instance.bind(application_id_to_bound=sample_java_app.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+
+        self.svc_ensure_bound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Check whether bindings sections is available")
+        self.check_bindings(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Try to remove application bindings from service instance")
+        service_instance.unbind_app(application_id=sample_java_app.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+        step("Verify the service has no bindings")
+        self.svc_ensure_unbound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Try to remove service bindings from application instance")
+        sample_java_app.unbind(service_instance_id=service_instance.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+        step("Verify the application has no bindings")
+        self.app_ensure_unbound(sample_java_app, service_instance, api_service_admin_client)
+
+    @priority.high
+    @pytest.mark.components(TAP.api_service)
+    def test_bind_unbind_stopped_application_to_service(self, sample_java_app, service_instance,
+                                                        api_service_admin_client):
+        """
+        <b>Description:</b>
+        Bind and unbind the application and service.
+
+        <b>Input data:</b>
+        - Sample application that was already pushed (in STOPPED state)
+        - Sample service that was already pushed
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Binding and unbinding application and service is possible.
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Service is pushed
+        - Bind service to application
+        - Verify the application is stopped
+        - Verify service instance is running
+        - Verify there is a single binding in application
+        - Verify there are no bindings in service
+
+        - Bind application to service
+        - Verify the application is stopped
+        - Verify service instance is running
+        - Verify there is a binding for service
+        - Verify there is a single binding in application
+
+        - Try to remove application bindings from service instance
+        - Verify the application is stopped
+        - Verify service instance is running
+        - Verify the service has no bindings
+
+        - Try to remove service bindings from application instance
+        - Verify the application is stopped
+        - Verify service instance is running
+        - Verify the application has no bindings
+        """
+        if sample_java_app.is_running:
+            sample_java_app.stop()
+            sample_java_app.ensure_stopped()
+        if service_instance.is_stopped:
+            service_instance.start()
+            service_instance.ensure_running()
+
+        step("Bind service to application")
+        sample_java_app.bind(service_instance_id=service_instance.id, client=api_service_admin_client)
+        step("Verify the application is stopped")
+        sample_java_app.ensure_stopped()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+
+        self.app_ensure_bound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Bind application to service")
+        service_instance.bind(application_id_to_bound=sample_java_app.id, client=api_service_admin_client)
+        step("Verify the application is stopped")
+        sample_java_app.ensure_stopped()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+
+        self.svc_ensure_bound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Check whether bindings sections is available")
+        self.check_bindings(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Try to remove application bindings from service instance")
+        service_instance.unbind_app(application_id=sample_java_app.id, client=api_service_admin_client)
+        step("Verify the application is stopped")
+        sample_java_app.ensure_stopped()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+        step("Verify the service has no bindings")
+        self.svc_ensure_unbound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Try to remove service bindings from application instance")
+        sample_java_app.unbind(service_instance_id=service_instance.id, client=api_service_admin_client)
+        step("Verify the application is stopped")
+        sample_java_app.ensure_stopped()
+        step("Verify service instance is running")
+        service_instance.ensure_running()
+        step("Verify the application has no bindings")
+        self.app_ensure_unbound(sample_java_app, service_instance, api_service_admin_client)
+
+
+    @priority.high
+    @pytest.mark.components(TAP.api_service)
+    def test_bind_unbind_application_to_stopped_service(self, sample_java_app, service_instance,
+                                                        api_service_admin_client):
+        """
+        <b>Description:</b>
+        Bind and unbind the application and service.
+
+        <b>Input data:</b>
+        - Sample application that was already pushed
+        - Sample service that was already pushed (in STOPPED state)
+        - Admin credentials
+
+        <b>Expected results:</b>
+        - Binding and unbinding application and service is possible.
+
+        <b>Steps:</b>
+        - Application is pushed
+        - Service is pushed
+        - Bind service to application
+        - Verify the application is running
+        - Verify service instance is stopped
+        - Verify there is a single binding in application
+        - Verify there are no bindings in service
+
+        - Bind application to service
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify there is a binding for service
+        - Verify there is a single binding in application
+
+        - Try to remove application bindings from service instance
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify the service has no bindings
+
+        - Try to remove service bindings from application instance
+        - Verify the application is running
+        - Verify service instance is running
+        - Verify the application has no bindings
+        """
+        if sample_java_app.is_stopped:
+            sample_java_app.start()
+            sample_java_app.ensure_running()
+        if service_instance.is_running:
+            service_instance.stop()
+            service_instance.ensure_stopped()
+
+        step("Bind service to application")
+        sample_java_app.bind(service_instance_id=service_instance.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is stopped")
+        service_instance.ensure_stopped()
+
+        self.app_ensure_bound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Bind application to service")
+        service_instance.bind(application_id_to_bound=sample_java_app.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is stopped")
+        service_instance.ensure_stopped()
+
+        self.svc_ensure_bound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Check whether bindings sections is available")
+        self.check_bindings(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Try to remove application bindings from service instance")
+        service_instance.unbind_app(application_id=sample_java_app.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is stopped")
+        service_instance.ensure_stopped()
+        step("Verify the service has no bindings")
+        self.svc_ensure_unbound(sample_java_app, service_instance, api_service_admin_client)
+
+        step("Try to remove service bindings from application instance")
+        sample_java_app.unbind(service_instance_id=service_instance.id, client=api_service_admin_client)
+        step("Verify the application is running")
+        sample_java_app.ensure_running()
+        step("Verify service instance is stopped")
+        service_instance.ensure_stopped()
+        step("Verify the application has no bindings")
+        self.app_ensure_unbound(sample_java_app, service_instance, api_service_admin_client)
