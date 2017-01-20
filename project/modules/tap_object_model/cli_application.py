@@ -20,6 +20,7 @@ from modules.constants import HttpStatus, TapEntityState
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 from ._cli_object_superclass import CliObjectSuperclass
+from modules.tap_cli import TapCli
 
 
 class CliApplication(CliObjectSuperclass):
@@ -30,6 +31,7 @@ class CliApplication(CliObjectSuperclass):
 
     FIELD_ID = "id"
     FIELD_NAME = "NAME"
+    FIELD_TYPE = "type"
     FIELD_STATE = "state"
     FIELD_URLS = "urls"
 
@@ -38,6 +40,7 @@ class CliApplication(CliObjectSuperclass):
         self.app_type = app_type
         self.instances = instances
         self.target_directory = target_directory
+        self.type = TapCli.APPLICATION
 
     @classmethod
     def push(cls, context, *, app_path, tap_cli, app_type, name=None, instances=1):
@@ -79,6 +82,13 @@ class CliApplication(CliObjectSuperclass):
         scale_output = self.tap_cli.app_scale(application_name=self.name, instances=scale_app_instances)
         assert self.EXPECTED_SUCCESS_RESPONSE in scale_output
         return scale_output
+
+    def bind(self, bound_app, direction):
+        out = self.tap_cli.bind(self.type, [TapCli.NAME_PARAM, self.name, direction, bound_app])
+        assert self.EXPECTED_SUCCESS_RESPONSE
+
+    def unbind(self, bound_app, direction):
+        out = self.tap_cli.unbind(self.type, [TapCli.NAME_PARAM, self.name, direction, bound_app])
 
     def logs(self):
         return self.tap_cli.app_logs(application_name=self.name)

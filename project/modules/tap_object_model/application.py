@@ -314,8 +314,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         Args:
             client: HttpClient to use
         """
-        apps = self.get_list(client=self._get_client(client))
-        app = next((a for a in apps if a.name == self.name), None)
+        app = self.get(app_inst_id=self.id, client=self._get_client(client))
         assert app is not None, "Cannot find application {}".format(self.name)
         for attr_name in self._REFRESH_ATTRIBUTES:
             new_value = getattr(app, attr_name)
