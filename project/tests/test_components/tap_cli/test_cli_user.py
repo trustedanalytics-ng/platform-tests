@@ -88,7 +88,6 @@ class TestCliUserOperations(CliUserTestFixtures):
 
     @priority.high
     @pytest.mark.components(TAP.cli, TAP.user_management)
-    @pytest.mark.bugs("DPNG-13587 500 is returned when trying to delete user")
     def test_delete_user(self, tap_cli, test_org, user):
         """
         <b>Description:</b>
@@ -222,7 +221,6 @@ class TestCliInvitation(CliUserTestFixtures):
 
     @priority.medium
     @pytest.mark.components(TAP.cli)
-    @pytest.mark.bugs("DPNG-13587 - 500 is returned when trying to delete user.")
     def test_delete_invitation(self, tap_cli, invitation):
         """
         <b>Description:</b>
@@ -252,7 +250,6 @@ class TestChangePassword(CliUserTestFixtures):
 
     @priority.medium
     @pytest.mark.components(TAP.cli, TAP.user_management)
-    @pytest.mark.bugs("DPNG-14955 Update tap api client expected http status")
     def test_user_change_passwd_to_valid(self, tap_cli,
                                          current_username,
                                          current_password):
@@ -279,7 +276,6 @@ class TestChangePassword(CliUserTestFixtures):
 
     @priority.medium
     @pytest.mark.components(TAP.cli, TAP.user_management)
-    @pytest.mark.bugs("DPNG-14955 Update tap api client expected http status")
     def test_user_login_with_old_passwd(self, tap_cli,
                                         current_username,
                                         current_password):
