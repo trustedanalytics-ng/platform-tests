@@ -137,7 +137,7 @@ class TestTapCli(unittest.TestCase):
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_services_list(self):
-        assert ["service", "list"] == self.tap_cli.services_list()
+        assert ["service", "list"] == self.tap_cli.service_list()
 
     @patch.object(TapCli, "_run_command", _run_command_return_cmd)
     def test_service_log(self):
