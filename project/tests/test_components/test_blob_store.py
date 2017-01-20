@@ -21,6 +21,7 @@ from modules.markers import priority
 from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Blob
 from tests.fixtures.assertions import assert_raises_http_exception
+from tests.fixtures.sample_apps import SampleAppKeys
 
 
 logged_components = (TAP.blob_store, )
@@ -33,13 +34,13 @@ class TestBlobStore:
     non_existing_id = "776a1f91-df7e-4032-4c31-7cd107719afb"
 
     @pytest.fixture(scope="class")
-    def sample_blob(self, class_context, test_data_urls):
+    def sample_blob(self, class_context, test_sample_apps):
         log_fixture("Create sample blob and check it exists")
-        blob = Blob.create_from_file(class_context, file_path=test_data_urls.nodejs_app.filepath)
+        blob = Blob.create_from_file(class_context, file_path=test_sample_apps[SampleAppKeys.TAPNG_NODEJS_APP].filepath)
         return Blob.get(blob_id=blob.id)
 
     @priority.high
-    def test_create_and_delete_blob(self, context, test_data_urls):
+    def test_create_and_delete_blob(self, context, test_sample_apps):
         """
         <b>Description:</b>
         Create and delete blob from blob store
@@ -58,7 +59,7 @@ class TestBlobStore:
         - Verify that the blob is no longer in blob store
         """
         step("Create artifact in blob-store")
-        test_blob = Blob.create_from_file(context, file_path=test_data_urls.nodejs_app.filepath)
+        test_blob = Blob.create_from_file(context, file_path=test_sample_apps[SampleAppKeys.TAPNG_NODEJS_APP].filepath)
 
         step("Check that the blob exists")
         blob = Blob.get(blob_id=test_blob.id)
@@ -73,7 +74,7 @@ class TestBlobStore:
                                      Blob.get, blob_id=test_blob.id)
 
     @priority.low
-    def test_cannot_create_artifact_in_blob_store_with_existing_id(self, context, sample_blob, test_data_urls):
+    def test_cannot_create_artifact_in_blob_store_with_existing_id(self, context, sample_blob, test_sample_apps):
         """
         <b>Description:</b>
         Attempt to create blob with duplicated id
@@ -93,7 +94,7 @@ class TestBlobStore:
         assert_raises_http_exception(BlobStoreHttpStatus.CODE_CONFLICT,
                                      BlobStoreHttpStatus.MSG_BLOB_ID_ALREADY_IN_USE,
                                      Blob.create_from_file, context, blob_id=sample_blob.id,
-                                     file_path=test_data_urls.nodejs_app.filepath)
+                                     file_path=test_sample_apps[SampleAppKeys.TAPNG_NODEJS_APP].filepath)
 
     @priority.low
     def test_empty_blob(self, context):

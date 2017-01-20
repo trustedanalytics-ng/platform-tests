@@ -21,7 +21,7 @@ from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import CliApplication
 from modules.tap_object_model.prep_app import PrepApp
-from tests.fixtures.data_repo import DataFileKeys
+from tests.fixtures.sample_apps import SampleAppKeys
 from tests.test_components.tap_cli.test_cli_application import TestAppBase
 
 
@@ -207,22 +207,22 @@ class TestPythonCliApp(TestAppBase):
 
 
 class TestGoCliApp(TestPythonCliApp):
-    SAMPLE_APP_NAME = DataFileKeys.TAPNG_GO_APP
+    SAMPLE_APP_NAME = SampleAppKeys.TAPNG_GO_APP
     APP_TYPE = TapApplicationType.GO
     EXPECTED_FILE_LIST = ["main", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
 
 class TestJavaCliApp(TestPythonCliApp):
-    SAMPLE_APP_NAME = DataFileKeys.TAPNG_JAVA_APP
+    SAMPLE_APP_NAME = SampleAppKeys.TAPNG_JAVA_APP
     APP_TYPE = TapApplicationType.JAVA
     EXPECTED_FILE_LIST = ["tapng-java-sample-app-0.1.0.jar", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
 
 class TestNodeJsCliApp(TestPythonCliApp):
-    SAMPLE_APP_NAME = DataFileKeys.TAPNG_NODEJS_APP
+    SAMPLE_APP_NAME = SampleAppKeys.TAPNG_NODEJS_APP
     APP_TYPE = TapApplicationType.NODEJS
-    EXPECTED_FILE_LIST = ["server.js", "run.sh", "public", "views", "app", "node_modules", "manifest.yml",
+    EXPECTED_FILE_LIST = ["server.js", "run.sh", "public", "views", "app", "node_modules", "manifest.json",
                           "package.json", "README.md"]
     APP_URL_MESSAGE = "This is a Cloud Foundry sample application."

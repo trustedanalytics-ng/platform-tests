@@ -23,6 +23,7 @@ from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import CatalogImage, Blob, Image
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_http_exception
+from tests.fixtures.sample_apps import SampleAppKeys
 
 
 logged_components = (TAP.catalog, )
@@ -153,7 +154,7 @@ class TestCatalogImages:
         assert test_image == image
 
     @priority.high
-    def test_update_catalog_image_state(self, context, test_data_urls):
+    def test_update_catalog_image_state(self, context, test_sample_apps):
         """
         <b>Description:</b>
         Checks if value of image state can be updated.
@@ -176,7 +177,8 @@ class TestCatalogImages:
 
         test_image.ensure_in_state(TapEntityState.REQUESTED)
 
-        Blob.create_from_file(context, blob_id=test_image.id, file_path=test_data_urls.nodejs_app.filepath)
+        Blob.create_from_file(context, blob_id=test_image.id,
+                              file_path=test_sample_apps[SampleAppKeys.TAPNG_NODEJS_APP].filepath)
 
         Image.create(context, image_id=test_image.id)
         image = CatalogImage.get(image_id=test_image.id)

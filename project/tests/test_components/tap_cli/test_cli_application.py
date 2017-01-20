@@ -28,7 +28,7 @@ from modules.tap_object_model import CliApplication
 from modules.tap_object_model.prep_app import PrepApp
 from modules.test_names import generate_test_object_name
 from tests.fixtures.assertions import assert_raises_command_execution_exception
-from tests.fixtures.data_repo import DataFileKeys
+from tests.fixtures.sample_apps import SampleAppKeys
 
 pytestmark = [pytest.mark.components(TAP.cli)]
 
@@ -197,17 +197,17 @@ class TestCliCommandsWithNonExistingApplication:
 
 
 class TestAppBase:
-    SAMPLE_APP_NAME = DataFileKeys.TAPNG_PYTHON_APP
+    SAMPLE_APP_NAME = SampleAppKeys.TAPNG_PYTHON_APP
     APP_TYPE = TapApplicationType.PYTHON27
-    EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "src", "vendor"]
+    EXPECTED_FILE_LIST = ["requirements.txt", "run.sh", "vendor"]
     APP_URL_MESSAGE = "TEST APP v.1.0 READY"
 
     @pytest.yield_fixture(scope="class")
-    def sample_app_source_dir(self, test_data_urls):
+    def sample_app_source_dir(self, test_sample_apps):
         """ Download and extract sample application. The archive may contain symbolic links. """
-        sample_app_source_dir = os.path.join(TMP_FILE_DIR, test_data_urls[self.SAMPLE_APP_NAME].filename)
+        sample_app_source_dir = os.path.join(TMP_FILE_DIR, test_sample_apps[self.SAMPLE_APP_NAME].filename)
         step("Extract application archive")
-        with tarfile.open(test_data_urls[self.SAMPLE_APP_NAME].filepath) as tar:
+        with tarfile.open(test_sample_apps[self.SAMPLE_APP_NAME].filepath) as tar:
             tar.extractall(path=sample_app_source_dir)
             sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
         step("Check content of the archive")

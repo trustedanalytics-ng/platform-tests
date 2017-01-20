@@ -37,6 +37,7 @@ from modules.tap_object_model.flows import data_catalog
 from modules.test_names import generate_test_object_name
 from tap_component_config import api_service
 from .data_repo import Urls, DATA_REPO_PATH
+from .sample_apps import SampleApps
 
 
 # TODO until unittest.TestCase subclassing is not removed, session-scoped fixtures write to global variables
@@ -632,3 +633,12 @@ def test_data_urls(session_context, api_service_admin_client):
     app.ensure_running()
 
     return Urls(app.urls[0])
+
+
+@pytest.yield_fixture(scope="session")
+def test_sample_apps():
+    log_fixture("test_sample_apps: Copy sample_apps to temporary directory, build and pack them")
+    sample_apps = SampleApps()
+    yield sample_apps
+    log_fixture("test_sample_apps: delete sample_apps temporary directory")
+    sample_apps.cleanup()

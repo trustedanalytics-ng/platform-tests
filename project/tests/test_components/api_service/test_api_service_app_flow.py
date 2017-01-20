@@ -22,7 +22,7 @@ from modules.tap_logger import step, log_fixture
 from modules.tap_object_model import Application
 from modules.tap_object_model.prep_app import PrepApp
 from tests.fixtures import assertions
-from tests.fixtures.data_repo import DataFileKeys
+from tests.fixtures.sample_apps import SampleAppKeys
 
 
 logged_components = (TAP.api_service,)
@@ -33,21 +33,21 @@ pytestmark = [pytest.mark.components(TAP.api_service)]
 class ApiServiceApplicationFlow:
 
     @pytest.fixture(scope="class")
-    def sample_application(self, class_context, test_data_urls, api_service_admin_client):
+    def sample_application(self, class_context, test_sample_apps, api_service_admin_client):
         log_fixture("sample_application: update manifest")
-        p_a = PrepApp(test_data_urls[self.SAMPLE_APP].filepath)
+        p_a = PrepApp(test_sample_apps[self.SAMPLE_APP].filepath)
         manifest_params = {"type" : self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         log_fixture("Push sample application and check it's running")
-        application = Application.push(class_context, app_path=test_data_urls[self.SAMPLE_APP].filepath,
+        application = Application.push(class_context, app_path=test_sample_apps[self.SAMPLE_APP].filepath,
                                        name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         application.ensure_running()
         return application
 
     @priority.high
-    def test_push_and_delete_application(self, context, test_data_urls, api_service_admin_client):
+    def test_push_and_delete_application(self, context, test_sample_apps, api_service_admin_client):
         """
         <b>Description:</b>
         Attempts to push application, stop it and then delete it.
@@ -72,12 +72,12 @@ class ApiServiceApplicationFlow:
         - Remove the application and verify it's no longer available
         """
         log_fixture("sample_application: update manifest")
-        p_a = PrepApp(test_data_urls[self.SAMPLE_APP].filepath)
+        p_a = PrepApp(test_sample_apps[self.SAMPLE_APP].filepath)
         manifest_params = {"type" : self.APP_TYPE}
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         step("Push sample application")
-        application = Application.push(context, app_path=test_data_urls[self.SAMPLE_APP].filepath,
+        application = Application.push(context, app_path=test_sample_apps[self.SAMPLE_APP].filepath,
                                        name=p_a.app_name, manifest_path=manifest_path,
                                        client=api_service_admin_client)
         step("Check application is running")
@@ -193,20 +193,20 @@ class ApiServiceApplicationFlow:
 
 
 class TestPythonApplicationFlow(ApiServiceApplicationFlow):
-    SAMPLE_APP = DataFileKeys.TAPNG_PYTHON_APP
+    SAMPLE_APP = SampleAppKeys.TAPNG_PYTHON_APP
     APP_TYPE = TapApplicationType.PYTHON27
 
 
 class TestNodeJsApplicationFlow(ApiServiceApplicationFlow):
-    SAMPLE_APP = DataFileKeys.TAPNG_NODEJS_APP
+    SAMPLE_APP = SampleAppKeys.TAPNG_NODEJS_APP
     APP_TYPE = TapApplicationType.NODEJS
 
 
 class TestGoApplicationFlow(ApiServiceApplicationFlow):
-    SAMPLE_APP = DataFileKeys.TAPNG_GO_APP
+    SAMPLE_APP = SampleAppKeys.TAPNG_GO_APP
     APP_TYPE = TapApplicationType.GO
 
 
 class TestJavaApplicationFlow(ApiServiceApplicationFlow):
-    SAMPLE_APP = DataFileKeys.TAPNG_JAVA_APP
+    SAMPLE_APP = SampleAppKeys.TAPNG_JAVA_APP
     APP_TYPE = TapApplicationType.JAVA

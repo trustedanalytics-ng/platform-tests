@@ -35,10 +35,6 @@ class DataFileKeys:
     COMPLEXDAG_APP = "complexdag_app"
     NODEJS_APP = "nodejs_app"
     HADOOP_MAPREDUCE_EXAMPLES = "hadoop_mapreduce_examples"
-    TAPNG_PYTHON_APP = "tapng_python_app"
-    TAPNG_GO_APP = "tapng_go_app"
-    TAPNG_JAVA_APP = "tapng_java_app"
-    TAPNG_NODEJS_APP = "tapng_nodejs_app"
 
 
 class Urls:
@@ -49,10 +45,6 @@ class Urls:
         DataFileKeys.COMPLEXDAG_APP: "https://repo.gotapaas.eu/files/complexdag-2.11.5-0.7.1-SNAPSHOT-assembly.jar",
         DataFileKeys.NODEJS_APP: "https://repo.gotapaas.eu/files/test_blob",
         DataFileKeys.HADOOP_MAPREDUCE_EXAMPLES: "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-mapreduce-examples/2.2.0/hadoop-mapreduce-examples-2.2.0.jar",
-        DataFileKeys.TAPNG_PYTHON_APP: "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-python-app.tar.gz",
-        DataFileKeys.TAPNG_GO_APP: "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-go-app.tar.gz",
-        DataFileKeys.TAPNG_JAVA_APP: "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-java-app.tar.gz",
-        DataFileKeys.TAPNG_NODEJS_APP: "https://repo.gotapaas.eu/files/tapng_sample_apps/tapng-sample-nodejs-app.tar.gz"
     }
 
     class Url:

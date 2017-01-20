@@ -82,9 +82,9 @@ def cli_login(tap_cli):
 
 
 @pytest.fixture(scope="class")
-def app_jar(test_data_urls):
+def app_jar(test_sample_apps):
     sample_app_source_dir = os.path.join(TMP_FILE_DIR, "sample_java_app_source")
-    with tarfile.open(test_data_urls.tapng_java_app.filepath) as tar:
+    with tarfile.open(test_sample_apps.tapng_java_app.filepath) as tar:
         tar.extractall(path=sample_app_source_dir)
         sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
     return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if ".jar" in name))
