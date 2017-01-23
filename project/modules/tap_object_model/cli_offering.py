@@ -23,7 +23,6 @@ from modules.file_utils import save_text_file
 from modules.test_names import generate_test_object_name
 from ._cli_object_superclass import CliObjectSuperclass
 from ._service_plan import ServicePlan
-from ..exceptions import CommandExecutionException
 
 
 class CliOffering(CliObjectSuperclass):
@@ -88,6 +87,5 @@ class CliOffering(CliObjectSuperclass):
     def ensure_not_on_offering_list(self):
         assert self.name not in self.tap_cli.list_offerings(), "Offering '{}' is in the offerings list".format(self.name)
 
-    @retry(CommandExecutionException, tries=12, delay=5)
     def delete(self):
         self.tap_cli.delete_offering(self.name)
