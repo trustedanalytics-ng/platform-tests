@@ -1,1 +1,6 @@
-{"bindings": null, "instances": 1, "name": "morus20161122152027569055", "app_type": "PYTHON2.7", "type": "PYTHON2.7"}
+{
+  "bindings": null,
+  "instances": 1,
+  "name": "sample-python-app",
+  "type": "PYTHON2.7"
+}
