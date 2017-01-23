@@ -138,7 +138,7 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
 
     <b>Steps:</b>
     1. Onboard new user to the platform.
-    2. Add new user to the default organization.
+    2. Update user role to admin
     3. Verify the user is present in the organization.
     4. Remove the user from the organization.
     5. Verify that the user was removed from the organization.
@@ -146,7 +146,7 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     step("Add new user to organization")
     test_user = onboarding.onboard(context=context, org_guid=core_org.guid,
                                    check_email=False)
-    test_user.add_to_organization(org_guid=core_org.guid, role=User.ORG_ROLE["admin"])
+    test_user.update_org_role(org_guid=core_org.guid, new_role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
     users = User.get_list_in_organization(org_guid=core_org.guid)
     assert test_user in users
