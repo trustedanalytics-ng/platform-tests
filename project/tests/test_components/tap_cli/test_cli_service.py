@@ -331,7 +331,7 @@ class TestCliService:
         1. Verify that attempt to create service without name return expected message.
         """
         step("Check error message when creating instance without instance name")
-        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+        assert_raises_command_execution_exception(3, TapMessage.MISSING_PARAMETER,
                                                   tap_cli.create_service,
                                                   ["--offering", offering.label,
                                                    "--plan", offering.service_plans[0].name])
@@ -384,7 +384,7 @@ class TestCliService:
         2. Verify that attempt to create service without plan return expected message.
         """
         step("Check error message when creating instance without plan name")
-        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+        assert_raises_command_execution_exception(3, TapMessage.MISSING_PARAMETER,
                                                   tap_cli.create_service, ["--offering", offering.label,
                                                                            "--name", "test"])
 
@@ -407,7 +407,7 @@ class TestCliService:
         2. Verify that attempt to create service without offering name return expected message.
         """
         step("Check error message when creating instance without offering name")
-        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+        assert_raises_command_execution_exception(3, TapMessage.MISSING_PARAMETER,
                                                   tap_cli.create_service, ["--plan", offering.service_plans[0].name,
                                                                            "--name", "test"])
 
@@ -500,7 +500,7 @@ class TestCliService:
         2. Verify that attempt to delete service without providing all required arguments return expected message.
         """
         step("Check error message when deleting instance without instance name")
-        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+        assert_raises_command_execution_exception(3, TapMessage.MISSING_PARAMETER,
                                                   tap_cli.delete_service, [])
 
     @priority.low
@@ -521,7 +521,7 @@ class TestCliService:
         2. Verify that attempt to get service credentials service without providing service name will return proper message.
         """
         step("Check error message when getting service credentialswithout instance name")
-        assert_raises_command_execution_exception(3, TapMessage.NOT_ENOUGH_ARGS_SERVICE,
+        assert_raises_command_execution_exception(3, TapMessage.MISSING_PARAMETER,
                                                   tap_cli.service_credentials, [])
 
     @priority.medium

@@ -167,6 +167,7 @@ class TestCliBasicFlow:
                                                   tap_cli.login,
                                                   tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
 
+    @pytest.mark.bugs("DPNG-15123 Remove redundant test_cannot_login_with_incorrect_domain test")
     @priority.low
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):
         """
@@ -208,3 +209,105 @@ class TestCliBasicFlow:
         step("Check that user cannot login to tap cli using foreign domain")
         assert_raises_command_execution_exception(1, TapMessage.CANNOT_REACH_API,
                                                   tap_cli.login, login_domain=self.FOREIGN_DOMAIN)
+
+    @priority.medium
+    def test_login_without_optional_password_parameter(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check that TAP CLI will ask for user password and use it to log the user in.
+
+        <b>Input data:</b>
+        1. Command name: login
+        2. TAP domain api address
+        3. Username
+
+        <b>Expected results:</b>
+        Test passes when TAP CLI prompts for password and logs the user in when proper password given.
+
+        <b>Steps:</b>
+        0. Logout
+        1. Run TAP CLI with command login.
+        2. Enter user password
+        3. Verify that user is logged in using info command.
+        """
+        tap_cli.logout_by_deleting_credentials_file()
+
+        step("Check that user will be promped for password when it is not given in login parameters")
+        output = tap_cli.login_with_password_prompt()
+        assert TapMessage.AUTHENTICATION_SUCCEEDED in output
+
+        step("Check that user is logged in correctly")
+        output = tap_cli.info()
+        assert config.api_url in output
+        assert config.admin_username in output
+
+    @pytest.fixture(scope="class")
+    def empty_parameter_test_cases(self, tap_cli):
+        return {
+            "empty_api": {
+                "parameter": "--api",
+                "command": [tap_cli.LOGIN, tap_cli.API_PARAM]},
+            "empty_username": {
+                "parameter": "--username",
+                "command": [tap_cli.LOGIN, tap_cli.API_PARAM, "http://{}".format(config.api_url),
+                            tap_cli.USERNAME_PARAM]},
+            "empty_password": {
+                "parameter": "--password",
+                "command": [tap_cli.LOGIN, tap_cli.API_PARAM, "http://{}".format(config.api_url),
+                            tap_cli.USERNAME_PARAM, config.admin_username, tap_cli.PASSWORD_PARAM]}
+        }
+
+    @priority.medium
+    @pytest.mark.parametrize("test_case", ("empty_api", "empty_username", "empty_password"))
+    def test_cannot_login_with_empty_parameter(self, test_case, empty_parameter_test_cases, tap_cli):
+        """
+        <b>Description:</b>
+        Check that TAP CLI will fail to login with any of the following parameters empty: api, username, password.
+
+        <b>Input data:</b>
+        1. Command name: login
+        2. any of --api, --username, --pasword parameters empty
+
+        <b>Expected results:</b>
+        Test passes when TAP CLI reports "Incorrect Usage"
+
+        <b>Steps:</b>
+        1. Run TAP CLI with command login with:
+            a) --api
+            b) --username
+            c) --pasword
+            parameter empty value
+        2. Verify "Incorrect Usage" raported
+        """
+        step("Check that user will not be logged in with missing " +
+             empty_parameter_test_cases[test_case]["parameter"] + " parameter value")
+        assert_raises_command_execution_exception(
+            1, TapMessage.INCORRECT_USAGE, tap_cli._run_command, empty_parameter_test_cases[test_case]["command"])
+
+    @priority.medium
+    def test_check_credentials_file(self, tap_cli):
+        """
+        <b>Description:</b>
+        Check that TAP CLI stored user & environment info in ~/.tap-cli/credentials.json file.
+
+        <b>Input data:</b>
+        1. File path: ~/.tap-cli/credentials.json
+
+        <b>Expected results:</b>
+        The file contains api adress and username
+
+        <b>Steps:</b>
+        0. Logout
+        1. Login
+        2. Read the file and check for expected info.
+        """
+        step("Check that credentials.json file contains api adress and username after user successfully logged in")
+        tap_cli.logout_by_deleting_credentials_file()
+
+        step("login")
+        tap_cli.login()
+
+        step("check file content")
+        file_content = tap_cli.read_credentials_file()
+        assert config.api_url in file_content
+        assert config.admin_username in file_content

@@ -70,7 +70,7 @@ def run_interactive(command: list, prompt_answers: list, cwd=None) -> str:
 
     out = []
     for ans in prompt_answers:
-        output = process.communicate(ans)[0].rstrip()
+        output = process.communicate(ans+"\n")[0].rstrip()
         if output != '':
             logger.info(output.strip())
             out.append(output.strip())
@@ -78,7 +78,7 @@ def run_interactive(command: list, prompt_answers: list, cwd=None) -> str:
 
     return_code = process.poll()
 
-    if return_code == 255:
+    if return_code in [0, 255]:
         return out
 
     exception_output = " ".join(out)

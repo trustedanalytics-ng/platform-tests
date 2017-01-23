@@ -128,6 +128,27 @@ class TapCli:
             raise TapCliException(output)
         return output
 
+    def login_with_password_prompt(self):
+        cmd = [self.LOGIN, self.API_PARAM, "http://{}".format(config.api_url), self.USERNAME_PARAM, config.admin_username]
+        output = self.run_command_with_prompt(cmd, prompt_answers=[config.admin_password])
+        return output
+
+    def _credentials_file_path(self):
+        home_path = os.environ.get('HOME')
+        tap_credentials_path = ".tap-cli/credentials.json"
+        return os.path.join(home_path, tap_credentials_path)
+
+    def logout_by_deleting_credentials_file(self):
+        credentials_path = self._credentials_file_path()
+        if os.path.isfile(credentials_path):
+            os.remove(credentials_path)
+
+    def read_credentials_file(self):
+        credentials_path = self._credentials_file_path()
+        with open(credentials_path, 'r') as file:
+            file_content = file.read()
+        return file_content
+
     def info(self):
         return self._run_command([self.INFO])
 

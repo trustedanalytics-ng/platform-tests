@@ -50,11 +50,12 @@ class TapMessage:
     CANNOT_DELETE_RUNNING_APP = "event DESTROY_REQ inappropriate in current state RUNNING"
     CODE_CANNOT_DELETE_BOUND_SERVICE = 'CODE: 403 BODY: '
     CANNOT_DELETE_OFFERING_WITH_INSTANCE = "offering instance exists"
+    INCORRECT_USAGE = "Incorrect Usage"
     INSTANCE_IS_BOUND_TO_OTHER_INSTANCE = "Instance: {} is bound to other instance: {}, id: {}"
     NO_SUCH_FILE_OR_DIRECTORY = "open {}: no such file or directory"
     MANIFEST_JSON_NO_SUCH_FILE = "manifest.json: no such file or directory"
     NO_SUCH_OFFERING = "Could not find offering with such name"
-    NOT_ENOUGH_ARGS_SERVICE = "MISSING PARAMETER"
+    MISSING_PARAMETER = "MISSING PARAMETER"
     NAME_HAS_INCORRECT_VALUE = "Field: Name has incorrect value: {}"
     NO_SUCH_HOST = "no such host"
     OK = "OK"
