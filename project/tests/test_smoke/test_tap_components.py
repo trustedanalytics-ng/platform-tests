@@ -202,21 +202,20 @@ class TestK8sComponents:
 @priority.high
 class TestSmokeTrustedAnalyticsComponents:
 
-    @pytest.mark.bugs("DPNG-13413 user-management is no longer reachable from outside network")
     @pytest.mark.parametrize("component", [TAP.api_service, TAP.uaa])
     def test_components_check_healthz(self, component):
         """
         <b>Description:</b>
-        Checks if user-management, api service and uaa return status OK on healthz endpoint.
+        Checks if api service and uaa return status OK on healthz endpoint.
 
         <b>Input data:</b>
-        1. Component names: user-management, api service, uaa.
+        1. Component names: api service, uaa.
 
         <b>Expected results:</b>
-        Test passes when user-management, api service and uaa healthz endpoint return status OK to HTTP GET request.
+        Test passes when api service and uaa healthz endpoint return status OK to HTTP GET request.
 
         <b>Steps:</b>
-        1. Check healthz endpoint for components: user-management, api service and uaa.
+        1. Check healthz endpoint for components: api service and uaa.
         2. Verify that response status is OK.
         """
         step("Check healthz endpoint")
