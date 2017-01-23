@@ -19,7 +19,6 @@ import pytest
 from modules.constants import TapComponent as TAP
 from modules.markers import priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet
 from modules.tap_object_model import Metrics
 from modules.tap_logger import log_fixture
 from tests.fixtures.assertions import assert_dict_values_set
@@ -89,7 +88,6 @@ class TestMetrics(object):
         assert apps == dashboard_running_apps, "\nRunning apps in dashboard received from grafana: {}, " \
                                                "expected from reference: {}".format(dashboard_running_apps, apps)
 
-    @pytest.mark.bugs("DPNG-14003 [dashboard] Number of applications doesn't equal actual apps amount")
     @priority.low
     def test_apps_down(self, org_metrics):
         """
@@ -136,7 +134,6 @@ class TestMetrics(object):
         assert user_list == dashboard_total_users, "\nUsers in dashboard received from grafana: {}, expected from" \
                                                    "reference: {}".format(dashboard_total_users, user_list)
 
-    @pytest.mark.skip("DPNG-14019 [api-tests] Amend test_service_usage to compare running services amount")
     @priority.high
     def test_service_usage(self, org_metrics):
         """
@@ -209,8 +206,7 @@ class TestMetrics(object):
             "{}".format(memory_metrics_dashboard, memory_metrics_ref)
 
     @priority.low
-    @pytest.mark.skip("DPNG-10769 [api-tests] Dashboard metrics - tests for datasets")
-    def test_data_metrics(self, core_org):
+    def test_data_metrics(self, org_metrics):
         """
         <b>Description:</b>
         Checks if metrics on Dashboard show correct number of datasets.
@@ -225,23 +221,8 @@ class TestMetrics(object):
         1. Gather metrics from grafana and reference sources.
         2. Check that metric of datasets on Dashboard shows correct value.
         """
-        step("Get datasets and check datasetCount, privateDatasets, publicDatasets metrics are correct")
-        public_datasets = []
-        private_datasets = []
-        datasets = DataSet.api_get_list(org_guid_list=[core_org.guid])
-        for table in datasets:
-            if table.is_public:
-                public_datasets.append(table)
-            else:
-                private_datasets.append(table)
-        dashboard_datasets_count = self.org_metrics['datasetCount']
-        dashboard_private_datasets = self.org_metrics['privateDatasets']
-        dashboard_public_datasets = self.org_metrics['publicDatasets']
-        metrics_are_equal = (len(datasets) == dashboard_datasets_count and
-                             len(private_datasets) == dashboard_private_datasets and
-                             len(public_datasets) == dashboard_public_datasets)
-        error_msg = "\nDatasets: {}, expected: {}\nPrivate: {}, expected: {}\nPublic: {}, expected: {}".format(
-            dashboard_datasets_count, len(datasets),
-            dashboard_private_datasets, len(private_datasets),
-            dashboard_public_datasets, len(public_datasets))
-        assert metrics_are_equal is True, error_msg
+        step("Get datasets and check datasets metrics are correct")
+        ref_metrics, grafana_metrics = org_metrics
+        datasets_list_length = len(ref_metrics.datasets)
+        dashboard_datasets = grafana_metrics.datasets
+        assert datasets_list_length == dashboard_datasets
