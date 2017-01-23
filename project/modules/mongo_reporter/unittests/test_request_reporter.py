@@ -28,6 +28,7 @@ from tests.fixtures.assertions import assert_date_close_enough_to_now, assert_va
 SELF = mock.Mock()
 TIMEOUT = 1
 DURATION = .5
+TEST_NAME = 'test_name'
 TEST_STRESS_RUN_ID = str(ObjectId())
 
 
@@ -43,7 +44,7 @@ TEST_NEW_REQUEST_INFO = {
 }
 
 TEST_REQUEST_INFO = dict(TEST_NEW_REQUEST_INFO, stress_run_id=TEST_STRESS_RUN_ID)
-
+TEST_REQUEST_INFO_IN_DB = dict(TEST_REQUEST_INFO, test_name=TEST_NAME)
 
 class MockConfig:
     def __init__(self, database_url='db_url', stress_run_id=TEST_STRESS_RUN_ID, log_requests=True):
@@ -99,21 +100,21 @@ class TestRequestReporter(object):
     def test_send_to_db(self, mock_insert_method):
         reporter = RequestReporter()
         reporter.add_request(TEST_NEW_REQUEST_INFO)
-        reporter.send_to_db()
-        mock_insert_method.assert_called_once_with(collection_name='request', document=TEST_REQUEST_INFO)
+        reporter.send_to_db(TEST_NAME)
+        mock_insert_method.assert_called_once_with(collection_name='request', document=TEST_REQUEST_INFO_IN_DB)
 
     @mock.patch('modules.mongo_reporter.request_reporter.DBClient.insert')
     def test_clean_request_lists_after_sending_to_db(self, mock_insert_method):
         reporter = RequestReporter()
         reporter.add_request(TEST_NEW_REQUEST_INFO)
         assert len(reporter.requests) == 1, "Request isn't logged to RequestReporter"
-        reporter.send_to_db()
+        reporter.send_to_db(TEST_NAME)
         assert len(reporter.requests) == 0, 'RequestReporter.send_to_db() not clean RequestReporter.requests list'
 
     @mock.patch('modules.mongo_reporter.request_reporter.DBClient.insert')
     def test_send_no_request_info_if_no_request_logged(self, mock_insert_method):
         reporter = RequestReporter()
-        reporter.send_to_db()
+        reporter.send_to_db(TEST_NAME)
         assert not mock_insert_method.called
 
 
