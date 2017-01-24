@@ -224,6 +224,7 @@ class CatalogHttpStatus(HttpStatus):
     MSG_APPLICATION_EXISTS = "application \\\"{}\\\" already exists"
     MSG_INSTANCE_EXISTS = "instance with name: {} already exists!"
     MSG_ID_HAS_TO_BE_EMPTY = "Id field has to be empty!"
+    MSG_OFFERING_SHOULD_HAVE_PLAN = "offering should have at least one plan"
     MSG_EVENT_DOES_NOT_EXIST = "event {} does not exist"
     MSG_COMPARE_FAILED = "101: Compare failed ([\\\"{}\\\" != \\\"{}\\\"]"
     MSG_COMPARE_FAILED_NO_QUOTES = "101: Compare failed ([{} != {}]"

@@ -92,7 +92,7 @@ class TestCatalogServicePlans:
     def test_create_service_without_plans(self, context, catalog_template):
         """
         <b>Description:</b>
-        Checks if: service with plan as an empty list can be created, plan for service without plans can be created,
+        Checks if: service with plan as an empty list cannot be created, plan for service with test plan can be created,
         another plan for service can be created, another plan for service with id filled cannot be created, service
         with plan can be listed.
 
@@ -100,34 +100,39 @@ class TestCatalogServicePlans:
         1. sample catalog template
 
         <b>Expected results:</b>
-        Test passes when: service with plan as an empty list [] can be created and the length of the list is equal to
-        0, plan for service without plans can be created, another plan for service can be created, another plan for
-        service with id filled cannot be created and status code 400 with error message 'Id field has to be empty!'
-        is returned, service plans can be listed.
+        Test passes when: service with plan as an empty list [] cannot be created, plan for service with test plan
+        can be created, another plan for service can be created, another plan for service with id filled cannot be
+        created and status code 400 with error message 'Id field has to be empty!' is returned,
+        service plans can be listed.
 
         <b>Steps:</b>
-        1. Create service with plan as an empty list [].
-        2. Create plan for the service without plan.
+        1. Try to create service with plan as an empty list [].
+        2. Create service with test plan.
         3. Create another plan for service.
         4. Create another plan for service with id filled.
         5. Get created service plan.
         """
         step("Create service without plans")
-        catalog_service = CatalogService.create(context, template_id=catalog_template.id, plans=[])
-        plans = ServicePlan.get_plans(service_id=catalog_service.id)
-        assert len(plans) == 0
+        assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
+                                     CatalogHttpStatus.MSG_OFFERING_SHOULD_HAVE_PLAN,
+                                     CatalogService.create, context, template_id=catalog_template.id, plans=[])
 
-        step("Create plan for service without plans")
-        self.create_plan_for_service(catalog_service)
+        step("Create service with test plan")
+        catalog_service = CatalogService.create(context, template_id=catalog_template.id)
         plans = ServicePlan.get_plans(service_id=catalog_service.id)
         assert len(plans) == 1
+
+        step("Create plan for service with one plan")
+        self.create_plan_for_service(catalog_service)
+        plans = ServicePlan.get_plans(service_id=catalog_service.id)
+        assert len(plans) == 2
 
         step("Create another plan for service")
         service_plan_body = self.plan_body()
         service_plan_body["name"] = "add_plan_to_service2"
         plan = catalog_service.create_plan(service_plan_body)
         plans = ServicePlan.get_plans(service_id=catalog_service.id)
-        assert len(plans) == 2
+        assert len(plans) == 3
 
         step("Create another plan for service with id filled")
         service_plan_body["id"] = "test"
