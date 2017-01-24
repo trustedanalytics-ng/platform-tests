@@ -37,10 +37,8 @@ NOTEBOOKS_PATHS = ["examples/spark/{}.ipynb".format(filename) for filename in ("
                                                                                "pyspark-streaming-wordcount",
                                                                                "spark-sql-example")]
 
-@pytest.mark.skip(reason="DPNG-8807 Adjust test_jupyter tests to TAP NG")
 class TestJupyterConsole:
 
-    ATK_PLAN_NAME = "Simple"
     TERMINAL_INDEX = 0
 
     @pytest.fixture(scope="function")
@@ -52,12 +50,10 @@ class TestJupyterConsole:
 
     @staticmethod
     @pytest.fixture(scope="class")
-    def jupyter_instance(class_context, test_org, test_space, admin_user):
-        admin_user.api_add_to_space(space_guid=test_space.guid, org_guid=test_org.guid,
-                                    roles=User.SPACE_ROLES["developer"])
+    def jupyter_instance(class_context, admin_user):
         step("Create instance of Jupyter service")
         jupyter = Jupyter(class_context)
-        assertions.assert_in_with_retry(jupyter.instance, ServiceInstance.api_get_list, space_guid=test_space.guid)
+        assertions.assert_in_with_retry(jupyter.instance, ServiceInstance.get_list)
         step("Get credentials for the new jupyter service instance")
         jupyter.get_credentials()
         step("Login into Jupyter")
@@ -70,6 +66,7 @@ class TestJupyterConsole:
         assert re.search(pattern, str(output)) is not None
 
     @priority.high
+    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     def test_jupyter_terminal(self, jupyter_instance, terminal_index):
         """
         <b>Description:</b>
@@ -95,6 +92,7 @@ class TestJupyterConsole:
         terminal.ws.close()
 
     @priority.high
+    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     def test_jupyter_interactive_mode_hello_world(self, jupyter_instance):
         """
         <b>Description:</b>
@@ -121,68 +119,7 @@ class TestJupyterConsole:
         notebook.ws.close()
 
     @priority.medium
-    def test_connect_to_atk_from_jupyter_using_server_atk_client(self, jupyter_instance, terminal_index, core_space):
-        """
-        <b>Description:</b>
-        Checks if connection to ATK can be established from Jupyter via server ATK client.
-
-        <b>Input data:</b>
-        1. Jupyter instance.
-        2. URL to the ATK application.
-        3. Username.
-        4. Password.
-
-        b>Expected results:</b>
-        Test passes when connection is established.
-
-        <b>Steps:</b>
-        1. Get ATK application URL.
-        2. Create new python terminal.
-        3. Connect to the terminal and install ATK client.
-        4. Verify that ATK client was successfully installed
-        5. Create new Jupyter notebook.
-        6. Import ATK client in the notebook.
-        7. Verify that command status is OK.
-        8. Create credentials file using atk client.
-        9. Check if prompt text contains "URI of the ATK server".
-        10. Send ATK application URL.
-        11. Verify if wait for a username prompt.
-        12. Send username.
-        13. Verify if wait for a password.
-        14. Send password.
-        15. Connect to the ATK.
-        16. Check if connection is established.
-        """
-        step("Get atk app from core space")
-        atk_app = next((app for app in Application.cf_api_get_list_by_space(core_space.guid)
-                        if app.name == "atk"), None)
-        if atk_app is None:
-            raise AssertionError("Atk app not found in core space")
-        atk_url = atk_app.urls[0]
-        step("Create new Jupyter terminal and install atk client")
-        terminal = jupyter_instance.connect_to_terminal(terminal_no=terminal_index)
-        terminal.send_input("pip install http://{}/client\r".format(atk_url))
-        step("Check in terminal output that atk client was successfully installed")
-        self._assert_pattern_in_output(terminal, "Successfully installed trustedanalytics")
-        step("Create new Jupyter notebook")
-        notebook = jupyter_instance.create_notebook()
-        step("import atk client in the notebook")
-        notebook.send_input("import trustedanalytics as ta")
-        assert notebook.check_command_status() == "ok"
-        step("Create credentials file using atk client")
-        notebook.send_input("ta.create_credentials_file('./cred_file')")
-        assert "URI of the ATK server" in notebook.get_prompt_text()
-        notebook.send_input(atk_url, reply=True)
-        assert "User name" in notebook.get_prompt_text()
-        notebook.send_input(config.admin_username, reply=True)
-        assert "" in notebook.get_prompt_text()
-        notebook.send_input(config.admin_password, reply=True, obscure_from_log=True)
-        assert "Connect now?" in notebook.get_prompt_text()
-        notebook.send_input("y", reply=True)
-        assert "Connected." in str(notebook.get_stream_result())
-        notebook.ws.close()
-
-    @priority.medium
+    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     @pytest.mark.parametrize("notebook_path", NOTEBOOKS_PATHS[1:])
     def test_spark_tk_in_jupyter(self, jupyter_instance, notebook_path):
         """
@@ -205,6 +142,7 @@ class TestJupyterConsole:
                        cells=jupyter_instance.get_notebook_source(notebook_path))
 
     @priority.medium
+    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     def test_spark_tk_readme_in_jupyter(self, jupyter_instance):
         """
         <b>Description:</b>

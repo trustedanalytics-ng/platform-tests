@@ -177,7 +177,7 @@ class Jupyter(object):
     @retry(KeyError, tries=5, delay=5)
     def get_credentials(self):
         """Set jupyter instance credentials."""
-        response = self.instance.get_credentials()
+        response = self.instance.get_credentials(self.instance.id)
         self.password = response["password"]
         self.instance_url = response["hostname"]
 
