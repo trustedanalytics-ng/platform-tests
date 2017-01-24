@@ -49,9 +49,12 @@ class RequestReporter:
         logger.debug('New request logged: {}'.format(request))
         self.requests.append(request)
 
-    def send_to_db(self, test_name):
+    def send_to_db(self, test_name, result_document_id):
         for request in self.requests:
-            request['test_name'] = test_name
+            request.update({
+                'test_name': test_name,
+                'result_id': result_document_id
+            })
         logger.info('Sending logged requests to db ({} requests)'.format(len(self.requests)))
         for request in self.requests:
             self._db_client.insert(collection_name=self.COLLECTION_NAME, document=request)
@@ -81,10 +84,3 @@ def log_request(func: callable):
         return response
 
     return wrapper
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    outcome = yield
-    test_name = item.nodeid.split('::')[-1]
-    request_reporter.send_to_db(test_name)

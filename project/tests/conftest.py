@@ -26,6 +26,7 @@ from _pytest.mark import MarkInfo, MarkDecorator
 import config
 from modules.constants import Path, ParametrizedService
 from modules.mongo_reporter.reporter import MongoReporter
+from modules.mongo_reporter.request_reporter import request_reporter
 from modules.tap_logger import get_logger
 from modules.tap_object_model import ServiceOffering
 
@@ -187,7 +188,11 @@ def pytest_runtest_makereport(item, call):
     # report for setup, call, teardown
     outcome = yield
     report = outcome.get_result()
-    mongo_reporter.log_report(report, item)
+    inserted_id = mongo_reporter.log_report(report, item)
+
+    if inserted_id:
+        test_name = item.nodeid.split('::')[-1]
+        request_reporter.send_to_db(test_name=test_name, result_document_id=inserted_id)
 
     # support for incremental tests
     if INCREMENTAL_KEYWORD in item.keywords:

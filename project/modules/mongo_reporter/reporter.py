@@ -114,7 +114,7 @@ class MongoReporter(BaseReporter):
         elif report.skipped:
             doc, status = self._on_fixture_skipped(report, item)
         if doc and status:
-            self._update_run_status(doc, status, increment_test_count=(report.when == "call"))
+            return self._update_run_status(doc, status, increment_test_count=(report.when == "call"))
 
     @staticmethod
     def _get_test_version():
@@ -224,9 +224,11 @@ class MongoReporter(BaseReporter):
         if increment_test_count:
             self._mongo_run_document["test_count"] += 1
 
-        self._db_client.insert(collection_name=self._TEST_RESULT_COLLECTION_NAME, document=result_document)
+        inserted_id = self._db_client.insert(collection_name=self._TEST_RESULT_COLLECTION_NAME, document=result_document)
 
         if self._mongo_run_document["status"] == self._RESULT_PASS and test_status == self._RESULT_FAIL:
             self._mongo_run_document["status"] = self._RESULT_FAIL
         self._mongo_run_document["result"][test_status] += 1
         self._save_test_run()
+
+        return inserted_id
