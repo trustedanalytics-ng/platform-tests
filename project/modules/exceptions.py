@@ -59,10 +59,6 @@ class RedirectionLimitException(Exception):
     pass
 
 
-class ModelNotFoundException(Exception):
-    pass
-
-
 class TapCliException(Exception):
     pass
 

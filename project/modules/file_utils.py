@@ -143,3 +143,11 @@ def save_text_file(data, file_name=None):
         text_file.write(data)
     _add_generated_file(file_path)
     return file_path
+
+
+def zip_file(file_path):
+    file_name = TMP_FILE_NAME.format(datetime.now().strftime('%Y%m%d_%H%M%S_%f'))
+    zip_file_path = os.path.join(TMP_FILE_DIR, file_name)
+    with zipfile.ZipFile(zip_file_path, mode="w") as zf:
+        zf.write(file_path)
+    return zip_file_path

@@ -186,6 +186,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         this_instance = self.get(service_id=self.id, client=self._get_client(client))
         assert this_instance is not None, "Instance {} not found on the list".format(self.name)
         self.state = this_instance.state
+        self.url = this_instance.url
 
     def get_credentials(self, client=None):
         return api.get_service_credentials(service_id=self.id, client=self._get_client(client))

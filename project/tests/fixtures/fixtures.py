@@ -25,7 +25,8 @@ import config
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, \
     TapComponent, TapGitHub
-from modules.exceptions import UnexpectedResponseError, ModelNotFoundException
+from modules.exceptions import UnexpectedResponseError
+from modules.file_utils import zip_file
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
@@ -36,7 +37,7 @@ from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
 from modules.test_names import generate_test_object_name
 from tap_component_config import api_service
-from .data_repo import Urls, DATA_REPO_PATH
+from .data_repo import Urls, DATA_REPO_PATH, DataFileKeys
 from .sample_apps import SampleApps
 
 
@@ -599,14 +600,11 @@ def example_image():
 
 
 @pytest.fixture(scope="session")
-def model_hdfs_path(core_org):
-    log_fixture("Retrieve existing model hdfs path from platform")
-    model_dataset_name = "model"
-    dataset_list = data_catalog.DataSet.api_get_list(org_guid_list=[core_org.guid])
-    model_dataset = next((ds for ds in dataset_list if ds.title == model_dataset_name), None)
-    if model_dataset is None:
-        raise ModelNotFoundException("Model not found. Missing '{}' dataset on platform".format(model_dataset_name))
-    return model_dataset.target_uri
+def model_hdfs_path(session_context, core_org, test_data_urls):
+    model_file = zip_file(test_data_urls[DataFileKeys.SCORING_ENGINE_MODEL].filepath)  # workaround for DPNG-15187
+    log_fixture("Create a dataset with model file.")
+    _, dataset = data_catalog.create_dataset_from_file(session_context, core_org.guid, model_file)
+    return dataset.target_uri
 
 
 @pytest.fixture(scope="session")

@@ -17,19 +17,16 @@
 import pytest
 import requests
 
-from modules.application_stack_validator import ApplicationStackValidator
-from modules.constants import TapComponent as TAP, ServiceCatalogHttpStatus, ServiceLabels, ServicePlan
+from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan
 from modules.markers import incremental, long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
-from tests.fixtures import assertions
 
 logged_components = (TAP.scoring_engine, TAP.service_catalog, TAP.das, TAP.downloader,
                      TAP.metadata_parser)
 pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog)]
 
 
-@pytest.mark.skip(reason="DPNG-8772 Adjust test_scoring_engine tests to TAP NG")
 @long
 @priority.high
 @incremental
@@ -37,15 +34,26 @@ pytestmark = [pytest.mark.components(TAP.scoring_engine, TAP.service_catalog)]
 class TestScoringEngineInstance:
     expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
 
-    def test_0_create_instance(self, model_hdfs_path, core_org, core_space, space_users_clients_core, class_context):
+    @pytest.fixture(scope="class")
+    def se_instance(self, class_context, model_hdfs_path):
+        step("Create scoring engine instance")
+        instance = ServiceInstance.create_with_name(
+            context=class_context,
+            offering_label=ServiceLabels.SCORING_ENGINE,
+            plan_name=ServicePlan.SINGLE,
+            params={"uri": model_hdfs_path}
+        )
+        step("Check that scoring engine instance is runnning")
+        instance.ensure_running()
+        return instance
+
+    def test_0_create_instance(self, se_instance):
         """
         <b>Description:</b>
         Check creation of scoring engine instance.
 
         <b>Input data:</b>
-        1. model hdfs path
-        2. organization id
-        3. user client
+        1. organization id
 
         <b>Expected results:</b>
         Test passes if scoring engine instance is created successfully.
@@ -54,41 +62,12 @@ class TestScoringEngineInstance:
         1. Create scoring engine instance.
         2. Check that created instance is present on instances list.
         """
-        self.__class__.client = space_users_clients_core["developer"]
-        step("Create scoring engine instance")
-        self.__class__.instance = ServiceInstance.api_create_with_plan_name(
-            context=class_context,
-            org_guid=core_org.guid,
-            space_guid=core_space.guid,
-            service_label=ServiceLabels.SCORING_ENGINE,
-            service_plan_name=ServicePlan.SIMPLE_ATK,
-            params={"uri": model_hdfs_path},
-            client=self.client
-        )
         step("Check instance is on the instance list")
-        instances_list = ServiceInstance.api_get_list(core_space.guid, client=self.client)
-        assert self.instance in instances_list, "Scoring Engine was not found on the instance list"
+        instances_list = ServiceInstance.get_list()
+        assert se_instance in instances_list, "Scoring Engine was not found on the instance list"
 
-    def test_1_check_service_bindings(self):
-        """
-        <b>Description:</b>
-        Check service bindings.
-
-        <b>Input data:</b>
-        No input data.
-
-        <b>Expected results:</b>
-        Test passes if scoring engine has correct bindings.
-
-        <b>Steps:</b>
-        1. Check that scoring engine has correct bindings.
-        """
-        step("Check scoring engine has correct bindings")
-        validator = ApplicationStackValidator(self.instance)
-        validator.validate(expected_bindings=self.expected_se_bindings)
-        self.__class__.se_app = validator.application
-
-    def test_2_check_request_to_se_application(self):
+    @pytest.mark.bugs("DPNG-15102 Model associated with scoring-engine instance is not detected.")
+    def test_1_check_request_to_se_application(self, se_instance):
         """
         <b>Description:</b>
         Check sending request to scoring engine application.
@@ -104,33 +83,12 @@ class TestScoringEngineInstance:
         2. Check scoring engine application response.
         """
         step("Check that Scoring Engine app responds to an HTTP request")
-        url = "http://{}/v1/score?data=10.0,1.5,200.0".format(self.se_app.urls[0])
+        url = "{}/v1/score?data=10.0,1.5,200.0".format(se_instance.url)
         headers = {"Accept": "text/plain", "Content-Types": "text/plain; charset=UTF-8"}
         response = requests.post(url, data="", headers=headers)
         assert response.text == "-1.0", "Scoring engine response was wrong"
 
-    def test_3_create_service_key(self, core_space):
-        # This functionality changed in new TAP
-        # step("Check that the instance exists in summary and has no keys")
-        # summary = ServiceInstance.api_get_keys(core_space.guid, client=self.client)
-        # assert self.instance in summary, "Instance not found in summary"
-        # assert summary[self.instance] == [], "There are keys for the instance"
-        # step("Create a key for the scoring engine instance and check it")
-        # self.__class__.instance_key = ServiceKey.api_create(self.instance.guid, client=self.client)
-        # summary = ServiceInstance.api_get_keys(core_space.guid)
-        # assert self.instance_key in summary[self.instance], "Key not found"
-        pass
-
-    def test_4_delete_service_key(self, core_space):
-        # This functionality changed in new TAP
-        # step("Delete service key")
-        # self.instance_key.api_delete(client=self.client)
-        # step("Check the key is no longer in summary")
-        # summary = ServiceInstance.api_get_keys(core_space.guid, client=self.client)
-        # assert summary[self.instance] == [], "There are keys for the instance"
-        pass
-
-    def test_5_delete_instance(self, core_space):
+    def test_2_delete_instance(self, se_instance):
         """
         <b>Description:</b>
         Check that scoring engine instance can be deleted.
@@ -145,40 +103,9 @@ class TestScoringEngineInstance:
         1. Delete scoring engine instance.
         2. Check that scoring engine instance was successfully deleted.
         """
-        self.instance.api_delete(client=self.client)
-        instances = ServiceInstance.api_get_list(space_guid=core_space.guid)
-        assert self.instance not in instances, "Scoring engine instance was not deleted"
-
-
-@pytest.mark.skip(reason="DPNG-8772 Adjust test_scoring_engine tests to TAP NG")
-@priority.low
-@pytest.mark.sample_apps_test
-class TestScoringEngineUnauthorizedUsers:
-    unauthorized_roles = ("manager", "auditor")
-
-    @pytest.mark.parametrize("user_role", unauthorized_roles)
-    def test_cannot_create_scoring_engine(self, context, test_org, test_space, space_users_clients, model_hdfs_path, user_role):
-        """
-        <b>Description:</b>
-        Check that scoring engine instance cannot be created by unauthorized user.
-
-        <b>Input data:</b>
-        1. Test organization
-        2. unauthorized user client
-        3. model hdfs path
-
-        <b>Expected results:</b>
-        Test passes if scoring engine cannot be created by unauthorized user.
-
-        <b>Steps:</b>
-        1. Try to create a scoring engine instance by unauthorized user results with proper error.
-        """
-        step("Check that unauthorized user cannot create scoring engine")
-        client = space_users_clients[user_role]
-        assertions.assert_raises_http_exception(ServiceCatalogHttpStatus.CODE_FORBIDDEN,
-                                                ServiceCatalogHttpStatus.MSG_FORBIDDEN,
-                                                ServiceInstance.api_create_with_plan_name, context=context,
-                                                org_guid=test_org.guid, space_guid=test_space.guid,
-                                                service_label=ServiceLabels.SCORING_ENGINE,
-                                                service_plan_name=ServicePlan.SIMPLE_ATK,
-                                                params={"uri": model_hdfs_path}, client=client)
+        step("Delete scoring engine instance.")
+        se_instance.delete()
+        step("Check that scoring engine instance was deleted.")
+        se_instance.ensure_deleted()
+        instances = ServiceInstance.get_list()
+        assert se_instance not in instances, "Scoring engine instance was not deleted"
