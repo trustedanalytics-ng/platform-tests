@@ -302,11 +302,12 @@ def kerberos_instance(session_context, api_service_admin_client):
 def app_bound_mongodb(module_context, mongodb_instance, api_service_admin_client):
     log_fixture("mongodb_app: download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.MONGODB_API)
-    app_src.run_build_sh()
-
-    log_fixture("mongodb_app: package sample application")
     p_a = PrepApp(app_src.path)
-    gzipped_app_path = p_a.package_app(module_context)
+    log_fixture("mongodb_app: package sample application")
+    if os.path.exists(ApplicationPath.MONGODB_API_TAR):
+        gzipped_app_path = ApplicationPath.MONGODB_API_TAR
+    else:
+        gzipped_app_path = p_a.package_app(module_context)
 
     log_fixture("mongodb_app: update manifest")
     manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [mongodb_instance.name]}
@@ -329,11 +330,12 @@ def app_bound_mongodb(module_context, mongodb_instance, api_service_admin_client
 def app_bound_mysql(module_context, mysql_instance, api_service_admin_client):
     log_fixture("mysql_app: download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
-    app_src.run_build_sh()
-
-    log_fixture("mysql_app: package sample application")
     p_a = PrepApp(app_src.path)
-    gzipped_app_path = p_a.package_app(module_context)
+    log_fixture("mysql_app: package sample application")
+    if os.path.exists(ApplicationPath.SQL_API_EXAMPLE_TAR):
+        gzipped_app_path = ApplicationPath.SQL_API_EXAMPLE_TAR
+    else:
+        gzipped_app_path = p_a.package_app(module_context)
 
     log_fixture("mysql_app: update manifest")
     manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [mysql_instance.name]}
@@ -383,15 +385,16 @@ def app_bound_orientdb(module_context, orientdb_instance, api_service_admin_clie
 def app_bound_psql(module_context, psql_instance, api_service_admin_client):
     log_fixture("psql_app: Download libraries")
     app_src = AppSources.from_local_path(ApplicationPath.SQL_API_EXAMPLE)
-    app_src.run_build_sh()
+    p_a = PrepApp(app_src.path)
+    log_fixture("psql_app: package sample application")
+    if os.path.exists(ApplicationPath.SQL_API_EXAMPLE_TAR):
+        gzipped_app_path = ApplicationPath.SQL_API_EXAMPLE_TAR
+    else:
+        gzipped_app_path = p_a.package_app(module_context)
 
     log_fixture("psql_app: update manifest")
-    p_a = PrepApp(app_src.path)
     manifest_params = {"type": TapApplicationType.PYTHON27, "bindings": [psql_instance.name]}
     manifest_path = p_a.update_manifest(params=manifest_params)
-
-    log_fixture("mysql_app: package sample application")
-    gzipped_app_path = p_a.package_app(module_context)
 
     log_fixture("psql_app: push sample application")
     db_app = Application.push(module_context, app_path=gzipped_app_path,

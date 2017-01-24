@@ -77,7 +77,7 @@ class PrepApp:
         if os.path.exists(os.path.join(self.app_path, self.BUILD_SH_NAME)):
             run("./" + self.BUILD_SH_NAME, cwd=self.app_path)
 
-        self.tar_name = os.path.join(self.app_path, str(random.random()) + ".tar.gz")
+        self.tar_name = os.path.join(self.app_path, "app.tar.gz")
         tar_file = tarfile.open(self.tar_name, "w:gz")
         tar_file.add(self.app_path, arcname="")
 
