@@ -196,7 +196,7 @@ offerings = {
     ServiceLabels.MOSQUITTO: {
         Plan.SINGLE_SMALL: {
             PlanKeys.NODES: 1,
-            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.MEMORY: "512M",
             PlanKeys.STORAGE: "5.0G",
             PlanKeys.SMOKE_TESTS: True,
         }, 
@@ -266,7 +266,7 @@ offerings = {
     ServiceLabels.RABBIT_MQ: {
         Plan.SINGLE_SMALL: {
             PlanKeys.NODES: 1,
-            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.MEMORY: "512M",
             PlanKeys.STORAGE: "2.0G",
             PlanKeys.SMOKE_TESTS: True,
         }, 
@@ -280,7 +280,7 @@ offerings = {
     ServiceLabels.REDIS: {
         Plan.SINGLE_SMALL: {
             PlanKeys.NODES: 1,
-            PlanKeys.MEMORY: "512Mi",
+            PlanKeys.MEMORY: "512M",
             PlanKeys.STORAGE: "5.0G",
             PlanKeys.SMOKE_TESTS: True,
         }
