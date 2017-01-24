@@ -128,4 +128,5 @@ class User(object):
         return cls.get_list_in_organization(org_guid=org_guid)
 
     def cleanup(self):
-        self.delete_from_organization(org_guid=Guid.CORE_ORG_GUID)
+        for org_guid in self.org_role:
+            self.delete_from_organization(org_guid=org_guid)
