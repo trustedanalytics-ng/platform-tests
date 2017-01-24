@@ -187,14 +187,11 @@ class TapCli:
 
     def bindings(self, instance_type, instance_name, direction):
         output = self._run_command([instance_type] + self.BINDING_LIST + [self.NAME_PARAM, instance_name, direction])
+        bindings = self.parse_ascii_table(output)
+        return bindings
 
     def service_restart(self, service_name):
         return self._run_command(self.SERVICE_RESTART + [self.NAME_PARAM, service_name], filter_logs=False)
-
-    def bindings(self, instance_name):
-        output = self._run_command([self.BINDINGS, instance_name])
-        bindings = self.parse_ascii_table(output)
-        return bindings
 
     def bind(self, instance_type,  cmd: list):
         return self._run_command([instance_type] + self.BINDING_CREATE + cmd)

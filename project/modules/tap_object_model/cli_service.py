@@ -80,38 +80,13 @@ class CliService(CliObjectSuperclass):
         cli_service.ensure_service_state(TapEntityState.RUNNING)
         return cli_service
 
-    def bind_to_dst(self, bound_service):
-        return self.bind(bound_service, TapCli.DST_NAME_PARAM)
-
-    def unbind_from_dst(self, bound_service):
-        return self.unbind(bound_service, TapCli.DST_NAME_PARAM)
-
-    def bind(self, bound_service, direction):
-        bound_service = bound_service.name if isinstance(bound_service, CliService) else bound_service
-        output = self.tap_cli.bind(self.type, [TapCli.NAME_PARAM, self.name, direction, bound_service])
-        assert self.MESSAGE_SUCCESS in output
-        return output
-
-    def unbind(self, bound_service, direction):
-        bound_service = bound_service.name if isinstance(bound_service, CliService) else bound_service
-        output = self.tap_cli.unbind(self.type, [TapCli.NAME_PARAM, self.name, direction, bound_service])
-        assert self.MESSAGE_SUCCESS in output
-        return output
-
-    def get_bindings(self, direction):
-        return self.tap_cli.bindings(self.type, self.name, direction)
-
-    def get_binding_names_as_dst(self):
-        return self.get_binding_names(TapCli.IS_DST_PARAM)
-
-    def get_binding_names(self, direction):
-        bindings = self.get_bindings(direction)
-        return [entry['BINDING NAME'] for entry in bindings]
-
     def logs(self):
         return self.tap_cli.service_log(self.name)
 
     def delete(self):
+        if self.get(self.name, self.tap_cli).state != TapEntityState.STOPPED:
+            self.stop()
+            self.ensure_service_state(TapEntityState.STOPPED)
         return self.tap_cli.delete_service(["--name", self.name])
 
     def cleanup(self):

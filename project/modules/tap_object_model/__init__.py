@@ -55,6 +55,7 @@ from .space import Space
 from .transfer import Transfer
 from .upsi import Upsi
 from .cli_application import CliApplication
+from .cli_binding import CliBinding
 from .cli_service import CliService
 from .cli_offering import CliOffering
 from .cli_invitation import CliInvitation

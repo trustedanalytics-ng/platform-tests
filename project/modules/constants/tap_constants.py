@@ -39,6 +39,8 @@ class TapMessage:
     AUTHENTICATION_FAILED = "Authentication failed"
     AUTHENTICATION_SUCCEEDED = "Authentication succeeded"
     CHANGING_PASSWORD_FAILED = "Changing user password failed"
+    CANNOT_BIND_UNBIND_INSTANCES_WITH_BOTH_DST_AND_SRC_FLAGS_SET = 'Cannot use more then one alternative flags' \
+                                                                   ' (dst-name AND src-name) in the same time'
     CANNOT_DELETE_BOUND_SERVICE = 'Instance: {} is bound to other instance: {}, id: {}'
     CANNOT_FIND_INSTANCE_WITH_NAME = "cannot find instance with name: {}"
     CANNOT_FIND_MANIFEST = "error: manifest.json does not exist: create one with metadata about your application"
