@@ -17,7 +17,8 @@
 import pytest
 
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, TapApplicationType, TapComponent as TAP
+from modules.constants import ApplicationPath, TapApplicationType, TapComponent as TAP, \
+                              UserManagementHttpStatus as HttpStatus
 from modules.markers import priority
 from modules.tap_logger import step
 from modules.tap_object_model import Application, ServiceInstance, ServiceOffering
@@ -108,11 +109,10 @@ class TestTapApp:
         app.delete()
         assertions.assert_not_in_by_id_with_retry(app.id, Application.get_list)
 
-    @pytest.mark.bugs("DPNG-15159 [api-tests] Creating offering from an application should be supported only for admin users")
     @priority.medium
     @pytest.mark.sample_apps_test
-    @pytest.mark.parametrize("role", ["admin", "user"])
-    def test_app_register_as_offering(self, context, app_jar, offering_json, manifest_json, test_user_clients, role):
+    def test_app_register_as_offering_as_admin(self, context, app_jar, offering_json,
+                                               manifest_json, test_user_clients):
         """
         <b>Description:</b>
         Checks if an offering can be created from an application.
@@ -122,18 +122,48 @@ class TestTapApp:
         2. Organization id
 
         <b>Expected results:</b>
-        An offering can be created from an application.
+        An offering can be created from an application as admin
 
         <b>Steps:</b>
         1. Create offering.
         2. Verify is on the offerings list.
         """
-        client = test_user_clients[role]
-        step("Register in marketplace")
-        register_offering = ServiceOffering.create_from_binary(context, jar_path=app_jar, manifest_path=manifest_json,
-                                                               offering_path=offering_json, client=client)
-        register_offering.ensure_ready()
-        assertions.assert_in_with_retry(register_offering, ServiceOffering.get_list)
+        client = test_user_clients["admin"]
+        step("Register in marketplace as admin")
+        offering = ServiceOffering.create_from_binary(context, jar_path=app_jar,
+                                                      manifest_path=manifest_json,
+                                                      offering_path=offering_json,
+                                                      client=client)
+        offering.ensure_ready()
+        assertions.assert_in_with_retry(offering, ServiceOffering.get_list)
+
+    @priority.medium
+    @pytest.mark.sample_apps_test
+    def test_app_register_as_offering_as_user(self, context, app_jar, offering_json,
+                                              manifest_json, test_user_clients):
+        """
+        <b>Description:</b>
+        Checks if an offering can be created from an application.
+
+        <b>Input data:</b>
+        1. Sample application.
+        2. Organization id
+
+        <b>Expected results:</b>
+        An offering CAN'T be created from an application as user
+
+        <b>Steps:</b>
+        1. Try to create offering and fail.
+        """
+        client = test_user_clients["user"]
+        step("Register in marketplace as user")
+        assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN,
+                                                HttpStatus.MSG_FORBIDDEN,
+                                                ServiceOffering.create_from_binary,
+                                                context, jar_path=app_jar,
+                                                manifest_path=manifest_json,
+                                                offering_path=offering_json,
+                                                client=client)
 
     @priority.medium
     @pytest.mark.sample_apps_test

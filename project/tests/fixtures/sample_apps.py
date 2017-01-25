@@ -58,7 +58,7 @@ class SampleApps:
     def prepare(self):
         """ Build all sample apps and copy them to tmp directory"""
         if not os.path.exists(TMP_FILE_DIR):
-            os.mkdir(TMP_FILE_DIR)
+            os.makedirs(TMP_FILE_DIR)
 
         for name, path in self.SAMPLE_APPS.items():
             tar_gz_path = self.build_app(path)
