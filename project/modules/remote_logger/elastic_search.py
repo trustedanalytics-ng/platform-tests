@@ -28,7 +28,7 @@ from config import ng_socks_proxy_port
 class ElasticSearch(object):
     """Elastic search requests manager."""
 
-    MAX_PAGE_LIMIT = 10000
+    MAX_PAGE_LIMIT = 50000
 
     def __init__(self, configuration: LogProviderConfiguration):
         self.__configuration = configuration
@@ -47,7 +47,7 @@ class ElasticSearch(object):
     def get_log(self):
         """Read all available logs for given configuration."""
         if self.__last_total_count > self.MAX_PAGE_LIMIT:
-            raise ElasticSearchResultPaginationNotImplementedException()
+            raise ElasticSearchResultPaginationNotImplementedException(self.__last_total_count)
         query = self.__get_query(limit=self.__last_total_count, offset=0)
         response = self.__request(query)
         return ElasticSearchResponseConverter.convert(response)
@@ -87,8 +87,10 @@ class ElasticSearch(object):
 
 
 class ElasticSearchResultPaginationNotImplementedException(Exception):
-    def __init__(self):
-        super().__init__("Results total count is higher than MAX_PAGE_LIMIT and need pagination to get all results.")
+    def __init__(self, results_total_count):
+        self.results_total_count = results_total_count
+        super().__init__("""Results total count is {0} and is higher than MAX_PAGE_LIMIT
+                         and need pagination to get all results.""".format(results_total_count))
 
 
 class ElasticSearchUnexpectedResponseException(Exception):

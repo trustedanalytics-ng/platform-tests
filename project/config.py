@@ -192,7 +192,7 @@ check_tap_cli_version = get_bool("PT_CHECK_TAP_CLI_VERSION", True)
 
 # Set to True if kubectl and core services are not accessible from jumpbox, but from master-0
 access_to_core_services_from_jump = get_bool("PT_ACCESS_TO_CORE_SERVICES_FROM_JUMP", False)
-master_0_hostname = os.environ.get("PT_MASTER_0_HOSTNAME", "compute-master.instance.cluster.local")
+master_0_hostname = os.environ.get("PT_MASTER_0_HOSTNAME", "compute-master")
 
 # --------------------------------- Performance tests -------------------------------- #
 
