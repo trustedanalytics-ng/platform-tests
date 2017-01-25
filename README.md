@@ -4,7 +4,7 @@
 
 ### Requirements
 * Recommended OS - Ubuntu 14, Centos 7
-* access to the Web (several tests rely on Web resources) - not necessarily needed for smoke tests (see below)
+* access to the Web (several tests rely on Web resources)
 * key `key.dat` to decrypt repository secrets (ask repository owner) - not needed for smoke tests
 
 
@@ -152,13 +152,13 @@ For example to run `test_create_and_delete_marketplace_service_instances` only f
 
 ### Run smoke tests on bastion
 
-Ssh to your bastion using, most likely, auto-deploy-virginia.pem key (if you don't know bastion address, but you know the environment is deployed automatically on TeamCity, you'll find bastion address in platform-deployment-tests/deployment-init configuration, step Update domain IP addresses)
+Ssh to your bastion using <jumpbox_key> (if you don't know bastion address, but you know the environment is deployed automatically on TeamCity, you'll find bastion address in platform-deployment-tests/deployment-init configuration, step Update domain IP addresses)
 
 + **Go through steps 2 to 6 from [Setup above](https://github.com/intel-data/platform-tests#setup)**
 
 **Note:** to clone the repository, either use http, or copy your private key:
 ```
-scp -i ./auto-deploy-virginia.pem [your_private_key] [user]@[bastion_address]:/[path_to_ssh]/.ssh/[your_private_key]
+scp -i ./<jumpbox_key> [your_private_key] [user]@[bastion_address]:/[path_to_ssh]/.ssh/[your_private_key]
 eval `ssh-agent`
 ssh-add .ssh/[your_private_key]
 ```
