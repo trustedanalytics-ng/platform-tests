@@ -212,7 +212,7 @@ def ng_k8s_service_credentials() -> tuple:
 
 
 def github_credentials() -> tuple:
-    _assert_config_value_set("_github_user_password")
+    # _github_user_password may be None, and this is ok in some scenarios
     return github_user_username, _github_user_password
 
 
