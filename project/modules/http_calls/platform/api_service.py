@@ -470,4 +470,4 @@ def get_platform_components(*, client: HttpClient) -> dict:
 def get_cli_resource(*, client: HttpClient, resource_id: str):
     """ GET /resources/cli/{resource_id} """
     return client.request(method=HttpMethod.GET, path="resources/cli/{}".format(resource_id),
-                          msg="Get CLI resource", raw_response=True)
+                          msg="Get CLI resource", raw_response=True, log_response_content=False)

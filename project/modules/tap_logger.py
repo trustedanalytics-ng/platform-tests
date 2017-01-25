@@ -125,17 +125,17 @@ def log_http_response(response, logged_body_length=None):
     """If logged_body_length < 0, full response body is logged"""
     if logged_body_length is None:
         logged_body_length = int(config.logged_response_body_length)
-    body = response.text
+    body = None
     if logged_body_length == 0:
         body = "[...]"
-    elif len(body) > logged_body_length > 0:
+    elif len(response.text) > logged_body_length > 0:
         half = logged_body_length // 2
-        body = "{} [...] {}".format(body[:half], body[-half:])
+        body = "{} [...] {}".format(response.text[:half], response.text[-half:])
     msg = [
         "\n----------------Response------------------",
         "Status code: {}".format(response.status_code),
         "Headers: {}".format(response.headers),
-        "Content: {}".format(body),
+        "Content: {}".format(body if body is not None else response.text),
         "-----------------------------------------\n"
     ]
     get_logger(LoggerType.HTTP_RESPONSE).debug("\n".join(msg))

@@ -55,12 +55,12 @@ class HttpSession(object):
 
     def request(self, method: HttpMethod, url, headers=None, files=None,
                 data=None, params=None, auth=None, body=None, log_message="",
-                raw_response=False, timeout=None, raise_exception=True):
+                raw_response=False, timeout=None, raise_exception=True, log_response_content=True):
         """Perform request and return response."""
         request = self._request_prepare(method, url, headers, files,
                                         data, params, auth, body, log_message)
         return self._request_perform(request, raw_response, timeout=timeout,
-                                     raise_exception=raise_exception)
+                                     raise_exception=raise_exception, log_response_content=log_response_content)
 
     def _request_prepare(self, method, url, headers, files, data, params, auth, body, log_message):
         """Prepare request to perform."""
@@ -79,10 +79,13 @@ class HttpSession(object):
         return prepared_request
 
     def _request_perform(self, request: Request, raw_response: bool,
-                         timeout: int, raise_exception: bool):
+                         timeout: int, raise_exception: bool, log_response_content=True):
         """Perform request and return response."""
         response = self._send_request_and_get_raw_response(request, timeout=timeout)
-        log_http_response(response)
+        if log_response_content:  # workaround for downloading large files - reading response.text takes too long
+            log_http_response(response)
+        else:
+            log_http_response(response, logged_body_length=0)
 
         if raise_exception and not response.ok and "session_expired" != response.text.strip():
             raise UnexpectedResponseError(response.status_code, response.text)

@@ -44,7 +44,7 @@ class HttpClient(object):
         self._auth.session = session
 
     def request(self, method: HttpMethod, path, url=None, headers=None, files=None, params=None, data=None, body=None,
-                msg="", raw_response=False, timeout=900, raise_exception=True):
+                msg="", raw_response=False, timeout=900, raise_exception=True, log_response_content=True):
         """Perform request and return response."""
         if not self._auth.authenticated:
             self._auth.authenticate()
@@ -61,7 +61,8 @@ class HttpClient(object):
             log_message=msg,
             raw_response=raw_response,
             timeout=timeout,
-            raise_exception=raise_exception
+            raise_exception=raise_exception,
+            log_response_content=log_response_content
         )
 
         if "session_expired" == format(response).strip():
