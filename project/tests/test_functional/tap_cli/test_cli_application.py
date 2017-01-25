@@ -209,14 +209,14 @@ class TestPythonCliApp(TestAppBase):
 class TestGoCliApp(TestPythonCliApp):
     SAMPLE_APP_NAME = SampleAppKeys.TAPNG_GO_APP
     APP_TYPE = TapApplicationType.GO
-    EXPECTED_FILE_LIST = ["main", "run.sh"]
+    EXPECTED_FILE_LIST = ["main.go", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
 
 class TestJavaCliApp(TestPythonCliApp):
     SAMPLE_APP_NAME = SampleAppKeys.TAPNG_JAVA_APP
     APP_TYPE = TapApplicationType.JAVA
-    EXPECTED_FILE_LIST = ["tapng-java-sample-app-0.1.0.jar", "run.sh"]
+    EXPECTED_FILE_LIST = ["target/sample-java-application-1.0-SNAPSHOT.jar", "run.sh"]
     APP_URL_MESSAGE = "OK"
 
 
