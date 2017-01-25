@@ -75,15 +75,15 @@ sudo yum install rubygems ruby-devel gcc-c++
 sudo gem install cf-uaac
 ```
 
-run the script
+run the script - (if there is already a user **username** you get the error "username already in use: **username**")
 ```
 cd platform-tests
 ./deploy/add-test-admin.sh <domain> <uaa client pass> <username> <password>
 ```
-- domain, e.g. daily-nokrb-aws.gotapaas.eu
-- uaa client pass, uaa password for user admin
-- username, e.g. taptester
-- password, password for your taptester user
+- **domain**: e.g. daily-nokrb-aws.gotapaas.eu
+- **uaa client pass**: uaa password for user admin
+- **username**: e.g. taptester
+- **password**: password for your taptester user
 
 
 
@@ -100,17 +100,17 @@ There are three options to define configuration:
 1. export all variables before running tests
 
 2. create a file `platform-tests/project/user_config.py` with environment variable defined like this:
-```
-import os
-os.environ["PT_TAP_DOMAIN"] = "daily-nokrb.gotapaas.eu"
-os.environ["PT_ADMIN_USERNAME"] = "taptester"
-os.environ["PT_ADMIN_PASSWORD"] = "<password>"
-os.environ["PT_NG_JUMP_IP"] = "<jumpbox_ip>"
-os.environ["PT_NG_JUMP_KEY_PATH"] = "<jumpbox_key_path>"
-os.environ["PT_K8S_SERVICE_AUTH_PASSWORD"] = "<kubernetes-password>"
-os.environ["PT_DISABLE_ENVIRONMENT_CHECK"] = "True"
-...
-```
+  ```
+  import os
+  os.environ["PT_TAP_DOMAIN"] = "daily-nokrb.gotapaas.eu"
+  os.environ["PT_ADMIN_USERNAME"] = "taptester"
+  os.environ["PT_ADMIN_PASSWORD"] = "<password>"
+  os.environ["PT_NG_JUMP_IP"] = "<jumpbox_ip>"
+  os.environ["PT_NG_JUMP_KEY_PATH"] = "<jumpbox_key_path>"
+  os.environ["PT_K8S_SERVICE_AUTH_PASSWORD"] = "<kubernetes-password>"
+  os.environ["PT_DISABLE_ENVIRONMENT_CHECK"] = "True"
+  ...
+  ```
 
 3. export the variables in `run_tests.sh`
 
