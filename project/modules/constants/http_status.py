@@ -215,7 +215,8 @@ class TemplateRepositoryHttpStatus(HttpStatus):
 
 class CatalogHttpStatus(HttpStatus):
     MSG_TOO_SHORT_SERVICE_ID = "serviceId has to be longer than 15 characters!"
-    MSG_INSTANCE_FORBIDDEN_CHARACTERS = "Field: Name has incorrect value: {}"
+    MSG_INSTANCE_FORBIDDEN_CHARACTERS = "field: Name has incorrect value: {}; content: {} doesn't match regexp: "\
+                                        "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ !"
     MSG_INVALID_JSON = "unexpected end of JSON input"
     MSG_INSTANCE_UNCHANGED_FIELDS = "ID and Name fields can not be changed!"
     MSG_KEY_NOT_FOUND = "100: Key not found"

@@ -212,7 +212,7 @@ class TestApiServiceApplication:
         manifest_path = p_a.update_manifest(params=manifest_params)
 
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                CatalogHttpStatus.MSG_APP_FORBIDDEN_CHARACTERS.format(app_name),
+                                                CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(app_name, app_name),
                                                 Application.push, context,
                                                 app_path=test_sample_apps.tapng_python_app.filepath,
                                                 name=app_name, manifest_path=manifest_path,

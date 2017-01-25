@@ -163,7 +163,7 @@ class TestCatalogApplicationInstances:
         1. Create application instance with empty name: "".
         """
         step("Create application instance without name")
-        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME)
+        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME, self.EMPTY_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      CatalogApplicationInstance.create, context, application_id=catalog_application.id,
                                      name=self.EMPTY_NAME)
@@ -237,7 +237,8 @@ class TestCatalogApplicationInstances:
         1. Create application instance with incorrect name.
         """
         step("Try to create instance with name '{}'".format(self.INCORRECT_INSTANCE_NAME))
-        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME)
+        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME,
+                                                                                      self.INCORRECT_INSTANCE_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      CatalogApplicationInstance.create, context, application_id=catalog_application.id,
                                      name=self.INCORRECT_INSTANCE_NAME)
@@ -282,7 +283,8 @@ class TestCatalogApplicationInstances:
         """
         step("Check create instance with empty body")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
-                                     CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME),
+                                     CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME,
+                                                                                                self.EMPTY_NAME),
                                      catalog_api.create_application_instance, application_id=catalog_application.id,
                                      name=None, instance_type=None, state=None)
 

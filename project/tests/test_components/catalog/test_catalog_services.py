@@ -169,7 +169,7 @@ class TestCatalogServices:
         """
         step("Create catalog service with incorrect name")
         incorrect_name = "testServiceId"
-        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(incorrect_name)
+        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(incorrect_name, incorrect_name)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      CatalogService.create, context, template_id=catalog_template.id,
                                      name=incorrect_name)

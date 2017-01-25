@@ -181,7 +181,7 @@ class TestCatalogApplications:
         1. Create application with incorrect name.
         """
         step("Create catalog application with incorrect name")
-        expected_message = CatalogHttpStatus.MSG_APP_FORBIDDEN_CHARACTERS.format(self.INCORRECT_APP_NAME)
+        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_APP_NAME, self.INCORRECT_APP_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      CatalogApplication.create, context, template_id=catalog_template.id,
                                      image_id=catalog_image.id, name=self.INCORRECT_APP_NAME)

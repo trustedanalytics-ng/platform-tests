@@ -180,7 +180,8 @@ class TestCatalogServiceInstances:
         """
         step("Create service instance without name")
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST,
-                                     CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME),
+                                     CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.EMPTY_NAME,
+                                                                                                self.EMPTY_NAME),
                                      CatalogServiceInstance.create, context, service_id=catalog_service.id,
                                      plan_id=catalog_service.plans[0].id, name=self.EMPTY_NAME)
 
@@ -275,7 +276,8 @@ class TestCatalogServiceInstances:
         1. Create service instance with incorrect name.
         """
         step("Try to create instance with name '{}'".format(self.INCORRECT_INSTANCE_NAME))
-        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME)
+        expected_message = CatalogHttpStatus.MSG_INSTANCE_FORBIDDEN_CHARACTERS.format(self.INCORRECT_INSTANCE_NAME,
+                                                                                      self.INCORRECT_INSTANCE_NAME)
         assert_raises_http_exception(CatalogHttpStatus.CODE_BAD_REQUEST, expected_message,
                                      CatalogServiceInstance.create, context, service_id=catalog_service.id,
                                      name=self.INCORRECT_INSTANCE_NAME, plan_id=catalog_service.plans[0].id)
