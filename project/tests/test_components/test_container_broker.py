@@ -514,7 +514,6 @@ class TestContainerBroker:
                                                 nats_instance.expose_service_instance, hostname=None, ports=None,
                                                 body=body)
 
-    @pytest.mark.bugs("DPNG-15110 Custom configmap and secret should be deleted after removing service instance")
     def test_get_custom_configmap_secret(self, open_tunnel, catalog_instance_nats):
         """
         <b>Description:</b>
@@ -555,7 +554,8 @@ class TestContainerBroker:
 
         step("Delete service instance")
         catalog_instance_nats.stop()
-        catalog_instance_nats.cleanup()
+        catalog_instance_nats.destroy()
+        catalog_instance_nats.ensure_deleted()
         step("Verify if custom configmap exists")
         expected_msg = ContainerBrokerHttpStatus.MSG_CONFIGMAPS_NOT_FOUND.format(configmap_name)
         assertions.assert_raises_http_exception(ContainerBrokerHttpStatus.CODE_NOT_FOUND, expected_msg,

@@ -92,3 +92,9 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
         if metadata == []:
             metadata = None
         return metadata
+
+    @retry(AssertionError, tries=10, delay=2)
+    def ensure_deleted(self):
+        instances = self.get_list_for_service(service_id=self.class_id)
+        this_instance = next((i for i in instances if i.id == self.id), None)
+        assert this_instance is None, "Instance is is still on the list with status {}".format(this_instance.state)

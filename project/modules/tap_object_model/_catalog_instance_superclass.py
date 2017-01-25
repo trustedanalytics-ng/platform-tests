@@ -76,7 +76,7 @@ class CatalogInstanceSuperClass(object):
         return NotImplemented
 
     def delete(self):
-        return NotImplemented
+        self.update(field_name="state", value=TapEntityState.DESTROY_REQ)
 
     def stop(self):
         self.update(field_name="state", value=TapEntityState.STOP_REQ)
