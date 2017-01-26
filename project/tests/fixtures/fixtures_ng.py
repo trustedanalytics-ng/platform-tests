@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ def _get_latest_tap_cli_instance(jumpbox_client):
 
 
 @pytest.fixture(scope="session")
-def tap_cli():
+def tap_cli(request):
     jump_client = JumpClient(username=config.ng_jump_user)
 
     tap_build_number = config.tap_build_number
@@ -71,6 +71,14 @@ def tap_cli():
     if config.check_tap_cli_version and return_code != 0:
         pytest.fail("Latest tap client cannot be properly copied from jumpbox")
     os.chmod(target_path, os.stat(target_path).st_mode | stat.S_IEXEC)
+
+    def fin():
+        try:
+            log_fixture("Deleting tap client")
+            os.remove(target_path)
+        except:
+            pass
+    request.addfinalizer(fin)
 
     return TapCli(target_path)
 
