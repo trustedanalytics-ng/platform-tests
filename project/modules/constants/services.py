@@ -25,6 +25,7 @@ class ServiceLabels(object):
     COUCH_DB = "couchdb-16"
     ELASTICSEARCH13 = "elasticsearch-13"
     ELASTICSEARCH17 = "elasticsearch-17"
+    ELASTICSEARCH24 = "elasticsearch-24"
     ELASTICSEARCH17_MULTINODE = "elasticsearch17-multinode"
     ELK_MULTINODE = "elk-multinode"
     ETCD = "etcd"

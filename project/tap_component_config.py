@@ -94,7 +94,7 @@ offerings = {
             PlanKeys.SMOKE_TESTS: False,
         }
     },
-    ServiceLabels.ELASTICSEARCH17: {
+    ServiceLabels.ELASTICSEARCH24: {
         Plan.SINGLE_SMALL: {
             PlanKeys.NODES: 1,
             PlanKeys.MEMORY: "2Gi",
