@@ -36,7 +36,6 @@ You have to pass the context, as the gzipped file will be later removed.
 """
 import json
 import os
-import random
 import tarfile
 
 from modules import test_names
