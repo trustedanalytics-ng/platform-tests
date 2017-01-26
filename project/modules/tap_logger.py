@@ -45,7 +45,10 @@ class StdAndFileHandler(object):
 
 
 requests.packages.urllib3.disable_warnings()
-logger_format = "%(asctime)s - %(name)s - %(levelname)s: %(message)s"
+log_username = ""
+if config.log_username:
+    log_username = "- [{}] ".format(config.admin_username)
+logger_format = "%(asctime)s {}- %(name)s - %(levelname)s: %(message)s".format(log_username)
 if is_running_under_teamcity():
     logging.basicConfig(stream=sys.stdout, format=logger_format)
 else:

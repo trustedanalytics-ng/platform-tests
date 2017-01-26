@@ -161,6 +161,7 @@ logsearch_collect_retry_count = get_int("PT_LOGSEARCH_COLLECT_RETRY_COUNT", 5)
 logging_level = os.environ.get("PT_LOGGING_LEVEL", "DEBUG")
 verbose_ssh = get_bool("PT_VERBOSE_SSH", False)
 logged_response_body_length = os.environ.get("PT_LOGGED_RESPONSE_BODY_LENGTH", 1024)
+log_username = os.environ.get("PT_LOG_USERNAME", False)
 
 # -------------------------------------- TAP NG -------------------------------------- #
 
