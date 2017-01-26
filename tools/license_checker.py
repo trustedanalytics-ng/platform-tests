@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016 - 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,41 +18,11 @@ import os
 import re
 import sys
 
+SEARCH_PATTERN = re.compile(r'# Copyright \(c\) ([-0-9\s\,]*) Intel Corporation')
+
 HEADERS = [
 """#
-# Copyright (c) 2016 Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-""",
-"""#
-# Copyright (c) 2017 Intel Corporation
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-""",
-"""#
-# Copyright (c) 2016-2017 Intel Corporation
+# Copyright (c) {{date_ranges}} Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,10 +38,6 @@ HEADERS = [
 #
 """,
 ]
-
-HEADER_LENGTHS = {header: len(header.splitlines()) for header in HEADERS}
-MAX_HEADER_LENGTH = max(HEADER_LENGTHS.values())
-
 
 def check_file_headers(root_path, extensions, path_exceptions):
     """Checks if all files under the given root_path with the given extensions have proper license
@@ -106,26 +72,68 @@ def check_file_headers(root_path, extensions, path_exceptions):
         return False
     return True
 
+def check_license_header(path):
+    """Checks if a given file has proper license.
 
-def check_license_header(file_path):
-    match_found = False
-    try:
-        with open(file_path) as checked_file:
-            read_lines = [checked_file.readline() for _ in range(MAX_HEADER_LENGTH + 1)]
-            for header, num_lines in HEADER_LENGTHS.items():
-                lines = read_lines[:(num_lines+1)]
-                if header == ''.join(lines[1:]) or header == ''.join(lines[:-1]):
-                    match_found = True
-                    raise Exception('We need to get out of those loops.')
-    except Exception:
-        pass
+    This functions tries all the available headers. If at least one of the header
+    matches, then function will True.
 
-    if match_found:
-        return True
-    else:
-        #print('Wrong header in file: {}'.format(file_path))
-        return file_path
+    Args:
+        path: path to the file to be checked
 
+    Returns:
+        True if file has proper header, path to file otherwise
+    """
+    for header in HEADERS:
+        if is_header_correct(path, header) is True:
+            return True
+
+    return path
+
+def is_header_correct(path, header):
+    """Compares single header against file
+
+    Args:
+        path: path to file to check
+        header: header as a string
+
+    Returns:
+        True if header is correct, false otherwise
+
+    Caveats:
+        Short header will crash the tool
+    """
+    with open(path) as f:
+        header = header.splitlines()
+        # The first line can be a single '#' or '#!/usr/bin/env python3.4'
+        # In case of the laster omit such line
+        line = f.readline().strip()
+        if len(line) > 1:
+            line = f.readline().strip()
+
+        if header[0] != line:
+            print("File: " + path + " differs: " + header[0] + " != " + line)
+            return False
+        header = header[1:]
+
+        # Second line is special...
+        line = f.readline().strip()
+
+        m = SEARCH_PATTERN.search(line)
+        if m is None:
+            print("File: " + path + " has improper year format: " + line)
+            return False
+        # But we do not compare it yet...
+        header = header[1:]
+
+        # Compare the rest
+        for h in header:
+            line = f.readline().strip()
+            if h != line:
+                print("File: " + path + " differs: " + header[0] + " != " + line)
+                return False
+
+    return True
 
 if __name__ == '__main__':
     path_exceptions = ['./' + path for path in sys.argv[1].split(',')]
