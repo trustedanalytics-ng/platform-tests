@@ -176,7 +176,7 @@ def compiled_sample_java_app():
 def sample_app_jar(compiled_sample_java_app):
     jar_directory = os.path.join(compiled_sample_java_app, "target")
     file_list = os.listdir(jar_directory)
-    return os.path.join(jar_directory, next(name for name in file_list if ".jar" in name))
+    return os.path.join(jar_directory, next(name for name in file_list if name.endswith(".jar")))
 
 
 @pytest.fixture(scope="class")

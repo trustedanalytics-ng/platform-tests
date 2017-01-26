@@ -87,4 +87,4 @@ def app_jar(test_sample_apps):
     with tarfile.open(test_sample_apps.tapng_java_app.filepath) as tar:
         tar.extractall(path=sample_app_source_dir)
         sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
-    return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if ".jar" in name))
+    return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if name.endswith(".jar")))
