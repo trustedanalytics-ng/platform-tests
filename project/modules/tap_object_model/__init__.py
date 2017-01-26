@@ -26,6 +26,7 @@ from .catalog_instance import CatalogInstance
 from .catalog_service import CatalogService
 from .catalog_service_instance import CatalogServiceInstance
 from .catalog_template import CatalogTemplate
+from .catalog_state import CatalogState
 from .container_broker_instance import ContainerBrokerInstance
 from .dataset import DataSet, DatasetAccess
 from .user import User

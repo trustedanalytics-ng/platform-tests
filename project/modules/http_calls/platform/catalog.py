@@ -473,3 +473,9 @@ def delete_application_instance(*, application_id, instance_id):
                                      msg="CATALOG: delete application instance")
     return response
 
+# ---------------------------------------------- readiness probe ---------------------------------------------- #
+
+
+def get_stable_state():
+    """ GET /stable-state """
+    return _get_client().request(HttpMethod.GET, path="stable-state", msg="CATALOG: get stable-state")

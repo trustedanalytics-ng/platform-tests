@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,11 @@
 # limitations under the License.
 #
 
-# DO NOT TOUCH - version is changed automatically by Bumpversion
-VERSION = '0.6.761'
+import modules.http_calls.platform.catalog as catalog_api
 
 
+class CatalogState(object):
+
+    @classmethod
+    def get_stable_state(cls):
+        return catalog_api.get_stable_state()
