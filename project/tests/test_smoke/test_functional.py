@@ -237,7 +237,6 @@ def test_add_and_delete_transfer_from_file(core_org, context):
     transfer_flow(transfer, core_org)
 
 
-@pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
 @long
 @pytest.mark.components(TAP.gearpump_broker, TAP.hbase_broker, TAP.service_catalog,
                         TAP.smtp_broker, TAP.kafka_broker, TAP.yarn_broker, TAP.zookeeper_broker,
