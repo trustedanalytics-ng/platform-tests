@@ -102,6 +102,11 @@ class TestBindings:
         step("Check that the binding was not deleted")
         sample_python_app.ensure_bound(service_instance_id=service_instance.id)
 
+        step("Unbind service instance from application and check there are no bindings")
+        sample_python_app.unbind(service_instance_id=service_instance.id)
+        sample_python_app.ensure_running()
+        sample_python_app.ensure_unbound(service_instance_id=service_instance.id)
+
     @priority.medium
     def test_delete_app_with_bound_service(self, sample_python_app, service_instance):
         """
