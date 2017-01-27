@@ -152,6 +152,7 @@ test_user_email = os.environ.get("PT_TEST_USER_EMAIL", "intel.data.tests@gmail.c
 database_url = os.environ.get("PT_DATABASE_URL")  # if specified, results will be logged in database
 # This config value is only used by the platform-test app
 test_run_id = os.environ.get("PT_TEST_RUN_ID")
+data_repo_url = os.environ.get("PT_DATA_REPO_URL", None)
 
 # Logsearch
 collect_logsearch_logs = get_bool("PT_COLLECT_LOGSEARCH_LOGS", True)
@@ -194,7 +195,7 @@ master_0_hostname = os.environ.get("PT_MASTER_0_HOSTNAME", "compute-master.insta
 # --------------------------------- Performance tests -------------------------------- #
 
 locust_file = os.environ.get("PT_LOCUST_FILE", None)
-num_clients = os.environ.get("PT_NUM_CLIENTS", "2")
+num_clients = get_int("PT_NUM_CLIENTS", 2)
 hatch_rate = os.environ.get("PT_HATCH_RATE", "1")
 test_duration = get_int("PT_DURATION", 10) * 60
 locust_port = os.environ.get("PT_LOCUST_PORT", "8089")
@@ -205,6 +206,8 @@ if stress_run_id:
 log_metrics_interval = get_int("PT_LOG_METRICS_INTERVAL", 0)
 log_requests = get_bool("PT_LOG_REQUESTS", False)
 unique_id = os.environ.get("PT_UNIQUE_ID", None)
+perf_user_names = os.environ.get("PT_PERF_USER_NAMES", "").split()
+admin_username = os.environ.get("PT_PERF_ADMIN_USERNAME", admin_username)
 
 
 def ng_k8s_service_credentials() -> tuple:

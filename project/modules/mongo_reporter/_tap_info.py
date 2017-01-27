@@ -24,6 +24,13 @@ class TapInfo(object):
 
     @classmethod
     def get_build_number(cls):
+        if config.tap_build_number:
+            return config.tap_build_number
+        else:
+            return cls._retrieve_build_number_from_platform()
+
+    @classmethod
+    def _retrieve_build_number_from_platform(cls):
         try:
             platform_info = PlatformInfo.get()
             build_number = cls._build_number_from_platform_version(platform_info.platform_version)

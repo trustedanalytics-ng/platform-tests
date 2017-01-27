@@ -27,23 +27,11 @@ from retry import retry
 sys.path.insert(0, os.getcwd())
 
 import config
-from modules.command import run
-from modules.constants import ApplicationPath
+from stress_tests.fixtures import setup, teardown
 from modules.mongo_reporter.performance_reporter import PerformanceReporter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-
-def setup():
-    if "app_pushing" in config.locust_file:
-        logger.info('Building sample apps')
-        for app_dir in [ApplicationPath.SAMPLE_JAVA_APP, ApplicationPath.SAMPLE_PYTHON_APP, ApplicationPath.SAMPLE_GO_APP]:
-            run(['./build.sh'], cwd=app_dir)
-
-
-def teardown():
-    pass
 
 
 def start_locust_process(stress_run_id=None):

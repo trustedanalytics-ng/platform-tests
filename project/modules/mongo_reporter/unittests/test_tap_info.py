@@ -44,8 +44,14 @@ class TestTapInfo:
         platform_info.get.side_effect = Exception
         assert MockConfig.tap_build_number == TapInfo.get_build_number()
 
-    @mock.patch("modules.mongo_reporter._tap_info.config", MockConfig)
-    def test_get_build_number_when_platform_ok(self, platform_info):
+    def test_get_build_number_when_platform_ok_and_not_config_env_set(self, platform_info):
         platform_info.get = platform_info
         platform_info.platform_version = "0.8.5641"
         assert 5641 == TapInfo.get_build_number()
+
+    @mock.patch("modules.mongo_reporter._tap_info.config", MockConfig)
+    def test_get_build_number_when_platform_ok_and_config_env_set(self, platform_info):
+        platform_info.get = platform_info
+        platform_info.platform_version = "0.8.5641"
+        assert MockConfig.tap_build_number == TapInfo.get_build_number()
+

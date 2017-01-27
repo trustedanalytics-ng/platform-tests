@@ -26,6 +26,7 @@ import _pytest.main as pytest_main
 from locust import events
 
 from stress_tests.tap_locust.task_set_utils import PytestSelector
+from stress_tests.tap_locust.username_pool import UsernameLock
 from ._stream_capture import StreamCapture
 
 project_path = os.path.abspath(os.path.join(__file__, "..", "..", ".."))
@@ -73,7 +74,7 @@ class LocustClient(object):
         name = name or pytest_selector
         pytest_params = pytest_params or []
 
-        logger.info("Starting pytest with {}".format(str([pytest_selector]+pytest_params)))
+        logger.info("Starting pytest with {}".format(str([pytest_selector] + pytest_params)))
         ret_code, out, err, exec_time = self.run_pytest(pytest_selector, pytest_params)
         logger.info("Pytest exit with code: {}".format(ret_code))
 
@@ -82,26 +83,28 @@ class LocustClient(object):
                                         response_length=0)
         elif ret_code == pytest_main.EXIT_TESTSFAILED:
             events.request_failure.fire(request_type="test", name=name, response_time=exec_time,
-                                        exception=out+err)
+                                        exception=out + err)
 
     def run_pytest(self, selector, params):
-        env = dict(os.environ)
-        unique_id = str(self.counter.get_and_increment())
-        env["PT_UNIQUE_ID"] = unique_id
+        with UsernameLock() as username:
+            env = dict(os.environ)
+            unique_id = str(self.counter.get_and_increment())
+            env["PT_UNIQUE_ID"] = unique_id
+            env["PT_PERF_ADMIN_USERNAME"] = username
 
-        command = ["py.test", selector] + params
+            command = ["py.test", selector] + params
 
-        process = None
-        self.capture_start()
-        try:
-            start_time = time.time()
-            process = subprocess.Popen(command, env=env, cwd=project_path, universal_newlines=True)
-            process.wait()
-            total_time = int((time.time() - start_time) * 1000)
-        except:
-            logger.warn("Terminating pytest")
-            process.send_signal(signal.SIGINT)
-            raise
-        finally:
-            out, err = self.capture_end()
-        return process.returncode, out, err, total_time
+            process = None
+            self.capture_start()
+            try:
+                start_time = time.time()
+                process = subprocess.Popen(command, env=env, cwd=project_path, universal_newlines=True)
+                process.wait()
+                total_time = int((time.time() - start_time) * 1000)
+            except:
+                logger.warn("Terminating pytest")
+                process.send_signal(signal.SIGINT)
+                raise
+            finally:
+                out, err = self.capture_end()
+            return process.returncode, out, err, total_time
