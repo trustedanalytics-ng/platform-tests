@@ -611,7 +611,7 @@ def model_hdfs_path(session_context, core_org, test_data_urls):
 
 
 @pytest.fixture(scope="session")
-def test_data_urls(session_context, api_service_admin_client):
+def test_data_urls(session_context):
     """ Fixture with files from tests/fixtures/data_repo.py::DATA_FILES.
         They are accessible by url or filepath.
         Eg.:
@@ -628,7 +628,7 @@ def test_data_urls(session_context, api_service_admin_client):
 
     log_fixture("data_repo: Push data_repo application")
     app = Application.push(context=session_context, app_path=gzipped_app_path, name=p_a.app_name,
-                           manifest_path=manifest_path, client=api_service_admin_client)
+                           manifest_path=manifest_path)
 
     log_fixture("data_repo: Check application is running")
     app.ensure_running()

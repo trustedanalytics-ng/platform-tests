@@ -98,6 +98,8 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             Returns:
                 Application class instance
         """
+        if client is None:
+            client = cls._get_default_client()
         try:
             if manifest_path:
                 api.create_application_with_manifest_path(client=client, file_path=app_path,
