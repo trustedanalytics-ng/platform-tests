@@ -49,7 +49,7 @@ class CliUserTestFixtures(object):
     @pytest.fixture(scope="function")
     def regular_user(self, user, tap_cli):
         current_passwd = user.password
-        username = user.username.replace('+', '%2B')
+        username = user.username
         step("New user logs in...")
         tap_cli.login(tap_auth=[username, current_passwd])
         logged_user = user
@@ -57,7 +57,7 @@ class CliUserTestFixtures(object):
 
     @pytest.fixture(scope="function")
     def current_username(self, regular_user):
-        return regular_user.username.replace('+', '%2B')
+        return regular_user.username
 
     @pytest.fixture(scope="function")
     def current_password(self, regular_user):
@@ -211,7 +211,7 @@ class TestCliInvitation(CliUserTestFixtures):
         invitation.delete()
         expected_code = 1
         expected_message_scheme = \
-            UserManagementHttpStatus.MSG_NO_PENDING_INVITATION_FOR
+            TapMessage.MSG_RESEND_NOT_EXIST_INVITATION
         expected_message = expected_message_scheme.format(invitation.username)
         step("Ensuring legitimate response has been returned")
         assert_raises_command_execution_exception(expected_code,

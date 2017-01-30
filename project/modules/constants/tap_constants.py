@@ -65,6 +65,7 @@ class TapMessage:
     OK = "OK"
     SERVICE_ALREADY_EXISTS = "service with name: {} already exists!"
     SUCCESS = "success"
+    MSG_RESEND_NOT_EXIST_INVITATION = "Resending invitation to email {} failed error"
 
 
 class TapApplicationType:
