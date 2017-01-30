@@ -285,7 +285,6 @@ class TestSmokeTrustedAnalyticsComponents:
         request.addfinalizer(fin)
 
     @pytest.mark.usefixtures("cleanup_tap_path")
-    @pytest.mark.skip(reason="DPNG-14808 [api-tests] Some API tests take a very long time to execute")
     @pytest.mark.parametrize("resource", ["linux32"])
     def test_api_resource_cli_returns_tap_cli_binary(self, api_service_admin_client, resource, tap_path):
         """
