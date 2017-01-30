@@ -45,6 +45,7 @@ def api_get_metric(client=None, panel_id=None, metrics_level=None):
             "1": "tap_catalog_counts{component='applications'}",
             "2": "tap_catalog_counts{component='services'}",
             "3": "tap_catalog_counts{component='serviceInstancesRunning'}",
+            "4": "tap_usermanagement_counts{component='organizations'}",
             "5": "tap_usermanagement_counts{component='users'}",
             "6": "sum(container_memory_usage_bytes{image!=''})",
             "8": "sum(sum by (kubernetes_pod_name)  (rate(container_cpu_usage_seconds_total{image!=''}[2m]))) / sum(machine_cpu_cores) "

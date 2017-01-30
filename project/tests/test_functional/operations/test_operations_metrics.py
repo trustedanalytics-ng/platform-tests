@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.components(TAP.platform_operations)]
 class TestNonAdminOperationsMetrics:
     PLATFORM_SUMMARY_PATH = "app/operations/platformdashboard/platform-summary.html"
 
-    @pytest.mark.bugs("DPNG-15155 [api-tests] Non-admin is redirected to /dashboard when trying to reach /platformdashboard/summary")
+    @pytest.mark.bugs("DPNG-15270 non-admin user receives summary page layout")
     def test_non_admin_cannot_access_platform_operations(self, context, test_org):
         """
         <b>Description:</b>

@@ -118,7 +118,7 @@ class Metrics(object):
                    "memory_usage_org": "5", "cpu_usage_org": "6", "datasets": "7"}
         if metrics_level == "platform":
             metrics = {"apps": "1", "services": "2", "service_instances": "3", "orgs": "4", "users_platform": "5",
-                       "memory_usage_platform": "7", "cpu_usage_platform": "8"}
+                       "memory_usage_platform": "6", "cpu_usage_platform": "8"}
         for panel_value in metrics:
             try:
                 tmp = grafana_metrics.api_get_metric(client, panel_id=metrics[panel_value], metrics_level=metrics_level)
