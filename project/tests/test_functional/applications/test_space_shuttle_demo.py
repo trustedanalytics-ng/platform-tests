@@ -32,7 +32,7 @@ class TestSpaceShuttleDemo:
     SPACE_SHUTTLE_DEMO_APP_NAME = "space-shuttle-demo"
     SPACE_SHUTTLE_DEMO_CLIENT_NAME = "space-shuttle-demo-client"
     SPACE_SHUTTLE_GATEWAY = "space-shuttle-gateway"
-    EXPECTED_BINDINGS = [ServiceLabels.GATEWAY, ServiceLabels.INFLUX_DB_088]
+    EXPECTED_BINDINGS = [ServiceLabels.GATEWAY, ServiceLabels.INFLUX_DB_088, ServiceLabels.SCORING_ENGINE]
 
     @pytest.fixture(scope="class")
     def space_shuttle_client(self):
