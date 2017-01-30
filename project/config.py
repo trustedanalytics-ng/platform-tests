@@ -169,10 +169,9 @@ log_username = os.environ.get("PT_LOG_USERNAME", False)
 
 # -------------------------------------- TAP NG -------------------------------------- #
 
-api_version = os.environ.get("PT_API_VERSION", "v1")
+api_version = os.environ.get("PT_API_VERSION", api_service[TAP.api_service]["api_version"])
 api_url = "api.{}".format(tap_domain)
 api_url_full = os.environ.get("PT_API_URL", "{}://{}/api/{}".format(external_protocol, api_url, api_version))
-api_url_full_v2 = os.environ.get("PT_API_URL", "{}://{}/api/v2".format(external_protocol, api_url))
 ng_disable_environment_check = get_bool("PT_DISABLE_ENVIRONMENT_CHECK", False)
 ng_jump_ip = os.environ.get("PT_NG_JUMP_IP", "jump.{}".format(tap_domain))  # required for running component tests on TAP NG
 ng_jump_key_path = os.environ.get("PT_NG_JUMP_KEY_PATH")  # if not passed, key will be retrieved from GitHub

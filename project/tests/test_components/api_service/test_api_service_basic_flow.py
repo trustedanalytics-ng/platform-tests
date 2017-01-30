@@ -34,10 +34,11 @@ class TestApiServiceBasicFlow:
     MSG_INVALID_CREDENTIALS_PROVIDED = "{\"message\":\"Bad response status: 401\"}"
     KEY_ACCESS_TOKEN = "access_token"
 
-    def _get_client(self, client_type=HttpClientType.BASIC_AUTH, username=None, password=None):
+    @staticmethod
+    def _get_client(client_type=HttpClientType.BASIC_AUTH, username=None, password=None):
         configuration = HttpClientConfiguration(
             client_type=client_type,
-            url=config.api_url_full_v2,
+            url=config.api_url_full,
             username=username,
             password=password
         )

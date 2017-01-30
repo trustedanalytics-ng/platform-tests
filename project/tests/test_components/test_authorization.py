@@ -40,7 +40,7 @@ class TestApiServiceAuthorization:
         credentials = config.ng_k8s_service_credentials()
         configuration = HttpClientConfiguration(
             HttpClientType.BASIC_AUTH,
-            url=config.api_url_full_v2,
+            url=config.api_url_full,
             username=credentials[0],
             password=credentials[1]
         )
@@ -85,7 +85,6 @@ class TestApiServiceAuthorization:
         step("Check that basic auth does not work with platform info")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_UNAUTHORIZED, ApiServiceHttpStatus.MSG_UNAUTHORIZED,
                                      api.get_platform_info, client=self.basic_auth_client)
-
 
     def test_login_to_console_with_valid_credentials(self):
         """

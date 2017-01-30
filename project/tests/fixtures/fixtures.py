@@ -23,8 +23,7 @@ import pytest
 
 import config
 from modules.app_sources import AppSources
-from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, \
-    TapComponent, TapGitHub
+from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, TapGitHub
 from modules.exceptions import UnexpectedResponseError
 from modules.file_utils import zip_file
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
@@ -37,7 +36,6 @@ from modules.tap_object_model import Application, Organization, ServiceOffering,
 from modules.tap_object_model.prep_app import PrepApp
 from modules.tap_object_model.flows import data_catalog
 from modules.test_names import generate_test_object_name
-from tap_component_config import api_service
 from .data_repo import Urls, DATA_REPO_PATH, DataFileKeys
 from .sample_apps import SampleApps
 
@@ -48,9 +46,7 @@ from .sample_apps import SampleApps
 
 @pytest.fixture(scope="session")
 def api_service_admin_client():
-    api_version = api_service[TapComponent.api_service]["api_version"]
-    default_url = "{}://{}/api/{}".format(config.external_protocol, config.api_url, api_version)
-    return HttpClientFactory.get(ServiceConfigurationProvider.get(url=default_url))
+    return HttpClientFactory.get(ServiceConfigurationProvider.get())
 
 
 @pytest.fixture(scope="session")
