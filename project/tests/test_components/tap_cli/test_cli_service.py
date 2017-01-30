@@ -205,7 +205,7 @@ class TestCliService:
 
     @priority.medium
     @pytest.mark.components(TAP.cli)
-    def test_cannot_delete_service_instance_in_running_state(self, service):
+    def test_cannot_delete_service_instance_in_running_state(self, tap_cli, service):
         """
         <b>Description:</b>
         Check that attempt to delete service in running state returns proper information.
@@ -221,7 +221,7 @@ class TestCliService:
         """
         step("Trying to delete a service")
         assert_raises_command_execution_exception(1, TapMessage.CANNOT_DELETE_RUNNING_APP,
-                                                  service.delete)
+                                                  tap_cli.delete_service, ["--name", service.name])
 
     @priority.medium
     @pytest.mark.components(TAP.cli)
