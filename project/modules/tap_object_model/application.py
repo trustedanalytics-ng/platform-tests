@@ -360,7 +360,10 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         self._refresh(client=client)
         assert self.id != "", "App {} hasn't received id yet. State: {}".format(self.name, format(self.state))
 
-    def cleanup(self):
+    def cleanup(self, client: HttpClient=None):
+        if client is None:
+            client = self._get_default_client()
+        self._refresh(client=client)
         if self.state == TapEntityState.RUNNING:
             self.stop()
             self.ensure_stopped()
