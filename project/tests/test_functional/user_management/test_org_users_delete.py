@@ -58,7 +58,7 @@ class TestDeleteOrganizationUser:
         assert_user_not_in_org(user_to_delete, test_org.guid)
 
     @priority.low
-    def test_cannot_delete_org_user_twice(self, context, user_to_delete, test_org):
+    def test_cannot_delete_org_user_twice(self, user_to_delete, test_org):
         """
         <b>Description:</b>
         Checks if a user cannot be removed twice.
@@ -74,14 +74,19 @@ class TestDeleteOrganizationUser:
         1. Admin removes a user from the test org.
         2. Check that trying to delete test user from organization for the second time causes an error
         """
-        step("Admin removes a user from the test org")
+        
+        step("Delete user")
         user_to_delete.delete_from_organization(org_guid=test_org.guid)
-        step("Check that trying to delete test user from organization for the second time causes an error")
-        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_USER_NOT_EXIST,
-                                     user_to_delete.delete_from_organization, org_guid=test_org.guid)
+
+        step("Check that deleting user second time returns 404 Not Found")
+        assert_raises_http_exception(
+            HttpStatus.CODE_NOT_FOUND,
+            HttpStatus.MSG_USER_NOT_FOUND.format(user_to_delete.guid),
+            user_to_delete.delete_from_organization, org_guid=test_org.guid
+        )
 
     @priority.low
-    def test_admin_cannot_delete_non_existing_org_user(self, context, test_org):
+    def test_admin_cannot_delete_non_existing_org_user(self, test_org):
         """
         <b>Description:</b>
         Checks if admin user cannot remove not existing user.
@@ -95,10 +100,15 @@ class TestDeleteOrganizationUser:
         <b>Steps:</b>
         1. Check that an attempt to delete user which is not in org causes an error.
         """
-        step("Check that an attempt to delete user which is not in org causes an error")
+        
         non_existing_user = User(guid=Guid.NON_EXISTING_GUID, username='non-existing-user')
-        assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_USER_NOT_EXIST,
-                                     non_existing_user.delete_from_organization, org_guid=test_org.guid)
+
+        step("Check that deleting not existing user returns 404 Not Found")
+        assert_raises_http_exception(
+            HttpStatus.CODE_NOT_FOUND,
+            HttpStatus.MSG_USER_NOT_FOUND.format(non_existing_user.guid),
+            non_existing_user.delete_from_organization, org_guid=test_org.guid
+        )
 
     @priority.low
     def test_non_admin_cannot_delete_user(self, context, test_org, test_org_user_client, user_to_delete):

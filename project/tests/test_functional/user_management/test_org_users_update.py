@@ -85,7 +85,7 @@ class TestUpdateOrganizationUser:
         assert_user_in_org_and_role(updated_user, test_org.guid, role_expected)
 
     @priority.low
-    def test_cannot_update_user_with_invalid_guid(self, test_org):
+    def test_update_user_with_not_existing_id_returns_not_found(self, test_org):
         """
         <b>Description:</b>
         Checks if user update with invalid guid fails.
@@ -100,20 +100,25 @@ class TestUpdateOrganizationUser:
         1. Check that updating user with invalid user guid returns an error.
         2. Check that user org list did not change.
         """
-        # TODO implement non-existing guid
-        step("Check that updating user with invalid user guid returns an error")
-        invalid_guid = "invalid-user-guid"
+        
+        step("Get initial users list")
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
-                                     user_management.api_update_org_user_role, org_guid=test_org.guid,
-                                     user_guid=invalid_guid, new_role=User.ORG_ROLE["user"])
+
+        step("Check that updating not existing user returns 404 Not Found")
+        not_existing_user_id = "this-user-does-not-exist"
+        assert_raises_http_exception(
+            HttpStatus.CODE_NOT_FOUND,
+            HttpStatus.MSG_USER_NOT_FOUND.format(not_existing_user_id),
+            user_management.api_update_org_user_role, org_guid=test_org.guid,
+            user_guid=not_existing_user_id, new_role=User.ORG_ROLE["user"]
+        )
+
         step("Check that user org list did not change")
         users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
-    @pytest.mark.bugs("DPNG-14948 It is possible to add user to not existing org or update user providing invalid org_guid")
     @priority.low
-    def test_cannot_update_org_user_with_invalid_org_guid(self, updated_user):
+    def test_update_user_with_not_existing_org_id_returns_not_found(self, updated_user):
         """
         <b>Description:</b>
         Checks if user update with invalid organization guid fails.
@@ -127,12 +132,16 @@ class TestUpdateOrganizationUser:
         <b>Steps:</b>
         1. Check that updating user using invalid org guid returns an error.
         """
-        # TODO implement non-existing guid
-        invalid_guid = "invalid-org-guid"
-        step("Check that updating user using invalid org guid returns an error")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
-                                     user_management.api_update_org_user_role, org_guid=invalid_guid,
-                                     user_guid=updated_user.guid, new_role=User.ORG_ROLE["user"])
+        
+        not_existing_org_id = "this-org-does-not-exist"
+
+        step("Check that updating user using not existing org ID returns an error")
+        assert_raises_http_exception(
+            HttpStatus.CODE_NOT_FOUND,
+            HttpStatus.MSG_ORGANIZATION_NOT_FOUND.format(not_existing_org_id),
+            user_management.api_update_org_user_role, org_guid=not_existing_org_id,
+            user_guid=updated_user.guid, new_role=User.ORG_ROLE["user"]
+        )
 
     @priority.low
     def test_cannot_update_org_user_with_incorrect_role(self, test_org, updated_user):
@@ -150,6 +159,7 @@ class TestUpdateOrganizationUser:
         1. Check that updating user using invalid role returns an error.
         2. Check that user roles did not change.
         """
+        
         initial_role = updated_user.org_role.get(test_org.guid)
         invalid_role = "invalid role"
         step("Check that updating user using invalid role returns an error")
@@ -174,6 +184,7 @@ class TestUpdateOrganizationUser:
         1. Check that non-admin cannot update another user's roles.
         2. Check that updated user's roles did not change.
         """
+        
         step("Check that non-admin cannot update another user's roles")
         org_users = User.get_list_in_organization(org_guid=test_org.guid)
         assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_FORBIDDEN,

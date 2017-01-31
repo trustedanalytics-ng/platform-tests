@@ -116,9 +116,8 @@ class TestAddNewUserToOrganization:
         users = User.get_list_in_organization(org_guid=test_org.guid)
         assert sorted(users) == sorted(org_users)
 
-    @pytest.mark.bugs("DPNG-14948 It is possible to add user to not existing org or update user providing invalid org_guid")
     @priority.low
-    def test_cannot_add_new_user_to_non_existing_org(self, context):
+    def test_add_new_user_to_not_existing_org_returns_not_found(self, context):
         """
         <b>Description:</b>
         Checks if user cannot be added to not existing organization.
@@ -133,11 +132,15 @@ class TestAddNewUserToOrganization:
         <b>Steps:</b>
         1. Check that an error is raised when trying to add user using incorrect org guid.
         """
-        org_guid = "this-org-guid-is-not-correct"
-        step("Check that an error is raised when trying to add user using incorrect org guid")
-        assert_raises_http_exception(HttpStatus.CODE_BAD_REQUEST, HttpStatus.MSG_GUID_CODE_IS_INVALID_EXCEPTION,
-                                     User.create_by_adding_to_organization, context=context, org_guid=org_guid,
-                                     role=User.ORG_ROLE["user"])
+        
+        org_id = "id-of-not-existing-organization"
+
+        step("Check that adding new user to not existing organization returns 404 Not Found")
+        assert_raises_http_exception(
+            HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_ORGANIZATION_NOT_FOUND.format(org_id),
+            User.create_by_adding_to_organization, context=context, org_guid=org_id,
+            role=User.ORG_ROLE["user"]
+        )
 
     @priority.medium
     def test_non_admin_cannot_add_new_user_to_org(self, context, test_org_user_client, test_org):
