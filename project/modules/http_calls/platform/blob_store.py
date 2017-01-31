@@ -30,7 +30,8 @@ def _get_client():
 def get_blob(*, blob_id):
     """ GET /blobs/{blob_id} """
     response = _get_client().request(method=HttpMethod.GET,
-                                     path="blobs/{}".format(blob_id),
+                                     path="blobs/{blob_id}",
+        path_params={'blob_id': blob_id},
                                      raw_response=True, raise_exception=True,
                                      msg="BLOB-STORE: get blob")
     assert response.status_code == HttpStatus.CODE_OK
@@ -64,7 +65,8 @@ def create_blob_from_data(*, blob_id, blob_content):
 def delete_blob(*, blob_id):
     """ DELETE /blobs/{blob_id} """
     response = _get_client().request(method=HttpMethod.DELETE,
-                                     path="blobs/{}".format(blob_id),
+                                     path="blobs/{blob_id}",
+        path_params={'blob_id': blob_id},
                                      msg="BLOB-STORE: delete blob")
     return response
 

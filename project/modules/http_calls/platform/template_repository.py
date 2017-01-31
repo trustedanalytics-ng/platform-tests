@@ -35,7 +35,8 @@ def get_templates():
 def get_template(*, template_id):
     """ GET /templates/{template_id} """
     response = _get_client().request(HttpMethod.GET,
-                                     path="templates/{}".format(template_id),
+                                     path="templates/{template_id}",
+                                     path_params={'template_id': template_id},
                                      msg="TEMPLATE REPOSITORY: get template")
     return response
 
@@ -56,7 +57,8 @@ def create_template(*, template_id, template_body, hooks):
 def get_parsed_template(*, template_id, params):
     """ GET /parsed_template/{template_id}?param1=value1&param2=value2 """
     return _get_client().request(HttpMethod.GET,
-                                 path="parsed_template/{}".format(template_id),
+                                 path="parsed_template/{template_id}",
+                                 path_params={'template_id': template_id},
                                  params=params,
                                  msg="TEMPLATE REPOSITORY: get parsed template")
 
@@ -64,7 +66,8 @@ def get_parsed_template(*, template_id, params):
 def delete_template(*, template_id):
     """ DELETE /templates/{template_id} """
     response = _get_client().request(HttpMethod.DELETE,
-                                     path="templates/{}".format(template_id),
+                                     path="templates/{template_id}",
+                                     path_params={'template_id': template_id},
                                      raw_response=True, raise_exception=True,
                                      msg="TEMPLATE REPOSITORY: delete template")
     assert response.status_code == HttpStatus.CODE_NO_CONTENT

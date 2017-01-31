@@ -63,6 +63,7 @@ def api_get_job_details(org_guid, job_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="v1/oozie/jobs/workflow/{}".format(job_id),
+        path="v1/oozie/jobs/workflow/{job_id}",
+        path_params={'job_id': job_id},
         params=params
     )

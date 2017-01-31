@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import logging
 import os
 
@@ -36,7 +37,7 @@ PERFORMANCE_CONTEXT = Context()
 def build_sample_apps():
     logger.info('Building sample apps')
     for app_dir in [ApplicationPath.SAMPLE_JAVA_APP, ApplicationPath.SAMPLE_PYTHON_APP,
-                    ApplicationPath.SAMPLE_GO_APP]:
+                    ApplicationPath.SAMPLE_NODEJS_APP, ApplicationPath.SAMPLE_GO_APP]:
         run(['./build.sh'], cwd=app_dir)
 
 

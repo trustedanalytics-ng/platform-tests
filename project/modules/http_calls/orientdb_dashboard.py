@@ -36,7 +36,8 @@ def get_database(database_name, password, app_url):
                                             password=password, url=app_url)
     return HttpClientFactory.get(configuration).request(
         method=HttpMethod.GET,
-        path="database/{}".format(database_name),
+        path="database/{database_name}",
+        path_params={'database_name': database_name},
         msg="OrientDB-dashboard: get database"
     )
 
@@ -47,6 +48,7 @@ def execute_command(database_name, command, password, app_url):
                                             password=password, url=app_url)
     return HttpClientFactory.get(configuration).request(
         method=HttpMethod.GET,
-        path="command/{}/sql/{}/20".format(database_name, command),
+        path="command/{database_name}/sql/{command}/20",
+ path_params={'database_name': database_name, 'command': command},
         msg="OrientDB-dashboard: execute command"
     )

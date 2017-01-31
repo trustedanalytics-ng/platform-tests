@@ -30,7 +30,8 @@ def _get_client():
 def get_logs(*, instance_id):
     """ GET /service/{instanceId}/logs """
     response = _get_client().request(HttpMethod.GET,
-                                     path="service/{}/logs".format(instance_id),
+                                     path="service/{instance_id}/logs",
+                                     path_params={'instance_id': instance_id},
                                      raw_response=True,
                                      msg="CONTAINER-BROKER: get logs for instance")
     assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
@@ -40,7 +41,8 @@ def get_logs(*, instance_id):
 def get_envs(*, instance_id):
     """ GET /service/{instanceId}/credentials """
     response = _get_client().request(HttpMethod.GET,
-                                     path="service/{}/credentials".format(instance_id),
+                                     path="service/{instance_id}/credentials",
+                                     path_params={'instance_id': instance_id},
                                      raw_response=True,
                                      msg="CONTAINER-BROKER: get envs for instance")
     assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
@@ -50,7 +52,9 @@ def get_envs(*, instance_id):
 def bind_service_instances(*, src_instance_id, dst_instance_id):
     """ POST /bind/{src_instance_id}/{dst_instance_id} """
     response = _get_client().request(HttpMethod.POST,
-                                     path="bind/{}/{}".format(src_instance_id, dst_instance_id),
+                                     path="bind/{src_instance_id}/{dst_instance_id}",
+                                     path_params={'src_instance_id': src_instance_id,
+                                                  'dst_instance_id': dst_instance_id},
                                      msg="CONTAINER-BROKER: bind service instances")
     return response
 
@@ -58,7 +62,9 @@ def bind_service_instances(*, src_instance_id, dst_instance_id):
 def unbind_service_instances(*, src_instance_id, dst_instance_id):
     """ POST /unbind/{src_instance_id}/{dst_instance_id} """
     response = _get_client().request(HttpMethod.POST,
-                                     path="unbind/{}/{}".format(src_instance_id, dst_instance_id),
+                                     path="unbind/{src_instance_id}/{dst_instance_id}",
+                                     path_params={'src_instance_id': src_instance_id,
+                                                  'dst_instance_id': dst_instance_id},
                                      msg="CONTAINER-BROKER: unbind service instances")
     return response
 
@@ -69,7 +75,8 @@ def scale_service_instance(*, instance_id, replicas):
         "replicas": replicas
     }
     response = _get_client().request(HttpMethod.PUT,
-                                     path="scale/{}".format(instance_id),
+                                     path="scale/{instance_id}",
+                                     path_params={'instance_id': instance_id},
                                      body=body,
                                      msg="CONTAINER-BROKER: scale service instance")
     return response
@@ -88,7 +95,8 @@ def get_core_components_version():
 def get_secret(*, secret_name):
     """ GET /secret/{secret_name} """
     response = _get_client().request(HttpMethod.GET,
-                                     path="secret/{}".format(secret_name),
+                                     path="secret/{secret_name}",
+                                     path_params={'secret_name': secret_name},
                                      raw_response=True,
                                      msg="CONTAINER-BROKER: get secret")
     assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
@@ -98,7 +106,8 @@ def get_secret(*, secret_name):
 def get_configmap(*, configmap_name):
     """ GET /configmap/{configmap_name} """
     response = _get_client().request(HttpMethod.GET,
-                                     path="configmap/{}".format(configmap_name),
+                                     path="configmap/{configmap_name}",
+                                     path_params={'configmap_name': configmap_name},
                                      raw_response=True,
                                      msg="CONTAINER-BROKER: get configmap")
     assert response.status_code == ContainerBrokerHttpStatus.CODE_OK
@@ -113,7 +122,8 @@ def expose_service_instance(*, instance_id, hostname, ports: list, body=None):
             "ports": ports
         }
     response = _get_client().request(HttpMethod.POST,
-                                     path="service/{}/expose".format(instance_id),
+                                     path="service/{instance_id}/expose",
+                                     path_params={'instance_id': instance_id},
                                      body=body,
                                      msg="CONTAINER-BROKER: expose service instance")
     return response
@@ -122,7 +132,8 @@ def expose_service_instance(*, instance_id, hostname, ports: list, body=None):
 def unexpose_service_instance(*, instance_id):
     """ DELETE /service/{instance_id}/expose """
     response = _get_client().request(HttpMethod.DELETE,
-                                     path="service/{}/expose".format(instance_id),
+                                     path="service/{instance_id}/expose",
+                                     path_params={'instance_id': instance_id},
                                      msg="CONTAINER-BROKER: unexpose service instance")
     return response
 
@@ -130,7 +141,8 @@ def unexpose_service_instance(*, instance_id):
 def get_hosts(*, instance_id):
     """ GET /service/{instance_id}/hosts """
     response = _get_client().request(HttpMethod.GET,
-                                     path="service/{}/hosts".format(instance_id),
+                                     path="service/{instance_id}/hosts",
+                                     path_params={'instance_id': instance_id},
                                      raw_response=True,
                                      msg="CONTAINER-BROKER: get hosts")
     assert response.status_code == ContainerBrokerHttpStatus.CODE_OK

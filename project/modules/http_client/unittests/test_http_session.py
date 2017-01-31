@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ class TestHttpSession(unittest.TestCase):
 
     USERNAME = "username"
     PASSWORD = "password"
-    URL = "http://some/path"
+    PATH = "path"
+    URL = "http://some"
 
     def setUp(self):
         self._create_http_session()
@@ -52,7 +53,7 @@ class TestHttpSession(unittest.TestCase):
         response._content = content
         mock_session_send_call.return_value = response
         # when
-        response = self.http_session.request(HttpMethod.GET, self.URL)
+        response = self.http_session.request(HttpMethod.GET, self.URL, self.PATH)
         # then
         self.assertEqual(response, expected_response)
 
@@ -63,7 +64,7 @@ class TestHttpSession(unittest.TestCase):
         response.status_code = HttpStatus.CODE_BAD_REQUEST
         mock_session_send_call.return_value = response
         # then
-        self.assertRaises(UnexpectedResponseError, self.http_session.request, HttpMethod.GET, self.URL)
+        self.assertRaises(UnexpectedResponseError, self.http_session.request, HttpMethod.GET, self.URL, self.PATH)
 
     def _create_http_session(self):
         self.http_session = HttpSession(

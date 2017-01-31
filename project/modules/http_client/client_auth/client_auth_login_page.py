@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ class ClientAuthLoginPage(ClientAuthBase):
         """Use session credentials to authenticate."""
         response = self.session.request(
             method=HttpMethod.POST,
-            url="{}/login.do".format(self._url),
+            url=self._url,
+            path="login.do",
             data=self._request_data(),
             headers=self._request_headers(),
             log_message="Authenticate user",
@@ -62,7 +63,8 @@ class ClientAuthLoginPage(ClientAuthBase):
         """Prepare data with csrf token."""
         response = self.session.request(
             method=HttpMethod.GET,
-            url="{}/login".format(self._url),
+            url=self._url,
+            path="login",
             log_message="Authenticate: get login form"
         )
         token = self._get_csrf_token(response)

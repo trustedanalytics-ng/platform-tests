@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ class HttpClient(object):
     def session(self, session):
         self._auth.session = session
 
-    def request(self, method: HttpMethod, path, url=None, headers=None, files=None, params=None, data=None, body=None,
-                credentials=None, msg="", raw_response=False, timeout=900, raise_exception=True,
+    def request(self, method: HttpMethod, path, path_params=None, url=None, headers=None, files=None, params=None,
+                data=None, body=None, credentials=None, msg="", raw_response=False, timeout=900, raise_exception=True,
                 log_response_content=True):
         """Perform request and return response."""
         if not self._auth.authenticated:
@@ -54,7 +54,9 @@ class HttpClient(object):
         url = self.url if url is None else url
         response = self._auth.session.request(
             method=method,
-            url="{}/{}".format(url, path),
+            url=url,
+            path=path,
+            path_params=path_params,
             headers=headers,
             files=files,
             params=params,
@@ -72,7 +74,9 @@ class HttpClient(object):
             self._auth.authenticate()
             return self._auth.session.request(
                 method=method,
-                url="{}/{}".format(url, path),
+                url=url,
+                path=path,
+                path_params=path_params,
                 headers=headers,
                 files=files,
                 params=params,

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ def api_create_transfer_by_file_upload(org_guid, source, category=None, is_publi
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="upload/{}".format(org_guid),
+        path="upload/{org_guid}",
+        path_params={'org_guid': org_guid},
         data=data,
         files=files,
         msg="PLATFORM: create a transfer"

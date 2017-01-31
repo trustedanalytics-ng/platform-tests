@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,8 @@ def get_model_metadata(*, model_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="models/{}".format(model_id),
+        path="models/{model_id}",
+        path_params={'model_id': model_id},
         msg="PLATFORM: get metadata of model"
     )
 
@@ -86,7 +87,8 @@ def update_model(*, model_id, name=None, creation_tool=None, revision=None, algo
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.PUT,
-        path="models/{}".format(model_id),
+        path="models/{model_id}",
+        path_params={'model_id': model_id},
         body=body,
         msg="PLATFORM: update model"
     )
@@ -97,7 +99,8 @@ def delete_model(*, model_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="models/{}".format(model_id),
+        path="models/{model_id}",
+        path_params={'model_id': model_id},
         msg="PLATFORM: delete model"
     )
 
@@ -121,7 +124,8 @@ def update_model_fields(*, model_id, name=None, creation_tool=None, revision=Non
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.PATCH,
-        path="models/{}".format(model_id),
+        path="models/{model_id}",
+        path_params={'model_id': model_id},
         body=body,
         msg="PLATFORM: update model fields"
     )
@@ -141,7 +145,8 @@ def upload_model_artifact(model_id, filename=None, actions=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="models/{}/artifacts/".format(model_id),
+        path="models/{model_id}/artifacts/",
+        path_params={'model_id': model_id},
         files=files,
         msg="PLATFORM: upload model artifact"
     )
@@ -152,7 +157,8 @@ def get_model_artifact_metadata(model_id, artifact_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="models/{}/artifacts/{}".format(model_id, artifact_id),
+        path="models/{model_id}/artifacts/{artifact_id}",
+        path_params={'model_id': model_id, 'artifact_id': artifact_id},
         msg="PLATFORM: get model artifact metadata"
     )
 
@@ -162,7 +168,8 @@ def get_model_artifact_file(model_id, artifact_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="models/{}/artifacts/{}/file".format(model_id, artifact_id),
+        path="models/{model_id}/artifacts/{artifact_id}/file",
+        path_params={'model_id': model_id, 'artifact_id': artifact_id},
         msg="PLATFORM: download model artifact file"
     )
 
@@ -172,7 +179,8 @@ def delete_model_artifact(model_id, artifact_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="models/{}/artifacts/{}".format(model_id, artifact_id),
+        path="models/{model_id}/artifacts/{artifact_id}",
+        path_params={'model_id': model_id, 'artifact_id': artifact_id},
         msg="PLATFORM: delete model artifact metadata and file"
     )
 

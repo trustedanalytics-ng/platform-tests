@@ -36,7 +36,8 @@ def get_org_synchronization_state(org_guid):
     """GET /state/organizations/{org_guid}"""
     return _get_client().request(
         method=HttpMethod.GET,
-        path="state/organizations/{}".format(org_guid),
+        path="state/organizations/{org_guid}",
+        path_params={'org_guid': org_guid},
         msg="Auth-gateway: get synchronization state of organization"
     )
 
@@ -44,7 +45,8 @@ def get_user_synchronization_state(org_guid, user_id):
     """GET /state/organizations/{org_guid}/users/{user_id}"""
     return _get_client().request(
         method=HttpMethod.GET,
-        path="state/organizations/{}/users/{}".format(org_guid, user_id),
+        path="state/organizations/{org_guid}/users/{user_id}",
+        path_params={'org_guid': org_guid, 'user_id': user_id},
         msg="Auth-gateway: get synchronization state of user"
     )
 
@@ -60,7 +62,8 @@ def synchronize_org(org_guid):
     """PUT /synchronize/organizations/{org_guid}"""
     return _get_client().request(
         method=HttpMethod.PUT,
-        path="synchronize/organizations/{}".format(org_guid),
+        path="synchronize/organizations/{org_guid}",
+        path_params={'org_guid': org_guid},
         msg="Auth-gateway: synchronize organization"
     )
 
@@ -68,6 +71,7 @@ def synchronize_user_in_org(org_guid, user_id):
     """PUT /synchronize/organizations/{org_guid}/users/{user_id}"""
     return _get_client().request(
         method=HttpMethod.PUT,
-        path="synchronize/organizations/{}/users/{}".format(org_guid, user_id),
+        path="synchronize/organizations/{org_guid}/users/{user_id}",
+        path_params={'org_guid': org_guid, 'user_id': user_id},
         msg="Auth-gateway: synchronize user in organization"
     )

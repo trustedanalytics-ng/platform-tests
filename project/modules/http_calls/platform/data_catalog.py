@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,7 +47,8 @@ def api_get_dataset(entry_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="datasets/{}".format(entry_id),
+        path="datasets/{entry_id}",
+        path_params={'entry_id': entry_id},
         msg="PLATFORM: get data set"
     )
 
@@ -57,7 +58,8 @@ def api_delete_dataset(entry_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="datasets/{}".format(entry_id),
+        path="datasets/{entry_id}",
+        path_params={'entry_id': entry_id},
         msg="PLATFORM: delete data set"
     )
 
@@ -74,7 +76,8 @@ def api_update_dataset(entry_id, creation_time=None, target_uri=None, category=N
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="datasets/{}".format(entry_id),
+        path="datasets/{entry_id}",
+        path_params={'entry_id': entry_id},
         body=body,
         msg="PLATFORM: update data set"
     )

@@ -26,7 +26,8 @@ def k8s_get_pods():
     """GET /namespaces/{namespace}/pods"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/pods".format(DEFAULT_NAMESPACE),
+        path="namespaces/{DEFAULT_NAMESPACE}/pods",
+        path_params={'DEFAULT_NAMESPACE': DEFAULT_NAMESPACE},
         msg="KUBERNETES: get pods"
     )
 
@@ -44,7 +45,8 @@ def k8s_get_services(*, namespace=DEFAULT_NAMESPACE):
     """GET /namespaces/{namespace}/services"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/services".format(namespace),
+        path="namespaces/{namespace}/services",
+        path_params={'namespace': namespace},
         msg="KUBERNETES: get services"
     )
 
@@ -53,7 +55,8 @@ def k8s_get_service(service_name, *, namespace=DEFAULT_NAMESPACE):
     """GET /namespaces/{namespace}/services/{name}"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/services/{}".format(namespace, service_name),
+        path="namespaces/{namespace}/services/{service_name}",
+        path_params={'namespace': namespace, 'service_name': service_name},
         msg="KUBERNETES: get service {}".format(service_name)
     )
 
@@ -62,7 +65,8 @@ def k8s_get_configmap(configmap_name):
     """GET /namespaces/{namespace}/configmaps/{configmap_name}"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/configmaps/{}".format(DEFAULT_NAMESPACE, configmap_name),
+        path="namespaces/{DEFAULT_NAMESPACE}/configmaps/{configmap_name}",
+        path_params={'DEFAULT_NAMESPACE': DEFAULT_NAMESPACE, 'configmap_name': configmap_name},
         msg="KUBERNETES: get configmap {}".format(configmap_name)
     )
 
@@ -71,7 +75,8 @@ def k8s_logs(application_name, params):
     """GET /namespaces/{namespace}/pods/{application_name}/log"""
     return HttpClientFactory.get(KubernetesConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="namespaces/{}/pods/{}/log".format(DEFAULT_NAMESPACE, application_name),
+        path="namespaces/{DEFAULT_NAMESPACE}/pods/{application_name}/log",
+        path_params={'DEFAULT_NAMESPACE': DEFAULT_NAMESPACE, 'application_name': application_name},
         params=params,
         msg="KUBERNETES: get logs {}".format(application_name)
     )
@@ -103,7 +108,8 @@ def k8s_scale_pod(pod_name, number_of_replicas, rest_prefix="apis", api_version=
     return client.request(
         method=HttpMethod.PUT,
         body=body,
-        path="namespaces/{}/deployments/{}/scale".format(DEFAULT_NAMESPACE, pod_name),
+        path="namespaces/{DEFAULT_NAMESPACE}/deployments/{pod_name}/scale",
+        path_params={'DEFAULT_NAMESPACE': DEFAULT_NAMESPACE, 'pod_name': pod_name},
         msg="POD {} scaled to {} replicas".format(pod_name, number_of_replicas)
     )
 
@@ -113,6 +119,7 @@ def k8s_get_ingresses(rest_prefix="apis", api_version="extensions/v1beta1"):
     client = HttpClientFactory.get(KubernetesConfigurationProvider.get(rest_prefix, api_version))
     return client.request(
         method=HttpMethod.GET,
-        path="namespaces/{}/ingresses".format(DEFAULT_NAMESPACE, ),
+        path="namespaces/{DEFAULT_NAMESPACE}/ingresses",
+        path_params={'DEFAULT_NAMESPACE': DEFAULT_NAMESPACE},
         msg="KUBERNETES: get ingresses"
     )

@@ -26,7 +26,8 @@ def k8s_broker_get_service_status(org_guid, service_id):
     """GET /v$/:org_id/service/:instance_id/status"""
     return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.GET,
-        path="{}/service/{}/status".format(org_guid, service_id),
+        path="{org_guid}/service/{service_id}/status",
+        path_params={'org_guid': org_guid, 'service_id': service_id},
         msg="K8S BROKER: get instance status"
     )
 
@@ -54,7 +55,8 @@ def k8s_broker_get_instance(org_guid, space_guid, service_id):
     """GET /rest/kubernetes/{org_guid}/{space_guid}/service/{service_instance_guid}"""
     response = HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.GET,
-        path="rest/kubernetes/{}/{}/service/{}".format(org_guid, space_guid, service_id),
+        path="rest/kubernetes/{org_guid}/{space_guid}/service/{service_id}",
+        path_params={'org_guid': org_guid, 'space_guid': space_guid, 'service_id': service_id},
         msg="K8S BROKER: get instance"
     )
     return response
@@ -64,7 +66,8 @@ def k8s_broker_get_instance_list(org_guid, space_guid):
     """GET /rest/kubernetes/{org_guid}/{space_guid}/services"""
     response = HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.GET,
-        path="rest/kubernetes/{}/{}/services".format(org_guid, space_guid),
+        path="rest/kubernetes/{org_guid}/{space_guid}/services",
+        path_params={'org_guid': org_guid, 'space_guid': space_guid},
         msg="K8S BROKER: get instance list"
     )
     return response
@@ -74,7 +77,8 @@ def k8s_broker_delete_instance(instance_guid):
     """DELETE /v$/service_instances/:instanceId"""
     return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.kubernetes_broker)).request(
         method=HttpMethod.DELETE,
-        path="service_instances/{}".format(instance_guid),
+        path="service_instances/{instance_guid}",
+        path_params={'instance_guid': instance_guid},
         msg="K8S BROKER: delete instance"
     )
 
@@ -90,7 +94,8 @@ def k8s_broker_create_secret(org_guid, key_id, username_b64, password_b64):
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.POST,
         body=body,
-        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        path="rest/kubernetes/{org_guid}/secret/{key_id}",
+        path_params={'org_guid': org_guid, 'key_id': key_id},
         msg="K8S BROKER: create secret"
     )
 
@@ -99,7 +104,8 @@ def k8s_broker_get_secret(org_guid, key_id):
     """GET /rest/kubernetes/{org_id}/secret/{key}"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.GET,
-        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        path="rest/kubernetes/{org_guid}/secret/{key_id}",
+        path_params={'org_guid': org_guid, 'key_id': key_id},
         msg="K8S BROKER: get secret"
     )
 
@@ -118,7 +124,8 @@ def k8s_broker_update_secret(org_guid, key_id, username_b64=None, password_b64=N
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.PUT,
         body=body,
-        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        path="rest/kubernetes/{org_guid}/secret/{key_id}",
+        path_params={'org_guid': org_guid, 'key_id': key_id},
         msg="K8S BROKER: update secret"
     )
 
@@ -127,6 +134,7 @@ def k8s_broker_delete_secret(org_guid, key_id):
     """DELETE /rest/kubernetes/{org_id}/secret/{key}"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get(url=config.kubernetes_broker_url)).request(
         method=HttpMethod.DELETE,
-        path="rest/kubernetes/{}/secret/{}".format(org_guid, key_id),
+        path="rest/kubernetes/{org_guid}/secret/{key_id}",
+        path_params={'org_guid': org_guid, 'key_id': key_id},
         msg="K8S BROKER: delete secret"
     )

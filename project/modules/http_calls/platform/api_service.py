@@ -71,12 +71,17 @@ def create_offering_from_binary(*, jar_path: str, manifest_path: str, offering_p
 
 def get_offering(*, client: HttpClient, offering_id: str):
     """ GET /offerings/{offering_id} """
-    return client.request(HttpMethod.GET, path="offerings/{}".format(offering_id))
+    return client.request(HttpMethod.GET,
+                          path="offerings/{offering_id}",
+                          path_params={'offering_id': offering_id})
 
 
 def delete_offering(*, client: HttpClient, offering_id):
     """ DELETE /offerings/{offering_id} """
-    response = client.request(HttpMethod.DELETE, path="offerings/{}".format(offering_id), raw_response=True)
+    response = client.request(HttpMethod.DELETE,
+                              path="offerings/{offering_id}",
+                              path_params={'offering_id': offering_id},
+                              raw_response=True)
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
@@ -123,7 +128,10 @@ def get_applications(*, client: HttpClient, org_id: str=None):
 
 def get_application(*, client: HttpClient, app_id: str):
     """ GET /applications/{app_id} """
-    response = client.request(HttpMethod.GET, path="applications/{}".format(app_id), raw_response=True,
+    response = client.request(HttpMethod.GET,
+                              path="applications/{app_id}",
+                              path_params={'app_id': app_id},
+                              raw_response=True,
                               msg="Get application")
     assert response.status_code == HttpStatus.CODE_OK
     return response.json()
@@ -131,13 +139,20 @@ def get_application(*, client: HttpClient, app_id: str):
 
 def delete_application(*, client: HttpClient, app_id: str):
     """ DELETE /applications/{app_id} """
-    response = client.request(HttpMethod.DELETE, path="applications/{}".format(app_id), msg="Delete application", raw_response=True)
+    response = client.request(HttpMethod.DELETE,
+                              path="applications/{app_id}",
+                              path_params={'app_id': app_id},
+                              msg="Delete application",
+                              raw_response=True)
     assert response.status_code == HttpStatus.CODE_NO_CONTENT
 
 
 def get_application_logs(*, client: HttpClient, app_id: str):
     """ GET /applications/{app_id}/logs """
-    response = client.request(HttpMethod.GET, path="applications/{}/logs".format(app_id), raw_response=True,
+    response = client.request(HttpMethod.GET,
+                              path="applications/{app_id}/logs",
+                              path_params={'app_id': app_id},
+                              raw_response=True,
                               msg="Get application logs")
     assert response.status_code == HttpStatus.CODE_OK
     return response.json()
@@ -148,14 +163,21 @@ def scale_application(*, client: HttpClient, app_id: str, replicas):
     body = {
         "replicas": replicas
     }
-    response = client.request(HttpMethod.PUT, path="applications/{}/scale".format(app_id), body=body, raw_response=True,
+    response = client.request(HttpMethod.PUT,
+                              path="applications/{app_id}/scale",
+                              path_params={'app_id': app_id},
+                              body=body,
+                              raw_response=True,
                               msg="Scale application")
     return response.json()
 
 
 def start_application(*, client: HttpClient, app_id: str):
     """ PUT /applications/{app_id}/start """
-    response = client.request(HttpMethod.PUT, path="applications/{}/start".format(app_id), raw_response=True,
+    response = client.request(HttpMethod.PUT,
+                              path="applications/{app_id}/start",
+                              path_params={'app_id': app_id},
+                              raw_response=True,
                               msg="Start application")
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
@@ -163,7 +185,10 @@ def start_application(*, client: HttpClient, app_id: str):
 
 def stop_application(*, client: HttpClient, app_id: str):
     """ PUT /applications/{app_id}/stop """
-    response = client.request(HttpMethod.PUT, path="applications/{}/stop".format(app_id), raw_response=True,
+    response = client.request(HttpMethod.PUT,
+                              path="applications/{app_id}/stop",
+                              path_params={'app_id': app_id},
+                              raw_response=True,
                               msg="Stop application")
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
@@ -171,7 +196,10 @@ def stop_application(*, client: HttpClient, app_id: str):
 
 def restart_application(*, client: HttpClient, app_id: str):
     """ PUT /applications/{app_id}/restart """
-    response = client.request(HttpMethod.PUT, path="applications/{}/restart".format(app_id), raw_response=True,
+    response = client.request(HttpMethod.PUT,
+                              path="applications/{app_id}/restart",
+                              path_params={'app_id': app_id},
+                              raw_response=True,
                               msg="Restart application")
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
@@ -184,8 +212,11 @@ def start_service(*, client: HttpClient, srv_id: str):
         client: HttpClient to use
         srv_id: id of the service instance to start
     """
-    response = client.request(HttpMethod.PUT, path="services/{}/start".format(srv_id),
-                              raw_response=True, msg="Start service instance")
+    response = client.request(HttpMethod.PUT,
+                              path="services/{srv_id}/start",
+                              path_params={'srv_id': srv_id},
+                              raw_response=True,
+                              msg="Start service instance")
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
@@ -198,8 +229,11 @@ def stop_service(*, client: HttpClient, srv_id: str):
         client: HttpClient to use
         srv_id: id of the service instance to stop
     """
-    response = client.request(HttpMethod.PUT, path="services/{}/stop".format(srv_id),
-                              raw_response=True, msg="Stop service instance")
+    response = client.request(HttpMethod.PUT,
+                              path="services/{srv_id}/stop",
+                              path_params={'srv_id': srv_id},
+                              raw_response=True,
+                              msg="Stop service instance")
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
@@ -212,8 +246,11 @@ def restart_service(*, client: HttpClient, srv_id: str):
         client: HttpClient to use
         srv_id: id of the service instance to restart
     """
-    response = client.request(HttpMethod.PUT, path="services/{}/restart".format(srv_id),
-                              raw_response=True, msg="Restart service instance")
+    response = client.request(HttpMethod.PUT,
+                              path="services/{srv_id}/restart",
+                              path_params={'srv_id': srv_id},
+                              raw_response=True,
+                              msg="Restart service instance")
     assert response.status_code == HttpStatus.CODE_ACCEPTED
     return response.json()
 
@@ -222,7 +259,9 @@ def restart_service(*, client: HttpClient, srv_id: str):
 
 def get_app_bindings(*, client: HttpClient, app_id: str):
     """ GET /applications/{app_id}/bindings """
-    response = client.request(method=HttpMethod.GET, path="applications/{}/bindings".format(app_id),
+    response = client.request(method=HttpMethod.GET,
+                              path="applications/{app_id}/bindings",
+                              path_params={'app_id': app_id},
                               msg="Get application bindings")
     return response["resources"]
 
@@ -233,14 +272,16 @@ def bind_svc(*, client: HttpClient, app_id, service_instance_id: str):
         'service_id': service_instance_id
     }
     return client.request(method=HttpMethod.POST,
-                          path="applications/{}/bindings".format(app_id),
+                          path="applications/{app_id}/bindings",
+                          path_params={'app_id': app_id},
                           body=body, msg="Bind service and app")
 
 
 def unbind_svc(*, client: HttpClient, app_id: str, service_instance_id: str):
     """ DELETE /applications/{app_id}/bindings/services/{service_instance_id} """
     return client.request(method=HttpMethod.DELETE,
-                          path="applications/{}/bindings/services/{}".format(app_id, service_instance_id),
+                          path="applications/{app_id}/bindings/services/{service_instance_id}",
+                          path_params={'app_id': app_id, 'service_instance_id': service_instance_id},
                           msg="Unbind service from app")
 
 
@@ -281,32 +322,43 @@ def create_service(*, client: HttpClient, name: str=None, plan_id: str, offering
 
 def get_service(*, client: HttpClient, service_id: str):
     """ GET /services/{service_id} """
-    return client.request(method=HttpMethod.GET, path="services/{}".format(service_id), msg="Get service instance")
+    return client.request(method=HttpMethod.GET,
+                          path="services/{service_id}",
+                          path_params={'service_id': service_id},
+                          msg="Get service instance")
 
 
 def delete_service(*, client: HttpClient, service_id: str):
     """ DELETE /services/{service_id} """
-    return client.request(method=HttpMethod.DELETE, path="services/{}".format(service_id), msg="Delete service instance")
+    return client.request(method=HttpMethod.DELETE,
+                          path="services/{service_id}",
+                          path_params={'service_id': service_id},
+                          msg="Delete service instance")
 
 
 def get_service_credentials(*, client: HttpClient, service_id: str):
     """ GET /services/{service_id}/credentials """
-    return client.request(method=HttpMethod.GET, path="services/{}/credentials".format(service_id),
+    return client.request(method=HttpMethod.GET,
+                          path="services/{service_id}/credentials",
+                          path_params={'service_id': service_id},
                           msg="Get service instance credentials")
 
 
 def expose_service(*, client: HttpClient, service_id: str, should_expose: bool=True):
-    """ PUT /services/s{service_id}/expose """
+    """ PUT /services/{service_id}/expose """
     body = {
         "exposed": should_expose
     }
-    return client.request(method=HttpMethod.PUT, path="services/{}/expose".format(service_id),
+    return client.request(method=HttpMethod.PUT,
+                          path="services/{service_id}/expose",
+                          path_params={'service_id': service_id},
                           msg="Expose service instance", body=body)
 
 
 def get_service_logs(*, client: HttpClient, service_id):
     """ GET /services/{service_id}/logs """
-    return client.request(method=HttpMethod.GET, path="services/{}/logs".format(service_id),
+    return client.request(method=HttpMethod.GET, path="services/{service_id}/logs",
+                          path_params={'service_id': service_id},
                           msg="Get service instance logs")
 
 
@@ -315,7 +367,9 @@ def get_service_logs(*, client: HttpClient, service_id):
 
 def get_service_bindings(*, client: HttpClient, service_id: str):
     """ GET /services/{service_id}/bindings """
-    response = client.request(method=HttpMethod.GET, path="services/{}/bindings".format(service_id),
+    response = client.request(method=HttpMethod.GET,
+                              path="services/{service_id}/bindings",
+                              path_params={'service_id': service_id},
                               msg="Get service bindings")
     return response["resources"]
 
@@ -328,22 +382,29 @@ def bind_service(*, client: HttpClient, service_id: str, application_id_to_bound
     if service_id_to_bound is not None:
         body["service_id"] = service_id_to_bound
 
-    response = client.request(method=HttpMethod.POST, path="services/{}/bindings".format(service_id), body=body,
-                              raw_response=True, msg="Bind service or application to service")
+    response = client.request(method=HttpMethod.POST,
+                              path="services/{service_id}/bindings",
+                              path_params={'service_id': service_id},
+                              body=body,
+                              raw_response=True,
+                              msg="Bind service or application to service")
     return response
 
 
 def unbind_app_from_service(*, client: HttpClient, service_id: str, application_id_to_unbound: str):
     """ DELETE /services/{service_id}/bindings/applications/{application_id_to_unbound} """
     return client.request(method=HttpMethod.DELETE,
-                          path="services/{}/bindings/applications/{}".format(service_id, application_id_to_unbound),
+                          path="services/{service_id}/bindings/applications/{application_id_to_unbound}",
+                          path_params={'service_id': service_id,
+                                       'application_id_to_unbound': application_id_to_unbound},
                           msg="Unbind app from service")
 
 
 def unbind_svc_from_service(*, client: HttpClient, service_id: str, service_id_to_unbound: str):
     """ DELETE /services/{service_id}/bindings/services/{service_id_to_unbound} """
     return client.request(method=HttpMethod.DELETE,
-                          path="services/{}/bindings/services/{}".format(service_id, service_id_to_unbound),
+                          path="services/{service_id}/bindings/services/{service_id_to_unbound}",
+                          path_params={'service_id': service_id, 'service_id_to_unbound': service_id_to_unbound},
                           msg="Unbind service from service")
 
 
@@ -431,7 +492,10 @@ def get_metrics_organizations(*, client: HttpClient, org_id: str, time_from: str
         "from": time_from,
         "to": time_to
     }
-    return client.request(method=HttpMethod.GET, path="metrics/organizations/{}".format(org_id), body=body,
+    return client.request(method=HttpMethod.GET,
+                          path="metrics/organizations/{org_id}",
+                          path_params={'org_id': org_id},
+                          body=body,
                           msg="Get organization metrics")
 
 # --------------------------------------- platform info --------------------------------------- #
@@ -469,5 +533,9 @@ def get_platform_components(*, client: HttpClient) -> dict:
 
 def get_cli_resource(*, client: HttpClient, resource_id: str):
     """ GET /resources/cli/{resource_id} """
-    return client.request(method=HttpMethod.GET, path="resources/cli/{}".format(resource_id),
-                          msg="Get CLI resource", raw_response=True, log_response_content=False)
+    return client.request(method=HttpMethod.GET,
+                          path="resources/cli/{resource_id}",
+                          path_params={'resource_id': resource_id},
+                          msg="Get CLI resource",
+                          raw_response=True,
+                          log_response_content=False)

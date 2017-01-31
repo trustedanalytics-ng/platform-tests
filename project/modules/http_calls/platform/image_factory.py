@@ -46,7 +46,8 @@ def create_image(body=None, *, image_id):
 def delete_image(*, image_id):
     """ DELETE /image/{image_id} """
     response = _get_client().request(HttpMethod.DELETE,
-                                     path="image/{}".format(image_id),
+                                     path="image/{image_id}",
+                                     path_params={'image_id': image_id},
                                      raw_response=True, raise_exception=True,
                                      msg="IMAGE FACTORY: delete image")
     return response

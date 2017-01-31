@@ -39,7 +39,8 @@ def api_get_test_run(run_id, client=None):
     )
     return client.request(
         method=HttpMethod.GET,
-        path="platform_tests/tests/{}/results".format(run_id),
+        path="platform_tests/tests/{run_id}/results",
+        path_params={'run_id': run_id},
         msg="PLATFORM: get test run"
     )
 

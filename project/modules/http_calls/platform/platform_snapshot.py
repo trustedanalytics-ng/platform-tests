@@ -54,7 +54,8 @@ def api_get_snapshots_diff(snapshot_0_number, snapshot_1_number, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="v1/snapshots/{}/diff/{}".format(snapshot_0_number, snapshot_1_number),
+        path="v1/snapshots/{snapshot_0_number}/diff/{snapshot_1_number}",
+        path_params={'snapshot_0_number': snapshot_0_number, 'snapshot_1_number': snapshot_1_number},
         params={"aggregateBy": "type"},
         msg="PLATFORM: get snapshots diff"
     )

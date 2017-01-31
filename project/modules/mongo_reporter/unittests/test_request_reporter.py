@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,13 +35,15 @@ TEST_STRESS_RUN_ID = str(ObjectId())
 
 class MockRequest:
     method = 'GET'
-    path_url = '/login'
+    path_url = '/stairways/to/{heaven}'
+    path_params = {'heaven': 'heaven'}
 
 TEST_NEW_REQUEST_INFO = {
     'date': datetime.now(),
     'method': MockRequest.method,
     'status_code': 200,
-    'url': MockRequest.path_url
+    'url': MockRequest.path_url,
+    'url_params': MockRequest.path_params
 }
 
 TEST_REQUEST_INFO = dict(TEST_NEW_REQUEST_INFO, stress_run_id=TEST_STRESS_RUN_ID)
@@ -131,7 +133,11 @@ def test_log_request_decorator():
     request_reporter.requests = []
 
     decorated_func = log_request(mock_function)
-    decorated_func('self', request=MockRequest, timeout=TIMEOUT)
+    decorated_func('self',
+                   request=MockRequest,
+                   path=MockRequest.path_url,
+                   path_params=MockRequest.path_params,
+                   timeout=TIMEOUT)
 
     assert len(request_reporter.requests) == 1, '@log_request does not add request to request_report'
 
@@ -143,3 +149,4 @@ def test_log_request_decorator():
     assert logged_request['status_code'] == TEST_REQUEST_INFO['status_code']
     assert logged_request['stress_run_id'] == TEST_REQUEST_INFO['stress_run_id']
     assert logged_request['url'] == TEST_REQUEST_INFO['url']
+    assert logged_request['url_params'] == TEST_REQUEST_INFO['url_params']

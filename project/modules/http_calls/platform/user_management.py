@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,8 @@ def api_delete_organization(*, org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="orgs/{}".format(org_guid),
+        path="orgs/{org_guid}",
+        path_params={'org_guid': org_guid},
         msg="PLATFORM: delete org"
     )
 
@@ -62,7 +63,8 @@ def api_rename_organization(*, org_guid, new_name, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.PUT,
-        path="orgs/{}/name".format(org_guid),
+        path="orgs/{org_guid}/name",
+        path_params={'org_guid': org_guid},
         body={"name": new_name},
         msg="PLATFORM: rename org"
     )
@@ -78,7 +80,8 @@ def api_add_organization_user(*, org_guid, username, role=None, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="orgs/{}/users".format(org_guid),
+        path="orgs/{org_guid}/users",
+        path_params={'org_guid': org_guid},
         body=body,
         msg="PLATFORM: add user to org"
     )
@@ -89,7 +92,8 @@ def api_get_organization_users(*, org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="orgs/{}/users".format(org_guid),
+        path="orgs/{org_guid}/users",
+        path_params={'org_guid': org_guid},
         msg="PLATFORM: get list of users in org"
     )
 
@@ -99,7 +103,8 @@ def api_delete_organization_user(*, org_guid, user_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="orgs/{}/users/{}".format(org_guid, user_guid),
+        path="orgs/{org_guid}/users/{user_guid}",
+        path_params={"org_guid": org_guid, "user_guid": user_guid},
         msg="PLATFORM: delete user from org"
     )
 
@@ -112,7 +117,8 @@ def api_update_org_user_role(*, org_guid, user_guid, new_role=None, client=None)
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="orgs/{}/users/{}".format(org_guid, user_guid),
+        path="orgs/{org_guid}/users/{user_guid}",
+        path_params={'org_guid': org_guid, 'user_guid': user_guid},
         body=body,
         msg="PLATFORM: update user roles in org"
     )
@@ -144,7 +150,8 @@ def api_delete_invitation(*, email, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.DELETE,
-        path="invitations/{}".format(email),
+        path="invitations/{invitation}",
+        path_params={'invitation': email},
         msg="PLATFORM: delete invitation"
     )
 
@@ -154,7 +161,8 @@ def api_resend_invitation(*, email, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="invitations/{}/resend".format(email),
+        path="invitations/{invitation}/resend",
+        path_params={'invitation': email},
         msg="PLATFORM: resend invitation"
     )
 

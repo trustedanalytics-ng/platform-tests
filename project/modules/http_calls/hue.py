@@ -47,7 +47,8 @@ def get_tables(database_name, client=None):
         client = get_logged_client()
     return client.request(
         method=HttpMethod.GET,
-        path="metastore/tables/{}".format(database_name),
+        path="metastore/tables/{database_name}",
+        path_params={'database_name': database_name},
         params={"format": "json"},
         msg="HUE: get tables"
     )
@@ -59,7 +60,8 @@ def get_table(database_name, table_name, client=None):
         client = get_logged_client()
     return client.request(
         method=HttpMethod.GET,
-        path="beeswax/api/table/{}/{}/sample".format(database_name, table_name),
+        path="beeswax/api/table/{database_name}/{table_name}/sample",
+        path_params={'database_name': database_name, 'table_name': table_name},
         msg="HUE: get table"
     )
 
@@ -70,7 +72,8 @@ def get_table_metadata(database_name, table_name, client=None):
         client = get_logged_client()
     return client.request(
         method=HttpMethod.GET,
-        path="metastore/table/{}/{}/metadata".format(database_name, table_name),
+        path="metastore/table/{database_name}/{table_name}/metadata",
+        path_params={'database_name': database_name, 'table_name': table_name},
         params={"format": "json"},
         msg="HUE: get table metadata"
     )
@@ -122,7 +125,8 @@ def get_job_workflow(workflow_id, client=None):
         client = get_logged_client()
     return client.request(
         method=HttpMethod.GET,
-        path="oozie/list_oozie_workflow/{}/".format(workflow_id),
+        path="oozie/list_oozie_workflow/{workflow_id}/",
+        path_params={'workflow_id': workflow_id},
         headers=_get_headers(client),
         params={"format": "json"},
         msg="HUE: get job workflow"
@@ -156,7 +160,8 @@ def query_watch(id, client=None):
         client = get_logged_client()
     return client.request(
         method=HttpMethod.POST,
-        path="beeswax/api/watch/json/{}".format(id),
+        path="beeswax/api/watch/json/{id}",
+        path_params={'id': id},
         msg="HUE: query watch",
         headers=_get_headers(client, True)
     )
@@ -168,7 +173,8 @@ def query_result(id, client):
         client = get_logged_client()
     return client.request(
         method=HttpMethod.GET,
-        path="beeswax/results/{}/0".format(id),
+        path="beeswax/results/{id}/0",
+        path_params={'id': id},
         msg="HUE: query watch",
         data={"format": "json"}
     )

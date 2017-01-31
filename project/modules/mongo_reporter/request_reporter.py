@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,11 +66,12 @@ request_reporter = RequestReporter()
 
 def log_request(func: callable):
 
-    def wrapper(self, request: PreparedRequest, timeout: int):
+    def wrapper(self, request: PreparedRequest, path: str, path_params,  timeout: int):
         request_info = {
             'date': datetime.now(),
             'method': request.method,
-            'url': request.path_url
+            'url': path,
+            'url_params': path_params
         }
         start_time = time.perf_counter()
 

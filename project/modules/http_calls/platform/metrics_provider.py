@@ -24,6 +24,7 @@ def api_get_org_metrics(org_guid, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.GET,
-        path="orgs/{}/metrics".format(org_guid),
+        path="orgs/{org_guid}/metrics",
+        path_params={'org_guid': org_guid},
         msg="PLATFORM: get metrics"
     )

@@ -24,6 +24,7 @@ def api_publish_dataset(dataset_id, client=None):
     client = client or HttpClientFactory.get(ConsoleConfigurationProvider.get())
     return client.request(
         method=HttpMethod.POST,
-        path="datasets/"+dataset_id+"/table",
+        path="datasets/{dataset_id}/table",
+        path_params={'dataset_id': dataset_id},
         msg="PLATFORM: publish dataset in hive"
     )

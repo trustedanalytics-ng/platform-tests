@@ -33,7 +33,8 @@ def demiurge_get_cluster(cluster_name, raw_response=False):
     """GET /clusters/{cluster_name}"""
     return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.demiurge)).request(
         method=HttpMethod.GET,
-        path="clusters/{}".format(cluster_name),
+        path="clusters/{cluster_name}",
+        path_params={'cluster_name': cluster_name},
         msg="DEMIURGE: get cluster",
         raw_response=raw_response
     )
@@ -42,6 +43,7 @@ def demiurge_create_cluster(cluster_name):
     """PUT /clusters/{cluster_name}"""
     return HttpClientFactory.get(BrokerConfigurationProvider.get(TapComponent.demiurge)).request(
         method=HttpMethod.PUT,
-        path="clusters/{}".format(cluster_name),
+        path="clusters/{cluster_name}",
+        path_params={'cluster_name': cluster_name},
         msg="DEMIURGE: create cluster"
     )

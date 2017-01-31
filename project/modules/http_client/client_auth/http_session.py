@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ import json
 from requests import Session, Request
 
 import config
+from modules.exceptions import UnexpectedResponseError
 from modules.mongo_reporter.request_reporter import log_request
 from modules.tap_logger import log_http_request, log_http_response
-from modules.exceptions import UnexpectedResponseError
 from .http_method import HttpMethod
 
 
@@ -53,13 +53,15 @@ class HttpSession(object):
         """Session cookies."""
         return self._session.cookies
 
-    def request(self, method: HttpMethod, url, headers=None, files=None,
+    def request(self, method: HttpMethod, url, path="", path_params=None, headers=None, files=None,
                 data=None, params=None, auth=None, body=None, log_message="",
                 raw_response=False, timeout=None, raise_exception=True, log_response_content=True):
         """Perform request and return response."""
+        path_params = {} if path_params is None else path_params
+        url = '{}/{}'.format(url, path).format(**path_params)
         request = self._request_prepare(method, url, headers, files,
                                         data, params, auth, body, log_message)
-        return self._request_perform(request, raw_response, timeout=timeout,
+        return self._request_perform(request, path, path_params, raw_response, timeout=timeout,
                                      raise_exception=raise_exception, log_response_content=log_response_content)
 
     def _request_prepare(self, method, url, headers, files, data, params, auth, body, log_message):
@@ -78,10 +80,10 @@ class HttpSession(object):
         log_http_request(prepared_request, self._username, self._password, description=log_message, data=data)
         return prepared_request
 
-    def _request_perform(self, request: Request, raw_response: bool,
+    def _request_perform(self, request: Request, path: str, path_params, raw_response: bool,
                          timeout: int, raise_exception: bool, log_response_content=True):
         """Perform request and return response."""
-        response = self._send_request_and_get_raw_response(request, timeout=timeout)
+        response = self._send_request_and_get_raw_response(request, path, path_params, timeout=timeout)
         if log_response_content:  # workaround for downloading large files - reading response.text takes too long
             log_http_response(response)
         else:

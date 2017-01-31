@@ -76,7 +76,7 @@ def cf_delete_service(service):
 
 # ====================================================== cf api ====================================================== #
 
-def __get_all_pages(endpoint, query_params=None, log_msg=""):
+def __get_all_pages(endpoint, endpoint_params, query_params=None, log_msg=""):
     """For requests which return paginated results"""
     query_params = query_params or {}
     resources = []
@@ -87,6 +87,7 @@ def __get_all_pages(endpoint, query_params=None, log_msg=""):
         response = HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
             method=HttpMethod.GET,
             path=endpoint,
+            path_params=endpoint_params,
             params=params,
             msg="{} page {}".format(log_msg, page_num),
         )
@@ -111,7 +112,8 @@ def cf_api_delete_org(org_guid):
         raise YouMustBeJokingException("You're trying to delete {}".format(config.core_org_name))
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
-        path="organizations/{}".format(org_guid),
+        path="organizations/{org_guid}",
+        path_params={'org_guid': org_guid},
         params={"recursive": "true", "async": "false"},
         msg="CF: delete organization",
     )
@@ -119,7 +121,10 @@ def cf_api_delete_org(org_guid):
 
 def cf_api_get_org_spaces(org_guid):
     """GET /v2/organizations/{org_guid}/spaces"""
-    return __get_all_pages(endpoint="organizations/{}/spaces".format(org_guid), log_msg="CF: get spaces in org")
+    return __get_all_pages(
+        endpoint="organizations/{org_guid}/spaces",
+        endpoint_params={'org_guid': org_guid},
+        log_msg="CF: get spaces in org")
 
 
 def cf_api_get_org_users(org_guid, space_guid=None):
@@ -127,7 +132,10 @@ def cf_api_get_org_users(org_guid, space_guid=None):
     params = {}
     if space_guid:
         params = {"space_guid": space_guid}
-    return __get_all_pages(endpoint="organizations/{}/users".format(org_guid), query_params=params,
+    return __get_all_pages(
+        endpoint="organizations/{org_guid}/spaces",
+        endpoint_params={'org_guid': org_guid},
+        query_params=params,
                            log_msg="CF: get users in org (space)")
 
 
@@ -142,7 +150,8 @@ def cf_api_space_summary(space_guid):
     """GET /v2/spaces/{space_guid}/summary - Equal to running cf apps and cf services"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="spaces/{}/summary".format(space_guid),
+        path="spaces/{space_guid}/summary",
+        path_params={'space_guid': space_guid},
         msg="CF: get space summary",
     )
 
@@ -154,7 +163,8 @@ def cf_api_delete_space(space_guid):
         raise YouMustBeJokingException("You're trying to delete {}".format(config.core_space_name))
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
-        path="spaces/{}".format(space_guid),
+        path="spaces/{space_guid}",
+        path_params={'space_guid': space_guid},
         params={"recursive": "true", "async": "false"},
         msg="CF: delete space",
     )
@@ -164,7 +174,8 @@ def cf_api_get_space_routes(space_guid):
     """GET /v2/spaces/{space_guid}/routes"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="spaces/{}/routes".format(space_guid),
+        path="spaces/{space_guid}/routes",
+        path_params={'space_guid': space_guid},
         msg="CF: get routes in space",
     )
 
@@ -187,7 +198,8 @@ def cf_api_update_service_access(service_guid, enable_service=True):
     """PUT /v2/service_plans/{service_guid}"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.PUT,
-        path="service_plans/{}".format(service_guid),
+        path="service_plans/{service_guid}",
+        path_params={'service_guid': service_guid},
         body={"public": enable_service},
         msg="CF: update service access",
     )
@@ -204,7 +216,8 @@ def cf_api_delete_user(user_guid):
     """DELETE /v2/users/{user_guid}"""
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
-        path="users/{}".format(user_guid),
+        path="users/{user_guid}",
+        path_params={'user_guid': user_guid},
         params={"async": "false"},
         msg="CF: delete user",
     )
@@ -248,7 +261,8 @@ def cf_api_get_app_env(app_guid):
     """GET /v2/apps/{app_guid}/env"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="apps/{}/env".format(app_guid),
+        path="apps/{app_guid}/env",
+        path_params={'app_guid': app_guid},
         msg="CF: get app env",
     )
 
@@ -257,7 +271,8 @@ def cf_api_app_summary(app_guid):
     """GET /v2/apps/{app_guid}/summary"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="apps/{}/summary".format(app_guid),
+        path="apps/{app_guid}/summary",
+        path_params={'app_guid': app_guid},
         msg="CF: get app summary",
     )
 
@@ -266,7 +281,8 @@ def cf_api_delete_app(app_guid):
     """DELETE /v2/apps/{app_guid}"""
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
-        path="apps/{}".format(app_guid),
+        path="apps/{app_guid}",
+        path_params={'app_guid': app_guid},
         msg="CF: delete app",
     )
 
@@ -275,7 +291,8 @@ def cf_api_get_apps_bindings(app_guid):
     """GET /v2/apps/{app_guid}/service_bindings"""
     return HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.GET,
-        path="apps/{}/service_bindings".format(app_guid),
+        path="apps/{app_guid}/service_bindings",
+        path_params={'app_guid': app_guid},
         msg="CF: get service bindings",
     )
 
@@ -297,7 +314,8 @@ def cf_api_delete_route(route_guid):
     """DELETE /v2/routes/{route_guid}"""
     HttpClientFactory.get(CloudFoundryConfigurationProvider.get()).request(
         method=HttpMethod.DELETE,
-        path="routes/{}".format(route_guid),
+        path="routes/{route_guid}",
+        path_params={'route_guid': route_guid},
         params={"async": "false"},
         msg="CF: delete route",
     )
