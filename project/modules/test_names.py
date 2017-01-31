@@ -55,7 +55,14 @@ class TapObjectName:
 
     def as_email(self) -> str:
         email_format = config.test_user_email.replace('@', '+{}@')
-        return email_format.format(self.build())
+        email = email_format.format(self.build())
+        if len(email) > 64:
+            email = self.shorten_email_address(email)
+        return email
+
+    def shorten_email_address(self, email):
+        year_month = self._now.strftime("%Y%m")
+        return email.replace(year_month, "")
 
 
 def is_test_object_name(name):

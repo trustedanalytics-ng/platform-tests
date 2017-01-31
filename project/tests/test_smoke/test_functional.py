@@ -28,6 +28,7 @@ from modules.tap_object_model import DataSet, Transfer, User, ServiceInstance, M
 from modules.tap_object_model.flows import onboarding
 from modules.tap_object_model.platform_tests import TestSuite
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
+from modules.test_names import generate_test_object_name
 from tap_component_config import offerings, offerings_as_parameters, PlanKeys
 from tests.fixtures.assertions import assert_dict_values_set
 
@@ -117,7 +118,8 @@ def test_onboarding(context, test_org):
     3. Verify that the user is present on the platform.
     """
     step("Onboard new user")
-    test_user = onboarding.onboard(context=context, org_guid=test_org.guid,
+    username = generate_test_object_name(email=True, separator="")
+    test_user = onboarding.onboard(context=context, org_guid=test_org.guid, username=username,
                                    check_email=False)
     step("Check that user is created")
     users = User.get_all_users(test_org.guid)
@@ -144,7 +146,8 @@ def test_add_new_user_to_and_delete_from_org(core_org, context):
     5. Verify that the user was removed from the organization.
     """
     step("Add new user to organization")
-    test_user = onboarding.onboard(context=context, org_guid=core_org.guid,
+    username = generate_test_object_name(email=True, separator="")
+    test_user = onboarding.onboard(context=context, org_guid=core_org.guid, username=username,
                                    check_email=False)
     test_user.update_org_role(org_guid=core_org.guid, new_role=User.ORG_ROLE["admin"])
     step("Check that the user is added")
