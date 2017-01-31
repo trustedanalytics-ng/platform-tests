@@ -66,7 +66,6 @@ class TestJupyterConsole:
         assert re.search(pattern, str(output)) is not None
 
     @priority.high
-    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     def test_jupyter_terminal(self, jupyter_instance, terminal_index):
         """
         <b>Description:</b>
@@ -92,7 +91,6 @@ class TestJupyterConsole:
         terminal.ws.close()
 
     @priority.high
-    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     def test_jupyter_interactive_mode_hello_world(self, jupyter_instance):
         """
         <b>Description:</b>
@@ -119,7 +117,6 @@ class TestJupyterConsole:
         notebook.ws.close()
 
     @priority.medium
-    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     @pytest.mark.parametrize("notebook_path", NOTEBOOKS_PATHS[1:])
     def test_spark_tk_in_jupyter(self, jupyter_instance, notebook_path):
         """
@@ -142,7 +139,6 @@ class TestJupyterConsole:
                        cells=jupyter_instance.get_notebook_source(notebook_path))
 
     @priority.medium
-    @pytest.mark.bugs(reason="DPNG-15134 Jupyter 500 Server Error openresty")
     def test_spark_tk_readme_in_jupyter(self, jupyter_instance):
         """
         <b>Description:</b>

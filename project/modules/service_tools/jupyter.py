@@ -166,7 +166,7 @@ class Jupyter(object):
             context=context,
             name=instance_name,
             offering_label=ServiceLabels.JUPYTER,
-            plan_name=ServicePlan.FREE,
+            plan_name=ServicePlan.SINGLE_SMALL,
             params=params
         )
         self.instance.ensure_running()
