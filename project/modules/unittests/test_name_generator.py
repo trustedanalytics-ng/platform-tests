@@ -58,3 +58,8 @@ class TestIsTestObjectName:
     def test_negative_cases(self, name):
         step('Testing if {} is recognized as test object name'.format(name))
         assert not is_test_object_name(name)
+
+    def test_too_long_generated_addresses(self):
+        test_email_address = generate_test_object_name(email=True, prefix="test"*7)
+        assert len(test_email_address.split("@")[0]) <= 64
+        assert is_test_object_name(test_email_address)

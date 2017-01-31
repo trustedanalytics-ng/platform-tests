@@ -56,11 +56,11 @@ class TapObjectName:
     def as_email(self) -> str:
         email_format = config.test_user_email.replace('@', '+{}@')
         email = email_format.format(self.build())
-        if len(email) > 64:
+        if len(email.split("@")[0]) > 64:
             email = self.shorten_email_address(email)
         return email
 
-    def shorten_email_address(self, email):
+    def shorten_email_address(self, email) -> str:
         year_month = self._now.strftime("%Y%m")
         return email.replace(year_month, "")
 
@@ -69,7 +69,7 @@ def is_test_object_name(name):
     """Return True if object's name matches pattern for test names, False otherwise."""
     if name is None:
         return False  # there are users with username=None
-    test_name_regex = r'^.*[0-9]{8}(.*)[0-9]{6}\1([0-9]{6,})?(@gmail.com)?$'
+    test_name_regex = r'^.*[0-9]{2,8}(.*)[0-9]{6}\1([0-9]{6,})?(@gmail.com)?$'
     return re.match(test_name_regex, name) is not None
 
 
