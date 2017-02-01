@@ -172,7 +172,7 @@ class ServiceCatalogHttpStatus(HttpStatus):
     MSG_SERVICE_BINDING_NOT_FOUND = "The service binding could not be found: {}"
     MSG_NOT_AUTHORIZED = "You are not authorized"
     MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE = "User not authorize to delete this service"
-    MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE = "There is an instance of service being deleted"
+    MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE = "offering instance exists"
     MSG_SERVICE_EXISTS = "service with name: {} already exists!"
     MSG_SERVICE_DOES_NOT_EXIST = "100: Key not found"
     MSG_SERVICE_NAME_IS_EMPTY = "Service name should not be empty"

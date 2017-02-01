@@ -92,6 +92,6 @@ class TestDeleteService:
         assert_in_with_retry(instance, ServiceInstance.get_list, name=instance.name)
 
         step("Attempt to delete public service with instance")
-        assert_raises_http_exception(HttpStatus.CODE_METHOD_NOT_ALLOWED,
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN,
                                      HttpStatus.MSG_CANNOT_REMOVE_SERVICE_WITH_INSTANCE,
                                      sample_service.delete)
