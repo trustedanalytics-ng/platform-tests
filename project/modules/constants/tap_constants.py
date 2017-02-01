@@ -60,7 +60,7 @@ class TapMessage:
     MANIFEST_JSON_INCORRECT_NAME_VALUE = "field: Name has incorrect value: {}"
     NO_SUCH_OFFERING = "Could not find offering with such name"
     MISSING_PARAMETER = "MISSING PARAMETER"
-    NAME_HAS_INCORRECT_VALUE = "Field: Name has incorrect value: {}"
+    NAME_HAS_INCORRECT_VALUE = "field: Name has incorrect value: {}"
     NO_SUCH_HOST = "no such host"
     OK = "OK"
     SERVICE_ALREADY_EXISTS = "service with name: {} already exists!"
