@@ -246,7 +246,7 @@ class ApiServiceHttpStatus(HttpStatus):
     MSG_CANNOT_FETCH_APP_INSTANCE = "cannot fetch instance of application with id {} from Catalog"
     MSG_INCORRECT_TYPE = "json: cannot unmarshal string into Go value of type int"
     MSG_BAD_REQUEST = "Bad response status"
-    MSG_FIELD_INCORRECT_VALUE = "Field: {} has incorrect value"
+    MSG_FIELD_INCORRECT_VALUE = "field: {} has incorrect value"
     MSG_FIELD_ZERO_VALUE = "{}: zero value"
     MSG_PLAN_CANNOT_BE_FOUND = "plan with id \\\"{}\\\" does not exist in offering"
     MSG_MINIMUM_ALLOWED_REPLICA = "Replicas: less than min"
