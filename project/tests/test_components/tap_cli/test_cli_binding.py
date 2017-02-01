@@ -29,9 +29,9 @@ from tests.fixtures.assertions import assert_raises_command_execution_exception
 pytestmark = [pytest.mark.components(TAP.cli)]
 
 
-@pytest.fixture(scope="module")
-def offering(session_context, tap_cli, cli_login):
-    return CliOffering.create(context=session_context, tap_cli=tap_cli)
+@pytest.fixture(scope="class")
+def offering(class_context, tap_cli, cli_login):
+    return CliOffering.create(context=class_context, tap_cli=tap_cli)
 
 
 @pytest.mark.usefixtures("cli_login")
