@@ -17,7 +17,7 @@
 import pytest
 import requests
 
-from modules.constants import TapComponent as TAP, ServiceLabels, ServicePlan
+from modules.constants import ScoringEngineHttpStatus, TapComponent as TAP, ServiceLabels, ServicePlan
 from modules.markers import incremental, long, priority
 from modules.tap_logger import step
 from modules.tap_object_model import ServiceInstance
@@ -35,13 +35,12 @@ class TestScoringEngineInstance:
     expected_se_bindings = [ServiceLabels.KERBEROS, ServiceLabels.HDFS]
 
     @pytest.fixture(scope="class")
-    def se_instance(self, class_context, model_hdfs_path):
+    def se_instance(self, class_context):
         step("Create scoring engine instance")
         instance = ServiceInstance.create_with_name(
             context=class_context,
             offering_label=ServiceLabels.SCORING_ENGINE,
-            plan_name=ServicePlan.SINGLE,
-            params={"uri": model_hdfs_path}
+            plan_name=ServicePlan.SINGLE
         )
         step("Check that scoring engine instance is runnning")
         instance.ensure_running()
@@ -66,11 +65,10 @@ class TestScoringEngineInstance:
         instances_list = ServiceInstance.get_list()
         assert se_instance in instances_list, "Scoring Engine was not found on the instance list"
 
-    @pytest.mark.bugs("DPNG-15102 Model associated with scoring-engine instance is not detected.")
-    def test_1_check_request_to_se_application(self, se_instance):
+    def test_1_upload_mar_model(self, se_instance, jumpbox_model_file):
         """
         <b>Description:</b>
-        Check sending request to scoring engine application.
+        Upload model to scoring engine application.
 
         <b>Input data:</b>
         No input data.
@@ -79,16 +77,37 @@ class TestScoringEngineInstance:
         Test passes if scoring engine application returns correct response.
 
         <b>Steps:</b>
-        1. Send request to scoring engine application.
+        1. Send request with model to scoring engine application.
         2. Check scoring engine application response.
         """
+        step("Send request with model to scoring engine application")
+        file = open(jumpbox_model_file, 'rb')
+        url = "{}/uploadMarBytes".format(se_instance.url)
+        headers = {"Accept": "text/plain", "Content-Types": "text/plain; charset=UTF-8"}
+        response = requests.post(url, data=file, headers=headers)
+        assert ScoringEngineHttpStatus.MSG_MODEL_SUCCESSFULLY_UPLOADED in response.text
+
+    def test_2_check_request_to_se_application(self, se_instance):
+        """
+        <b>Description:</b>
+        Send request to scoring engine application.
+
+        <b>Input data:</b>
+        No input data.
+
+        <b>Expected results:</b>
+        Test passes if scoring engine application returns correct response.
+
+        <b>Steps:</b>
+        1. Check that Scoring Engine app responds to an HTTP request
+        """
         step("Check that Scoring Engine app responds to an HTTP request")
-        url = "{}/v1/score?data=10.0,1.5,200.0".format(se_instance.url)
+        url = "{}/v1/score?data=1,2,3,4,5,6,7,8,9".format(se_instance.url)
         headers = {"Accept": "text/plain", "Content-Types": "text/plain; charset=UTF-8"}
         response = requests.post(url, data="", headers=headers)
-        assert response.text == "-1.0", "Scoring engine response was wrong"
+        assert response.text == ScoringEngineHttpStatus.MSG_SCORING_ENGINE_RESULT, "Scoring engine response was wrong"
 
-    def test_2_delete_instance(self, se_instance):
+    def test_3_delete_se_instance(self, se_instance):
         """
         <b>Description:</b>
         Check that scoring engine instance can be deleted.
@@ -100,9 +119,15 @@ class TestScoringEngineInstance:
         Test passes if scoring engine instance is successfully deleted.
 
         <b>Steps:</b>
-        1. Delete scoring engine instance.
-        2. Check that scoring engine instance was successfully deleted.
+        1. Stop scoring engine instance.
+        2. Check that scoring engine instance was stopped.
+        3. Delete scoring engine instance.
+        4. Check that scoring engine instance was successfully deleted.
         """
+        step("Stop service instance")
+        se_instance.stop()
+        step("Check that scoring engine instance was stopped.")
+        se_instance.ensure_stopped()
         step("Delete scoring engine instance.")
         se_instance.delete()
         step("Check that scoring engine instance was deleted.")

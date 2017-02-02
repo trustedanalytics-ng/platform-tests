@@ -17,7 +17,7 @@
 from .application_path import ApplicationPath
 from .http_status import HttpStatus, DataCatalogHttpStatus, UserManagementHttpStatus, ServiceCatalogHttpStatus, \
     KubernetesBrokerHttpStatus, ImageFactoryHttpStatus, BlobStoreHttpStatus , TemplateRepositoryHttpStatus, \
-    CatalogHttpStatus, ApiServiceHttpStatus, ContainerBrokerHttpStatus, ModelCatalogHttpStatus
+    CatalogHttpStatus, ApiServiceHttpStatus, ContainerBrokerHttpStatus, ModelCatalogHttpStatus, ScoringEngineHttpStatus
 from .logger_type import LoggerType
 from .project_paths import Path
 from .services import ParametrizedService, ServiceLabels, ServicePlan, ServiceTag
