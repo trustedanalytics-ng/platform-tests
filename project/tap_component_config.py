@@ -313,7 +313,11 @@ offerings = {
     },
 }
 
+SERVICES_TESTED_SEPARATELY = [ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.SEAHORSE, ServiceLabels.H2O]
 
 offerings_as_parameters = []
+filtered_offerings = []
 for key, val in offerings.items():
     offerings_as_parameters += list(itertools.product([key], val.keys()))
+    if key not in SERVICES_TESTED_SEPARATELY:
+        filtered_offerings += list(itertools.product([key], val.keys()))

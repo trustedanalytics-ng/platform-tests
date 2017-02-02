@@ -23,7 +23,7 @@ from modules.markers import long, priority
 from modules.service_tools.jupyter import Jupyter
 from modules.tap_logger import step
 from modules.tap_object_model import KubernetesPod, ServiceInstance
-from tap_component_config import offerings, offerings_as_parameters, PlanKeys
+from tap_component_config import offerings, filtered_offerings, PlanKeys
 from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry, \
     assert_unordered_list_equal
 
@@ -37,7 +37,6 @@ pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, T
 
 
 class TestMarketplaceServices:
-    SERVICES_TESTED_SEPARATELY = [ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.SEAHORSE, ServiceLabels.H2O]
 
     def _create_jupyter_instance_and_login(self, context, param_key, param_value):
         param = {param_key: param_value}
@@ -119,16 +118,8 @@ class TestMarketplaceServices:
     @long
     @priority.high
     @pytest.mark.usefixtures("open_tunnel")
-    @pytest.mark.bugs("DPNG-12485 It is possible to create invalid services with no plan")
-    @pytest.mark.bugs("DPNG-14838 GearPump instance cannot be created")
-    @pytest.mark.bugs("DPNG-13981 Gearpump broker can't create new instance - 403 forbidden")
-    @pytest.mark.bugs("DPNG-13185 Hive, zookeeper instances fail to be deleted")
-    @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir")
-    @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0")
-    @pytest.mark.bugs("DPNG-15068 Test for h2o service should not expect instance on list of pods")
-    @pytest.mark.bugs("DPNG-15227 elasticsearch24 - cannot see assigned storage")
     @pytest.mark.parametrize("role", ["user"])
-    @pytest.mark.parametrize("offering_name, plan_name", offerings_as_parameters)
+    @pytest.mark.parametrize("offering_name, plan_name", filtered_offerings)
     def test_create_and_delete_service_instance(self, context, test_user_clients, role, offering_name, plan_name,
                                                 open_tunnel):
         """
@@ -149,8 +140,6 @@ class TestMarketplaceServices:
         5. Delete service instance.
         """
         client = test_user_clients[role]
-        self._skip_if_service_excluded(offering_name)
-
         step("Create an instance")
         instance = ServiceInstance.create_with_name(context, offering_label=offering_name, plan_name=plan_name,
                                                     client=client)
@@ -166,10 +155,6 @@ class TestMarketplaceServices:
         step("Delete an instance")
         instance.delete()
         instance.ensure_deleted()
-
-    def _skip_if_service_excluded(self, offering_name):
-        if offering_name in self.SERVICES_TESTED_SEPARATELY:
-            pytest.skip(msg="Offering {} is tested separately".format(offering_name))
 
     @pytest.mark.skip(reason="DPNG-10885 credentials endpoint is not implemented yet")
     @priority.low
@@ -230,7 +215,6 @@ class TestMarketplaceServices:
                                              plan_name=ServicePlan.SINGLE_SMALL, name=instance.name)
         assert e.value.status == HttpStatus.CODE_CONFLICT, "Created service instance with already taken name"
 
-    @pytest.mark.bugs("DPNG-14965 No meaningful error message for http status 400 in api-service create_service")
     @priority.low
     def test_cannot_create_instance_without_a_name(self, context):
         """
