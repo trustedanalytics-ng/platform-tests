@@ -190,7 +190,8 @@ class MongoReporter(BaseReporter):
     def _on_fixture_error(self, report, item, log=""):
         fixture_mongo_document = self._common_mongo_document(report=report, item=item, log=log)
         fixture_mongo_document.update({
-            "name": "{}: {} error".format(fixture_mongo_document["name"], report.when)
+            "name": "{}: {} error".format(fixture_mongo_document["name"], report.when),
+            "status": self._RESULT_FAIL,
         })
         return fixture_mongo_document, self._RESULT_FAIL
 
