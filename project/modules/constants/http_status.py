@@ -253,8 +253,7 @@ class ApiServiceHttpStatus(HttpStatus):
     MSG_APP_NOT_FOUND = "getting key \\\\\\\"/default/Applications/{}\\\\\\\" error: 100: " \
                         "Key not found (/default/Applications/{})"
     MSG_SERVICE_NOT_FOUND = "service not found"
-    MSG_ONLY_ONE_ID_EXPECTED = "Exactly one of ids has to be filled"
-    MSG_CANNOT_BOUND_INSTANCE = "Cannot bind instance {} to {}"
+    MSG_ONLY_ONE_ID_EXPECTED = "exactly one of ids has to be filled"
 
 
 class ContainerBrokerHttpStatus(HttpStatus):

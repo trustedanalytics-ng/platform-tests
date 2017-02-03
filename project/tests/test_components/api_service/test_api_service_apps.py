@@ -354,8 +354,6 @@ class TestApiServiceApplication:
         apps = Application.get_list(client=api_service_admin_client)
         assert application not in apps
 
-    @pytest.mark.bug("DPNG-15196 Error should be returned instead of response code 200 after binding application"
-                     "to service with empty id")
     @priority.high
     @pytest.mark.components(TAP.api_service)
     def test_bind_invalid_ids(self, sample_java_app, service_instance, api_service_admin_client):
@@ -407,7 +405,7 @@ class TestApiServiceApplication:
         assert sample_java_app.bindings is None
 
         step("Bind invalid application and service to service")
-        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
+        assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
                                                 ApiServiceHttpStatus.MSG_ONLY_ONE_ID_EXPECTED.
                                                 format(self.APPLICATION_INVALID_ID, self.APPLICATION_INVALID_ID),
                                                 service_instance.bind,
@@ -419,7 +417,7 @@ class TestApiServiceApplication:
 
         step("Bind application to service with empty id")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                ApiServiceHttpStatus.MSG_CANNOT_BOUND_INSTANCE.
+                                                ApiServiceHttpStatus.MSG_ONLY_ONE_ID_EXPECTED.
                                                 format("", service_instance.id),
                                                 service_instance.bind,
                                                 application_id_to_bound="",
@@ -429,7 +427,7 @@ class TestApiServiceApplication:
 
         step("Bind service to service with empty id")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_BAD_REQUEST,
-                                                ApiServiceHttpStatus.MSG_CANNOT_BOUND_INSTANCE.
+                                                ApiServiceHttpStatus.MSG_ONLY_ONE_ID_EXPECTED.
                                                 format("", service_instance.id),
                                                 service_instance.bind,
                                                 service_id_to_bound="",
