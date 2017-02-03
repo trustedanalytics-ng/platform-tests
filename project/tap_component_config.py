@@ -129,11 +129,6 @@ offerings = {
             PlanKeys.SMOKE_TESTS: False,
         }
     },
-    ServiceLabels.HBASE: {
-        Plan.ORG_SHARED: {
-            PlanKeys.SMOKE_TESTS: False,
-        }
-    },
     ServiceLabels.HDFS: {
         Plan.PLAIN_DIR: {
             PlanKeys.SMOKE_TESTS: False,
@@ -313,7 +308,7 @@ offerings = {
     },
 }
 
-SERVICES_TESTED_SEPARATELY = [ServiceLabels.HBASE, ServiceLabels.HDFS, ServiceLabels.SEAHORSE, ServiceLabels.H2O]
+SERVICES_TESTED_SEPARATELY = [ServiceLabels.HDFS, ServiceLabels.SEAHORSE, ServiceLabels.H2O]
 
 offerings_as_parameters = []
 filtered_offerings = []

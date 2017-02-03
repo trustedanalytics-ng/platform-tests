@@ -28,12 +28,10 @@ from tests.fixtures.assertions import assert_raises_http_exception, assert_in_wi
     assert_unordered_list_equal
 
 
-logged_components = (TAP.service_catalog, TAP.gearpump_broker, TAP.hbase_broker,
-                     TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
-                     TAP.zookeeper_wssb_broker)
-pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, TAP.hbase_broker,
-                                     TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker, TAP.zookeeper_broker,
-                                     TAP.zookeeper_wssb_broker)]
+logged_components = (TAP.service_catalog, TAP.gearpump_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
+                     TAP.zookeeper_broker, TAP.zookeeper_wssb_broker)
+pytestmark = [pytest.mark.components(TAP.service_catalog, TAP.gearpump_broker, TAP.kafka_broker, TAP.smtp_broker,
+                                     TAP.yarn_broker, TAP.zookeeper_broker, TAP.zookeeper_wssb_broker)]
 
 
 class TestMarketplaceServices:
