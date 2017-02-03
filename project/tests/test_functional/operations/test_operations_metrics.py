@@ -27,34 +27,6 @@ logged_components = (TAP.platform_operations, )
 pytestmark = [pytest.mark.components(TAP.platform_operations)]
 
 
-class TestNonAdminOperationsMetrics:
-    PLATFORM_SUMMARY_PATH = "app/operations/platformdashboard/platform-summary.html"
-
-    @pytest.mark.bugs("DPNG-15270 non-admin user receives summary page layout")
-    def test_non_admin_cannot_access_platform_operations(self, context, test_org):
-        """
-        <b>Description:</b>
-        Checks if non-admin user cannot reach summary operations page /app/platformdashboard/summary.
-
-        <b>Input data:</b>
-        1. User email.
-
-        <b>Expected results:</b>
-        Test passes when non-admin user was not able to reach summary operations page.
-
-        <b>Steps:</b>
-        1. Create non-admin user.
-        2. Verify that the user cannot reach summary operations page.
-        """
-        step("Create non-admin user")
-        test_user = User.create_by_adding_to_organization(context=context, org_guid=test_org.guid)
-        client = test_user.login(rest_prefix="")
-        step("Checking if non-admin user cannot request admin-only data")
-        assertions.assert_raises_http_exception(HttpStatus.CODE_UNAUTHORIZED, HttpStatus.MSG_UNAUTHORIZED,
-                                                client.request, method=HttpMethod.GET, url=console_url,
-                                                path=self.PLATFORM_SUMMARY_PATH)
-
-
 @pytest.mark.usefixtures("open_tunnel")
 class TestOperationsMetrics:
     """
