@@ -110,7 +110,7 @@ class TestReporterTestDocument:
         test_document, status = reporter._on_fixture_error(report=report, item=item, log=TEST_LOG)
         assert status == MongoReporter._RESULT_FAIL
         assert set(TEST_COMMON_REPORT.items()).issubset(set(test_document.items()))
-        assert "status" not in test_document
+        assert test_document["status"] == MongoReporter._RESULT_FAIL
         assert test_document["name"] == "{}: {} error".format(report.nodeid, report.when)
 
     def test_on_fixture_skipped(self):
@@ -174,7 +174,7 @@ class TestReporterTestDocument:
             if report_skipped:
                 assert test_documents[0]["status"] == MongoReporter._RESULT_SKIPPED
             else:
-                assert "status" not in test_documents[0]
+                assert test_documents[0]["status"] == MongoReporter._RESULT_FAIL
 
     @pytest.mark.parametrize("report_when", ("setup", "teardown"),
                              ids=("on_setup_report_passed", "on_teardown_report_passed"))
@@ -209,6 +209,6 @@ class TestReporterTestDocument:
             assert run_document_after["test_count"] == run_document_before["test_count"]
             test_documents = self._get_test_result_documents(reporter)
             assert len(test_documents) == 1
-            fixture_document = next((d for d in test_documents if "status" not in d), None)
+            fixture_document = next((d for d in test_documents if d["status"] == MongoReporter._RESULT_FAIL), None)
             assert fixture_document is not None
             assert fixture_document["name"] == "{}: setup error".format(report.nodeid)
