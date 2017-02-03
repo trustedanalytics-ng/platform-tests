@@ -34,7 +34,6 @@ class TestDeleteService:
         services = ServiceOffering.get_list()
         return next(s for s in services if s.label == ServiceLabels.ZOOKEEPER)
 
-    @pytest.mark.skip(reason="DPNG-12855 Deleting service broker offering - not yet implemented")
     @pytest.mark.parametrize("role", ["user"])
     def test_cannot_delete_public_service_as_non_admin(self, test_user_clients, role, public_service):
         """
@@ -55,7 +54,7 @@ class TestDeleteService:
         """
         client = test_user_clients[role]
         step("Attempt to delete public service")
-        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_USER_NOT_AUTHORIZED_TO_DELETE_SERVICE,
+        assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN, HttpStatus.MSG_ACCESS_FORBIDDEN,
                                      public_service.delete, client=client)
 
     @pytest.mark.parametrize("role", ["admin"])
