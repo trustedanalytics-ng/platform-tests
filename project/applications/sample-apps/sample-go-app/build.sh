@@ -16,7 +16,7 @@
 
 TAR_NAME=app.tar.gz
 
-make build_anywhere_linux64 || make build_anywhere_linux64
+make build_anywhere_linux64
 
 rm -f $TAR_NAME
 tar -zcvf $TAR_NAME *

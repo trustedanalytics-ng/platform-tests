@@ -65,22 +65,30 @@ build_anywhere_linux:
 	$(MAKE) build_anywhere_linux32
 
 build_anywhere_linux64:
-	$(call build,linux,amd64,main-linux64)
+	$(call prepare_env_for_build_app,linux,amd64,main-linux64)
+	$(MAKE) build_app
 	ln -sf main-linux64 application/main
 
 build_anywhere_linux32:
-	$(call build,linux,386,main-linux32)
+	$(call prepare_env_for_build_app,linux,386,main-linux32)
+	$(MAKE) build_app
 
 build_anywhere_win32:
-	$(call build,windows,386,main-windows32.exe)
+	$(call prepare_env_for_build_app,windows,386,main-windows32.exe)
+	$(MAKE) build_app
 
 build_anywhere_osx:
-	$(call build,darwin,amd64,main-macosx64.osx)
+	$(call prepare_env_for_build_app,darwin,amd64,main-macosx64.osx)
+	$(MAKE) build_app
 
-define build
-	$(MAKE) prepare_temp
+build_app: prepare_temp
 	$(eval GOPATH=$(shell readlink -f temp))
 	$(eval APP_DIR_LIST=$(shell GOPATH=$(GOPATH) go list ./temp/src/github.com/trustedanalytics/platform-tests/project/applications/sample-apps/sample-go-app/... | grep -v /vendor/))
-	GOPATH=$(GOPATH) CGO_ENABLED=0 GOOS=$(1) GOARCH=$(2) go build -o ./application/$(3) -tags netgo $(APP_DIR_LIST)
+	GOPATH=$(GOPATH) CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ./application/$(OUTFILE) -tags netgo $(APP_DIR_LIST)
 	$(MAKE) clear_temp
+
+define prepare_env_for_build_app
+	$(eval export GOOS=$(1))
+	$(eval export GOARCH=$(2))
+	$(eval export OUTFILE=$(3))
 endef
