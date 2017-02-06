@@ -138,7 +138,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         assert self.state == TapEntityState.STOPPED, \
                "Instance state is {}, expected {}".format(self.state, TapEntityState.STOPPED)
 
-    @retry(AssertionError, tries=10, delay=2)
+    @retry(AssertionError, tries=60, delay=5)
     def ensure_deleted(self):
         instances = self.get_list()
         this_instance = next((i for i in instances if i.id == self.id), None)
