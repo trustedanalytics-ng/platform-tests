@@ -289,7 +289,7 @@ offerings = {
         }
     },
     ServiceLabels.SCORING_ENGINE: {
-        Plan.SIMPLE: {
+        Plan.SINGLE: {
             PlanKeys.SMOKE_TESTS: False,
         }
     },

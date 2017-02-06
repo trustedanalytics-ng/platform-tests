@@ -26,12 +26,6 @@ from tap_component_config import offerings_as_parameters
 @pytest.mark.usefixtures("cli_login")
 class TestCreatingServiceInstancesViaCli:
 
-    @pytest.mark.bugs("DPNG-15071 Gearpump service removal issue")
-    @pytest.mark.bugs("DPNG-10429 [TAP-NG] Brokers - Elasticsearch")
-    @pytest.mark.bugs("DPNG-15149 [api-tests] Move all tests using hbase to platform-tests/project/test_TAP_09/")
-    @pytest.mark.bugs("DPNG-13433 Adjust Jupyter offering to TAP Offerings doc")
-    @pytest.mark.bugs("DPNG-15095 Unable to create mysql instance - error: inappropriate state OFFLINE")
-    @pytest.mark.bugs("DPNG-11192 TAP NG - get scoring engine running in TAP 0.8.0")
     @long
     @priority.low
     @pytest.mark.parametrize("service_label,plan_name", offerings_as_parameters)
