@@ -93,7 +93,6 @@ class TestCliService:
         credentials_output = tap_cli.service_credentials(["--name", svc.name])
         assert all([result in credentials_output for result in expected])
 
-    @pytest.mark.bugs("DPNG-14805 Cannot remove instance hdfs in plain-dir and encrypted-dir")
     @priority.high
     @pytest.mark.components(TAP.cli)
     @pytest.mark.parametrize("service_label, plan_name", KAFKA_AND_HDFS_OFFERINGS)

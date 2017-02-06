@@ -72,14 +72,14 @@ class Hdfs(object):
         return self._execute(self._HDFS_CMD + ["crypto", "-listZones"])
 
     def get_cdhmaster(self):
-        k8s = ["cat", "k8s"]
+        inventory = ["cat", "tap.inventory.out"]
         try:
-            output = self.ssh_client.execute_ssh_command(k8s)
+            output = self.ssh_client.execute_ssh_command(inventory)
         except:
             output = self.ssh_client.execute_ssh_command(["ls"])
-            TAP = next((s for s in output if 'TAP' in s), None)
-            k8s = ["cat", "{}/inventory/k8s".format(TAP)]
-            output = self.ssh_client.execute_ssh_command(k8s)
+            TAP = next((s for s in output if 'configuration' in s), None)
+            inventory = ["cat", "{}/tap.inventory.out".format(TAP)]
+            output = self.ssh_client.execute_ssh_command(inventory)
         index = output.index('[cdh-master-primary]')
         cdh = output[index+1].split(" ")
         return cdh[0]
