@@ -61,7 +61,7 @@ class TapMessage:
     NO_SUCH_OFFERING = "Could not find offering with such name"
     MISSING_PARAMETER = "MISSING PARAMETER"
     NAME_HAS_INCORRECT_VALUE = "field: Name has incorrect value: {}"
-    NO_SUCH_HOST = "no such host"
+    DOMAIN_NOT_FOUND = "Domain not found."
     OK = "OK"
     SERVICE_ALREADY_EXISTS = "service with name: {} already exists!"
     SUCCESS = "success"

@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.components(TAP.cli)]
 class TestCliBasicFlow:
 
     INCORRECT_DOMAIN = 'www.incorrect.domain'
-    FOREIGN_DOMAIN = 'www.google.com'
+    FOREIGN_DOMAIN = 'www.wp.pl'
 
     @pytest.fixture(scope="function")
     def restore_login(self, request, tap_cli):
@@ -186,7 +186,7 @@ class TestCliBasicFlow:
         2. Verify that TAP CLI command login with incorrect domain returns expected message.
         """
         step("Check that user cannot login to tap cli using incorrect domain")
-        assert_raises_command_execution_exception(1, TapMessage.NO_SUCH_HOST,
+        assert_raises_command_execution_exception(1, TapMessage.DOMAIN_NOT_FOUND,
                                                   tap_cli.login, login_domain=self.INCORRECT_DOMAIN)
 
     @priority.low
