@@ -33,9 +33,7 @@ class DataFileKeys:
     TEST_TRANSFER = "test_transfer"
     KAFKA2GEARPUMP2HBASE = "kafka2gearpump2hbase"
     COMPLEXDAG_APP = "complexdag_app"
-    NODEJS_APP = "nodejs_app"
     HADOOP_MAPREDUCE_EXAMPLES = "hadoop_mapreduce_examples"
-    SCORING_ENGINE_MODEL = "scoring_engine_model"
 
 
 class Urls:
@@ -44,9 +42,7 @@ class Urls:
         DataFileKeys.TEST_TRANSFER: "https://repo.gotapaas.eu/files/2_kilobytes.csv",
         DataFileKeys.KAFKA2GEARPUMP2HBASE: "https://repo.gotapaas.eu/files/gearpump-app-0.6.0-jar-with-dependencies.jar",
         DataFileKeys.COMPLEXDAG_APP: "https://repo.gotapaas.eu/files/complexdag-2.11.5-0.7.1-SNAPSHOT-assembly.jar",
-        DataFileKeys.NODEJS_APP: "https://repo.gotapaas.eu/files/test_blob",
         DataFileKeys.HADOOP_MAPREDUCE_EXAMPLES: "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-mapreduce-examples/2.2.0/hadoop-mapreduce-examples-2.2.0.jar",
-        DataFileKeys.SCORING_ENGINE_MODEL: "https://repo.gotapaas.eu/files/spaceshuttleSVMmodel.mar",
     }
 
     class Url:

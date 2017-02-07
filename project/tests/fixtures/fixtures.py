@@ -602,10 +602,10 @@ def example_image():
 
 
 @pytest.fixture(scope="session")
-def model_hdfs_path(session_context, core_org, test_data_urls):
-    model_file = zip_file(test_data_urls[DataFileKeys.SCORING_ENGINE_MODEL].filepath)  # workaround for DPNG-15187
+def model_hdfs_path(session_context, core_org, jumpbox_model_file):
+    packed_model_file = zip_file(jumpbox_model_file)  # workaround for DPNG-15187
     log_fixture("Create a dataset with model file.")
-    _, dataset = data_catalog.create_dataset_from_file(session_context, core_org.guid, model_file)
+    _, dataset = data_catalog.create_dataset_from_file(session_context, core_org.guid, packed_model_file)
     return dataset.target_uri
 
 
