@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 DATA_REPO_PATH = os.path.join(os.path.dirname(__file__), '../../applications/data-repo')
 FILES_DIRECTORY_NAME = 'files'
 FILES_DIRECTORY_PATH = os.path.join(DATA_REPO_PATH, FILES_DIRECTORY_NAME)
+DATA_REPO_TAR_PATH = os.path.join(DATA_REPO_PATH, "app.tar.gz")
 
 
 def _get_filename_from_url(url):

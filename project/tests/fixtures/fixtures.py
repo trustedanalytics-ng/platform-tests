@@ -25,18 +25,15 @@ import config
 from modules.app_sources import AppSources
 from modules.constants import ApplicationPath, HttpStatus, ServiceLabels, ServicePlan, TapApplicationType, TapGitHub
 from modules.exceptions import UnexpectedResponseError
-from modules.file_utils import zip_file
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
-from modules.ssh_lib import JumpClient
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
     ScoringEngineModel, ModelArtifact
 from modules.tap_object_model.prep_app import PrepApp
-from modules.tap_object_model.flows import data_catalog
 from modules.test_names import generate_test_object_name
-from .data_repo import Urls, DATA_REPO_PATH, DataFileKeys
+from .data_repo import Urls, DATA_REPO_PATH, DATA_REPO_TAR_PATH
 from .sample_apps import SampleApps
 
 
@@ -615,7 +612,10 @@ def test_data_urls(session_context):
     else:
         log_fixture("data_repo: package sample application")
         p_a = PrepApp(DATA_REPO_PATH)
-        gzipped_app_path = p_a.package_app(session_context)
+        if os.path.exists(DATA_REPO_TAR_PATH):
+            gzipped_app_path = DATA_REPO_TAR_PATH
+        else:
+            gzipped_app_path = p_a.package_app(session_context)
 
         log_fixture("data_repo: update manifest")
         manifest_path = p_a.update_manifest(params={})
