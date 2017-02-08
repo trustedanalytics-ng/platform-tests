@@ -75,7 +75,7 @@ def sample_db_app(request):
 
 
 @pytest.mark.components(TAP.metrics_grafana)
-@pytest.mark.bugs("DPNG-13789 Values for memory_usage and cpu_usage for organization are not passed by Grafana")
+@pytest.mark.skip(reason="DPNG-15338 Test hasn't got credential to get data from Grafana")
 def test_dashboard_metrics():
     """
     <b>Description:</b>
