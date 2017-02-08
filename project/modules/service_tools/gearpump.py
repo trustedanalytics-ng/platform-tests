@@ -99,7 +99,7 @@ class Gearpump(object):
         """
         if self.ssh_client is None:
             self.set_ssh_client()
-        self.yarn_endpoint = "https://{}.instance.cluster.local:8090/ws/v1/cluster/apps/"
+        self.yarn_endpoint = "https://{}:8090/ws/v1/cluster/apps/"
         if self.yarn_app_id is None:
             self.get_yarn_id()
         if config.kerberos:
