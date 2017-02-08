@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Intel Corporation
+# Copyright (c) 2016-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,13 +35,12 @@ class Hdfs(object):
         self.ssh_client = JumpClient(remote_host=config.jumpbox_hostname, remote_username=config.ng_jump_user,
                                      remote_key_path=config.jumpbox_key_path)
         self._HDFS_DIR = "/org/{}/brokers/userspace".format(org.guid)
-        cdh_master_primary = self.get_cdhmaster()
-        self._SSH.append(cdh_master_primary)
+        self.cdh_master_primary = self.get_cdhmaster()
 
     def _execute(self, command: list):
         jump = JumpClient(remote_host=config.jumpbox_hostname, remote_username=config.ng_jump_user,
                           remote_key_path=config.jumpbox_key_path)
-        return jump.execute_ssh_command(self._SSH + command)
+        return jump.execute_ssh_command(self._SSH + [self.cdh_master_primary] + command)
 
     def ls(self, service_instance_id):
         directory_path = "{}/{}".format(self._HDFS_DIR, service_instance_id)
@@ -62,8 +61,7 @@ class Hdfs(object):
         self.ssh_client.execute_ssh_command(["touch", file_name])
         fill_file = ["echo", "\"{}\"".format(content), ">>", file_name]
         self.ssh_client.execute_ssh_command(fill_file)
-        cdh_master_primary = self.get_cdhmaster()
-        self.ssh_client.execute_ssh_command(["scp", file_name, "{}:/tmp".format(cdh_master_primary)])
+        self.ssh_client.execute_ssh_command(["scp", file_name, "{}:/tmp".format(self.cdh_master_primary)])
         self.ssh_client.execute_ssh_command(["rm", file_name])
         file = {'name': file_name, 'content': content}
         return file
