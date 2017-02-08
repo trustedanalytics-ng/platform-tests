@@ -230,29 +230,6 @@ class TestGetDataSets(object):
         assert dataset.source_uri == transfer.source
 
     @priority.medium
-    def test_get_datasets_by_keyword_title(self, test_org):
-        """
-        <b>Description:</b>
-        Check that dataset can be retrieved by title.
-
-        <b>Input data:</b>
-        1. transfer title
-        2. dataset list
-
-        <b>Expected results:</b>
-        Test passes when dataset can be retrieved by title.
-
-        <b>Steps:</b>
-        1. Retrieve dataset by title.
-        2. Check that retrieved dataset is correct.
-        """
-        title = self.transfer_titles[0]
-        step("Retrieve datasets by title keyword")
-        filtered_datasets = self._filter_datasets(test_org, query=title)
-        expected_datasets = [d for d in self.datasets if d.title == title]
-        assert sorted(filtered_datasets) == sorted(expected_datasets)
-
-    @priority.medium
     def test_get_datasets_by_keyword_source_uri(self, test_org, test_data_urls):
         """
         <b>Description:</b>
