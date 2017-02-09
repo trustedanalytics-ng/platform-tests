@@ -66,7 +66,6 @@ class TestGearpumpConsole:
         yarn_app_status = self.gearpump.get_yarn_app_status()
         assert yarn_app_status == YarnAppStatus.RUNNING
 
-    @pytest.mark.bugs("DPNG-15154 Gearpump dashboard url doesn't work")
     def test_1_check_gearpump_ui_app_created(self):
         """
         <b>Description:</b>

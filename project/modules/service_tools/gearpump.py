@@ -102,10 +102,7 @@ class Gearpump(object):
         self.yarn_endpoint = "https://{}:8090/ws/v1/cluster/apps/"
         if self.yarn_app_id is None:
             self.get_yarn_id()
-        if config.kerberos:
-            self.yarn_endpoint = self.yarn_endpoint.format("hadoop-master-0")
-        else:
-            self.yarn_endpoint = self.yarn_endpoint.format("hadoop-master-1")
+        self.yarn_endpoint = self.yarn_endpoint.format(self.get_cdhmaster())
         url = self.yarn_endpoint + self.yarn_app_id
         command = ["curl --insecure", url]
         response = self.ssh_client.execute_ssh_command(command)
@@ -114,6 +111,19 @@ class Gearpump(object):
         json_string = string[start_json:]
         json_obj = json.loads(json_string)
         return str(json_obj["app"]["state"])
+
+    def get_cdhmaster(self):
+        inventory = ["cat", "tap.inventory.out"]
+        try:
+            output = self.ssh_client.execute_ssh_command(inventory)
+        except:
+            output = self.ssh_client.execute_ssh_command(["ls"])
+            TAP = next((s for s in output if 'configuration' in s), None)
+            inventory = ["cat", "{}/tap.inventory.out".format(TAP)]
+            output = self.ssh_client.execute_ssh_command(inventory)
+        index = output.index('[cdh-master-primary]')
+        cdh = output[index+1].split(" ")
+        return cdh[0]
 
     def get_yarn_id(self):
         """
