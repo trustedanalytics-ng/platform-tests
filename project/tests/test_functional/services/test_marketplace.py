@@ -113,6 +113,7 @@ class TestMarketplaceServices:
         else:
             step("Plan {} of offering {} does not have expected resource information".format(plan_name, offering_label))
 
+    @pytest.mark.bugs("DPNG-15227 elasticsearch24 - cannot see assigned storage")
     @long
     @priority.high
     @pytest.mark.usefixtures("open_tunnel")
