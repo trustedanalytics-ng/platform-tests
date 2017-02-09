@@ -35,9 +35,9 @@ class TestCliCatalogOffering:
         return CliOffering.create(context=class_context, tap_cli=tap_cli)
 
     @pytest.fixture(scope="class")
-    def service(self, class_context, sample_service, tap_cli):
-        return CliService.create(context=class_context, offering_name=sample_service.label,
-                                 plan_name=sample_service.service_plans[0].name, tap_cli=tap_cli)
+    def service(self, class_context, tap_cli, offering):
+        return CliService.create(context=class_context, offering_name=offering.name,
+                                 plan_name=offering.plans[0].name, tap_cli=tap_cli)
 
     @priority.high
     def test_create_and_delete_offering(self, context, tap_cli):
