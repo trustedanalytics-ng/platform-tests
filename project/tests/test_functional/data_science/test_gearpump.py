@@ -41,6 +41,7 @@ class TestGearpumpConsole:
     def go_to_dashboard(self):
         self.gearpump.go_to_dashboard()
 
+    @pytest.mark.bugs("DPNG-15305 Fix tests.test_functional.data_science.test_gearpump")
     def test_0_create_gearpump_instance(self, class_context, test_org):
         """
         <b>Description:</b>
@@ -127,7 +128,6 @@ class TestGearpumpConsole:
         step("Check that application is stopped")
         assert not self.dag_app.is_started
 
-    @pytest.mark.bugs("DPNG-15071 Gearpump service removal issue")
     def test_4_delete_gearpump_instance(self):
         """
         <b>Description:</b>

@@ -43,7 +43,7 @@ class TestWs2kafka2hdfs:
     topic_name = "topic-{}".format(str(int(time.time())))
     app_kafka2hdfs = None
 
-    @pytest.mark.bugs("DPNG-13583 Nginx image doesn't support websocket protocol for TAP-NG apps")
+    @pytest.mark.bugs("DPNG-15304 Fix tests.test_functional.applications.test_ws2kafka2hdfs")
     def test_step_0_send_from_ws2kafka2hdfs(self, ws2kafka_app, kafka2hdfs_app):
         """
         <b>Description:</b>
