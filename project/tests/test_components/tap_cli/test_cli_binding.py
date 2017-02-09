@@ -240,6 +240,8 @@ class TestCliBinding:
         step('unbind service from application')
         binding.type = 'service'
         binding.delete()
+        step('ensure that application is running after delete binding')
+        sample_python_app.ensure_running()
         step('ensure that service is not on application binding list')
         binding.type = 'application'
         binding.ensure_not_on_bindings_list()
