@@ -19,6 +19,7 @@ import config
 from ..http_client_configuration import HttpClientConfiguration
 from ..http_client_type import HttpClientType
 from .base import BaseConfigurationProvider
+from ...http_calls import kubernetes
 
 
 class GrafanaConfigurationProvider(BaseConfigurationProvider):
@@ -28,10 +29,11 @@ class GrafanaConfigurationProvider(BaseConfigurationProvider):
     def get(cls, username=None, password=None) -> HttpClientConfiguration:
         """Provide http client configuration."""
         if username is None:
-            username = config.admin_username
-            password = config.admin_password
+            login_data = kubernetes.k8s_get_configmap("grafana")
+            username = login_data['data']['grafana-basic-user']
+            password = login_data['data']['grafana-basic-password']
         return HttpClientConfiguration(
-            client_type=HttpClientType.NO_AUTH,
+            client_type=HttpClientType.BASIC_AUTH,
             url=config.grafana_url,
             username=username,
             password=password
