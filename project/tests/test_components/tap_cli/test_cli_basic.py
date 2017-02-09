@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.components(TAP.cli)]
 
 class TestCliBasicFlow:
 
-    INCORRECT_DOMAIN = 'www.incorrect.domain'
+    INCORRECT_DOMAIN = 'www.incorrect.domain.com'
     FOREIGN_DOMAIN = 'www.wp.pl'
 
     @pytest.fixture(scope="function")
@@ -167,7 +167,6 @@ class TestCliBasicFlow:
                                                   tap_cli.login,
                                                   tap_auth=(config.ng_k8s_service_auth_username, "wrong"))
 
-    @pytest.mark.bugs("DPNG-15123 Remove redundant test_cannot_login_with_incorrect_domain test")
     @priority.low
     def test_cannot_login_with_incorrect_domain(self, tap_cli, restore_login):
         """
