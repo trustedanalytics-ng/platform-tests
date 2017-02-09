@@ -17,6 +17,7 @@
 from retry import retry
 
 from modules.constants import HttpStatus, TapEntityState
+from modules.exceptions import UnexpectedResponseError
 from modules.http_client import HttpClientFactory, HttpMethod
 from modules.http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
 from ._cli_object_superclass import CliObjectSuperclass
@@ -94,9 +95,17 @@ class CliApplication(CliObjectSuperclass):
         return self.tap_cli.app_logs(application_name=self.name)
 
     def delete(self):
-        delete = self.tap_cli.app_delete(application_name=self.name)
-        assert self.EXPECTED_DELETE_BODY in delete
-        self.ensure_not_on_app_list()
+        if self._is_deleted is True:
+            return
+
+        try:
+            delete = self.tap_cli.app_delete(application_name=self.name)
+            assert self.EXPECTED_DELETE_BODY in delete
+            self.ensure_not_on_app_list()
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
+
         return delete
 
     def get_details(self):

@@ -16,6 +16,7 @@
 
 import uuid
 
+from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.blob_store as blob_store_api
 from ._tap_object_superclass import TapObjectSuperclass
 
@@ -72,4 +73,13 @@ class Blob(TapObjectSuperclass):
         return response
 
     def delete(self):
-        return Blob.delete_by_id(blob_id=self.id)
+        if self._is_deleted is True:
+            return
+
+        try:
+            response = Blob.delete_by_id(blob_id=self.id)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
+
+        return response

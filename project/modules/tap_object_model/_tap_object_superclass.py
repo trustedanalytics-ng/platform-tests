@@ -23,6 +23,7 @@ class TapObjectSuperclass(object):
 
     def __init__(self, *, object_id: str):
         self.id = object_id
+        self._is_deleted = False
 
     def __eq__(self, other):
         if self._COMPARABLE_ATTRIBUTES is None:
@@ -54,3 +55,6 @@ class TapObjectSuperclass(object):
 
     def cleanup(self):
         self.delete()
+
+    def _set_deleted(self, is_deleted):
+        self._is_deleted = bool(is_deleted)

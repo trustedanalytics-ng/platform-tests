@@ -24,6 +24,7 @@ class CliObjectSuperclass(object):
     def __init__(self, *, tap_cli, name):
         self.tap_cli = tap_cli
         self.name = name
+        self._is_deleted = False
 
     def __eq__(self, other):
         if self._COMPARABLE_ATTRIBUTES is None:
@@ -44,3 +45,6 @@ class CliObjectSuperclass(object):
 
     def cleanup(self):
         self.delete()
+
+    def _set_deleted(self, is_deleted):
+        self._is_deleted = bool(is_deleted)

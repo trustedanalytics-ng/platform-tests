@@ -17,6 +17,7 @@
 
 import uuid
 
+from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.template_repository as template_repository_api
 from fixtures.k8s_templates import template_example
 from ._tap_object_superclass import TapObjectSuperclass
@@ -64,7 +65,14 @@ class Template(TapObjectSuperclass):
         return cls._list_from_response(response)
 
     def delete(self):
-        template_repository_api.delete_template(template_id=self.id)
+        if self._is_deleted is True:
+            return
+
+        try:
+            template_repository_api.delete_template(template_id=self.id)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
 
     @classmethod
     def _from_response(cls, response):

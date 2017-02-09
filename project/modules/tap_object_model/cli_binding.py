@@ -16,6 +16,7 @@
 
 from retry import retry
 
+from modules.exceptions import UnexpectedResponseError
 from ._cli_object_superclass import CliObjectSuperclass
 
 
@@ -46,7 +47,14 @@ class CliBinding(CliObjectSuperclass):
         return binding
 
     def delete(self):
-        self.tap_cli.unbind(self.type, [self.tap_cli.NAME_PARAM, self.name] + self.direction_param)
+        if self._is_deleted is True:
+            return
+
+        try:
+            self.tap_cli.unbind(self.type, [self.tap_cli.NAME_PARAM, self.name] + self.direction_param)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
 
     @retry(AssertionError, tries=12, delay=10)
     def ensure_on_bindings_list(self):

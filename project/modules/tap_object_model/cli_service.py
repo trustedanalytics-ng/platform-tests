@@ -17,6 +17,7 @@
 from retry import retry
 
 from modules.exceptions import ServiceInstanceCreationFailed
+from modules.exceptions import UnexpectedResponseError
 from modules import test_names
 from modules.constants import TapEntityState
 from ._cli_object_superclass import CliObjectSuperclass
@@ -84,13 +85,21 @@ class CliService(CliObjectSuperclass):
         return self.tap_cli.service_log(self.name)
 
     def delete(self):
-        if self.get(self.name, self.tap_cli).state != TapEntityState.STOPPED:
-            self.stop()
-            self.ensure_service_state(TapEntityState.STOPPED)
-        return self.tap_cli.delete_service(["--name", self.name])
+        if self._is_deleted is True:
+            return
 
-    def cleanup(self):
-        self.delete()
+        try:
+            if self.get(self.name, self.tap_cli).state != TapEntityState.STOPPED:
+                self.stop()
+                self.ensure_service_state(TapEntityState.STOPPED)
+            response = self.tap_cli.delete_service(["--name", self.name])
+            self._set_deleted(self, True)
+        except UnexpectedResponseError:
+            raise
+        else:
+            self._set_deleted(self, False)
+
+        return response
 
     def start(self):
         return self.tap_cli.service_start(self.name)

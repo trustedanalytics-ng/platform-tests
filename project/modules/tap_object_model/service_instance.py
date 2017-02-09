@@ -20,6 +20,7 @@ from modules import test_names
 from modules.constants import TapEntityState
 from modules.http_client import HttpClient
 from modules.exceptions import ServiceInstanceCreationFailed
+from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.api_service as api
 from modules.test_names import generate_test_object_name
 from ._api_model_superclass import ApiModelSuperclass
@@ -46,6 +47,7 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         self.state = state
         self.bindings = [] if bindings is None else bindings
         self.url = url
+        self._is_deleted = False
 
     def __repr__(self):
         return "{} (name={}, id={}, offering={})".format(self.__class__.__name__, self.name, self.id, self.offering_label)
@@ -195,8 +197,15 @@ class ServiceInstance(ApiModelSuperclass, TapObjectSuperclass):
         ids = next((e["entity"]["app_guid"] for e in bindings), None)
         assert application_id in ids
 
-    def delete(self, client: HttpClient=None):
-        api.delete_service(service_id=self.id, client=self._get_client(client))
+    def delete(self, client: HttpClient=None, force=False):
+        if self._is_deleted is True and force is False:
+            return
+
+        try:
+            api.delete_service(service_id=self.id, client=self._get_client(client))
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
 
     @classmethod
     def _metadata_to_dict(cls, metadata):

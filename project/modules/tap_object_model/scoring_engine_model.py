@@ -38,6 +38,7 @@ class ScoringEngineModel(object):
         self.added_on = added_on
         self.modified_by = modified_by
         self.modified_on = modified_on
+        self._is_deleted = False
 
     def __repr__(self):
         return "{} (name={}, id={})".format(self.__class__.__name__, self.name, self.id)
@@ -94,8 +95,12 @@ class ScoringEngineModel(object):
                                        artifacts=artifacts, added_by=added_by, added_on=added_on,
                                        modified_by=modified_by, modified_on=modified_on, client=client)
 
-    def delete(self, *, client=None):
+    def delete(self, *, client=None, force=False):
+        if self._is_deleted is True and force is False:
+            return
+
         model_catalog_api.delete_model(model_id=self.id, client=client)
+        self._set_deleted(True)
 
     def patch(self, *, name=None, description=None, creation_tool=None, revision=None, algorithm=None, artifacts=None,
               added_by=None, added_on=None, modified_by=None, modified_on=None, client=None):
@@ -110,5 +115,5 @@ class ScoringEngineModel(object):
     def cleanup(self):
         self.delete()
 
-
-
+    def _set_deleted(self, is_deleted):
+        self._is_deleted = bool(is_deleted)

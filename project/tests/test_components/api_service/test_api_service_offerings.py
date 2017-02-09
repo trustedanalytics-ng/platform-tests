@@ -64,7 +64,7 @@ class TestApiServiceOfferings:
         assert test_offering not in catalog
         step("Check that requesting the deleted offering returns an error")
         assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND, ApiServiceHttpStatus.MSG_KEY_NOT_FOUND,
-                                     test_offering.delete, client=api_service_admin_client)
+                                     test_offering.delete, client=api_service_admin_client, force=True)
 
     @priority.low
     def test_cannot_create_the_same_offering_twice(self, context, api_service_admin_client):

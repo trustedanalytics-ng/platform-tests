@@ -80,7 +80,7 @@ class TestModelDelete:
         sample_model.delete()
         step("Try to delete the same model from organization for the second time")
         assert_raises_http_exception(HttpStatus.CODE_NOT_FOUND, HttpStatus.MSG_NOT_FOUND,
-                                     sample_model.delete)
+                                     sample_model.delete, force=True)
 
     @priority.low
     def test_cannot_delete_non_existing_model(self):

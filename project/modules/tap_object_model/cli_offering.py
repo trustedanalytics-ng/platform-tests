@@ -90,4 +90,8 @@ class CliOffering(CliObjectSuperclass):
 
     @retry(CommandExecutionException, tries=12, delay=5)
     def delete(self):
+        if self._is_deleted is True:
+            return
+
         self.tap_cli.delete_offering(self.name)
+        self._set_deleted(True)

@@ -206,7 +206,7 @@ class TestServiceInstantiation:
         step("Try delete not existing service instance")
         assertions.assert_raises_http_exception(ApiServiceHttpStatus.CODE_NOT_FOUND,
                                                 ApiServiceHttpStatus.MSG_KEY_NOT_FOUND, instance.delete,
-                                                client=api_service_admin_client)
+                                                client=api_service_admin_client, force=True)
 
     @priority.medium
     def test_7_cannot_retrieve_deleted_instance(self, instance, api_service_admin_client):

@@ -18,6 +18,7 @@ from retry import retry
 
 from modules.constants import TapEntityState
 from modules.exceptions import ServiceInstanceCreationFailed
+from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.catalog as catalog_api
 from modules.test_names import generate_test_object_name
 from ._catalog_instance_superclass import CatalogInstanceSuperClass
@@ -61,7 +62,14 @@ class CatalogServiceInstance(CatalogInstanceSuperClass):
         setattr(self, field_name, value)
 
     def delete(self):
-        catalog_api.delete_service_instance(service_id=self.class_id, instance_id=self.id)
+        if self._is_deleted is True:
+            return
+
+        try:
+            catalog_api.delete_service_instance(service_id=self.class_id, instance_id=self.id)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
 
     def cleanup(self):
         self.delete()

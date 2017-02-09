@@ -17,6 +17,7 @@
 import re
 
 from modules import test_names
+from modules.exceptions import UnexpectedResponseError
 from ._cli_object_superclass import CliObjectSuperclass
 
 
@@ -48,4 +49,11 @@ class CliInvitation(CliObjectSuperclass):
         self.tap_cli.reinvite(self.username)
 
     def delete(self, short_cmd=False):
-        self.tap_cli.delete_invitation(self.name)
+        if self._is_deleted is True:
+            return
+
+        try:
+            self.tap_cli.delete_invitation(self.name)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise

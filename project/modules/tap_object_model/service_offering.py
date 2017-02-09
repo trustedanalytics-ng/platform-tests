@@ -50,6 +50,7 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         self.tags = tags if tags is not None else []
         self.image = image
         self.display_name = display_name
+        self._is_deleted = False
 
     def __repr__(self):
         return "{} (label={}, guid={})".format(self.__class__.__name__, self.label, self.id)
@@ -119,8 +120,12 @@ class ServiceOffering(ApiModelSuperclass, TapObjectSuperclass):
         return cls._list_from_response(response, client)
 
     @retry(AssertionError, tries=10, delay=2)
-    def delete(self, client=None):
+    def delete(self, client=None, force=False):
+        if self._is_deleted is True and force is False:
+            return
+
         api.delete_offering(client=self._get_client(client), offering_id=self.id)
+        self._set_deleted(True)
 
     @classmethod
     def _from_response(cls, response: dict, client: HttpClient):

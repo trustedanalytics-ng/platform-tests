@@ -38,6 +38,7 @@ class CatalogInstanceSuperClass(object):
         self.class_id = class_id
         self.state = state
         self.bound_instance_ids = bound_instance_ids
+        self._is_deleted = False
 
     def __eq__(self, other):
         return all(getattr(self, a) == getattr(other, a) for a in self._COMPARABLE_ATTRIBUTES)
@@ -97,3 +98,6 @@ class CatalogInstanceSuperClass(object):
         if expected_state != TapEntityState.FAILURE and self.state == TapEntityState.FAILURE:
             raise ServiceInstanceCreationFailed("{} is in state {}".format(self, self.state))
         assert self.state == expected_state, "{} state is {}, expected {}".format(self, self.state, expected_state)
+
+    def _set_deleted(self, is_deleted):
+        self._is_deleted = bool(is_deleted)

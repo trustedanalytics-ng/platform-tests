@@ -71,6 +71,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
         self.urls = tuple(urls)
         self._request_session = requests.session()
         self._request_session.verify = config.ssl_validation
+        self._is_deleted = False
 
     def __repr__(self):
         return "{} (name={}, app_id={})".format(self.__class__.__name__,
@@ -189,8 +190,15 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
 
     def delete(self, client: HttpClient=None):
         """ Deletes the application from TAP """
-        api.delete_application(client=self._get_client(client),
-                               app_id=self.id)
+        if self._is_deleted is True:
+            return
+
+        try:
+            api.delete_application(client=self._get_client(client),
+                                   app_id=self.id)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
 
     def start(self, client: HttpClient=None):
         """ Sends the start command to application """

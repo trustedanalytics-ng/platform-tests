@@ -18,6 +18,7 @@ import re
 import functools
 
 from modules import gmail_api
+from modules.exceptions import UnexpectedResponseError
 from modules.tap_object_model.flows import onboarding
 from ._cli_object_superclass import CliObjectSuperclass
 
@@ -45,4 +46,11 @@ class CliUser(CliObjectSuperclass):
         return [cls(tap_cli=tap_cli, username=user) for user in user_list]
 
     def delete(self):
-        self.tap_cli.delete_user(self.name)
+        if self._is_deleted is True:
+            return
+
+        try:
+            self.tap_cli.delete_user(self.name)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise

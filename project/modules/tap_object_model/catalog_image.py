@@ -16,6 +16,7 @@
 
 from retry import retry
 
+from modules.exceptions import UnexpectedResponseError
 import modules.http_calls.platform.catalog as catalog_api
 from ._tap_object_superclass import TapObjectSuperclass
 
@@ -68,4 +69,11 @@ class CatalogImage(TapObjectSuperclass):
                                  username=username)
 
     def delete(self):
-        catalog_api.delete_image(image_id=self.id)
+        if self._is_deleted is True:
+            return
+
+        try:
+            catalog_api.delete_image(image_id=self.id)
+            self._set_deleted(True)
+        except UnexpectedResponseError:
+            raise
