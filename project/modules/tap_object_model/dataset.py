@@ -36,6 +36,7 @@ class DataSet(object):
     CATEGORIES = ["other", "agriculture", "climate", "science", "energy", "business", "consumer", "education",
                   "finance", "manufacturing", "ecosystems", "health"]
     FILE_FORMATS = ["CSV"]
+    IS_PUBLIC = [True, False]
 
     def __init__(self, category=None, creation_time=None, data_sample=None, format=None, id=None, is_public=None,
                  org_guid=None, record_count=None, size=None, source_uri=None, target_uri=None, title=None):

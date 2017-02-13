@@ -35,14 +35,11 @@ class TestGetDataSets(object):
         step("Create new transfer for each category")
         cls.transfers = []
         for category in DataSet.CATEGORIES:
-            cls.transfers.append(Transfer.api_create(class_context, category, is_public=False, org_guid=test_org.guid,
-                                                     source=test_data_urls.test_transfer.url))
-        for category in DataSet.CATEGORIES:
-            cls.transfers.append(Transfer.api_create(class_context, category, is_public=True, org_guid=test_org.guid,
-                                                     source=test_data_urls.test_transfer.url))
-        step("Ensure that transfers are finished")
-        for transfer in cls.transfers:
-            transfer.ensure_finished()
+            for dataset_privacy in DataSet.IS_PUBLIC:
+                cls.transfer = Transfer.api_create(class_context, category, is_public=dataset_privacy,
+                                                   org_guid=test_org.guid, source=test_data_urls.test_transfer.url)
+                cls.transfers.append(cls.transfer)
+                cls.transfer.ensure_finished()
         step("Get all data sets in the test org")
         cls.transfer_titles = [t.title for t in cls.transfers]
         dataset_list = DataSet.api_get_list(org_guid_list=[test_org.guid])
