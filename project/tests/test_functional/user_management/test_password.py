@@ -67,7 +67,7 @@ class TestPassword:
         pswd_api = api_password.PasswordAPI(self.test_user.username, self.test_user.password)
 
         step("Logout")
-        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout.do")
 
         step("Enter your email and press  'SEND RESET PASSWORD LINK'")
         pswd_api.reset_password()
@@ -76,14 +76,14 @@ class TestPassword:
         client.auth.authenticate()
 
         step("Logout and go to email message and press 'reset your password' link.")
-        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout.do")
         code = gmail_api.get_reset_password_links(self.test_user.username)
 
         step("Enter new password twice and press 'CREATE NEW PASSWORD'.")
         pswd_api.reset_password_set_new(code, self.NEW_PASSWORD)
 
         step("Logout")
-        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout.do")
 
         step("Try to login with old credentials.")
         assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_INCORRECT_PASSWORD, self.test_user.login)
@@ -120,7 +120,7 @@ class TestPassword:
         pswd_api.change_password(self.test_user.password, self.NEW_PASSWORD)
 
         step("Logout and try to login with old credentials.")
-        client.request(method=HttpMethod.GET, url=uaa_url, path="logout")
+        client.request(method=HttpMethod.GET, url=uaa_url, path="logout.do")
         HttpClientFactory.remove(self.test_user.client_configuration)
         assert_raises_http_exception(HttpStatus.CODE_OK, HttpStatus.MSG_INCORRECT_PASSWORD, self.test_user.login)
 

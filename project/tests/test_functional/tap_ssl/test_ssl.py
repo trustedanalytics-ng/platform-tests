@@ -80,7 +80,7 @@ class TestSsl:
         step("Get console client and configuration")
         client_configuration, client = self.get_client(HttpClientType.CONSOLE)
         step("Log out from the platform")
-        client.request(method=HttpMethod.GET, url=config.uaa_url, path="logout")
+        client.request(method=HttpMethod.GET, url=config.uaa_url, path="logout.do")
         HttpClientFactory.remove(client_configuration)
         step("Get login page using http")
         uaa_login_url = self.UAA_LOGIN_URL_FORMAT.format(self.HTTP_EXTERNAL_PROTOCOL, config.tap_domain)
