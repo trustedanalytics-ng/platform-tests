@@ -145,7 +145,7 @@ console_url = os.environ.get("PT_CONSOLE_URL", "{}://console.{}".format(external
 console_url_for_platform_tests_app = os.environ.get("PT_CONSOLE_URL_FOR_PLATFORM_TESTS_APP",
                                                     "{}://console.{}".format(external_protocol, tap_domain))
 arcadia_url = os.environ.get("PT_ARCADIA_URL", "{}://arcadia.{}".format(external_protocol, tap_domain))
-hue_url = os.environ.get("PT_HUE_URL", "https://hue.{}".format(tap_domain))
+hue_url = os.environ.get("PT_HUE_URL", "{}://hue.{}".format(external_protocol, tap_domain))
 demiurge_url = os.environ.get("PT_DEMIURGE_URL", "{}://demiurge.{}".format(external_protocol, tap_domain))
 kubernetes_broker_url = os.environ.get("PT_KUBERNETES_BROKER_URL", "{}://kubernetes-broker.{}".format(external_protocol, tap_domain))
 grafana_url = os.environ.get("PT_GRAFANA_URL", "{}://grafana.{}".format(external_protocol, tap_domain))

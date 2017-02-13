@@ -134,12 +134,12 @@ def get_job_workflow(workflow_id, client=None):
 
 
 def query_execute(database, query, client=None):
-    """POST beeswax/api/query/execute/1"""
+    """POST beeswax/api/query/execute/"""
     if client is None:
         client = get_logged_client()
     return client.request(
         method=HttpMethod.POST,
-        path="beeswax/api/query/execute/1",
+        path="beeswax/api/query/execute/",
         data={
             "query-query": query,
             "query-database": database,

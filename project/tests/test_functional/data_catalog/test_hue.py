@@ -53,7 +53,7 @@ class TestHue:
         step("Publish dataset in HUE")
         dataset.api_publish()
 
-    pytest.mark.bugs("DPNG-15157 502 Bad Gateway - on viewing dataset in hue")
+    @pytest.mark.bugs("DPNG-15157 502 Bad Gateway - on viewing dataset in hue")
     def test_1_check_database(self, test_org):
         """
         <b>Description:</b>
@@ -99,7 +99,7 @@ class TestHue:
         table_metadata = hue.get_table_metadata(database_name=self.database_name, table_name=self.transfer.title)
         assert table_metadata["status"] == 0
 
-    def test_3_check_table_content(self):
+    def test_3_check_table_content(self, test_data_urls):
         """
         <b>Description:</b>
         Check that table content is correct.
@@ -118,7 +118,7 @@ class TestHue:
         """
         step("Check table content against submitted transfer")
         table_response = hue.get_table(database_name=self.database_name, table_name=self.transfer.title)
-        assert table_response["rows"] == get_csv_data(download_file(url=self.TRANSFER_SOURCE))
+        assert table_response["rows"] == get_csv_data(test_data_urls.test_transfer.filepath)
 
     def test_4_check_file_browser(self, admin_user):
         """
@@ -156,7 +156,7 @@ class TestHue:
         response = hue.get_job_browser()
         assert all(item["user"] == admin_user.guid for item in response["jobs"])
 
-    def test_6_execute_hive_queries(self):
+    def test_6_execute_hive_queries(self, test_data_urls):
         """
         <b>Description:</b>
         Check that SQL queries can be executed in hive.
@@ -177,4 +177,4 @@ class TestHue:
         step("Execute SQL queries in hive")
         hive_data = hive.exec_query("SELECT * FROM {};".format(self.transfer.title), self.database_name)
         step("Check data from hive is equal to data from transfer")
-        assert hive_data == get_csv_data(download_file(url=self.TRANSFER_SOURCE))
+        assert hive_data == get_csv_data(test_data_urls.test_transfer.filepath)
