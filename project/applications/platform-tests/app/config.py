@@ -118,10 +118,12 @@ class AppConfig(_BaseConfig):
     """
     PORT = "PORT"
     DEBUG = "DEBUG"
+    PROTOCOL = "ACCESS_PROTOCOL"
     _default_config = {
         "hostname": "0.0.0.0",
         "port": 8080,
         "debug": False,
+        "protocol": "http"
     }
 
     def _parse_environment_variables(self) -> dict:
@@ -131,7 +133,10 @@ class AppConfig(_BaseConfig):
             environment_config["port"] = int(port)
         debug = os.environ.get(self.DEBUG)
         if debug and debug in ["1", "True", "true"]:
-                environment_config["port"] = True
+            environment_config["port"] = True
+        access_protocol = os.environ.get(self.PROTOCOL)
+        if access_protocol == "https":
+            environment_config["protocol"] = access_protocol
         return environment_config
 
 

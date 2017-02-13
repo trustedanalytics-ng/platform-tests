@@ -53,7 +53,7 @@ class ExceptionHandlingApi(flask_restful.Api):
 
 class Test(flask_restful.Resource):
     runner = Runner()
-    console_authenticator = ConsoleAuthenticator(tap_domain=app_config.tap_domain)
+    console_authenticator = ConsoleAuthenticator(tap_domain=app_config.tap_domain, protocol=app_config.protocol)
 
     def get(self):
         """Return a list of performed tests."""
