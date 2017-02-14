@@ -25,6 +25,7 @@ from modules.http_client.configuration_provider.console import ConsoleConfigurat
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.ssh_lib.jump_client import JumpClient
 from modules.tap_object_model import ServiceInstance
+from tests.fixtures.fixtures import get_cdhmaster
 from .gearpump_application import GearpumpApplication
 
 
@@ -102,7 +103,7 @@ class Gearpump(object):
         self.yarn_endpoint = "https://{}:8090/ws/v1/cluster/apps/"
         if self.yarn_app_id is None:
             self.get_yarn_id()
-        self.yarn_endpoint = self.yarn_endpoint.format(self.get_cdhmaster())
+        self.yarn_endpoint = self.yarn_endpoint.format(get_cdhmaster())
         url = self.yarn_endpoint + self.yarn_app_id
         command = ["curl --insecure", url]
         response = self.ssh_client.execute_ssh_command(command)
@@ -111,19 +112,6 @@ class Gearpump(object):
         json_string = string[start_json:]
         json_obj = json.loads(json_string)
         return str(json_obj["app"]["state"])
-
-    def get_cdhmaster(self):
-        inventory = ["cat", "tap.inventory.out"]
-        try:
-            output = self.ssh_client.execute_ssh_command(inventory)
-        except:
-            output = self.ssh_client.execute_ssh_command(["ls"])
-            TAP = next((s for s in output if 'configuration' in s), None)
-            inventory = ["cat", "{}/tap.inventory.out".format(TAP)]
-            output = self.ssh_client.execute_ssh_command(inventory)
-        index = output.index('[cdh-master-primary]')
-        cdh = output[index+1].split(" ")
-        return cdh[0]
 
     def get_yarn_id(self):
         """

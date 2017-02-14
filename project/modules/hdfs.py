@@ -19,6 +19,7 @@ import string
 import config
 from modules.ssh_lib.jump_client import JumpClient
 from modules.tap_logger import get_logger
+from tests.fixtures.fixtures import get_cdhmaster
 
 logger = get_logger(__name__)
 
@@ -35,7 +36,7 @@ class Hdfs(object):
         self.ssh_client = JumpClient(remote_host=config.jumpbox_hostname, remote_username=config.ng_jump_user,
                                      remote_key_path=config.jumpbox_key_path)
         self._HDFS_DIR = "/org/{}/brokers/userspace".format(org.guid)
-        self.cdh_master_primary = self.get_cdhmaster()
+        self.cdh_master_primary = get_cdhmaster()
 
     def _execute(self, command: list):
         jump = JumpClient(remote_host=config.jumpbox_hostname, remote_username=config.ng_jump_user,
@@ -68,19 +69,6 @@ class Hdfs(object):
 
     def list_zones(self):
         return self._execute(self._HDFS_CMD + ["crypto", "-listZones"])
-
-    def get_cdhmaster(self):
-        inventory = ["cat", "tap.inventory.out"]
-        try:
-            output = self.ssh_client.execute_ssh_command(inventory)
-        except:
-            output = self.ssh_client.execute_ssh_command(["ls"])
-            TAP = next((s for s in output if 'configuration' in s), None)
-            inventory = ["cat", "{}/tap.inventory.out".format(TAP)]
-            output = self.ssh_client.execute_ssh_command(inventory)
-        index = output.index('[cdh-master-primary]')
-        cdh = output[index+1].split(" ")
-        return cdh[0]
 
     def check_plain_dir_directory(self, service_instance_id: str):
         self._HADOOP_CMD.append(self._HDFS_DIR)

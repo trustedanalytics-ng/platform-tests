@@ -18,6 +18,7 @@ import base64
 import io
 import json
 import os
+from functools import lru_cache
 
 import pytest
 
@@ -28,6 +29,7 @@ from modules.exceptions import UnexpectedResponseError
 from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.http_client.configuration_provider.k8s_service import ServiceConfigurationProvider
+from modules.ssh_lib.jump_client import JumpClient
 from modules.tap_logger import log_fixture, log_finalizer
 from modules.tap_object_model import Application, Organization, ServiceOffering, ServiceInstance, User,\
     ScoringEngineModel, ModelArtifact
@@ -637,3 +639,20 @@ def test_sample_apps():
     yield sample_apps
     log_fixture("test_sample_apps: delete sample_apps temporary directory")
     sample_apps.cleanup()
+
+
+@lru_cache(maxsize=1)
+def get_cdhmaster():
+    ssh_client = JumpClient(remote_host=config.jumpbox_hostname, remote_username=config.ng_jump_user,
+                            remote_key_path=config.jumpbox_key_path)
+    inventory = ["cat", "tap.inventory.out"]
+    try:
+        output = ssh_client.execute_ssh_command(inventory)
+    except:
+        output = ssh_client.execute_ssh_command(["ls"])
+        TAP = next((s for s in output if 'configuration' in s), None)
+        inventory = ["cat", "{}/tap.inventory.out".format(TAP)]
+        output = ssh_client.execute_ssh_command(inventory)
+    index = output.index('[cdh-master-primary]')
+    cdh = output[index + 1].split(" ")
+    return cdh[0]

@@ -16,6 +16,7 @@
 
 import pytest
 
+import config
 from modules.constants import ServiceCatalogHttpStatus as HttpStatus, ApiServiceHttpStatus, ServiceLabels, ServicePlan, \
     TapComponent as TAP
 from modules.exceptions import UnexpectedResponseError
@@ -26,7 +27,7 @@ from modules.tap_object_model import KubernetesPod, ServiceInstance
 from tap_component_config import offerings, filtered_offerings, PlanKeys
 from tests.fixtures.assertions import assert_raises_http_exception, assert_in_with_retry, \
     assert_unordered_list_equal
-
+from tests.fixtures.fixtures import get_cdhmaster
 
 logged_components = (TAP.service_catalog, TAP.gearpump_broker, TAP.kafka_broker, TAP.smtp_broker, TAP.yarn_broker,
                      TAP.zookeeper_broker, TAP.zookeeper_wssb_broker)
@@ -92,7 +93,7 @@ class TestMarketplaceServices:
 
     def _validate_storage(self, instance_pod, tunnel, offering_name, expected_resources):
         command = ["kubectl", "exec", instance_pod.name, "df", "--", "-h"]
-        output = tunnel._jump_client.ssh(["ssh", "-tt", "compute-master"] + command)
+        output = tunnel._jump_client.ssh(["ssh", "-tt", config.master_0_hostname] + command)
         parsed_output = self.parse_storage_output(output)
         entry = next((v for k, v in parsed_output.items() if "/rbd" in k), None)
         if expected_resources[PlanKeys.STORAGE]:
@@ -120,9 +121,8 @@ class TestMarketplaceServices:
     @long
     @priority.high
     @pytest.mark.usefixtures("open_tunnel")
-    @pytest.mark.parametrize("role", ["user"])
     @pytest.mark.parametrize("offering_name, plan_name", filtered_offerings)
-    def test_create_and_delete_service_instance(self, context, test_user_clients, role, offering_name, plan_name,
+    def test_create_and_delete_service_instance(self, context, test_org_user_client, offering_name, plan_name,
                                                 open_tunnel):
         """
         <b>Description:</b>
@@ -141,10 +141,9 @@ class TestMarketplaceServices:
         4. Stop service instance.
         5. Delete service instance.
         """
-        client = test_user_clients[role]
         step("Create an instance")
         instance = ServiceInstance.create_with_name(context, offering_label=offering_name, plan_name=plan_name,
-                                                    client=client)
+                                                    client=test_org_user_client)
         step("Ensure that instance is running")
         instance.ensure_running()
         step("Check that service instance is present")
