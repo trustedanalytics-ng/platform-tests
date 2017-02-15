@@ -27,6 +27,7 @@ class TestElasticsearch:
 
     plans = [ServicePlan.SINGLE_SMALL, ServicePlan.SINGLE_MEDIUM]
 
+    @pytest.mark.bugs("DPNG-15227 elasticsearch24 - cannot see assigned storage")
     @pytest.mark.parametrize("plan", plans)
     def test_elasticsearch(self, context, api_service_admin_client, plan):
         """
