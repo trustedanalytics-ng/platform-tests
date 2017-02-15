@@ -218,6 +218,8 @@ class TestCliService:
         <b>Steps:</b>
         1. Delete service.
         """
+        step("Ensuring service is running ...")
+        service.ensure_service_state(TapEntityState.RUNNING)
         step("Trying to delete a service")
         assert_raises_command_execution_exception(1, TapMessage.CANNOT_DELETE_RUNNING_APP,
                                                   tap_cli.delete_service, ["--name", service.name])

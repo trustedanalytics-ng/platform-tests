@@ -199,9 +199,11 @@ class TestCliBinding:
         step("Bind application to service")
         binding = CliBinding.create(context=class_context, type=TapCli.APPLICATION, tap_cli=tap_cli,
                                     name=sample_python_app.name, dst_name=service_instance_1.name)
-        step('ensure that application is on service binding list')
         binding.type = 'service'
+        step('ensure that application and service are running after create binding')
+        sample_python_app.ensure_running()
         service_instance_1.ensure_service_state(TapEntityState.RUNNING)
+        step('ensure that application is on service binding list')
         binding.ensure_on_bindings_list()
         step('unbind application from service')
         binding.type = 'application'
@@ -233,9 +235,11 @@ class TestCliBinding:
         step('bind service to application')
         binding = CliBinding.create(context=class_context, type=TapCli.SERVICE, tap_cli=tap_cli,
                                     name=service_instance_1.name, dst_name=sample_python_app.name)
-        step('ensure that service is on application binding list')
         binding.type = 'application'
+        step('ensure that application and service are running after create binding')
+        sample_python_app.ensure_running()
         service_instance_1.ensure_service_state(TapEntityState.RUNNING)
+        step('ensure that service is on application binding list')
         binding.ensure_on_bindings_list()
         step('unbind service from application')
         binding.type = 'service'
