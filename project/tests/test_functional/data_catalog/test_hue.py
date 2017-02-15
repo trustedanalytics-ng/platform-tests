@@ -53,7 +53,7 @@ class TestHue:
         step("Publish dataset in HUE")
         dataset.api_publish()
 
-    @pytest.mark.bugs("DPNG-15157 502 Bad Gateway - on viewing dataset in hue")
+    @pytest.mark.bugs("DPNG-9885 [api-tests] String indices must be integers (test_hue)")
     def test_1_check_database(self, test_org):
         """
         <b>Description:</b>
