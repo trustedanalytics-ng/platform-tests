@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.components(TAP.gearpump_broker, TAP.service_catalog)]
 
 @incremental
 @pytest.mark.usefixtures("open_tunnel")
+@pytest.mark.bugs("DPNG-15381 Lack of GP pod - Service has inappropriate state OFFLINE")
 class TestGearpumpConsole:
 
     COMPLEXDAG_APP_NAME = "dag"
