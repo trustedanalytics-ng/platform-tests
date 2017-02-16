@@ -109,7 +109,10 @@ class TestMarketplaceServices:
             assert instance_pod is not None, "Pod for instance '{}' was not found".format(instance.name)
             self._validate_memory(instance_pod, expected_resources)
             self._validate_compute_nodes(instance_pod, expected_resources)
-            self._validate_storage(instance_pod, tunnel, offering_label, expected_resources)
+            # please remove this conditional when elasticsearch is in
+            # vesion >= 2.4.4 for which df is working properly
+            if offering_label != ServiceLabels.ELASTICSEARCH24:
+                self._validate_storage(instance_pod, tunnel, offering_label, expected_resources)
         else:
             step("Plan {} of offering {} does not have expected resource information".format(plan_name, offering_label))
 
