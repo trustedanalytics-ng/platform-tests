@@ -17,6 +17,7 @@
 import os
 import ssl
 import time
+from urllib.parse import urlsplit
 
 import pytest
 from retry import retry
@@ -60,7 +61,8 @@ class TestWs2kafka2hdfs:
         2. Verify message is in application stats.
         """
         self.app_kafka2hdfs = kafka2hdfs_app
-        connection_string = "{}/{}".format(ws2kafka_app.urls[0], self.topic_name)
+        domain_name = "{0.netloc}".format(urlsplit(ws2kafka_app.urls[0]))
+        connection_string = "{}/{}".format(domain_name, self.topic_name)
         self._send_ws_messages(connection_string)
         self._assert_message_count_in_app_stats(self.app_kafka2hdfs, self.MESSAGE_COUNT)
 
