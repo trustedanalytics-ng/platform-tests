@@ -127,3 +127,25 @@ class TestSsl:
         step("Check https redirection")
         assert response.url == self.API_LOGIN_URL_FORMAT.format(config.external_protocol, config.api_url, api_version,
                                                                 "/")
+
+    @pytest.mark.bugs("DPNG-15269 no redirection to https for tap-cli login http")
+    @priority.low
+    def test_http_redirection_login_tap_cli(self, tap_cli):
+        """
+        <b>Description:</b>
+        Checks if tap cli http login request is redirected to https
+
+        <b>Input data:</b>
+        No input data
+
+        <b>Expected results:</b>
+        Test passes when there is redirection to https login page in output info.
+
+        <b>Steps:</b>
+        1. Try log in to platform using tap cli http login command in verbose mode INFO
+        """
+        step("Check that https redirection is displayed in output INFO")
+        output = tap_cli.login(external_protocol=self.HTTP_EXTERNAL_PROTOCOL)
+        get_https_message = self.GET_URL_MESSAGE.format(self.TAP_CLI_API_LOGIN_URL_FORMAT
+                                                        .format(config.external_protocol, config.api_url))
+        assert get_https_message in output
