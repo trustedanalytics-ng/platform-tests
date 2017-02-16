@@ -139,34 +139,6 @@ class TestTapApp:
 
     @priority.medium
     @pytest.mark.sample_apps_test
-    def test_app_register_as_offering_as_user(self, context, app_jar, offering_json,
-                                              manifest_json, test_user_clients):
-        """
-        <b>Description:</b>
-        Checks if an offering can be created from an application.
-
-        <b>Input data:</b>
-        1. Sample application.
-        2. Organization id
-
-        <b>Expected results:</b>
-        An offering CAN'T be created from an application as user
-
-        <b>Steps:</b>
-        1. Try to create offering and fail.
-        """
-        client = test_user_clients["user"]
-        step("Register in marketplace as user")
-        assertions.assert_raises_http_exception(HttpStatus.CODE_FORBIDDEN,
-                                                HttpStatus.MSG_FORBIDDEN,
-                                                ServiceOffering.create_from_binary,
-                                                context, jar_path=app_jar,
-                                                manifest_path=manifest_json,
-                                                offering_path=offering_json,
-                                                client=client)
-
-    @priority.medium
-    @pytest.mark.sample_apps_test
     def test_delete_app(self, sample_java_app):
         """
         <b>Description:</b>
@@ -190,3 +162,4 @@ class TestTapApp:
         step("Delete the application and check that it doesn't exist")
         sample_java_app.delete()
         assertions.assert_not_in_by_id_with_retry(sample_java_app.id, Application.get_list)
+
