@@ -54,10 +54,6 @@ class TestJupyterConsole:
         step("Create instance of Jupyter service")
         jupyter = Jupyter(class_context)
         assertions.assert_in_with_retry(jupyter.instance, ServiceInstance.get_list)
-        step("Get credentials for the new jupyter service instance")
-        jupyter.get_credentials()
-        step("Login into Jupyter")
-        jupyter.login()
         return jupyter
 
     @staticmethod
@@ -65,7 +61,6 @@ class TestJupyterConsole:
         output = jupyter_terminal.get_output()
         assert re.search(pattern, str(output)) is not None
 
-    @pytest.mark.bugs("DPNG-15325 [api-test] Fix jupyter test in data-science")
     @priority.high
     def test_jupyter_terminal(self, jupyter_instance, terminal_index):
         """
@@ -91,7 +86,6 @@ class TestJupyterConsole:
         self._assert_pattern_in_output(terminal, "Python")
         terminal.ws.close()
 
-    @pytest.mark.bugs("DPNG-15325 [api-test] Fix jupyter test in data-science")
     @priority.high
     def test_jupyter_interactive_mode_hello_world(self, jupyter_instance):
         """
@@ -118,7 +112,7 @@ class TestJupyterConsole:
         assert output[-1] == "Hello, world!\n"
         notebook.ws.close()
 
-    @pytest.mark.bugs("DPNG-15325 [api-test] Fix jupyter test in data-science")
+    @pytest.mark.bugs("DPNG-15388 Missing example files in jupyter")
     @priority.medium
     @pytest.mark.parametrize("notebook_path", NOTEBOOKS_PATHS[1:])
     def test_spark_tk_in_jupyter(self, jupyter_instance, notebook_path):
@@ -141,7 +135,7 @@ class TestJupyterConsole:
         self.run_cells(notebook=jupyter_instance.create_notebook(),
                        cells=jupyter_instance.get_notebook_source(notebook_path))
 
-    @pytest.mark.bugs("DPNG-15325 [api-test] Fix jupyter test in data-science")
+    @pytest.mark.bugs("DPNG-15388 Missing example files in jupyter")
     @priority.medium
     def test_spark_tk_readme_in_jupyter(self, jupyter_instance):
         """

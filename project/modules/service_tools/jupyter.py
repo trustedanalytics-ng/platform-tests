@@ -18,14 +18,13 @@ import abc
 import json
 import ssl
 import uuid
-
-from retry import retry
+from urllib.parse import urlsplit, urlunsplit
+from time import sleep
 
 import config
 from ..constants import ServiceLabels, ServicePlan
 from ..http_client.client_auth.http_method import HttpMethod
-from ..http_client.configuration_provider.service_tool import ServiceToolConfigurationProvider
-from ..http_client.http_client import HttpClient
+from modules.http_client.configuration_provider.console import ConsoleConfigurationProvider
 from ..http_client.http_client_factory import HttpClientFactory
 from ..tap_logger import get_logger
 from ..tap_object_model import ServiceInstance
@@ -155,11 +154,6 @@ class Jupyter(object):
     """Jupyter service instance."""
 
     def __init__(self, context, instance_name=None, params=None):
-        self.client = None
-        self.cookie = None
-        self.password = None
-        self.instance_url = None
-        self.ws_sslopt = self._get_ws_ssl_options()
         if instance_name is None:
             instance_name = generate_test_object_name(short=True, prefix=ServiceLabels.JUPYTER)
         self.instance = ServiceInstance.create_with_name(
@@ -170,54 +164,53 @@ class Jupyter(object):
             params=params
         )
         self.instance.ensure_running()
+        self.instance_url = self.instance.url
+        self.client = HttpClientFactory.get(ConsoleConfigurationProvider.get(url=self.instance.url, rest_prefix=""))
+        sleep(300)
+        # Visit jupyter main page to start session
+        response = self.client.request(
+            method=HttpMethod.GET,
+            path="",
+            msg="Jupyter: main page",
+        )
 
     def __repr__(self):
         return "{} (instance_url={})".format(self.__class__.__name__, self.instance_url)
 
-    @retry(KeyError, tries=5, delay=5)
-    def get_credentials(self):
-        """Set jupyter instance credentials."""
-        response = self.instance.get_credentials(self.instance.id)
-        self.password = response["password"]
-        self.instance_url = response["hostname"]
+    @property
+    def cookie_header(self):
+        cookie_items = ("{}={}".format(k, v) for k,v in self.client.cookies.get_dict().items())
+        return "; ".join(cookie_items)
 
-    def get_client(self) -> HttpClient:
-        """Return jupyter http client."""
-        if self.client is None:
-            self.client = HttpClientFactory.get(ServiceToolConfigurationProvider.get(
-                url=self.instance_url,
-                username="JupyterClient",
-                password=self.password
-            ))
-        return self.client
+    @property
+    def use_ssl(self):
+        return self.instance_url.startswith('https')
 
-    def login(self):
-        """Login into jupyter instance."""
-        self.get_client().request(
-            method=HttpMethod.POST,
-            path="login",
-            data={"password": self.password},
-            params={"next": "/tree"},
-            msg="Jupyter: login"
-        )
-        self.cookie = ", ".join(["{}={}".format(k, v) for k, v in self.get_client().cookies.get_dict().items()])
+    @property
+    def ws_sslopt(self):
+        return self._get_ws_ssl_options() if self.use_ssl else None
+
+    @property
+    def ws_scheme(self):
+        return WebsocketClient.WSS if self.use_ssl else WebsocketClient.WS
 
     def connect_to_terminal(self, terminal_no):
-        uri = "{}://{}/terminals/websocket/{}".format(WebsocketClient.WSS, self.instance_url, terminal_no)
-        origin = "https://{}".format(self.instance_url)
-        headers = {"Cookie": self.cookie}
+        terminal_path = "terminals/websocket/{}".format(terminal_no)
+        uri = urlunsplit(urlsplit(self.instance_url)._replace(scheme=self.ws_scheme, path=terminal_path))
+        origin = self.instance_url
+        headers = {"Cookie": self.cookie_header}
         return JupyterTerminal(uri, origin, headers, self.ws_sslopt, terminal_no)
 
     def create_notebook(self, python_version=2):
         python_version = "python{}".format(python_version)
-        response = self.get_client().request(
+        response = self.client.request(
             method=HttpMethod.POST,
             path="api/contents",
             body={"type": "notebook"},
             msg="Jupyter: create notebook"
         )
         notebook_path = response["path"]
-        response = self.get_client().request(
+        response = self.client.request(
             method=HttpMethod.POST,
             path="api/sessions",
             body={
@@ -227,15 +220,15 @@ class Jupyter(object):
             msg="Jupyter: create kernel session for {}".format(python_version)
         )
         kernel_id = response["kernel"]["id"]
-        session_id = _generate_uuid()
-        uri = "{}://{}/api/kernels/{}/channels?session_id={}".format(
-            WebsocketClient.WSS, self.instance_url, kernel_id, session_id)
-        origin = "https://{}".format(self.instance_url)
-        headers = {"Cookie": self.cookie}
+        session_id = response["id"]
+        channel_path = "api/kernels/{}/channels?session_id={}".format(kernel_id, session_id)
+        uri = urlunsplit(urlsplit(self.instance_url)._replace(scheme=self.ws_scheme, path=channel_path))
+        origin = self.instance_url
+        headers = {"Cookie": self.cookie_header}
         return JupyterNotebook(uri, origin, headers, self.ws_sslopt, session_id, notebook_path)
 
     def get_notebook_source(self, notebook_path):
-        notebook_model = self.get_client().request(
+        notebook_model = self.client.request(
             method=HttpMethod.GET,
             path="api/contents/{}".format(notebook_path),
             body={"type": "notebook"},
