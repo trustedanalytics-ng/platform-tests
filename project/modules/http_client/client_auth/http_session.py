@@ -16,7 +16,8 @@
 
 import json
 
-from requests import Session, Request
+from requests import Session, Request, exceptions
+from retry import retry
 
 import config
 from modules.exceptions import UnexpectedResponseError
@@ -101,5 +102,6 @@ class HttpSession(object):
             return response.text
 
     @log_request
+    @retry(exceptions=exceptions.ConnectionError, tries=2)
     def _send_request_and_get_raw_response(self, request: Request, timeout: int):
         return self._session.send(request, timeout=timeout)

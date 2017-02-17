@@ -18,6 +18,7 @@ import json
 from urllib.parse import urlparse
 
 import requests
+from requests import exceptions
 from retry import retry
 
 import config
@@ -288,7 +289,7 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             json=body
         ))
         log_http_request(request, "")
-        response = self._request_session.send(request)
+        response = self._send_request(request)
         log_http_response(response)
         if raw is True:
             return response
@@ -298,6 +299,10 @@ class Application(ApiModelSuperclass, TapObjectSuperclass):
             return json.loads(response.text)
         except ValueError:
             return response.text
+
+    @retry(exceptions=requests.exceptions.ConnectionError, tries=2)
+    def _send_request(self, request):
+        return self._request_session.send(request)
 
     @classmethod
     def _set_scheme(cls, *, url: str, scheme: str="http"):
