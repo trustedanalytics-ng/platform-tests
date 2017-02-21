@@ -93,11 +93,11 @@ class CliService(CliObjectSuperclass):
                 self.stop()
                 self.ensure_service_state(TapEntityState.STOPPED)
             response = self.tap_cli.delete_service(["--name", self.name])
-            self._set_deleted(self, True)
+            self._set_deleted(True)
         except UnexpectedResponseError:
             raise
         else:
-            self._set_deleted(self, False)
+            self._set_deleted(False)
 
         return response
 
