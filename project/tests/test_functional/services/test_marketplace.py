@@ -93,7 +93,8 @@ class TestMarketplaceServices:
 
     def _validate_storage(self, instance_pod, tunnel, offering_name, expected_resources):
         command = ["kubectl", "exec", instance_pod.name, "df", "--", "-h"]
-        output = tunnel._jump_client.ssh(["ssh", "-tt", config.master_0_hostname] + command)
+        options = ["-o", "StrictHostKeyChecking=no"]
+        output = tunnel._jump_client.ssh(["ssh", "-tt"] + options + [config.master_0_hostname] + command)
         parsed_output = self.parse_storage_output(output)
         entry = next((v for k, v in parsed_output.items() if "/rbd" in k), None)
         if expected_resources[PlanKeys.STORAGE]:
