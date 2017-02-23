@@ -24,13 +24,12 @@ from modules.http_client.configuration_provider.application import ApplicationCo
 from modules.http_client.http_client_factory import HttpClientFactory
 from modules.markers import long, priority
 from modules.tap_logger import step
-from modules.tap_object_model import DataSet, Transfer, User, ServiceInstance, Metrics, Organization
+from modules.tap_object_model import DataSet, Transfer, User, ServiceInstance, Organization
 from modules.tap_object_model.flows import onboarding
 from modules.tap_object_model.platform_tests import TestSuite
 from modules.tap_object_model.scoring_engine_model import ScoringEngineModel
 from modules.test_names import generate_test_object_name
 from tap_component_config import offerings, offerings_as_parameters, PlanKeys
-from tests.fixtures.assertions import assert_dict_values_set
 
 logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloader, TAP.metadata_parser,
                      TAP.data_catalog, TAP.service_catalog, TAP.gearpump_broker,
@@ -38,8 +37,6 @@ logged_components = (TAP.user_management, TAP.auth_gateway, TAP.das, TAP.downloa
                      TAP.zookeeper_broker, TAP.zookeeper_wssb_broker, TAP.platform_tests)
 pytestmark = [priority.high]
 
-expected_metrics_keys = ["apps_running", "apps_down", "users_org", "service_usage", "memory_usage_org", "cpu_usage_org",
-                         "private_datasets", "public_datasets"]
 filtered_offerings_as_parameters = list(filter(lambda x: offerings[x[0]][x[1]][PlanKeys.SMOKE_TESTS],
                                                offerings_as_parameters))
 
@@ -72,33 +69,6 @@ def sample_app(request):
 @pytest.fixture(params=['app_bound_mysql', 'app_bound_mongodb', 'app_bound_psql'])
 def sample_db_app(request):
     return request.getfuncargvalue(request.param)
-
-
-@pytest.mark.components(TAP.metrics_grafana)
-@pytest.mark.skip(reason="DPNG-15338 Test hasn't got credential to get data from Grafana")
-def test_dashboard_metrics():
-    """
-    <b>Description:</b>
-    Checks if platform returns following Dashboard Metrics: "apps_running", "apps_down", "users_org", "service_usage",
-    "memory_usage_org", "cpu_usage_org", "private_datasets", "public_datasets".
-
-    <b>Input data:</b>
-    No input data.
-
-    <b>Expected results:</b>
-    Test passes when Grafana returns all expected metrics i.e. "apps_running", "apps_down", "users_org",
-    "service_usage", "memory_usage_org", "cpu_usage_org", "private_datasets", "public_datasets".
-
-    <b>Steps:</b>
-    1. Get metrics from Grafana.
-    2. Verify that Grafana returned following metrics: "apps_running", "apps_down", "users_org", "service_usage",
-    "memory_usage_org", "cpu_usage_org", "private_datasets", "public_datasets".
-    """
-    step("Get metrics from Grafana")
-    dashboard_metrics = Metrics.from_grafana()
-    step("Check if all expected metrics returned")
-    assert_dict_values_set(vars(dashboard_metrics), expected_metrics_keys)
-
 
 @pytest.mark.components(TAP.auth_gateway, TAP.user_management)
 def test_onboarding(context, test_org):
