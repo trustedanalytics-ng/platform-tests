@@ -111,6 +111,25 @@ def cli_login(tap_cli):
 def app_jar(test_sample_apps):
     sample_app_source_dir = os.path.join(TMP_FILE_DIR, "sample_java_app_source")
     with tarfile.open(test_sample_apps.tapng_java_app.filepath) as tar:
-        tar.extractall(path=sample_app_source_dir)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar, path=sample_app_source_dir)
         sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
     return os.path.join(sample_app_source_dir, next(name for name in sample_app_tar_content if name.endswith(".jar")))
