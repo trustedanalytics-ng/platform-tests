@@ -233,7 +233,26 @@ class TestAppBase:
         sample_app_source_dir = os.path.join(TMP_FILE_DIR, test_sample_apps[self.SAMPLE_APP_NAME].filename)
         step("Extract application archive")
         with tarfile.open(test_sample_apps[self.SAMPLE_APP_NAME].filepath) as tar:
-            tar.extractall(path=sample_app_source_dir)
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(tar, path=sample_app_source_dir)
             sample_app_tar_content = [name.replace("./", "", 1) for name in tar.getnames()]
         step("Check content of the archive")
         missing_files = [app_file for app_file in self.EXPECTED_FILE_LIST if app_file not in sample_app_tar_content]
